@@ -292,9 +292,10 @@
             if (outside(level, s)) {
                 fail(run, 'out-of-sector', `${s.name} left the navigation sector. No invisible wall will bring it back.`); return;
             }
-            for (const b of st.rocks) contact(run, s, { id: b.id, poly: b.poly, velocity: b });
-            if (st.target && !st.targetHit) contact(run, s, { id: 'target-vessel', poly: P.hull(st.target), velocity: st.target });
-            if (s !== st.mother) for (const b of attached) contact(run, s, { id: 'docked-' + b.id, poly: P.hull(b), velocity: st.mother });
+            // P.contact expects velocity components under x/y, never a body's position.
+            for (const b of st.rocks) contact(run, s, { id: b.id, poly: b.poly, velocity: { x: b.vx, y: b.vy } });
+            if (st.target && !st.targetHit) contact(run, s, { id: 'target-vessel', poly: P.hull(st.target), velocity: { x: st.target.vx, y: st.target.vy } });
+            if (s !== st.mother) for (const b of attached) contact(run, s, { id: 'docked-' + b.id, poly: P.hull(b), velocity: { x: st.mother.vx, y: st.mother.vy } });
             if (st.rescued && s !== st.friendly) contact(run, s, { id: 'secured-friendly', poly: P.hull(st.friendly) });
         }
         for (let i = 0; i < free.length; i++) for (let j = i + 1; j < free.length; j++) {

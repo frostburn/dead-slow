@@ -523,10 +523,13 @@
             world = selectedWorld;
         selectedWorld = P.clamp(Math.round(world) || 1, 1, WORLDS.length);
         pauseForMenu();
-        const w = WORLDS[selectedWorld - 1], stages = LEVELS.filter(l => l.campaign === w.id), arrivals = stages.filter(l => store.best(l.id)).length;
+        const w = WORLDS[selectedWorld - 1], stages = LEVELS.filter(l => l.campaign === w.id);
+        const sectors = stages.filter(l => !l.bonus), bonuses = stages.filter(l => l.bonus);
+        const arrivals = sectors.filter(l => store.best(l.id)).length;
+        const bonusArrivals = bonuses.filter(l => store.best(l.id)).length;
         openDialog('courses', `${topModal(w.name, `WORLD ${w.number} · ${w.subtitle}`)}
  <div class="world-tabs" role="tablist" aria-label="Select world">${WORLDS.map(v => `<button role="tab" aria-selected="${v.number === selectedWorld}" class="world-tab ${v.number === selectedWorld ? 'active' : ''}" data-world="${v.number}"><span>WORLD ${v.number}</span><strong>${v.name}</strong><small>${v.subtitle}</small></button>`).join('')}</div>
- <p>${w.description}</p><div class="world-progress"><span>${arrivals} / ${stages.length} ${w.number === 4 ? 'SECTORS CLEARED · 1 BONUS' : 'HARBORS MOORED'}</span><span>ALL STAGES AVAILABLE</span></div>
+ <p>${w.description}</p><div class="world-progress"><span>${arrivals} / ${sectors.length} ${w.number === 4 ? 'SECTORS CLEARED' : 'HARBORS MOORED'}</span>${bonuses.length ? `<span>${bonusArrivals} / ${bonuses.length} BONUS CLEARED</span>` : ''}<span>ALL STAGES AVAILABLE</span></div>
  ${marathon ? '<p class="subtle">Selecting a harbor starts an individual trial and ends your current circuit.</p>' : ''}
  <div class="level-grid">${stages.map(l => {
             const i = LEVELS.indexOf(l), b = store.best(l.id);

@@ -17,6 +17,33 @@ def check_space(browser, check, html, screenshots=None):
     check('Fourth world lists twelve sectors plus a selectable bonus',page.locator('.world-tab').count()==4 and page.locator('.level-card').count()==13)
     check('Bonus is explicitly excluded from the 48-stage Grand Tour','excluded from every circuit' in page.locator('#dialog').inner_text() and 'all 48' in page.locator('#dialog').inner_text())
     shot('worlds-four.png')
+    # Progress is campaign-only; the selectable Century Ship has its own tally.
+    check('Fresh Meridian chart reports twelve campaign sectors and a separate bonus',
+          '0 / 12 SECTORS CLEARED' in page.locator('.world-progress').inner_text()
+          and '0 / 1 BONUS CLEARED' in page.locator('.world-progress').inner_text())
+    for sectors, bonus in [(0, True), (12, False), (12, True)]:
+        page.evaluate("""([sectors, bonus]) => {
+            for (const l of HarborLevels.filter(l => l.worldNumber === 4)) {
+                const saved = DeadSlowTest.state.storage.stages[l.id];
+                saved.runs = (l.bonus ? bonus : l.stageNumber <= sectors) ? [{time: 100, clean: true}] : [];
+            }
+            DeadSlowTest.courses(4);
+        }""", [sectors, bonus])
+        text = page.locator('.world-progress').inner_text()
+        check(f'Meridian chart keeps {sectors}/12 sectors separate from bonus ({bonus})',
+              f'{sectors} / 12 SECTORS CLEARED' in text
+              and f'{int(bonus)} / 1 BONUS CLEARED' in text
+              and page.locator('.level-card').count() == 13)
+    page.set_viewport_size({'width': 390, 'height': 844})
+    check('Separate sector and bonus counters fit the portrait chart',
+          page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+    page.set_viewport_size({'width': 1440, 'height': 1000})
+    # Do not leave synthetic records behind for the replay/no-ranking checks.
+    page.evaluate("""() => {
+        for (const l of HarborLevels.filter(l => l.worldNumber === 4))
+            DeadSlowTest.state.storage.stages[l.id].runs = [];
+        DeadSlowTest.courses(4);
+    }""")
     page.click('[data-stage="36"]')
     check('Space briefing teaches thrust and counterfire','rotational jets' in page.locator('#dialog').inner_text())
     page.click('[data-action="begin"]')
