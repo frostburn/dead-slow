@@ -62,8 +62,8 @@
         set('weather-text', `VACUUM · REL ${relative.toFixed(2)} m/s · ${range >= 1000 ? (range / 1000).toFixed(2) + ' km' : Math.round(range) + ' m'} TO ACTIVE TARGET`);
         $('work-panel').hidden = false;
         set('work-order', run.failure ? 'FLIGHT TERMINATED' : st.targetHit ? 'TARGET DISABLED · RETURN HOME' : c.century ? 'CENTURY · DEEP-SPACE TRANSIT' : 'MERIDIAN FLIGHT COMPUTER');
-        const warning = c.flare ? ` · ${st.flare.active ? 'FLARE' : 'FLARE IN'} ${Math.ceil(st.flare.remaining)}s · HEAT ${Math.round(st.heat)}%`
-            : c.solar ? ` · SOLAR ${Math.round(st.light * 100)}%` : c.target && !st.targetHit ? ` · LOCK ${st.charge.toFixed(1)}/3s` : st.echo ? ' · PAST SELF IS SOLID' : '';
+        const warning = c.flare?.continuous ? ` · RADIATION · HEAT ${Math.round(st.heat)}%` : c.flare ? ` · ${st.flare.active ? 'FLARE' : 'FLARE IN'} ${Math.ceil(st.flare.remaining)}s · HEAT ${Math.round(st.heat)}%`
+            : c.solar ? ` · SOLAR ${Math.round(st.light * 100)}%` : c.target && !st.targetHit ? ` · LOCK ${st.charge.toFixed(1)}/3s` : st.echo ? ` · ${st.echoes.length} SOLID HISTORIES` : '';
         set('work-readout', `FUEL ${st.fuel.toFixed(1)} / ${st.capacity} Δv${warning}`);
         $('work-progress').style.width = `${Math.max(0, st.fuel / st.capacity) * 100}%`;
         $('work-progress').style.background = st.fuel < st.capacity * .15 ? 'var(--amber)' : 'var(--green)';
@@ -71,7 +71,12 @@
         $('tow-controls').hidden = !c.friendly;
         set('line-action', st.beam ? 'F · RELEASE BEAM' : st.rescued ? 'CRAFT SECURED' : 'F · LOCK BEAM');
         set('line-in-label', 'J · ATTRACT'); set('line-out-label', 'K · REPEL');
-        set('mobile-extra', `FUEL ${st.fuel.toFixed(0)}${c.flare ? ' · ' + (st.flare.active ? 'FLARE' : Math.ceil(st.flare.remaining) + 's') : ''}`);
+        set('mobile-extra', `FUEL ${st.fuel.toFixed(0)}${c.flare ? ' · ' + (c.flare.continuous ? 'HEAT ' + Math.round(st.heat) + '%' : st.flare.active ? 'FLARE' : Math.ceil(st.flare.remaining) + 's') : ''}`);
+        if (st.shelterWindow) {
+            const w=st.shelterWindow, stamp=t=>`${Math.floor(t/60).toString().padStart(2,'0')}:${Math.floor(t%60).toString().padStart(2,'0')}`;
+            set('work-order', w.opens === null ? 'CRADLE · NO COVER IN FORECAST' :
+                `CRADLE SHADOW ≈ ${w.opens <= run.time ? 'NOW' : stamp(w.opens)} – ${w.closes === null ? 'LATER' : stamp(w.closes)} IGT`);
+        }
         set('engine-read', Math.round(st.firingJets.main * 100));
         if (status === 'running') set('mission-status', root.HarborSpace.message(level, run));
         set('scale-label', c.century && root.document.getElementById('zoom-btn')?.textContent === '2.3×' ? 'SECTOR OVERVIEW' : '25 METRES');

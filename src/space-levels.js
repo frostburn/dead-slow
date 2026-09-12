@@ -10,10 +10,16 @@
     const levels = [
         {
             id: 'vacuum', name: 'Nothing to Push Against', kind: 'Burn · coast · counterburn',
-            world: [900, 520], start: [120, 280, 0], berth: berth(760, 280),
-            brief: 'Welcome to the Black Meridian. Burn toward Meridian Station, then fire the opposite thrusters to remove your velocity. There is no water, no drag and no automatic stabilization.',
+            world: [900, 560], start: [120, 370, 0], berth: berth(760, 180),
+            brief: 'Welcome to the Black Meridian. Meridian Station is above your departure line. Combine a forward burn with lateral jets, let two outbound rocks pass, then remove both components of your velocity. There is no water, no drag and no automatic stabilization.',
             tip: 'W/S select fore/aft thrust. A/D fire rotational jets; counterfire to stop spinning. Q/E translate sideways without turning. Space cuts thrust, not velocity.',
-            pace: [100, 150, 220], space: { mission: 'arrival', fuel: 90, acceleration: .36 }
+            pace: [145, 210, 300], space: {
+                mission: 'arrival', fuel: 90, acceleration: .36,
+                asteroids: [
+                    rock('outbound-01', 390, 130, 30, { motion: { vx: .65, vy: 1.1 } }),
+                    rock('outbound-02', 600, 410, 38, { motion: { vx: .9, vy: -.65 } })
+                ]
+            }
         },
         {
             id: 'wandering-stone', name: 'A Stone with a Schedule', kind: 'Moving asteroid landing',
@@ -82,14 +88,17 @@
             }
         },
         {
-            id: 'umbra', name: 'The Safe Side of a Stone', kind: 'Hide from stellar flares',
+            id: 'umbra', name: 'The Safe Side of a Stone', kind: 'Ride a migrating shadow',
             world: [1050, 620], start: [350, 375, 0], berth: berth(900, 215),
-            brief: 'The star flares for fourteen seconds in every fifty-six. Direct rays destroy an unshielded hull in seconds. Travel between the long shadows of the asteroids, take the survey reading, and reach the sheltered station.',
-            tip: 'Light arrives from the left. Shadows are cast by the actual rocks and protect only the hull points inside them. Time lateral transfers for the quiet interval; turn off thrust early enough to stay in cover.',
-            pace: [220, 340, 490], space: {
-                mission: 'flare', fuel: 180, acceleration: .36, flare: { period: 56, on: 14, offset: 22 },
-                survey: { x: 650, y: 215, r: 42, hold: 2, name: 'Shadow survey' },
-                asteroids: [rock('haven', 255, 375, 64), rock('umbra', 535, 215, 58), rock('terminus', 795, 505, 58)]
+            brief: 'The star does not let up. Haven drifts slowly north, sweeping its shadow over the survey instrument and then the station. Travel inside that moving cover. Arriving early is as dangerous as arriving late.',
+            tip: 'Light arrives from the left. Match the shadow’s slow northward drift while making your approach. The station’s safe capture window is roughly 05:25–13:30 IGT; watch the projected shelter times rather than racing sunlight.',
+            pace: [470, 620, 780], space: {
+                mission: 'flare', fuel: 180, acceleration: .36, flare: { continuous: true },
+                survey: { x: 650, y: 290, r: 28, hold: 8, name: 'Shadow survey' },
+                asteroids: [
+                    rock('haven', 235, 385, 78, { motion: { vy: -.30 } }),
+                    rock('terminus', 500, 530, 50, { motion: { vx: .08, vy: -.20 } })
+                ]
             }
         },
         {
@@ -104,13 +113,31 @@
             }
         },
         {
-            id: 'yesterday', name: 'Yesterday Has Right of Way', kind: 'A collision with your own history',
-            world: [1100, 650], start: [135, 275, 0], berth: berth(940, 180),
-            brief: 'First dock at the amber chronogate. It sends you back to the departure area, one lane south, while your first flight becomes a solid replay. Reach the experimental spaceport without colliding with your past self.',
-            tip: 'The violet craft repeats exactly what you just flew, not an invented route. Your run clock never rewinds. The gate returns you with your arrival velocity and fuel; plan both flights. A paradox ends the run.',
-            pace: [250, 370, 540], space: {
-                mission: 'time', fuel: 190, acceleration: .36,
-                chrono: berth(690, 275), returnAt: [135, 405], maxLoop: 900
+            id: 'yesterday', name: 'Yesterday Has Right of Way', kind: 'Two gates · three competing timelines',
+            world: [1440, 960], start: [220, 260, 0], berth: berth(1190, 560),
+            brief: 'Janus Station has two chronogates inside a winding freight concourse. Capture A, then B, then reach the experimental terminal. Each insertion adds your last flight as a repeating, solid history. The final leg shares the station with two past selves.',
+            tip: 'A → A′ and B → B′ destinations are marked. Use the passing bays, not the walls: copying your old line exactly can cause a paradox. Both histories keep replaying until you escape; waiting for them to disappear will not work.',
+            pace: [700, 1050, 1500], space: {
+                mission: 'time', fuel: 360, acceleration: .36, maxLoop: 900,
+                chronogates: [
+                    { ...berth(1190, 710), id: 'A', destination: [1170, 230], replayLead: 18 },
+                    { ...berth(220, 710), id: 'B', destination: [240, 360], replayLead: 32 }
+                ],
+                station: {
+                    name: 'JANUS / TEMPORAL FREIGHT TERMINAL',
+                    blocks: [
+                        { id: 'north-spine', x: 80, y: 80, w: 1280, h: 40 },
+                        { id: 'south-spine', x: 80, y: 840, w: 1280, h: 40 },
+                        { id: 'west-upper', x: 80, y: 120, w: 40, h: 490 },
+                        { id: 'west-lower', x: 80, y: 760, w: 40, h: 80 },
+                        { id: 'east-spine', x: 1320, y: 120, w: 40, h: 720 },
+                        { id: 'archive-stack', x: 430, y: 120, w: 90, h: 480 },
+                        { id: 'reactor-stack', x: 850, y: 360, w: 90, h: 480 },
+                        { id: 'west-machinery', x: 120, y: 440, w: 90, h: 85 },
+                        { id: 'east-machinery', x: 1230, y: 400, w: 90, h: 85 }
+                    ],
+                    bays: [{ x: 320, y: 690, label: 'PASSING BAY 1' }, { x: 690, y: 260, label: 'PASSING BAY 2' }, { x: 1120, y: 340, label: 'PASSING BAY 3' }]
+                }
             }
         },
         {
@@ -128,24 +155,30 @@
         {
             id: 'perihelion-dispatch', name: 'Perihelion Dispatch', kind: 'Fuel · rescue · flare shelter',
             world: [1300, 700], start: [280, 480, 0], spec: tug, berth: berth(1130, 290),
-            brief: 'Take fuel at the shielded depot, then use the beam to recover a disabled tender before docking at Perihelion Station. Flares sweep the sector. The tender is radiation-hardened; your tug is not.',
-            tip: 'Secure fuel before moving the tender. Use the long shadow lanes for towing and reserve the quiet interval for changes of latitude. Cargo must be captured and the beam released before the final docking hold.',
+            brief: 'Take fuel at the shielded depot, then use the beam to recover a disabled tender before docking at Perihelion Station. Unrelenting radiation sweeps the sector. Slowly migrating asteroid shadows shelter the work; the tender is radiation-hardened, but your tug is not.',
+            tip: 'Secure fuel before moving the tender. Do the rescue inside the depot’s migrating shadow, then follow its overlap with the station’s shadow. Use the broad overlap to change latitude; the station’s cover gradually leaves the cradle after about eight minutes. Cargo must be captured and the beam released before the final docking hold.',
             pace: [480, 680, 960], space: {
                 mission: 'dispatch', fuel: 18, capacity: 220, acceleration: .65,
                 depot: berth(410, 480, 0, { hold: 6, label: 'SHIELDED DEPOT' }),
                 friendly: { x: 670, y: 480, a: 0, length: 34, beam: 16, mass: 1.9, name: 'TENDER NANSEN' },
                 rescue: berth(1040, 480, 0, { l: 70, w: 44, angle: 16, speed: .3 }),
-                flare: { period: 72, on: 14, offset: 30 },
-                asteroids: [rock('depot-shield', 175, 480, 65), rock('station-shield', 940, 290, 72)]
+                flare: { continuous: true },
+                asteroids: [
+                    rock('depot-shield', 175, 480, 94, { motion: { vy: -.085 } }),
+                    rock('station-shield', 710, 300, 96, { motion: { vy: .16 } })
+                ]
             }
         },
         {
-            id: 'century-ship', name: 'The Century Ship', kind: 'BONUS · a very long coast', bonus: true,
-            world: [111500, 900], start: [128, 450, 0], berth: berth(110720, 450, 0, { l: 84, w: 44, speed: .24 }),
+            id: 'century-ship', name: 'The Century Ship', kind: 'BONUS · detour past a rogue planet', bonus: true,
+            world: [111500, 18000], start: [128, 9000, 0], berth: berth(110720, 9000, 0, { l: 84, w: 44, speed: .24 }),
             spec: { ...courier, name: 'IS CENTURY', length: 48, beam: 18, mass: 1 },
-            brief: 'A compressed interstellar voyage, outside every marathon. The next system is 110.592 km away on this navigation chart. At just 0.12 m/s², even the best possible rest-to-rest flight takes more than thirty minutes of in-game time. Nothing will slow you down for free.',
-            tip: 'This is a distance-and-acceleration bound, not a waiting timer. Plan a halfway counterburn. The console can accelerate practice; assisted voyages never enter the records. Z cycles between sector overview and local tracking.',
-            pace: [1980, 2250, 2700], space: { mission: 'century', fuel: 300, acceleration: .12, lateral: 0, century: true }
+            brief: 'A compressed interstellar voyage, outside every marathon. The next system is 110.592 km away on this navigation chart. With a 0.12 m/s² main drive and weak lateral jets, even the best possible rest-to-rest flight takes more than thirty minutes of in-game time. A rogue planet blocks the direct line. Clear its dark limb before turning your velocity back toward the destination; it is a solid obstruction, not a gravity assist.',
+            tip: 'This is a distance-and-acceleration bound, not a waiting timer. Plan a two-dimensional counterburn. Lateral jets are weak but useful: build clearance well before the planet, then remove lateral velocity as well as forward speed. The console can accelerate practice; assisted voyages never enter the records. Z cycles between sector overview and local tracking.',
+            pace: [2100, 2460, 3000], space: {
+                mission: 'century', fuel: 340, acceleration: .12, lateral: .04, century: true,
+                asteroids: [rock('EREBUS / ROGUE PLANET', 55424, 9000, 3800, { planet: true })]
+            }
         }
     ];
     for (const l of levels) {

@@ -1,6 +1,8 @@
 {
   "level": "perihelion-dispatch",
-  "description": "Ordinary timed helm and beam inputs through the actual game. No test repositioning, objective overrides or altered physics.",
+  "description": "Ordinary timed main/lateral jets and rescue beam inputs. Refuel, secure the tender inside migrating cover, and cross the overlapping shadows to the cradle. No pose writes or altered physics.",
+  "duration": 397,
+  "expectedTime": 393.2583333333333,
   "events": [
     {"time": 0, "throttle": 4, "rudder": 0, "thruster": 0, "winch": 0},
     {"time": 8.25, "throttle": 3},
@@ -287,7 +289,5 @@
     {"time": 389, "thruster": 0},
     {"time": 391, "thruster": 1},
     {"time": 391.25, "thruster": 0}
-  ],
-  "duration": 397,
-  "expectedTime": 393.2583333333333
+  ]
 }

@@ -1,6 +1,22 @@
 # Changelog
 
-## Unreleased — Spaceflight feedback and fixes
+## Unreleased — Moving Cover and Recurring Histories
+
+- Offset the first spaceport and add two straight-line outbound asteroid flybys.
+- Replace sprint-between-flare timing with continuous exposure behind migrating
+  shields in Umbra and Perihelion Dispatch. Forecast approximate cradle-cover
+  windows from real hull/shadow geometry.
+- Rebuild Yesterday inside Janus Station: solid freight stacks, passing bays,
+  two chronogates, marked insertion destinations, and two recurring actual histories.
+- Put Erebus in the Century Ship’s direct route; provide weak lateral jets, a
+  wider chart and local/overview tracking. Surface contact fails the mission.
+  Preserve the >30-minute distance bound, including combined thrust magnitude.
+- Replace affected input recordings; all five changed missions have clean runs.
+- Archive incompatible stage/circuit records under schema 6; retain all unchanged
+  records and the existing audio, radar, collision fixes and CI configuration.
+- Do not treat deliberately frozen console inspection as a missed-watch pause.
+
+## Earlier spaceflight feedback and fixes
 
 ### Flight feedback
 

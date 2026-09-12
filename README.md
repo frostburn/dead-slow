@@ -84,17 +84,30 @@ jet for the two-second docking hold.
 The twelve assignments include a moving asteroid's survey platform, a compulsory
 rendezvous with a fuel tanker, docking two tenders to a mothership and flying the
 heavier assembly, stationary and moving-target gunnery with real projectile flight
-and recoil, equal-and-opposite rescue beams, deadly solar flares, solar-only
+and recoil, equal-and-opposite rescue beams, drifting radiation shields, solar-only
 propulsion, and a collision with your own recorded past. **Cold Transit** adds an
 unpowered scanner corridor with moving drones; **Perihelion Dispatch** combines
-fuel, rescue and flare shelter.
+fuel, rescue and migrating shadow cover.
 
 **The Century Ship** is a thirteenth, optional sector, outside every marathon.
-Its 110.592-km compressed interstellar route and 0.12 m/s² thrust limit impose a
-physical flight-time bound longer than thirty simulated minutes. There is no
-waiting timer. A clean, three-command reference flight takes **32:02.33**.
+Its 110.592-km compressed interstellar route still takes more than thirty simulated
+minutes, including the most generous combined main/lateral acceleration bound.
+The rogue planet **Erebus** blocks a straight coast. Build lateral clearance, pass
+the limb and return to the destination line. An eight-command clean reference
+flight takes **32:02.33**. There is no waiting timer; surface impact ends the flight.
 These are planar local-frame puzzles, not an orbital or relativistic simulator;
 star-system distances are deliberately compressed.
+
+**Nothing to Push Against** now teaches an offset approach while two rocks drift
+out of the sector on straight, non-repeating trajectories. In **The Safe Side of
+a Stone**, persistent radiation makes early arrival dangerous: ride Haven’s shadow
+until it sweeps the survey marker and the station. The flight computer forecasts
+approximate cradle-cover times from actual geometry, not an objective timer.
+
+**Yesterday Has Right of Way** takes place inside **Janus Station**. Navigate the
+freight stacks, capture gates A and B, and escape while two solid versions of your
+own earlier flights recur in the same concourse. Both insertion destinations are
+marked; passing bays provide space to yield instead of colliding with history.
 
 All **thirteen** space missions have clean, fixed-input author recordings. Try:
 
@@ -209,10 +222,12 @@ leaderboard. Export the logbook before moving between files, browsers or hosts;
 then import it through **Logbook**. Import replaces the current local logbook.
 Storage denial or quota failure leaves the session playable and exportable.
 
-Logbooks using schemas 1–5 are accepted. Schema 5 preserves individual stage
-records, ghosts, splits and all three sea-world circuits from version 3.1.1.
-The earlier **36-stage Grand Tour is archived**, not compared against the longer
-48-stage route. New World 4 and Century Ship records start separately.
+Logbooks using schemas 1–6 are accepted. Schema 6 archives old records, ghosts and
+splits for the five redesigned missions (`vacuum`, `umbra`, `perihelion-dispatch`,
+`yesterday`, `century-ship`), plus their affected Meridian and Grand Tour circuits.
+These are not comparable routes. Every unchanged stage and the three sea-world
+circuits retain active records. Archives remain visible in the logbook and exports.
+The earlier **36-stage Grand Tour** also remains separate from the 48-stage route.
 
 Older schema migrations still preserve dock-side island departure records and
 24-stage circuits in their existing archives; none are deleted. The logbook

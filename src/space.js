@@ -21,8 +21,9 @@
     function asteroid(object, time) {
         const b = pose(object, time);
         // The same convex silhouette casts light, collides and is drawn.
-        b.poly = Array.from({ length: 16 }, (_, i) => {
-            const a = b.a + i * TAU / 16;
+        const sides = b.planet ? 64 : 16;
+        b.poly = Array.from({ length: sides }, (_, i) => {
+            const a = b.a + i * TAU / sides;
             return { x: b.x + Math.cos(a) * b.radius, y: b.y + Math.sin(a) * b.radius };
         });
         return b;
@@ -37,9 +38,67 @@
     }
     function flareState(config, time) {
         if (!config) return { active: false, remaining: Infinity };
+        if (config.continuous) return { active: true, remaining: Infinity, continuous: true };
         const phase = ((time + config.offset) % config.period + config.period) % config.period;
         const active = phase >= config.period - config.on;
         return { active, remaining: active ? config.period - phase : config.period - config.on - phase };
+    }
+    // Forecast physical cover of a whole stationary capture hull, not an unlock
+    // timer. Five-second samples are labelled approximate in the flight UI.
+    function shelterWindow(level, time, horizon = 1500) {
+        const covered = t => {
+            const target = pose(level.berth, t);
+            const hull = { ...level.spec, ...target, length: level.spec.length, beam: level.spec.beam };
+            return illumination(hull, level.space.asteroids.map(b => asteroid(b, t))) === 0;
+        };
+        let opens = null, closes = null;
+        for (let t = time; t <= time + horizon; t += 5) {
+            const safe = covered(t);
+            if (safe && opens === null) opens = t;
+            if (!safe && opens !== null) { closes = t; break; }
+        }
+        return { opens, closes, sampledAt: time };
+    }
+    function gates(config) {
+        // Legacy single-gate configs remain usable by tools and custom levels.
+        return config.chronogates || (config.chrono ? [{ ...config.chrono, id: 'A', destination: config.returnAt, replayLead: 0 }] : []);
+    }
+    function temporalStep(level, run, input, dt) {
+        const st = run.space, cfg = level.space, itinerary = gates(cfg), gate = itinerary[st.phase];
+        if (gate) {
+            const elapsed = run.time - st.legStarted;
+            if (elapsed >= cfg.maxLoop) {
+                fail(run, 'temporal-window', 'The current recording window expired. Reach the next chronogate within fifteen minutes.'); return;
+            }
+            if (run.time >= st.loopAt) {
+                const s = run.ship;
+                st.loop.push([elapsed, s.x, s.y, s.a, s.vx, s.vy]); st.loopAt += 1 / 30;
+            }
+            st.capture = dock(run.ship, gate, true, input).ready ? st.capture + dt : 0;
+            if (st.capture >= 2) {
+                const s = run.ship;
+                st.loop.push([elapsed, s.x, s.y, s.a, s.vx, s.vy]);
+                st.histories.push({ loop: st.loop, loopDuration: elapsed, start: run.time,
+                    lead: gate.replayLead || 0, id: gate.id });
+                st.loopDuration = elapsed; st.loopStart = run.time;
+                st.phase++; st.stats.jumps++; st.capture = 0;
+                // The gate is the only position discontinuity. Preserve velocity,
+                // attitude and fuel; never record a line across the jump itself.
+                s.x = gate.destination[0]; s.y = gate.destination[1];
+                st.legStarted = run.time; st.loopAt = run.time + 1 / 30;
+                st.loop = [[0, s.x, s.y, s.a, s.vx, s.vy]];
+                emit(st, `Gate ${gate.id} → ${gate.id}′ · ${st.histories.length} solid ${st.histories.length === 1 ? 'history' : 'histories'}`);
+            }
+        }
+        st.echoes = st.histories.map(history => ({
+            ...echoAt(history, (run.time - history.start + history.lead) % history.loopDuration), id: history.id
+        }));
+        st.echo = st.echoes[0] || null; // Read-only presentation compatibility.
+        for (const echo of st.echoes) {
+            if (P.sat(P.hull(run.ship), P.hull(echo))) {
+                fail(run, 'paradox', `You collided with history ${echo.id}. Use a passing bay and let your past self go first.`); return;
+            }
+        }
     }
     function freeStep(s, dt) {
         s.x += s.vx * dt; s.y += s.vy * dt; s.a = P.wrap(s.a + s.r * dt);
@@ -101,6 +160,8 @@
             beam: false, beamForce: 0, beamEver: false, rescueHold: 0,
             shots: [], charge: 0, targetHit: false, recoilAt: -100, lastShot: -100,
             loop: [], loopAt: 0, loopDuration: 0, loopStart: 0, echo: null,
+            histories: [], echoes: [], legStarted: 0,
+            structures: (cfg.station?.blocks || []).map(b => ({ ...b, poly: P.rect(b) })),
             events: [], finalReady: false, activeDock: null,
             firingJets: { main: 0, side: 0, yaw: 0 },
             stats: { fuelUsed: 0, fuelTaken: 0, burnTime: 0, beamTime: 0, shots: 0, hits: 0, captures: 0, jumps: 0 }
@@ -123,6 +184,8 @@
         st.light = illumination(run.ship, st.rocks);
         st.inBlackout = !!cfg.blackout && !!P.sat(P.hull(run.ship), P.rect(cfg.blackout));
         st.flare = flareState(cfg.flare, t);
+        if (cfg.flare?.continuous && (!st.shelterWindow || t >= st.shelterWindow.sampledAt + 5))
+            st.shelterWindow = shelterWindow(level, t);
         st.port = pose(level.berth, t);
         if (cfg.landing) {
             const b = st.rocks.find(b => b.id === cfg.landing.asteroid);
@@ -148,7 +211,7 @@
     function ready(st, cfg) {
         return (!cfg.depot || st.refuelled) && (!cfg.survey || st.surveyed) &&
             (!cfg.mother || st.phase === 2) && (!cfg.target || st.targetHit) &&
-            (!cfg.friendly || st.rescued && !st.beam) && (cfg.mission !== 'time' || st.phase === 1);
+            (!cfg.friendly || st.rescued && !st.beam) && (cfg.mission !== 'time' || st.phase === gates(cfg).length);
     }
     function captureBerth(st) {
         const mother = st.mother, p = P.localPoint(mother, 0, st.phase === 0 ? -43 : 43);
@@ -160,7 +223,7 @@
         if (c.depot && !st.refuelled) return st.depot;
         if (c.mother && st.phase < 2) return captureBerth(st);
         if (c.target && !st.targetHit) return { ...c.firing, a: st.aim };
-        if (c.mission === 'time' && st.phase === 0) return c.chrono;
+        if (c.mission === 'time' && st.phase < gates(c).length) return gates(c)[st.phase];
         if (c.friendly && !st.rescued) return c.rescue;
         return st.port;
     }
@@ -298,7 +361,13 @@
                 fail(run, 'out-of-sector', `${s.name} left the navigation sector. No invisible wall will bring it back.`); return;
             }
             // P.contact expects velocity components under x/y, never a body's position.
-            for (const b of st.rocks) contact(run, s, { id: b.id, poly: b.poly, velocity: { x: b.vx, y: b.vy } });
+            for (const b of st.rocks) {
+                if (b.planet && P.sat(P.hull(s), b.poly)) {
+                    fail(run, 'planet-impact', 'Surface impact on Erebus. There is no landing site here; clear the entire limb.'); return;
+                }
+                contact(run, s, { id: b.id, poly: b.poly, velocity: { x: b.vx, y: b.vy } });
+            }
+            for (const block of st.structures) contact(run, s, block);
             if (st.target && !st.targetHit) contact(run, s, { id: 'target-vessel', poly: P.hull(st.target), velocity: { x: st.target.vx, y: st.target.vy } });
             if (s !== st.mother) for (const b of attached) contact(run, s, { id: 'docked-' + b.id, poly: P.hull(b), velocity: { x: b.vx, y: b.vy } });
             if (st.rescued && s !== st.friendly) contact(run, s, { id: 'secured-friendly', poly: P.hull(st.friendly) });
@@ -340,27 +409,7 @@
                 st.stats.captures++; emit(st, 'Friendly craft secured');
             }
         }
-        if (cfg.mission === 'time') {
-            if (st.phase === 0) {
-                if (run.time >= st.loopAt) {
-                    const s = run.ship;
-                    st.loop.push([run.time, s.x, s.y, s.a, s.vx, s.vy]); st.loopAt += 1 / 30;
-                }
-                if (run.time >= cfg.maxLoop) { fail(run, 'temporal-window', 'The first-flight recording window expired. Reach the chronogate within fifteen minutes.'); return; }
-                st.capture = dock(run.ship, cfg.chrono, true, input).ready ? st.capture + dt : 0;
-                if (st.capture >= 2) {
-                    st.loop.push([run.time, run.ship.x, run.ship.y, run.ship.a, run.ship.vx, run.ship.vy]);
-                    st.loopDuration = run.time; st.loopStart = run.time; st.phase = 1; st.stats.jumps++;
-                    run.ship.x = cfg.returnAt[0]; run.ship.y = cfg.returnAt[1];
-                    emit(st, 'Temporal insertion · avoid your history');
-                }
-            } else {
-                st.echo = echoAt(st, run.time - st.loopStart);
-                if (st.echo && P.sat(P.hull(run.ship), P.hull(st.echo))) {
-                    fail(run, 'paradox', 'You collided with your recorded past self. The timeline cannot reconcile both hulls.'); return;
-                }
-            }
-        }
+        if (cfg.mission === 'time') temporalStep(level, run, input, dt);
         const s = run.ship;
         st.finalReady = ready(st, cfg);
         st.activeDock = activeTarget(level, run);
@@ -378,13 +427,16 @@
         if (cfg.mother && st.phase < 2) return `ASSEMBLY ${st.phase + 1}/2 · dock ${run.ship.name} at the amber cradle · ${st.capture.toFixed(1)} / 2 s`;
         if (cfg.target && !st.targetHit) return st.shots.length ? 'SHOT IN FLIGHT · recover recoil' : `FIRING SOLUTION · enter box · face lead diamond · steady ${st.charge.toFixed(1)} / 3 s`;
         if (cfg.friendly && !st.rescued) return st.beam ? 'BEAM LOCK · J attract / K repel · settle the friendly in its green cradle' : 'RESCUE · approach the friendly craft · F locks the beam';
-        if (cfg.mission === 'time' && st.phase === 0) return 'FIRST FLIGHT · dock in the amber chronogate to create your past self';
+        if (cfg.mission === 'time' && st.phase < gates(cfg).length) {
+            const gate = gates(cfg)[st.phase];
+            return `CHRONOGATE ${gate.id} → ${gate.id}′ · capture ${st.capture.toFixed(1)}/2 s · ${st.histories.length} repeating histories`;
+        }
         if (cfg.survey && !st.surveyed) return `${cfg.survey.name.toUpperCase()} · visit the amber survey circle`;
         if (run.dockHold > 0) return `CAPTURE · all jets off · ${(2 - run.dockHold).toFixed(1)} s`;
         return `DOCK · match the green cradle’s velocity and heading · REL ${run.dock.relativeSpeed.toFixed(2)} m/s`;
     }
     const api = { BEAM_RANGE, pose, asteroid, shadowAt, illumination, flareState, integrate, dock,
-        create, refresh, update, ready, activeTarget, toggleBeam, beamPhysics, echoAt, outside, message, clone };
+        shelterWindow, gates, temporalStep, create, refresh, update, ready, activeTarget, toggleBeam, beamPhysics, echoAt, outside, message, clone };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     root.HarborSpace = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -91,7 +91,8 @@
             const W = l.world[0], H = l.world[1], long = W > 2200;
             const overview = cfg.century && view.zoom === 2.3;
             const localW = overview ? W : Math.min(W, cfg.century ? 1600 : 2100);
-            scale = Math.min((width - 48) / localW, (height - top - bottom) / H) * (overview ? 1 : view.zoom);
+            const localH = cfg.century && !overview ? 1050 : H;
+            scale = Math.min((width - 48) / localW, (height - top - bottom) / localH) * (overview ? 1 : view.zoom);
             scale = Math.max(.002, scale);
             let cx = W / 2, cy = H / 2;
             if (long && !overview || view.zoom > 1 && !overview) {
@@ -125,6 +126,25 @@
                     line(botP, { x: W, y: botP.y }, '#7789b234', .6 / scale);
                 }
             }
+            // The station's visible plates are precisely its collision rectangles.
+            for (const b of st.structures || []) {
+                path(b.poly, '#273348', '#7f92ab', 1 / scale);
+                path(P.rect({x:b.x+5,y:b.y+5,w:b.w-10,h:b.h-10}), '#172235', '#40516c', .7 / scale);
+                const horizontal = b.w > b.h;
+                for (let u = 18; u < (horizontal ? b.w : b.h) - 8; u += 38) {
+                    const x = b.x + (horizontal ? u : 9), y = b.y + (horizontal ? 9 : u);
+                    line({x,y}, {x:x+(horizontal?10:0),y:y+(horizontal?0:10)}, '#85c7ca', 1.2 / scale);
+                }
+            }
+            if (cfg.station) {
+                text(cfg.station.name, W/2, 65, C.dim, 10/scale);
+                for (const b of cfg.station.bays) {
+                    ctx.setLineDash([3/scale,6/scale]);
+                    path(P.box(b.x,b.y,100,62,0), '#a6ece806', '#a6ece83c', .8/scale);
+                    ctx.setLineDash([]);
+                    text(b.label,b.x,b.y+45,C.dim,8/scale);
+                }
+            }
             if (cfg.blackout) {
                 const b = cfg.blackout;
                 path(P.rect(b), '#9881d319', '#b799e56b', 1 / scale);
@@ -135,7 +155,22 @@
                 text('THRUSTER BLACKOUT', b.x + b.w / 2, b.y - 13, C.violet, 10 / scale);
             }
             for (const b of st.rocks) {
+                // Outbound objects keep drifting off-chart; no wrap or reversal.
+                if (b.x+b.radius < minX || b.x-b.radius > maxX || b.y+b.radius < minY || b.y-b.radius > maxY) continue;
+                if (b.planet) {
+                    ctx.save();
+                    path(b.poly, null, null); ctx.clip();
+                    const surface = ctx.createRadialGradient(b.x-b.radius*.62,b.y-b.radius*.36,b.radius*.03,b.x-b.radius*.4,b.y,b.radius*1.6);
+                    surface.addColorStop(0,'#677185'); surface.addColorStop(.32,'#343b50');
+                    surface.addColorStop(.6,'#141929'); surface.addColorStop(1,'#030710');
+                    ctx.fillStyle=surface; ctx.fillRect(b.x-b.radius,b.y-b.radius,b.radius*2,b.radius*2);
+                    ctx.restore();
+                    path(b.poly,null,'#8497bb88',1/scale);
+                    text(b.id,b.x,b.y+b.radius+20/scale,C.violet,11/scale);
+                    continue;
+                }
                 path(b.poly, C.rock, '#808995', 1 / scale);
+                if (Math.hypot(b.vx,b.vy) > .01) arrow(b, {x:b.x+b.vx*60,y:b.y+b.vy*60},C.dim+'88',.8/scale);
                 // Small craters stay inside the actual collision silhouette.
                 for (let i = 0; i < 5; i++) {
                     const a = i * 2.4 + b.x, d = b.radius * (.15 + (i % 3) * .16);
@@ -185,14 +220,26 @@
                 circle(cfg.survey.x, cfg.survey.y, cfg.survey.r, '#efc27f06', '#efc27f85', 1 / scale);
                 text(cfg.survey.name.toUpperCase(), cfg.survey.x, cfg.survey.y - cfg.survey.r - 10 / scale, C.amber, 9 / scale);
             }
-            if (cfg.chrono) {
-                port(cfg.chrono, C.violet, st.phase ? 'HISTORY ENDS HERE' : 'CHRONOGATE');
-                if (st.phase && st.loop.length) {
-                    ctx.setLineDash([2 / scale, 8 / scale]);
-                    path(st.loop.filter((_, i) => i % 30 === 0).map(p => ({ x: p[1], y: p[2] })), null, '#ba91e93a', 1 / scale, false);
+            if (X.gates(cfg).length) {
+                for (const [i, gate] of X.gates(cfg).entries()) {
+                    const color = i === st.phase ? C.amber : C.violet;
+                    const destination = { ...gate, x:gate.destination[0], y:gate.destination[1] };
+                    port(gate, color, `${gate.id} → ${gate.id}′${i < st.phase ? ' · RECORDED' : ''}`);
+                    port(destination, C.violet, `${gate.id}′ · ARRIVAL`);
+                    ctx.setLineDash([2/scale,12/scale]);
+                    line(gate,destination,'#bf9aef28',.7/scale); ctx.setLineDash([]);
+                    circle(destination.x,destination.y,6/scale,null,C.violet,1/scale);
+                }
+                for (const history of st.histories) {
+                    ctx.setLineDash([2/scale,8/scale]);
+                    path(history.loop.filter((_,i)=>i%30===0).map(p=>({x:p[1],y:p[2]})),null,'#ba91e92b',1/scale,false);
                     ctx.setLineDash([]);
                 }
-                if (st.echo) { vessel(st.echo, C.violet, null, .75); text('PAST YOU · SOLID', st.echo.x, st.echo.y - 23, C.violet, 9 / scale); }
+                for (const echo of st.echoes) {
+                    vessel(echo,C.violet,null,.85);
+                    text(`PAST ${echo.id} · SOLID`,echo.x,echo.y-23,C.violet,9/scale);
+                    arrow(echo,{x:echo.x+echo.vx*10,y:echo.y+echo.vy*10},C.violet+'99',.8/scale);
+                }
             }
             if (st.friendly) {
                 vessel(st.friendly, st.rescued ? C.ice : C.amber);
@@ -264,6 +311,12 @@
                 line({ x: left, y }, { x: right, y }, '#8ea7bf55', 1);
                 circle(left + (right - left) * ratio, y, 3.5, C.ice, null);
                 circle(right, y, 4, null, C.amber, 1);
+                const planet = st.rocks.find(b=>b.planet);
+                if (planet) {
+                    const px=left+(right-left)*(planet.x-l.start[0])/(st.port.x-l.start[0]);
+                    circle(px,y,5,'#51546f',C.violet,1);
+                    text('EREBUS',px,y+16,C.violet,8);
+                }
                 text(`${(Math.max(0, st.port.x - s.x) / 1000).toFixed(2)} km REMAINING`, left, y - 12, C.dim, 9, 'left');
                 text(cfg.century ? 'CENTURY · BONUS / NOT A MARATHON STAGE' : 'SECTOR TRACK', right, y - 12, C.dim, 9, 'right');
             }
