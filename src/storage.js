@@ -1,7 +1,7 @@
 (function (root) {
     'use strict';
     // Keep the original key so same-origin upgrades discover the v1 logbook.
-    const KEY = 'dead-slow.records.v1', VERSION = 8;
+    const KEY = 'dead-slow.records.v1', VERSION = 9;
     // These routes now include an approach leg. Keep their earlier PBs/ghosts,
     // but never compare a dock-side departure against a midwater departure.
     const RESTARTED = ['milk-run', 'floating-sauna', 'market-day', 'granite-needle', 'last-bus', 'slackwater-salvage', 'island-exchange', 'two-calls', 'cars-and-casualty', 'midsummer-dispatch'];
@@ -35,7 +35,7 @@
     }
     function sanitize(data) {
         const result = fresh();
-        if (!data || ![1, 2, 3, 4, 5, 6, 7, VERSION].includes(data.version))
+        if (!data || ![1, 2, 3, 4, 5, 6, 7, 8, VERSION].includes(data.version))
             return result;
         result.attempts = Math.max(0, Math.floor(Number(data.attempts) || 0));
         result.stages = sanitizeStages(data.stages);
@@ -100,6 +100,12 @@
             if (!result.stages[id]) continue;
             result.archivedStages[id]=result.stages[id];
             delete result.stages[id];
+        }
+        // Retire only the superseded Reservoir Hairpin. No retained course or
+        // circuit changes geometry in this update; old exports remain readable.
+        if (data.version === 8 && result.stages['gerbo-hairpin']) {
+            result.archivedStages['gerbo-hairpin']=result.stages['gerbo-hairpin'];
+            delete result.stages['gerbo-hairpin'];
         }
         for (const k of ['ghost', 'sound', 'guide'])
             if (typeof data.settings?.[k] === 'boolean')
@@ -171,7 +177,7 @@
             }, save, stage, best, attempt, record, recordRace, bestRace,
             import(text) {
                 const d = JSON.parse(text);
-                if (!d || ![1, 2, 3, 4, 5, 6, 7, VERSION].includes(d.version))
+                if (!d || ![1, 2, 3, 4, 5, 6, 7, 8, VERSION].includes(d.version))
                     throw Error('This is not a compatible Dead Slow logbook.');
                 data = sanitize(d);
                 save();

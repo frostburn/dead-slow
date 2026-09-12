@@ -17,7 +17,7 @@ above directly. Opening DevTools can cause the game's usual focus-loss pause;
 ## Pick an assignment and speed up
 
 ```js
-DeadSlow.levels()                // List IDs and one-based world / harbor numbers.
+DeadSlow.levels()                // List IDs and one-based world / assignment numbers.
 DeadSlow.level(3, 4)             // The Floating Sauna, unranked.
 DeadSlow.speed(8)                // Eight times the wall-clock pace.
 DeadSlow.speed(0)                // Freeze, without opening a pause dialog.
@@ -63,11 +63,27 @@ it does not move the ship. It includes ship motion, local water, job/line state,
 splits and counters. Space snapshots additionally include fuel, local sunlight,
 heat, beam state, docked tenders, cannon shots and the recorded timeline. Invalid arguments throw before any partial command runs.
 
+### Rampage controls
+
+In World 5, `rudder` is an east/west push and `thruster` a south/north push.
+`DeadSlow.line()` activates the normal temporary shield. On the pepper course,
+`winch: 1` holds fire and `winch: 0` releases it; the actual pepper, breath, range,
+water and cover rules still apply. `throttle` does not drive the ball.
+
+```js
+DeadSlow.watch("gerbo-cavy-clash", 8)
+DeadSlow.watch("gerbo-whiskerdoom", 8)
+```
+
+Rampage snapshots include forests, monsters, breath, the escort's independent
+health and breadcrumbs. See [the field guide](GERBOZILLA.md). The Reservoir Hairpin
+is retired: use `gerbo-forest-slalom` for its replacement, not its old recording.
+
 ## Watch the actual verification runs
 
 ```js
 DeadSlow.runs()                  // Available recordings, measured times, source files.
-DeadSlow.times()                 // All 49: verified author times OR null; medal targets separately.
+DeadSlow.times()                 // All 58: verified author times OR null; medal targets separately.
 DeadSlow.timeline("bigger-boat")  // Timestamped helm and line actions.
 DeadSlow.watch("bigger-boat", 8)  // Animate those inputs in the normal game at 8×.
 DeadSlow.speed(0)                // Freeze the recording.
@@ -109,7 +125,7 @@ Leave the helm alone while watching a reference run.
 `verify` intentionally replaces the current attempt with each recording. It
 finishes on the last result, at frozen practice speed. `normal()` returns to a
 fresh ranked attempt. Reading a timeline or report alone does not replace a run.
-There are **twenty-five published author recordings**. The other twenty-four sea
+There are **thirty-four published author recordings**, including nine Rampage courses. The other twenty-four sea
 stages do not yet have published control-only completions. A `null` author time is
 honest missing coverage, not an impossible stage. Gold/silver/bronze targets are
 level-design goals; their existence is not proof of a successful control run.

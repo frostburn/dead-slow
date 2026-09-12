@@ -2319,3 +2319,21 @@ body[data-theme="rampage"] .toast { background:#e4ead5; color:#2c443a; border-co
 body[data-theme="rampage"] .brief { color:#546951; }
 body[data-theme="rampage"] .chart-title { text-shadow:none; }
 body[data-theme="rampage"] #gerbo-shield.shield-on:disabled { opacity:1; }
+
+/* A second action must fit the fixed-height helm, not spill below the viewport. */
+.gerbo-shield-group:has(#gerbo-fire:not([hidden])) { grid-template-columns:minmax(160px,1fr) minmax(160px,1fr); }
+#gerbo-fire { grid-column:2; grid-row:1 / 3; min-width:160px; min-height:53px; max-width:210px; font-size:13px; font-weight:750; touch-action:none; user-select:none; }
+#gerbo-fire.held { background:#d88941; color:#263c33; }
+@media(max-width:650px) {
+  .gerbo-shield-group:has(#gerbo-fire:not([hidden])) { grid-template-columns:118px; gap:5px; }
+  .gerbo-shield-group:has(#gerbo-fire:not([hidden]))>span { display:none; }
+  #gerbo-fire { grid-column:1; grid-row:auto; min-width:118px; min-height:44px; font-size:9px; padding:5px; }
+}
+@media(max-height:480px) and (min-width:651px) {
+  body[data-theme="rampage"] .helm { padding:6px 12px; }
+  .gerbo-shield-group { gap:3px; }
+  #gerbo-shield,#gerbo-fire { min-height:40px; font-size:10px; padding:6px; }
+  .gerbo-shield-group>span { font-size:8px; }
+  .gerbo-pad { margin-top:4px; }
+  .gerbo-pad button { min-height:40px; }
+}

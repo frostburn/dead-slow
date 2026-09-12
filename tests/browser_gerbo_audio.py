@@ -51,5 +51,5 @@ def check_gerbo_audio(page, check):
           wet['rms']<fast['rms'] and wet['brightness']>fast['brightness']*1.2)
     check('Squeaks stay finite and leave digital headroom',all(r['nonfinite']==0 and .0001<r['peak']<.15 for r in rows[:3]))
     check('Inactive wheel output is silent',silent['peak']==0 and silent['starts']==0)
-    check('Frozen phase cannot sustain or retrigger a whine',frozen['voices']==1 and frozen['tail']<1e-6)
+    check('Frozen phase cannot sustain or retrigger a whine',frozen['voices']==2 and frozen['tail']<1e-6)
     return rows

@@ -59,7 +59,7 @@
         const vals = new Set([...pressed.values(), ...pointers.values()]);
         input.rudder = (vals.has('starboard') || vals.has('rolleast') ? 1 : 0) - (vals.has('port') || vals.has('rollwest') ? 1 : 0);
         input.thruster = (vals.has('bowstarboard') || vals.has('rollsouth') ? 1 : 0) - (vals.has('bowport') || vals.has('rollnorth') ? 1 : 0);
-        input.winch = (vals.has('lineout') ? 1 : 0) - (vals.has('linein') ? 1 : 0);
+        input.winch = (vals.has('lineout') || vals.has('breathe') ? 1 : 0) - (vals.has('linein') ? 1 : 0);
         for (const b of document.querySelectorAll('[data-hold]'))
             b.classList.toggle('held', vals.has(b.dataset.hold));
     }
@@ -583,7 +583,7 @@
         $('dialog').dataset.theme = w.theme;
     }
     function showLog(filter = 'overall') {
-        if (level.rampage) { pauseForMenu(); return openDialog('log', G.dialog('log', level, run, format, store.stage(level.id).runs, settings, store.data.archivedStages[level.id])); }
+        if (level.rampage) { pauseForMenu(); return openDialog('log', G.dialog('log', level, run, format, store.stage(level.id).runs, settings, store.data.archivedStages[level.id] || store.data.archivedStages[level.rampage.retiredId])); }
         pauseForMenu();
         const s = store.stage(level.id), runs = s.runs.filter(r => filter !== 'clean' || r.clean).slice(0, 10);
         openDialog('log', `${topModal(wording('The captain’s logbook.', 'The flight logbook.'))}
@@ -912,7 +912,7 @@
         if (!recognized.includes(e.code))
             return;
         e.preventDefault();
-        const hold = run.rampage ? ({KeyW:'rollnorth',ArrowUp:'rollnorth',KeyS:'rollsouth',ArrowDown:'rollsouth',KeyA:'rollwest',ArrowLeft:'rollwest',KeyD:'rolleast',ArrowRight:'rolleast'})[e.code] : keyHolds[e.code];
+        const hold = run.rampage ? ({KeyH:'breathe',KeyW:'rollnorth',ArrowUp:'rollnorth',KeyS:'rollsouth',ArrowDown:'rollsouth',KeyA:'rollwest',ArrowLeft:'rollwest',KeyD:'rolleast',ArrowRight:'rolleast'})[e.code] : keyHolds[e.code];
         if (hold) {
             if (status === 'running') {
                 pressed.set(e.code, hold);

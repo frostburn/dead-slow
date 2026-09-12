@@ -1,4 +1,4 @@
-/* Orienteering-paper chart and a six-course World 5 interface. */
+/* Orienteering-paper chart and a nine-course World 5 interface. */
 (function(root) {
     'use strict';
     const R = root.GerboRampage, TAU = Math.PI*2;
@@ -9,11 +9,12 @@
         set('engine-output-label', level.rampage ? 'PAW POWER' : 'ENGINE OUTPUT');
         set('hull-state-label', level.rampage ? 'BALL INTEGRITY' : 'HULL INTEGRITY');
         set('contact-count-label', level.rampage ? 'DAMAGE EVENTS' : 'CONTACTS');
+        $('gerbo-fire').hidden=!level.rampage?.fire;
         if (!level.rampage) return;
         root.document.title = 'DEAD SLOW — Gerbozilla’s Rampage';
         $('chart-section').setAttribute('aria-label','Topographic rampage course');
         $('helm-controls').setAttribute('aria-label','Hamster ball directional pushes and shield');
-        $('sea').setAttribute('aria-label',`Top-down orienteering map of ${level.rampage.sheet}, with contour hills, irregular lakes and city districts. Push with WASD or arrows; Space activates the shield.`);
+        $('sea').setAttribute('aria-label',`Top-down orienteering map of ${level.rampage.sheet}, with contour hills, irregular lakes and city districts. Push with WASD or arrows; Space activates the shield; H breathes fire on pepper courses.`);
         $('work-panel').setAttribute('aria-label','Rampage objectives and shield charge');
         $('manifest').setAttribute('aria-label','Terrain and damage counters');
         $('manifest').hidden = false; // Tow duty may have hidden this shared panel.
@@ -22,7 +23,7 @@
             'courses-btn':'Worlds','speed-unit':'m/s','mobile-speed-unit':'m/s','speed-frame-label':'ROLLING SPEED',
             'heading-label':'DIRECTION OF TRAVEL','chart-frame-label':'N ↑ · CONTOURS 5 m',
             'dock-list-label':'COURSE CONTROL CARD','check-objectives':'Course controls','check-inside':'In recovery meadow',
-            'check-aligned':'Districts flattened','check-slow':'Slow + paws off','helm-warning':'BIG PAWS. LONG BRAKING DISTANCE.'
+            'check-aligned':'Mission objectives complete','check-slow':'Slow + paws off','helm-warning':'BIG PAWS. LONG BRAKING DISTANCE.'
         })) set(id,v);
         $('radar-btn').hidden=true; $('tow-controls').hidden=true;
     }
@@ -40,12 +41,15 @@
         set('engine-read',Math.round(st.effort*100));
         const hp=Math.ceil(s.hull); set('hull-label',hp+'%');set('mobile-hull',hp);$('hull-bar').style.width=hp+'%';
         $('hull-bar').style.background=hp<35?'var(--red)':'var(--green)';
-        set('shelter-status',st.wet>.5?'LAKE · PAWS SLIP':'FIRM GROUND');set('local-set',Math.round(st.elevation)+' m ASL');
+        set('shelter-status',st.wet>.5?'LAKE · PAWS SLIP':st.forest>0?'DENSE FOREST':'FIRM GROUND');set('local-set',Math.round(st.elevation)+' m ASL');
         set('ship-name','GERBOZILLA · 48 m EXERCISE BALL');
         set('weather-text',`${c.sheet} · FIELD SHEET ${String(level.stageNumber).padStart(2,'0')}`);
         $('work-panel').hidden=false;
-        set('work-order',`${st.stats.districts} / ${c.districts.length} DISTRICTS · ${shield}`);
-        set('work-readout',`CONTROL ${st.control}/${c.controls.length} · ELEVATION ${st.elevation.toFixed(0)} m · ${st.wet>.5?'WATER: NO TRACTION':'DRY: PUSH TO STEER'}`);
+        const tally=[c.districts.length?`${st.stats.districts}/${c.districts.length} ${c.rescue?'LOCKS':'CORES'}`:'',st.monsters.length?`${st.stats.monsters}/${st.monsters.length} PETS`:''].filter(Boolean).join(' · ') || `${st.control}/${c.controls.length} CONTROLS`;
+        set('work-order',`${tally} · ${shield}`);
+        set('work-readout',`CONTROL ${st.control}/${c.controls.length} · ELEVATION ${st.elevation.toFixed(0)} m · ${st.wet>.5?'WATER: NO TRACTION':st.forest>0?'FOREST: ROLLING RESISTANCE':'CLEAR: PUSH TO STEER'}`);
+        if(st.lady)set('work-readout',`LADY WHISKERDOOM · ${Math.ceil(st.lady.health)}% · ${st.rescued?'SAFE':st.lady.following?'FOLLOWING YOUR TRAIL':st.unlocked?'GATE OPEN · GREET HER':'FREE BOTH LOCKS'}`);
+        if(c.fire){set('work-readout',`${st.control<c.fire.unlockControl?'COLLECT THE PEPPER':st.wet>.5?'TOO WET TO BREATHE FIRE':st.fireActive?'FIRE BREATH':st.breath<.1?'RELEASE H TO REFILL':'HOLD H · AIM WITH A PUSH'} · BREATH ${st.breath.toFixed(1)} / ${c.fire.capacity} s`);set('gerbo-fire',`FIRE · ${st.breath.toFixed(1)} s · HOLD H`);}
         if(st.strikes.length) { const next=st.strikes[0]; set('work-readout',`RETALIATION · ${st.strikes.length} INBOUND · IMPACT ${Math.max(0,next.impactAt-run.time).toFixed(1)} s · AVOID RED CIRCLES`); }
         $('work-progress').style.width=(up?100:100*Math.max(0,1-wait/6))+'%';
         $('work-progress').style.background=up?'#9a3b7f':'var(--green)';
@@ -56,7 +60,7 @@
         $('gerbo-shield').disabled=wait>0;
         set('mission-status',status==='complete'?'COURSE COMPLETE · GERBOZILLA NEEDS A SNACK':status==='paused'?'PAUSED · UNRANKED PRACTICE':status==='ready'?'Awaiting the starting squeak.':R.message(level,run));
         $('check-objectives').classList.toggle('ok',st.control===c.controls.length);
-        $('check-aligned').classList.toggle('ok',st.stats.districts===c.districts.length);
+        $('check-aligned').classList.toggle('ok',R.ready(run));
         $('check-inside').classList.toggle('ok',run.dock.inside);
         $('check-slow').classList.toggle('ok',run.dock.slow);
         $('dock-bar').style.width=run.dockHold*50+'%';
@@ -68,13 +72,15 @@
     }
     function dialog(kind,level,run,format,records=[],settings={},archived=null) {
         const c=level.rampage, count=c.districts.length;
+        const taskCount=count+(c.monsters?.length||0)+(c.rescue?1:0)+(count?0:c.controls.length);
+        const resultTitle=c.rescue?'Two hamsters.<br>Home at last.':c.monsters?.length?'Nap time.<br>Territory reclaimed.':count?`${['Zero','One','Two','Three'][count] || count} ${count===1?'district':'districts'}.<br>One tired hamster.`:'All controls.<br>One tired hamster.';
         const intro=`<div class="eyebrow">WORLD 5 · GERBOZILLA’S RAMPAGE · COURSE ${level.stageNumber} / ${R.levels.length}</div>`;
         const actions=`<div class="dialog-actions"><button class="primary" data-action="retry" autofocus>Roll again · R</button>${level.stageNumber<R.levels.length?'<button data-action="next">Next course →</button>':''}<button data-action="courses">World map</button><button data-action="log">Field log</button></div>`;
-        if(kind==='intro') return `${intro}<h1>${level.stageNumber===1?'A small pet.<br>A very large problem.':esc(level.name)}</h1><p>${level.brief}</p><div class="intro-details"><div><strong>48 m</strong><span>EXERCISE BALL</span></div><div><strong>${String(count).padStart(2,'0')}</strong><span>DISTRICTS TO FLATTEN</span></div><div><strong>03 s</strong><span>SHIELD DURATION</span></div></div><p class="subtle">${level.tip}</p><div class="control-summary"><kbd>W A S D</kbd> / arrows: hold a push in map directions. Release to coast.<br><kbd>Space</kbd> / <kbd>F</kbd>: shield · <kbd>R</kbd>: retry · <kbd>Z</kbd>: zoom<br>Brown contours show hills. Blue means no traction. Magenta circles mark course controls.</div><p class="subtle">Six standalone field courses. They do not change the existing 48-stage Grand Tour.</p><div class="dialog-actions"><button class="primary" data-action="begin" autofocus>Let the hamster out →</button><button data-action="help">Field guide</button><button data-action="courses">World map</button></div>`;
-        if(kind==='help') return `${intro}<h1>Weight wins.<br>Until it doesn’t.</h1><p><b>Push, don’t point.</b> WASD / arrows accelerate north, west, south and east on the map. Diagonal pushes have the same total strength. Counter-push early to brake; releasing a key does not remove momentum.</p><p><b>Read the contours.</b> Brown 5-metre contours use the same elevation field as the rolling physics. Closed mountain rings enclose fortified towns: a standing push cannot overcome the steep rim, so back away and build a run-up. Annular blue moats contain dry islands, not bridges. Downhill builds speed; the first ridge needs a run-up. Cross every numbered magenta control in order. Their count varies by course.</p><p><b>The lake removes traction.</b> Running spins the ball and squeaks its bearings, but applies no useful push in deep water. Existing motion coasts through with water resistance. Gravity still pulls downhill even when your paws cannot grip. Retry rather than waiting forever after a poor run-up.</p><p><b>Ram the city cores.</b> Speed deals damage to both structures and your shell. Slow nudging cannot flatten a district. Space or F gives 3 seconds of protection followed by 6 seconds recharging. Shielded rams still lose momentum. A dashed red line warns of a local defensive shot; local guns stop when their district falls. On retaliation courses, off-map batteries keep firing after demolition. Red circles mark fixed impact points with a countdown. Steer away after they lock, or shield at impact. Recovery cannot finish while a salvo remains inbound.</p><p><b>Finish in the meadow.</b> Flatten all evacuated districts, return to the double-ring finish, and stay below 0.8 m/s with no push for two seconds. A clean run means zero shell damage—not zero destruction.</p><p class="subtle">Six courses are playable. Other giant pets and fire breath are not included yet.</p><div class="dialog-actions"><button class="primary" data-action="back" autofocus>Back to the ball</button></div>`;
+        if(kind==='intro') return `${intro}<h1>${level.stageNumber===1?'A small pet.<br>A very large problem.':esc(level.name)}</h1><p>${level.brief}</p><div class="intro-details"><div><strong>48 m</strong><span>EXERCISE BALL</span></div><div><strong>${String(taskCount).padStart(2,'0')}</strong><span>MISSION OBJECTIVES</span></div><div><strong>03 s</strong><span>SHIELD DURATION</span></div></div><p class="subtle">${level.tip}</p><div class="control-summary"><kbd>W A S D</kbd> / arrows: hold a push in map directions. Release to coast.<br><kbd>Space</kbd> / <kbd>F</kbd>: shield · <kbd>R</kbd>: retry · <kbd>Z</kbd>: zoom<br>Brown contours show hills. Blue removes traction; dense green forest slows rolling. Black boulders are impassable. Magenta circles mark ordered controls.${c.fire?'<br><kbd>H</kbd> hold to breathe toward your last push; release to refill.':''}</div><p class="subtle">Nine standalone field courses. They do not change the existing 48-stage Grand Tour.</p><div class="dialog-actions"><button class="primary" data-action="begin" autofocus>Let the hamster out →</button><button data-action="help">Field guide</button><button data-action="courses">World map</button></div>`;
+        if(kind==='help') return `${intro}<h1>Weight wins.<br>Until it doesn’t.</h1><p><b>Push, don’t point.</b> WASD / arrows accelerate north, west, south and east on the map. Diagonal pushes have the same total strength. Counter-push early to brake; releasing a key does not remove momentum.</p><p><b>Read the contours.</b> Brown 5-metre contours use the same elevation field as the rolling physics. Closed mountain rings enclose fortified towns: a standing push cannot overcome the steep rim, so back away and build a run-up. Annular blue moats contain dry islands, not bridges. Downhill builds speed; the first ridge needs a run-up. Cross every numbered magenta control in order. Their count varies by course.</p><p><b>The lake removes traction.</b> Running spins the ball and squeaks its bearings, but applies no useful push in deep water. Existing motion coasts through with water resistance. Gravity still pulls downhill even when your paws cannot grip. Retry rather than waiting forever after a poor run-up.</p><p><b>Ram the city cores.</b> Speed deals damage to both structures and your shell. Slow nudging cannot flatten a district. Space or F gives 3 seconds of protection followed by 6 seconds recharging. Shielded rams still lose momentum. A dashed red line warns of a local defensive shot; local guns stop when their district falls. On retaliation courses, off-map batteries keep firing after demolition. Red circles mark fixed impact points with a countdown. Steer away after they lock, or shield at impact. Recovery cannot finish while a salvo remains inbound.</p><p><b>Woodland and boulders.</b> Darker green forest increases rolling resistance; pale clearings are faster. Black rocks are solid to the whole ball, not hills to crest. Shields protect your shell but cannot let you phase through them. Rocks also stop defensive shots and fire; low gray walls stop the ball but can be fired over.</p><p><b>Giant pets.</b> Cavyclasm and Sir Flops-a-Lot mark their charges, commit to one direction, then rest. Ramming exchanges momentum and deals damage to both pets. Shield just before impact. Sleeping defeated pets are no longer dangerous.</p><p><b>Fire breath.</b> On pepper courses, collect the pepper control, then hold H (or the FIRE button). Your last directional push aims the fan; velocity does not aim it. Release to refill its three-second breath meter. Deep water stops the flame. Armored cores inside the keep can only be burned.</p><p><b>Lady Whiskerdoom.</b> Break both lock pylons to open the gate, defeat the sentry, then approach her to start the escort. She follows your actual trail with her own momentum, so clear the gate before stopping. Ramming her or leading her into rock damages her shell. Your shield protects you, not her. Wait for her to enter the meadow and settle too.</p><p><b>Finish in the meadow.</b> Complete every course objective, return to the double-ring finish, and stay below 0.8 m/s with no push for two seconds. A clean run means zero damage to either hamster—not zero destruction.</p><p class="subtle">Nine courses are playable, outside the Grand Tour.</p><div class="dialog-actions"><button class="primary" data-action="back" autofocus>Back to the ball</button></div>`;
         if(kind==='pause') return `${intro}<h1>The hamster is<br>on a snack break.</h1><p>The ball and course clock are frozen. This attempt is now unranked practice; a fresh retry is record-eligible.</p><div class="result-time">${format(run.time)}</div><div class="dialog-actions"><button class="primary" data-action="resume" autofocus>Resume practice</button><button data-action="retry">Fresh run · R</button><button data-action="courses">World map</button></div>`;
         if(kind==='failed') return `${intro}<h1>${run.failure?.type==='off-map'?'Beyond the paper.':'Exercise ball recalled.'}</h1><p>${esc(run.failure?.message||'The shell could not take another hit.')}</p><div class="result-time">${format(run.time)}</div>${actions}`;
-        if(kind==='result') return `${intro}<h1>${['Zero','One','Two','Three'][count] || count} ${count===1?'district':'districts'}.<br>One tired hamster.</h1><div class="result-badge">${run.pausedUsed?'UNRANKED PRACTICE':run.pb?'NEW PERSONAL BEST':'COURSE COMPLETE'}${run.result.clean?' · CLEAN':''}</div><div class="result-time">${format(run.time)}</div><div class="result-grid"><div><strong>${count} / ${count}</strong><span>DISTRICTS FLATTENED</span></div><div><strong>${Math.ceil(run.ship.hull)}%</strong><span>BALL INTEGRITY</span></div><div><strong>${run.rampage.stats.blocked}</strong><span>HITS BLOCKED</span></div></div><p>${run.pausedUsed?'Practice never replaces records or ghosts.':'Your field log keeps overall and zero-damage times separately.'} The giant wheel squeak was entirely necessary.</p>${actions}`;
+        if(kind==='result') return `${intro}<h1>${resultTitle}</h1><div class="result-badge">${run.pausedUsed?'UNRANKED PRACTICE':run.pb?'NEW PERSONAL BEST':'COURSE COMPLETE'}${run.result.clean?' · CLEAN':''}</div><div class="result-time">${format(run.time)}</div><div class="result-grid"><div><strong>${taskCount} / ${taskCount}</strong><span>MISSION OBJECTIVES</span></div><div><strong>${Math.ceil(run.ship.hull)}%</strong><span>BALL INTEGRITY</span></div><div><strong>${run.rampage.stats.blocked}</strong><span>HITS BLOCKED</span></div></div><p>${run.pausedUsed?'Practice never replaces records or ghosts.':'Your field log keeps overall and zero-damage times separately.'} ${c.rescue?'Lady Whiskerdoom is safe. There will be snacks.':'The giant wheel squeak was entirely necessary.'}</p>${actions}`;
         if(kind==='log') return `${intro}<h1>Gerbozilla’s field log.</h1><table class="log-table"><thead><tr><th>TIME / IGT</th><th>DAMAGE EVENTS</th><th>CLASS</th></tr></thead><tbody>${records.length?records.map(r=>`<tr><td>${format(r.time)}</td><td>${r.contacts}</td><td>${r.clean?'CLEAN':'OPEN'}</td></tr>`).join(''):'<tr><td colspan="3">No completed course yet.</td></tr>'}</tbody></table><p class="subtle">Clean means zero shell damage. Records and ghosts are local; these field courses are outside all circuits.</p>${archived?.runs?.length?`<details><summary>Earlier terrain records (archived)</summary><p class="subtle">Earlier terrain or defenses differ from the active course. Earlier ghosts and splits remain in exports, separate from the new route.</p>${archived.runs.map(r=>`<p>${format(r.time)} · ${r.clean?'CLEAN':'OPEN'}</p>`).join('')}</details>`:''}<div class="dialog-actions"><button data-action="toggle-sound">Sound: ${settings.sound?'ON':'OFF'}</button><button data-action="toggle-ghost">Ghost: ${settings.ghost?'ON':'OFF'}</button><button data-action="export">Export</button><button data-action="import">Import</button><button class="primary" data-action="back" autofocus>Back to the ball</button></div>`;
     }
     function createRenderer(canvas) {
@@ -101,10 +107,18 @@
             const [w,h]=level.world,c=level.rampage;
             const out=root.document.createElement('canvas');out.width=w;out.height=h;const g=out.getContext('2d');
             g.fillStyle='#f6f1db';g.fillRect(0,0,w,h);
-            // Pale forest patches, individually marked clearings, and sparse vegetation.
-            for(const [i,hill] of c.hills.entries()){g.fillStyle='#d7e3bc';shoreline(g,{...hill,shore:[.16,.07,i*.93]},1.5);g.fill();}
+            // White/pale forest is open ground; green hatching is slow woodland.
             let seed=29;const rnd=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};
-            for(let i=0;i<350;i++){const x=rnd()*w,y=rnd()*h;if(y>300&&y<630)continue;g.strokeStyle='#9cae82';g.lineWidth=1;g.beginPath();g.moveTo(x-2,y);g.lineTo(x+2,y);g.moveTo(x,y-2);g.lineTo(x,y+2);g.stroke();}
+            for(const f of c.forests || []) {
+                g.save();shoreline(g,f);g.fillStyle=f.density>.7?'#97bc80':'#c2d5a2';g.fill();g.clip();
+                g.strokeStyle='#60885e';g.lineWidth=1.2;
+                for(let x=f.x-f.rx*1.4;x<f.x+f.rx*1.4;x+=17){g.beginPath();g.moveTo(x,f.y-f.ry*1.4);g.lineTo(x,f.y+f.ry*1.4);g.stroke();}
+                for(let i=0;i<45;i++){const x=f.x+(rnd()*2-1)*f.rx*1.25,y=f.y+(rnd()*2-1)*f.ry*1.25;
+                    g.fillStyle='#588457';g.beginPath();g.moveTo(x,y-8);g.lineTo(x-5,y+3);g.lineTo(x+5,y+3);g.closePath();g.fill();}
+                g.restore();text(g,'SLOW WOODLAND',f.x,f.y+8,10,'#365b40');
+            }
+            // A little sparse vegetation remains decorative on the unchanged courses.
+            for(let i=0;i<140;i++){const x=rnd()*w,y=rnd()*h;g.strokeStyle='#a5b390';g.lineWidth=.8;g.beginPath();g.moveTo(x-2,y);g.lineTo(x+2,y);g.moveTo(x,y-2);g.lineTo(x,y+2);g.stroke();}
             // Cache real elevation contours once; no repeated per-frame terrain meshing.
             const step=14,nx=Math.ceil(w/step),ny=Math.ceil(h/step),zs=[];
             for(let j=0;j<=ny;j++){zs[j]=[];for(let i=0;i<=nx;i++)zs[j][i]=R.terrain(c,i*step,j*step).height;}
@@ -127,7 +141,7 @@
             }
             // Roads are cosmetic; the ball still crosses real slopes and water.
             // Never draw a cosmetic bridge across a functional moat.
-            if(!(c.rims?.length || c.lakes.some(l=>l.inner))) {
+            if(c.districts.length && !c.rocks?.length && !(c.rims?.length || c.lakes.some(l=>l.inner))) {
             g.strokeStyle='#d9c9a7';g.lineWidth=10;g.beginPath();
             for(const [i,d] of c.districts.entries()){if(i===0)g.moveTo(d.x-85,d.y+45);g.lineTo(d.x,d.y);}
             g.lineTo(c.finish.x,c.finish.y);g.stroke();g.strokeStyle='#fdf9e8';g.lineWidth=5;g.stroke();
@@ -139,10 +153,10 @@
             // Magnetic north lines and a compact map margin, not a physical world wall.
             g.strokeStyle='#9eac9b66';g.lineWidth=.6;for(let x=100;x<w;x+=200){g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke();}
             text(g,'N',52,109,16);g.strokeStyle=ink;g.lineWidth=2;g.beginPath();g.moveTo(52,160);g.lineTo(52,119);g.lineTo(46,132);g.moveTo(52,119);g.lineTo(58,132);g.stroke();
-            text(g,'GERBOZILLA / FIELD SHEET '+String(level.stageNumber).padStart(2,'0'),65,h-48,16,ink,'left');text(g,'5 m CONTOURS   ·   MAGENTA: COURSE   ·   BLUE: WATER',65,h-27,11,ink,'left');
+            text(g,'GERBOZILLA / FIELD SHEET '+String(level.stageNumber).padStart(2,'0'),65,h-48,16,ink,'left');text(g,'5 m CONTOURS · GREEN: SLOW FOREST · BLACK: IMPASSABLE · BLUE: NO GRIP',65,h-27,11,ink,'left');
             return out;
         }
-        function ball(g,x,y,r,roll,heading,alpha=1,shield=false,pawPhase=0,effort=0){
+        function ball(g,x,y,r,roll,heading,alpha=1,shield=false,pawPhase=0,effort=0,lady=false){
             g.save();g.translate(x,y);g.globalAlpha=alpha;
             g.save();g.scale(1,.37);circle(g,4,r*1.95,r*1.05,'#36483f30');g.restore();
             // Transparent shell; upright tiny pet inside, moving bearings outside.
@@ -165,15 +179,54 @@
                 g.restore();
             }
             // The plush belly occludes the hips; only reaching feet peek out.
-            g.fillStyle='#c89765';g.beginPath();g.ellipse(0,r*.12,r*.59,r*.64,0,0,TAU);g.fill();g.fillStyle='#f4dfb4';g.beginPath();g.ellipse(0,r*.27,r*.4,r*.43,0,0,TAU);g.fill();
+            g.fillStyle=lady?'#ded4bd':'#c89765';g.beginPath();g.ellipse(0,r*.12,r*.59,r*.64,0,0,TAU);g.fill();g.fillStyle=lady?'#fff1d8':'#f4dfb4';g.beginPath();g.ellipse(0,r*.27,r*.4,r*.43,0,0,TAU);g.fill();
             circle(g,-r*.21,-r*.03,r*.065,'#262f2a');circle(g,r*.21,-r*.03,r*.065,'#262f2a');circle(g,0,r*.17,r*.07,'#805455');
             g.strokeStyle='#775e46';g.lineWidth=.65;for(const sy of [-1,1]){g.beginPath();g.moveTo(sy*r*.1,r*.19);g.lineTo(sy*r*.52,r*.13);g.moveTo(sy*r*.1,r*.24);g.lineTo(sy*r*.51,r*.29);g.stroke();}g.restore();
+            if(lady){g.fillStyle='#a03780';g.beginPath();g.moveTo(0,-r*.45);g.lineTo(-r*.32,-r*.65);g.lineTo(-r*.3,-r*.25);g.closePath();g.fill();g.beginPath();g.moveTo(0,-r*.45);g.lineTo(r*.32,-r*.65);g.lineTo(r*.3,-r*.25);g.closePath();g.fill();circle(g,0,-r*.45,r*.09,'#f0abc4');}
             // Projected great-circle ribs track travelled distance / ball radius.
             g.save();g.rotate(heading);g.strokeStyle='#2e66608c';g.lineWidth=1.5;
             for(let i=0;i<3;i++){g.beginPath();g.ellipse(0,0,Math.max(.1,Math.abs(Math.cos(roll+i*Math.PI/3))*r),r,0,0,TAU);g.stroke();}g.restore();
             g.strokeStyle='#ffffffc4';g.lineWidth=2.8;g.beginPath();g.arc(0,0,r*.81,3.65,4.7);g.stroke();
             if(shield){circle(g,0,0,r+7,'#bd51b222','#a03780',2);g.setLineDash([3,4]);circle(g,0,0,r+11,null,'#a03780',1);}
             g.restore();
+        }
+        function rocks(g,st) {
+            for(const b of R.solids(st)) {
+                const p=b.poly;g.beginPath();g.moveTo(p[0].x,p[0].y);p.slice(1).forEach(v=>g.lineTo(v.x,v.y));g.closePath();
+                g.fillStyle=b.gate?'#a03780':b.lowWall?'#777c69':'#303d35';g.fill();g.strokeStyle='#192c25';g.lineWidth=2;g.stroke();
+                if(!b.lowWall){const cx=p.reduce((n,v)=>n+v.x,0)/p.length,cy=p.reduce((n,v)=>n+v.y,0)/p.length;
+                    g.beginPath();g.moveTo(p[0].x,p[0].y);g.lineTo(cx,cy);g.lineTo(p[2].x,p[2].y);g.strokeStyle='#869287';g.lineWidth=2;g.stroke();
+                    text(g,'IMPASSABLE',cx,cy+12,9,'#e7eed8');}
+            }
+        }
+        function monster(g,m,time) {
+            const asleep=m.health<=0;
+            if(m.state==='warning'&&!asleep){g.setLineDash([14,8]);g.strokeStyle='#b33642';g.lineWidth=3;g.beginPath();g.moveTo(m.x,m.y);g.lineTo(m.x+Math.cos(m.angle)*440,m.y+Math.sin(m.angle)*440);g.stroke();g.setLineDash([]);text(g,'CHARGE '+Math.max(0,m.until-time).toFixed(1)+' s',m.x,m.y-m.r-35,13,'#b33642');}
+            g.save();g.translate(m.x,m.y);const a=asleep?0:Math.atan2(m.vy,m.vx);g.rotate(a);
+            g.fillStyle='#3b483533';g.beginPath();g.ellipse(6,8,m.r*1.06,m.r*.83,0,0,TAU);g.fill();
+            if(m.kind==='rabbit')for(const y of [-1,1]){g.fillStyle='#bba998';g.beginPath();g.ellipse(m.r*.2,y*m.r*.64,m.r*.75,m.r*.2,-y*.5,0,TAU);g.fill();g.fillStyle='#e2b6af';g.beginPath();g.ellipse(m.r*.2,y*m.r*.64,m.r*.5,m.r*.1,-y*.5,0,TAU);g.fill();}
+            g.fillStyle=m.kind==='rabbit'?'#cdbbaa':'#a4774c';g.strokeStyle='#775d42';g.lineWidth=2;g.beginPath();g.ellipse(0,0,m.r,m.r*.78,0,0,TAU);g.fill();g.stroke();
+            circle(g,-m.r*.38,-m.r*.15,m.r*.47,m.kind==='rabbit'?'#e1d6bc':'#efe1b5');
+            if(m.kind!=='rabbit')for(const y of [-1,1]){circle(g,m.r*.15,y*m.r*.58,m.r*.18,'#ad8060');circle(g,m.r*.15,y*m.r*.58,m.r*.10,'#dca69c');}
+            for(const y of [-1,1]){if(asleep){g.strokeStyle='#2c352c';g.beginPath();g.moveTo(m.r*.5,y*m.r*.3-3);g.lineTo(m.r*.65,y*m.r*.3+3);g.stroke();}else circle(g,m.r*.5,y*m.r*.3,m.r*.06,'#2c352c');}
+            circle(g,m.r*.91,0,m.r*.08,'#815856');g.restore();
+            text(g,m.name.toUpperCase(),m.x,m.y+m.r+23,13,ink);
+            text(g,asleep?'ZZZ · NAP TIME':Math.ceil(100*m.health/m.maxHealth)+'% · '+m.state.toUpperCase(),m.x,m.y+m.r+42,11,asleep?magenta:'#914d42');
+        }
+        function flame(g,run,c) {
+            const st=run.rampage,s=run.ship,fire=c.fire;if(!fire||st.control<fire.unlockControl)return;
+            if(!st.fireActive){g.strokeStyle='#c6754699';g.setLineDash([7,5]);g.lineWidth=1.5;g.beginPath();g.moveTo(s.x,s.y);g.lineTo(s.x+Math.cos(st.aim)*85,s.y+Math.sin(st.aim)*85);g.stroke();g.setLineDash([]);return;}
+            const gradient=g.createRadialGradient(s.x,s.y,0,s.x,s.y,fire.range);gradient.addColorStop(0,'#fff2a1dd');gradient.addColorStop(.45,'#ee9b39bb');gradient.addColorStop(1,'#d8553622');
+            g.beginPath();g.moveTo(s.x,s.y);
+            for(let i=0;i<=18;i++){
+                const a=st.aim-fire.spread+2*fire.spread*i/18;let range=fire.range*(.96+.04*Math.sin(i*3+run.time*15));
+                const point=r=>({x:s.x+Math.cos(a)*r,y:s.y+Math.sin(a)*r});
+                if(R.blocked(st,s,point(range))){let lo=0,hi=range;for(let n=0;n<7;n++){const mid=(lo+hi)/2;if(R.blocked(st,s,point(mid)))hi=mid;else lo=mid;}range=lo;}
+                const p=point(range);g.lineTo(p.x,p.y);
+            }g.closePath();g.fillStyle=gradient;g.fill();
+            for(let i=0;i<14;i++){const u=(run.time*1.8+i*.127)%1,a=st.aim+Math.sin(i*4)*fire.spread*.75;
+                const x=s.x+Math.cos(a)*fire.range*u,y=s.y+Math.sin(a)*fire.range*u;
+                if(!R.blocked(st,s,{x,y})){g.globalAlpha=(1-u)*.7;circle(g,x,y,4+u*12,i%2?'#ffbd56':'#e96e37');g.globalAlpha=1;}}
         }
         function render(v){
             const {level,run,zoom,settings,ghost}=v,c=level.rampage,st=run.rampage,s=run.ship;
@@ -189,16 +242,20 @@
             const cy=factor===1?level.world[1]/2:Math.max(ch/2,Math.min(level.world[1]-ch/2,s.y));
             const tx=w/2-cx*scale,ty=105+availableH/2-cy*scale;
             ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#eae8d5';ctx.fillRect(0,0,w,h);
-            ctx.translate(tx,ty);ctx.scale(scale,scale);ctx.drawImage(cache,0,0);
+            ctx.translate(tx,ty);ctx.scale(scale,scale);ctx.drawImage(cache,0,0);rocks(ctx,st);
+            if(c.fire)text(ctx,'LOW WALLS · FIRE OVER, NOT THROUGH',1190,316,12,ink);
             for(const [i,p] of c.controls.entries())if(i<st.control)text(ctx,'✓',p.x,p.y+10,30,magenta);
             for(const [i,d] of st.districts.entries()){
                 // Small architectural clusters are cosmetic; the striped central core is solid.
                 for(let j=0;j<8;j++){const a=j*TAU/8,xx=d.x+Math.cos(a)*64,yy=d.y+Math.sin(a)*61;ctx.save();ctx.translate(xx,yy);ctx.rotate(j*.35);ctx.fillStyle=d.health>0?'#b6b7a6':'#cbbfa3';ctx.fillRect(-8,-5,16,10);ctx.strokeStyle='#535e4e';ctx.lineWidth=.8;ctx.strokeRect(-8,-5,16,10);ctx.restore();}
                 if(d.health>0){circle(ctx,d.x,d.y,d.r,'#c58c78',ink,2);ctx.fillStyle='#4d544c';ctx.fillRect(d.x-16,d.y-17,32,34);ctx.fillStyle='#f2d3a1';ctx.fillRect(d.x-10,d.y-11,20,22);
-                    text(ctx,String(d.number || i+c.controls.length+1).padStart(2,'0'),d.x,d.y+5,15,ink);text(ctx,d.name.toUpperCase(),d.x,d.y-89,14);text(ctx,Math.ceil(100*d.health/d.maxHealth)+'% · RAM CORE',d.x,d.y+92,11,'#984d46');
+                    text(ctx,String(d.number || i+c.controls.length+1).padStart(2,'0'),d.x,d.y+5,15,ink);text(ctx,d.name.toUpperCase(),d.x,d.y-89,14);text(ctx,Math.ceil(100*d.health/d.maxHealth)+(d.fireOnly?'% · BURN CORE':'% · RAM CORE'),d.x,d.y+92,11,'#984d46');
                     if(d.aim){ctx.setLineDash([9,6]);ctx.strokeStyle='#b04342';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(d.x,d.y);ctx.lineTo(d.aim.x,d.aim.y);ctx.stroke();ctx.setLineDash([]);circle(ctx,d.aim.x,d.aim.y,15,null,'#b04342',1.5);text(ctx,'FIRE '+Math.max(0,d.shotAt-run.time).toFixed(1)+' s',d.x,d.y-65,11,'#b04342');}
                 }else{circle(ctx,d.x,d.y,d.r+10,'#8d77622b');for(let j=0;j<7;j++){ctx.fillStyle=j%2?'#8d8473':'#b69d7e';ctx.fillRect(d.x+Math.sin(j*3)*25-8,d.y+Math.cos(j*3)*26-4,16,8);}text(ctx,d.name.toUpperCase()+' ✓',d.x,d.y-84,13,magenta);}
             }
+            for(const m of st.monsters)monster(ctx,m,run.time);
+            if(st.lady){const l=st.lady;ball(ctx,l.x,l.y,l.r,l.roll||0,l.a,1,false,(l.roll||0)*2,l.following&&!st.rescued?1:0,true);text(ctx,'LADY WHISKERDOOM',l.x,l.y-l.r-27,12,magenta);text(ctx,st.rescued?'SAFE ♥':Math.ceil(l.health)+'% · '+(l.following?'FOLLOWING':st.unlocked?'GREET HER':'CAGED'),l.x,l.y+l.r+27,11,magenta);}
+            flame(ctx,run,c);
             for(const b of st.strikes || []) if(b.x!==null) {
                 const countdown=Math.max(0,b.impactAt-run.time), red='#b33642';
                 circle(ctx,b.x,b.y,b.r,'#cc334420',red,2.5);

@@ -80,9 +80,9 @@ for(const mode of ['hit','shield','dodge']) test(`retaliation impact resolves on
     step(t);assert.equal(t.run.ship.hull,mode==='hit'?76:100);
 });
 test('after-demolition controls cannot be collected prematurely',()=>{
-    const t=scenario(R.levels[4]),st=t.run.rampage;st.control=1;
+    const t=scenario(R.levels[2]),st=t.run.rampage;st.control=1;
     const cp=t.level.rampage.controls[1];Object.assign(t.run.ship,{x:cp.x,y:cp.y});
-    step(t);assert.equal(st.control,1);st.districts[0].health=0;
+    step(t);assert.equal(st.control,1);st.districts.find(d=>d.id===cp.after).health=0;
     step(t);assert.equal(st.control,2);
 });
 test('recovery cannot prematurely skip still-pending long-range strikes',()=>{
@@ -109,7 +109,7 @@ test('only schema-7 banking/lake records move to the defense-layout archive',()=
 });
 test('paws are painted before the belly, not pasted over it',()=>{
     const s=fs.readFileSync(require.resolve('../src/rampage-view.js'),'utf8');
-    assert.ok(s.indexOf('const stride=Math.sin(pawPhase')<s.indexOf("g.fillStyle='#c89765'"));
+    assert.ok(s.indexOf('const stride=Math.sin(pawPhase')<s.indexOf("g.fillStyle=lady?'#ded4bd'"));
 });
 
 test('overlapping retaliation salvos report the soonest impact first',()=>{

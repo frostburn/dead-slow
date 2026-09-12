@@ -9,59 +9,76 @@ records, personal-best ghosts, keyboard controls and a multitouch helm.
 
 ## World 5 preview — Gerbozilla’s Rampage
 
-**Six standalone courses.** Gerbozilla treads a 48-metre exercise ball across
-orienteering-style maps. Hold **WASD / arrows** to push in map directions;
+**Nine standalone courses.** Gerbozilla treads a 48-metre exercise ball across
+orienteering-style field maps. Hold **WASD / arrows** to push in map directions;
 counter-push early to brake. **Space / F** gives three seconds of shielding,
-then six seconds recharging. Shields prevent damage, never supply momentum.
+then six seconds recharging. Shields stop damage, not momentum or solid rock.
+
+![Lady Whiskerdoom follows Gerbozilla out of the unlocked menagerie](docs/images/whiskerdoom.webp)
 
 | Course | Challenge | Clean reference |
 | --- | --- | ---: |
-| A Small Problem in Seedhaven | Ridge, crooked lake and a small redirection: the unchanged introduction. | 100.258 s |
-| Banks for the Memories | Closed mountain-ring citadels. Carry speed both into and out of the bowls. | 95.008 s |
+| A Small Problem in Seedhaven | Ridge, crooked lake and a small redirection: the introduction. | 100.258 s |
+| Banks for the Memories | Closed mountain-ring citadels. Carry speed into and out of the bowls. | 95.008 s |
 | No Grip, No Problem | Three water-moat islands. Each demolition launches three long-range strikes. | 172.758 s |
-| It All Goes Downhill | A summit descent into a flooded caldera with one heavily armored core. | 71.758 s |
-| The Reservoir Hairpin | Breach Pump House, use the northern saddle to reverse approach, then cross the reservoir. | 189.258 s |
-| Fort Pillow | A double moat with a steep ring between them, followed by a northern satellite fort. | 169.508 s |
+| It All Goes Downhill | Summit descent into a flooded caldera with one heavily armored core. | 71.758 s |
+| The Black Boulder Wood | Five ordered orienteering controls. Pick between slow forest and longer open lanes; no city demolition. | 187.508 s |
+| Fort Pillow | A double moat, steep mountain ring, retaliation and northern satellite fort. | 169.508 s |
+| A Very Territorial Guinea Pig | Cavyclasm commits to a telegraphed charge, then needs a rest. Time shielded rams. | 151.258 s |
+| Pepperbreath at Marshmallow Keep | Collect a pepper and aim finite bursts over low walls. Armor resists ordinary ramming. | 341.758 s |
+| Nobody Puts Whiskerdoom in a Cage | Defeat a rabbit sentry, smash two locks, greet Lady Whiskerdoom and escort her home. | 456.492 s |
 
-![Fort Pillow: two closed water moats and a steep mountain ring](docs/images/gerbo-fortress.webp)
+**Field-map symbols affect play.** Brown contours describe the elevation field
+used by gravity. Green woodland adds rolling resistance; lighter clearings offer
+faster routes. Black boulder silhouettes are impassable, including under shields.
+Blue water removes paw traction, not downhill gravity or existing momentum.
+The same outlines drive rendering, forest/water queries and rock collisions.
 
-Brown contours show the exact elevation field that drives rolling gravity.
-The later cities sit inside steep mountain bowls and/or continuous water moats,
-not beside decorative obstacles. Closed blue rings have dry islands, not bridges.
-A standing push stalls at a steep wall; back away and build a run-up. Water
-removes paw traction, not gravity or existing momentum.
+The Reservoir Hairpin has been replaced by the control-only woodland course.
+The other five existing courses retain their layouts and records. Pet combat,
+fire and rescue add different objectives rather than another sequence of cities.
+Enemies are enlarged guinea pigs and rabbits. They have mass, inertia, health,
+committed charge directions and recovery periods; impacts transfer momentum and
+deal mutual damage. A shield protects Gerbozilla, not the other animal.
+Defeated pets take a nap and stop attacking.
 
-After a city falls in course 3 (and Fort Pillow), the off-map battery launches
-three retaliatory strikes. Each red circle locks to a map location **7.5 seconds
-before impact**. It does not home. Keep moving, redirect after lock, or shield
-at impact. Destroying the local guns does not stop this response. Recovery must
-wait until every queued strike has resolved.
+On the pepper course, **hold H** or the **BREATH** touch button. The flame points
+in your last push direction, not necessarily your velocity. It reaches over low
+walls but cannot pass through giant boulders. Three seconds of breath recharge
+only while released; immersion suppresses fire. The keep's armored cores cannot
+be bypassed by ordinary ramming.
 
-The land wheel now makes **discrete rubber-bearing creaks** with broad filters
-and pitch bends, not vocal formants. Their cadence follows rotation, with real
-silent gaps and a gentle increase in volume at speed. The accepted higher,
-quieter water chirps are unchanged. Little hind paws tread **behind** the belly,
-with just the reaching toes showing; they rest when Gerbozilla stops pushing.
+Lady Whiskerdoom has her own ball, inertia and shell integrity. Open both cage
+locks, approach to greet her, then lead her through the woods and clearings. She
+follows your travelled route rather than teleporting through obstacles. Leave
+braking room and bring **both** hamsters into the recovery meadow. Your shield
+does not protect her; a clean rescue means neither hamster takes damage.
+
+Course 3 and Fort Pillow retain their long-range retaliation: red blast marks
+lock 7.5 seconds before impact. They do not home, and recovery waits until queued
+strikes resolve. Keep moving, redirect after lock or shield at impact.
+
+The dry wheel has discrete rubber-bearing creaks with a faint **inharmonic shell
+resonance**, broad filters and little pitch bends. Strokes retain silent gaps and
+follow rotation. Water's accepted quiet, high-pitched chirps are unchanged.
+The hind paws still tread behind the belly. Fire has a soft filtered hiss.
 
 ```js
-DeadSlow.watch("gerbo-lake-skipping", 8)
-DeadSlow.watch("gerbo-downhill", 8)
-DeadSlow.watch("gerbo-hairpin", 8)
-DeadSlow.watch("gerbo-fort-pillow", 8)
+DeadSlow.watch("gerbo-forest-slalom", 8)
+DeadSlow.watch("gerbo-cavy-clash", 8)
+DeadSlow.watch("gerbo-pepperbreath", 8)
+DeadSlow.watch("gerbo-whiskerdoom", 8)
 ```
 
-Run one at a time. All six courses have clean, input-only reference replays;
-course 3's reference evades all nine retaliation strikes. The offline authoring
-controller generates directional/shield inputs, not coordinate assignments or
-objective shortcuts. These are not human-recorded or optimal speedruns.
-There are **31 recordings and 55 selectable assignments**. World 5 remains
-**outside every circuit**; the Grand Tour still has 48 stages.
+Run one at a time. All nine courses have input-only reference recordings; the
+four replacement/new recordings are verified in this iteration. They are not
+claimed optimal. Read the [field guide](docs/GERBOZILLA.md) for mechanics and tests.
 
-Schema 8 archives only the superseded schema-7 Banking/Lake District records,
-ghosts and splits. Seedhaven's active course and records stay unchanged, as do
-all sea/space and circuit records. Existing older archives are retained.
-See [the World 5 guide](docs/GERBOZILLA.md). Rival pets and fire breath remain
-future work.
+There are **34 recordings and 58 selectable assignments**. World 5 remains
+standalone; the four complete worlds still supply the **48-stage Grand Tour**.
+Schema 9 archives the retired Hairpin's times, ghost and splits. Its records
+remain visible from the woodland course's field log and preserved in exports.
+Unchanged courses, earlier archives and circuit records remain intact.
 
 ## Play
 
@@ -278,7 +295,8 @@ leaderboard. Export the logbook before moving between files, browsers or hosts;
 then import it through **Logbook**. Import replaces the current local logbook.
 Storage denial or quota failure leaves the session playable and exportable.
 
-Logbooks using schemas 1–7 are accepted. Schema 6 archives old records, ghosts and
+Logbooks using schemas 1–9 are accepted. Schema 9 archives the retired Reservoir
+Hairpin; schema 8 retains superseded Banking/Lake District routes separately. Schema 6 archives old records, ghosts and
 splits for the five redesigned missions (`vacuum`, `umbra`, `perihelion-dispatch`,
 `yesterday`, `century-ship`), plus their affected Meridian and Grand Tour circuits.
 These are not comparable routes. Every unchanged stage and the three sea-world
@@ -295,7 +313,7 @@ some browsers, so export/import is the reliable transfer path.
 
 ```text
 index.html                 Source page; loads modules directly
-style.css                  Responsive bridge, dialogs and four palettes
+style.css                  Responsive controls, dialogs and five palettes
 src/
   space-audio.js           Ion-drive, reaction jets and electronic flight cues
   physics.js               Hulls, forces, collisions, water, tide, tow constraint
