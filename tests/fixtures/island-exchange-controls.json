@@ -1,0 +1,44 @@
+{
+  "level": "island-exchange",
+  "description": "Fixed-time helm and line inputs only; no repositioning, altered physics or objective shortcuts. Back to the mainland from the fairway, exchange vehicles across the channel, and return stern-first to the home ramp.",
+  "events": [
+    {
+      "time": 0,
+      "throttle": -3
+    },
+    {
+      "time": 49.61666666666667,
+      "throttle": 4
+    },
+    {
+      "time": 65.725,
+      "throttle": 0
+    },
+    {
+      "time": 103.725,
+      "throttle": 4
+    },
+    {
+      "time": 179.73333333333332,
+      "throttle": -3
+    },
+    {
+      "time": 212.28333333333333,
+      "throttle": 0
+    },
+    {
+      "time": 260.28333333333336,
+      "throttle": -3
+    },
+    {
+      "time": 355.14166666666665,
+      "throttle": 4
+    },
+    {
+      "time": 380.78333333333336,
+      "throttle": 0
+    }
+  ],
+  "duration": 400,
+  "expectedTime": 396.28333333333336
+}

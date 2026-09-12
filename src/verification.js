@@ -85,6 +85,272 @@
         "duration": 193,
         "expectedTime": 187.9,
         "source": "tests/fixtures/bigger-boat-controls.json"
+    },
+    {
+        "level": "astern",
+        "description": "Fixed-time helm inputs only; no repositioning, altered physics or objective shortcuts. Reverse between the finger piers, use ahead thrust to brake, and settle stern-first in neutral.",
+        "events": [
+            {
+                "time": 0,
+                "throttle": -3
+            },
+            {
+                "time": 57.041666666666664,
+                "throttle": 4
+            },
+            {
+                "time": 71.99166666666666,
+                "throttle": 0
+            }
+        ],
+        "duration": 84,
+        "expectedTime": 80.24166666666666,
+        "source": "tests/fixtures/astern-controls.json"
+    },
+    {
+        "level": "dead-slow",
+        "description": "Fixed-time helm and line inputs only; no repositioning, altered physics or objective shortcuts. A straight approach with early reverse thrust, then a neutral settling period.",
+        "events": [
+            {
+                "time": 0,
+                "throttle": 4
+            },
+            {
+                "time": 50.016666666666666,
+                "throttle": -3
+            },
+            {
+                "time": 70.325,
+                "throttle": 0
+            }
+        ],
+        "duration": 82,
+        "expectedTime": 78.59166666666667,
+        "source": "tests/fixtures/dead-slow-controls.json"
+    },
+    {
+        "level": "dogleg",
+        "description": "Fixed-time helm and line inputs only; no repositioning, altered physics or objective shortcuts. Round the breakwater head, countersteer into the northern basin, and brake onto the north-facing berth.",
+        "events": [
+            {
+                "time": 0,
+                "throttle": 4
+            },
+            {
+                "time": 44.6,
+                "rudder": -1
+            },
+            {
+                "time": 60.983333333333334,
+                "rudder": 1
+            },
+            {
+                "time": 61.90833333333333,
+                "rudder": 0
+            },
+            {
+                "time": 69.26666666666667,
+                "throttle": -3
+            },
+            {
+                "time": 88.50833333333334,
+                "throttle": 0
+            }
+        ],
+        "duration": 100,
+        "expectedTime": 96.76666666666667,
+        "source": "tests/fixtures/dogleg-controls.json"
+    },
+    {
+        "level": "granite-needle",
+        "description": "Fixed-time helm and line inputs only; no repositioning, altered physics or objective shortcuts. Back down to the waiting work barge, pass the line, tow between the granite heads, and let the barge coast into the repair yard before mooring the tug.",
+        "events": [
+            {
+                "time": 0,
+                "throttle": -3
+            },
+            {
+                "time": 17.533333333333335,
+                "throttle": 4
+            },
+            {
+                "time": 25.766666666666666,
+                "throttle": 0
+            },
+            {
+                "time": 43.766666666666666,
+                "line": true,
+                "throttle": 4
+            },
+            {
+                "time": 110.01666666666667,
+                "line": true
+            },
+            {
+                "time": 139.44166666666666,
+                "throttle": -3
+            },
+            {
+                "time": 152.3,
+                "throttle": 0
+            }
+        ],
+        "duration": 293,
+        "expectedTime": 289.925,
+        "source": "tests/fixtures/granite-needle-controls.json"
+    },
+    {
+        "level": "island-exchange",
+        "description": "Fixed-time helm and line inputs only; no repositioning, altered physics or objective shortcuts. Back to the mainland from the fairway, exchange vehicles across the channel, and return stern-first to the home ramp.",
+        "events": [
+            {
+                "time": 0,
+                "throttle": -3
+            },
+            {
+                "time": 49.61666666666667,
+                "throttle": 4
+            },
+            {
+                "time": 65.725,
+                "throttle": 0
+            },
+            {
+                "time": 103.725,
+                "throttle": 4
+            },
+            {
+                "time": 179.73333333333332,
+                "throttle": -3
+            },
+            {
+                "time": 212.28333333333333,
+                "throttle": 0
+            },
+            {
+                "time": 260.28333333333336,
+                "throttle": -3
+            },
+            {
+                "time": 355.14166666666665,
+                "throttle": 4
+            },
+            {
+                "time": 380.78333333333336,
+                "throttle": 0
+            }
+        ],
+        "duration": 400,
+        "expectedTime": 396.28333333333336,
+        "source": "tests/fixtures/island-exchange-controls.json"
+    },
+    {
+        "level": "lock",
+        "description": "Fixed-time helm and line inputs only; no repositioning, altered physics or objective shortcuts. Stop in neutral inside the interlocked chamber, wait for equalization, then finish the upper-reach approach.",
+        "events": [
+            {
+                "time": 0,
+                "throttle": 4
+            },
+            {
+                "time": 29.766666666666666,
+                "throttle": -3
+            },
+            {
+                "time": 48.333333333333336,
+                "throttle": 0
+            },
+            {
+                "time": 72.33333333333333,
+                "throttle": 4
+            },
+            {
+                "time": 101.94166666666666,
+                "throttle": -3
+            },
+            {
+                "time": 120.50833333333334,
+                "throttle": 0
+            }
+        ],
+        "duration": 132,
+        "expectedTime": 128.76666666666668,
+        "source": "tests/fixtures/lock-controls.json"
+    },
+    {
+        "level": "signal",
+        "description": "Fixed-time helm inputs only; no repositioning, altered physics or objective shortcuts. Pass the timed boom during its open window, clear the marker and brake onto the berth.",
+        "events": [
+            {
+                "time": 0,
+                "throttle": 4
+            },
+            {
+                "time": 52.208333333333336,
+                "throttle": -3
+            },
+            {
+                "time": 72.58333333333333,
+                "throttle": 0
+            }
+        ],
+        "duration": 84,
+        "expectedTime": 80.85,
+        "source": "tests/fixtures/signal-controls.json"
+    },
+    {
+        "level": "tidal",
+        "description": "Fixed-time helm inputs only; no repositioning, altered physics or objective shortcuts. Cross the sandbar while the rising tide provides clearance, then brake and settle at the tidal quay.",
+        "events": [
+            {
+                "time": 0,
+                "throttle": 4
+            },
+            {
+                "time": 52.575,
+                "throttle": -3
+            },
+            {
+                "time": 72.95833333333333,
+                "throttle": 0
+            }
+        ],
+        "duration": 85,
+        "expectedTime": 81.225,
+        "source": "tests/fixtures/tidal-controls.json"
+    },
+    {
+        "level": "two-greens",
+        "description": "Fixed-time helm and line inputs only; no repositioning, altered physics or objective shortcuts. Catch the outer boom, stop in the waiting pocket for clearance, then catch the independently timed inner boom before docking.",
+        "events": [
+            {
+                "time": 0,
+                "throttle": 4
+            },
+            {
+                "time": 34.9,
+                "throttle": -3
+            },
+            {
+                "time": 54.208333333333336,
+                "throttle": 0
+            },
+            {
+                "time": 75.33333333333333,
+                "throttle": 4
+            },
+            {
+                "time": 110.98333333333333,
+                "throttle": -3
+            },
+            {
+                "time": 130.36666666666667,
+                "throttle": 0
+            }
+        ],
+        "duration": 142,
+        "expectedTime": 138.625,
+        "source": "tests/fixtures/two-greens-controls.json"
     }
 ];
     for (const run of runs) {

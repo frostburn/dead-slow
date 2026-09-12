@@ -1,0 +1,32 @@
+{
+  "level": "two-greens",
+  "description": "Fixed-time helm and line inputs only; no repositioning, altered physics or objective shortcuts. Catch the outer boom, stop in the waiting pocket for clearance, then catch the independently timed inner boom before docking.",
+  "events": [
+    {
+      "time": 0,
+      "throttle": 4
+    },
+    {
+      "time": 34.9,
+      "throttle": -3
+    },
+    {
+      "time": 54.208333333333336,
+      "throttle": 0
+    },
+    {
+      "time": 75.33333333333333,
+      "throttle": 4
+    },
+    {
+      "time": 110.98333333333333,
+      "throttle": -3
+    },
+    {
+      "time": 130.36666666666667,
+      "throttle": 0
+    }
+  ],
+  "duration": 142,
+  "expectedTime": 138.625
+}

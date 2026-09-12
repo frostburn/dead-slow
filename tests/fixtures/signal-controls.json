@@ -1,0 +1,20 @@
+{
+  "level": "signal",
+  "description": "Fixed-time helm inputs only; no repositioning, altered physics or objective shortcuts. Pass the timed boom during its open window, clear the marker and brake onto the berth.",
+  "events": [
+    {
+      "time": 0,
+      "throttle": 4
+    },
+    {
+      "time": 52.208333333333336,
+      "throttle": -3
+    },
+    {
+      "time": 72.58333333333333,
+      "throttle": 0
+    }
+  ],
+  "duration": 84,
+  "expectedTime": 80.85
+}

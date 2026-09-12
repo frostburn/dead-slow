@@ -39,8 +39,15 @@ def check_open_water(browser, check, html):
     page.wait_for_function('DeadSlow.report()?.verified === true', timeout=30000)
     check('Animated accelerated replay matches the author time', abs(page.evaluate('DeadSlow.report().time')-123.95)<1/120)
     check('Watching a verification run cannot write a PB', page.locator('#best-overall').inner_text()=='—')
+    page.evaluate('DeadSlow.watch("granite-needle",32)')
+    page.wait_for_function('DeadSlow.report()?.verified === true', timeout=45000)
+    check('Animated remote-barge replay reaches its author time',
+          abs(page.evaluate('DeadSlow.report().time')-289.925)<1/120)
+    check('Animated barge replay secures the casualty without ranking', page.evaluate(
+          'DeadSlow.state().run.jobs.stats.vesselsDelivered===1 && DeadSlow.report().ranked===false')
+          and page.locator('#best-overall').inner_text()=='—')
     reports = page.evaluate('DeadSlow.verify("all")')
-    check('Production console executes all three real verification runs', len(reports)==3 and all(r['verified'] and not r['ranked'] for r in reports))
+    check('Production console executes all published verification runs', len(reports)==page.evaluate('HarborVerification.runs.length') and all(r['verified'] and not r['ranked'] for r in reports))
     check('Verification report identifies actual control-only method', all('no repositioning' in r['method'] for r in reports))
     # Exercise the actual graph, not a separately synthesized sound or mocked samples.
     audio = page.evaluate('''async () => {
@@ -79,6 +86,9 @@ def check_open_water(browser, check, html):
         return {before:energy(.2,.35),after:energy(.45,.9)};
     }''')
     check('Muting mid-horn fades to silence and is idempotent', fade['before']>1 and fade['after']<1e-9)
+    from browser_audio_mix import check_audio_mix
+    audio_report = check_audio_mix(page, check)
+    print('Audio mix measurements:', __import__('json').dumps(audio_report))
     check('Open-water console and horn introduce no page errors', not errors)
     check('Console, replays and horn make no network requests', not requests)
     page.close()

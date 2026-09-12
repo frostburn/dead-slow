@@ -73,15 +73,24 @@ DeadSlow.speed(0)                // Freeze the recording.
 DeadSlow.step(10)                // Continue ten seconds along that same input timeline.
 DeadSlow.speed(8)                // Resume animated playback.
 DeadSlow.report()                // Last recording's measured result, or null before finishing.
-DeadSlow.verify("all")           // Execute all three now and return measured reports.
+DeadSlow.verify("all")           // Execute all published recordings now and return measured reports.
 DeadSlow.verify("first-crossing")
 ```
 
 | Recording ID | Stage | Control-only author time |
 | --- | --- | --- |
+| `dead-slow` | World 1 · Dead Slow | 78.591667 s |
+| `dogleg` | World 1 · The Long Way Round | 96.766667 s |
+| `signal` | World 1 · Catch the Green | 80.850000 s |
+| `lock` | World 1 · The Lockkeeper | 128.766667 s |
+| `astern` | World 1 · Stern First | 80.241667 s |
+| `tidal` | World 1 · Water Under the Keel | 81.225000 s |
 | `crosscurrent` | World 2 · No Lee Shore | 78.641667 s |
+| `two-greens` | World 2 · Between Two Greens | 138.625000 s |
 | `first-crossing` | World 3 · The First Crossing | 123.950000 s |
 | `bigger-boat` | World 3 · A Bigger Boat | 187.900000 s |
+| `granite-needle` | World 3 · The Granite Needle | 289.925000 s |
+| `island-exchange` | World 3 · Island Exchange | 396.283333 s |
 
 These are full clean completions, not optimal times. They use the actual live
 state machine and ordinary throttle, rudder, thruster and line commands. They
@@ -94,11 +103,14 @@ Leave the helm alone while watching a reference run.
 `verify` intentionally replaces the current attempt with each recording. It
 finishes on the last result, at frozen practice speed. `normal()` returns to a
 fresh ranked attempt. Reading a timeline or report alone does not replace a run.
-There are **only three published author recordings**. A `null` author time is
+There are **twelve published author recordings**. The other twenty-four
+stages do not yet have published control-only completions. A `null` author time is
 honest missing coverage, not an impossible stage. Gold/silver/bronze targets are
 level-design goals; their existence is not proof of a successful control run.
 
-The JSON files named by `runs()` are the source of truth. After editing them,
+The JSON files named by `runs()` are the source of truth. Add new recordings
+as `tests/fixtures/<level-id>-controls.json`; the synchronizer discovers them
+in deterministic filename order after the three established reference runs. After editing them,
 run `npm run replays:sync`, then `npm test`, `npm run verify:runs` and the browser
 suite. This regenerates the committed `src/verification.js` used by source play
 and the single-file build. No runtime fetch is needed.

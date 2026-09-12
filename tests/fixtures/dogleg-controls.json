@@ -1,0 +1,32 @@
+{
+  "level": "dogleg",
+  "description": "Fixed-time helm and line inputs only; no repositioning, altered physics or objective shortcuts. Round the breakwater head, countersteer into the northern basin, and brake onto the north-facing berth.",
+  "events": [
+    {
+      "time": 0,
+      "throttle": 4
+    },
+    {
+      "time": 44.6,
+      "rudder": -1
+    },
+    {
+      "time": 60.983333333333334,
+      "rudder": 1
+    },
+    {
+      "time": 61.90833333333333,
+      "rudder": 0
+    },
+    {
+      "time": 69.26666666666667,
+      "throttle": -3
+    },
+    {
+      "time": 88.50833333333334,
+      "throttle": 0
+    }
+  ],
+  "duration": 100,
+  "expectedTime": 96.76666666666667
+}

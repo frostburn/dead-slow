@@ -1,0 +1,20 @@
+{
+  "level": "dead-slow",
+  "description": "Fixed-time helm and line inputs only; no repositioning, altered physics or objective shortcuts. A straight approach with early reverse thrust, then a neutral settling period.",
+  "events": [
+    {
+      "time": 0,
+      "throttle": 4
+    },
+    {
+      "time": 50.016666666666666,
+      "throttle": -3
+    },
+    {
+      "time": 70.325,
+      "throttle": 0
+    }
+  ],
+  "duration": 82,
+  "expectedTime": 78.59166666666667
+}
