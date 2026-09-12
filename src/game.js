@@ -1,8 +1,9 @@
 (function () {
     'use strict';
-    const P = HarborPhysics, J = HarborJobs, LEVELS = HarborLevels, WORLDS = HarborWorlds, $ = id => document.getElementById(id);
+    const P = HarborPhysics, N = HarborNavigation, J = HarborJobs, LEVELS = HarborLevels, WORLDS = HarborWorlds, $ = id => document.getElementById(id);
     const store = HarborStorage.create({ getItem: k => localStorage.getItem(k), setItem: (k, v) => localStorage.setItem(k, v) });
     const audio = HarborAudio.create(), renderer = HarborRenderer.create($('sea'));
+    let developer = null;
     const DT = 1 / 120, KNOTS = 1.9438444924406;
     let index = 0, level = LEVELS[0], run, status = 'ready', modal = 'intro', zoom = 1, accumulator = 0, lastFrame = null, lastHud = 0, marathon = null, selectedWorld = 1;
     let toastUntil = 0, focusBeforeModal = null, pressed = new Map(), pointers = new Map(), hiddenAt = 0;
@@ -63,18 +64,23 @@
         toastUntil = performance.now() + duration;
     }
     function staticObstacles() {
-        const [W, H] = level.world;
-        return [
-            {
-                id: 'coast-n', x: -100, y: -100, w: W + 200, h: 120
-            }, {
-                id: 'coast-s', x: -100, y: H - 20, w: W + 200, h: 120
-            }, {
-                id: 'coast-w', x: -100, y: 20, w: 120, h: H - 40
-            }, {
-                id: 'coast-e', x: W - 20, y: 20, w: 120, h: H - 40
-            }, ...level.obstacles.map((r, i) => ({ ...r, id: `pier-${i}` }))
-        ].map(r => ({ ...r, poly: r.poly || P.rect(r) })).concat(level.islands.map((island, i) => ({ id: `island-${i}`, poly: island.poly })));
+        return [...N.coasts(level), ...level.obstacles.map((r, i) => ({ ...r, id: `pier-${i}` }))]
+            .map(r => ({ ...r, poly: r.poly || P.rect(r) }))
+            .concat(level.islands.map((island, i) => ({ id: `island-${i}`, poly: island.poly })));
+    }
+    function checkChartExit() {
+        for (const body of [run.ship, ...run.jobs.bodies]) {
+            const side = N.exit(level, body);
+            if (side) {
+                run.failure = { type: 'out-of-bounds', side, vessel: body.name || 'Your ship' };
+                status = 'failed';
+                clearInput();
+                showFailure();
+                updateHud();
+                return true;
+            }
+        }
+        return false;
     }
     function loadStage(i, start = false) {
         index = P.clamp(Math.round(i), 0, LEVELS.length - 1);
@@ -90,6 +96,7 @@
         run = {
             ship: s, jobs: J.create(level, s), env: P.environmentAt(level, s, 0), time: 0, contacts: 0, wakes: 0, groundings: 0, grounded: false, dockHold: 0, buoyIndex: 0, buoyHold: 0, splits: [], sampleAt: 0, trailAt: 0, ghost: [[0, s.x, s.y, s.a]], trail: [], effects: [], gateStates: {}, lock: { phase: 'entry', hold: 0, clock: 0 }, wakeTimers: {}, wakeActive: {}, lastHits: {}, pausedUsed: false, practiceReason: '', loaded: false, throttleOrders: 0, thrusterTime: 0, distance: 0, maxSpeed: 0, dock: P.docking(s, level.berth, false), static: staticObstacles(), pb: false, result: null
         };
+        developer?.onLoad();
         toastUntil = 0;
         $('toast').classList.remove('visible');
         document.body.dataset.work = level.jobs.length ? 'true' : 'false';
@@ -120,7 +127,7 @@
         clearInput();
         accumulator = 0;
         lastFrame = null;
-        store.attempt(level.id);
+        if (!run.pausedUsed) store.attempt(level.id);
         updateHud();
     }
     function resume() {
@@ -266,6 +273,7 @@
                 toast(event.body.name + ' is aground.', true, 4500);
             }
         }
+        if (checkChartExit()) return;
         for (const t of level.traffic) {
             const f = P.trafficState(t, run.time);
             obstacles.push({ id: t.id, poly: P.hull(f), velocity: { x: f.vx, y: f.vy } });
@@ -288,6 +296,7 @@
                     }
                 }
         }
+        if (checkChartExit()) return;
         const speed = Math.hypot(s.vx, s.vy);
         run.maxSpeed = Math.max(run.maxSpeed, speed);
         run.distance += Math.hypot(s.x - oldX, s.y - oldY);
@@ -438,6 +447,7 @@
  <div class="eyebrow">WORLD ${level.worldNumber} · ${worldOf().name.toUpperCase()} · ${String(level.stageNumber).padStart(2, '0')} / 12</div><h1>${first ? 'Good ships.<br>Bad stopping distances.' : level.name}</h1>
  <p>${level.brief}</p><div class="intro-details"><div><strong>${run.ship.length} m</strong><span>${esc(run.ship.name || 'MV PATIENCE')}</span></div><div><strong>${String(level.stageNumber).padStart(2, '0')} / 12</strong><span>WORLD ${level.worldNumber} HARBOR</span></div><div><strong>02 sec</strong><span>NEUTRAL MOORING HOLD</span></div></div>
  <p class="subtle">${level.tip}</p>
+ <p class="subtle">${level.worldNumber === 3 ? "Open water on every side." : "The western fairway is open water."} Keep every hull on the chart: crossing an edge ends the attempt.</p>
  <div class="control-summary"><kbd>W</kbd><kbd>S</kbd> change throttle · <kbd>A</kbd><kbd>D</kbd> hold rudder<br><kbd>Q</kbd><kbd>E</kbd> hold bow thruster · <kbd>Space</kbd> neutral · <kbd>R</kbd> retry<br>${level.towables.length ? '<kbd>F</kbd> make / release towline · <kbd>J</kbd><kbd>K</kbd> hold winch<br>' : ''}Touch helm below. The engine telegraph stays where you leave it.</div>
  <div class="dialog-actions"><button class="primary" data-action="begin" autofocus>Cast off <span aria-hidden="true">→</span></button><button data-action="courses">Choose harbor</button><button class="secondary small" data-action="help">How to dock</button></div>
  <p class="subtle" style="margin:16px 0 0">No installs. No accounts. Records stay in this browser.</p>${!store.available ? '<div class="storage-warning">Browser storage is unavailable. Records will last for this session only; export them from the logbook.</div>' : ''}`);
@@ -456,7 +466,7 @@
         const marathonDone = marathon && !hasNext();
         openDialog('result', `<div class="eyebrow">${run.pausedUsed ? 'PRACTICE COMPLETE' : run.pb ? 'NEW PERSONAL BEST' : 'LINES ASHORE'} · ${level.name.toUpperCase()}</div>
  <h1>${marathonDone ? (marathon.id === 'grand-tour' ? 'Three worlds. One captain.' : 'One world. All fast.') : 'All fast. At last.'}</h1><div class="result-badge">${run.pausedUsed ? 'UNRANKED PRACTICE' : rank}${r.clean ? ' · CLEAN' : ''}</div><div class="result-time">${format(r.time)}</div>
- <p class="subtle">${run.pausedUsed ? 'Pause or interruption detected. This time was not saved to the leaderboards.' : run.pb ? 'Your new best line is saved as the ghost for this harbor.' : 'A harbor conquered. A braking point learned.'}</p>
+ <p class="subtle">${run.pausedUsed ? esc(run.practiceReason || 'Practice attempt') + '. This time was not saved to the leaderboards.' : run.pb ? 'Your new best line is saved as the ghost for this harbor.' : 'A harbor conquered. A braking point learned.'}</p>
  <div class="result-grid"><div><strong>${r.contacts}</strong><span>HULL CONTACTS</span></div><div><strong>${r.hull}%</strong><span>HULL REMAINING</span></div><div><strong>${r.commands}</strong><span>ENGINE ORDERS</span></div></div>
  <p class="subtle">${r.distance} m traveled · ${r.thruster.toFixed(1)} s bow thrust · ${r.wakes} wake violations · ${r.groundings} groundings<br>Clean = no contacts, wake violations, grounding or parted towlines. No hidden time penalties.</p>
  ${level.jobs.length ? `<div class="work-summary">${r.work.vehiclesDelivered} vehicles delivered · ${r.work.vesselsDelivered} vessels secured · ${r.work.lineBreaks} lines parted<br>${Math.round(r.work.towDistance)} m towed · ${r.work.lineChanges} line operations · ${r.work.winchTime.toFixed(1)} s winch</div>` : ''}
@@ -466,6 +476,11 @@
     }
     function showFailure() {
         audio.tick(run.ship, false);
+        if (run.failure?.type === 'out-of-bounds') {
+            const f = run.failure;
+            openDialog('failed', `<div class="eyebrow">OUT OF BOUNDS · ${N.NAMES[f.side].toUpperCase()} EDGE</div><h1>Beyond the chart.</h1><p>${esc(f.vessel)} crossed the ${N.NAMES[f.side]} limit of the assignment. The sea is open, but this watch is over. Keep the whole hull—and any tow—inside the chart.</p><div class="result-time">${format(run.time)}</div><p class="subtle">No invisible wall, no bounce. Failed attempts never enter the leaderboard.</p><div class="dialog-actions"><button class="primary" data-action="retry" autofocus>Retry · R</button><button data-action="courses">Choose harbor</button></div>`);
+            return;
+        }
         openDialog('failed', `<div class="eyebrow">HULL INTEGRITY LOST</div><h1>The paperwork<br>will be substantial.</h1><p>The ship can take a gentle fender touch, but not a full-speed argument with concrete. Use opposite thrust earlier.</p><div class="result-time">${format(run.time)}</div><p class="subtle">${run.contacts} contacts · ${run.groundings} groundings. Failed attempts never enter the stage leaderboard.</p><div class="dialog-actions"><button class="primary" data-action="retry" autofocus>Retry · R</button><button data-action="courses">Choose harbor</button></div>`);
     }
     function showCourses(world = selectedWorld) {
@@ -494,6 +509,8 @@
  <div class="dialog-actions" style="margin-top:8px"><button class="${filter === 'overall' ? 'primary' : 'secondary'} small" data-filter="overall">Overall</button><button class="${filter === 'clean' ? 'primary' : 'secondary'} small" data-filter="clean">Clean only</button></div>
  <table class="log-table"><thead><tr><th>#</th><th>TIME / IGT</th><th>CONTACTS</th><th>CLASS</th></tr></thead><tbody>${runs.length ? runs.map((r, i) => `<tr><td>${String(i + 1).padStart(2, '0')}</td><td>${format(r.time)}</td><td>${r.contacts}</td><td class="${r.clean ? 'clean' : ''}">${r.clean ? 'CLEAN' : 'OPEN'}</td></tr>`).join('') : '<tr><td colspan="4">No ranked arrival yet. The harbor is waiting.</td></tr>'}</tbody></table>
  <h3 class="circuit-heading">Circuit records</h3><table class="log-table"><thead><tr><th>ROUTE</th><th>OVERALL</th><th>CLEAN</th></tr></thead><tbody>${[...WORLDS.map(w => [w.id, `World ${w.number} · ${w.name}`]), ['grand-tour', `Grand Tour · ${LEVELS.length}`]].map(([id, name]) => `<tr><td>${name}</td><td>${format(store.bestRace(id)?.time)}</td><td class="clean">${format(store.bestRace(id, true)?.time)}</td></tr>`).join('')}</tbody></table><p class="subtle">${store.data.archivedRaces?.['grand-tour-24']?.length ? '24-harbor Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-24'][0].time) + '<br>' : ''}${store.data.marathon.length ? '12-harbor circuit (archived): ' + format(store.data.marathon[0].time) + '<br>' : ''}Times use a fixed 120 Hz simulation clock. Paused runs are unranked. Gold / silver / bronze are course pace targets, not online rankings.</p>
+ ${store.data.archivedStages[level.id]?.runs.length ? `<details><summary>Archived dock-side departure records</summary><p class="subtle">These runs use a different starting position. Their ghosts and splits are preserved in exports, not compared with this approach route.</p><table class="log-table"><thead><tr><th>TIME / IGT</th><th>CONTACTS</th><th>CLASS</th></tr></thead><tbody>${store.data.archivedStages[level.id].runs.map(r => `<tr><td>${format(r.time)}</td><td>${r.contacts}</td><td>${r.clean ? 'CLEAN' : 'OPEN'}</td></tr>`).join('')}</tbody></table></details>` : ''}
+ ${['archipelago', 'grand-tour'].some(id => store.data.archivedRaces[id + '-dock-starts']?.length) ? `<details><summary>Archived dock-side island circuits</summary><p class="subtle">Approach legs change these routes. Earlier records are retained separately.</p>${['archipelago', 'grand-tour'].map(id => { const rows = store.data.archivedRaces[id + '-dock-starts']; return rows.length ? `<p>${id === 'archipelago' ? 'World 3' : 'Grand Tour'} · ${format(rows[0].time)}</p>` : ''; }).join('')}</details>` : ''}
  <div class="dialog-actions"><button data-action="toggle-ghost" class="small">Ghost: ${settings.ghost ? 'ON' : 'OFF'}</button><button data-action="toggle-guide" class="small">Coast guide: ${settings.guide ? 'ON' : 'OFF'}</button><button data-action="toggle-sound" class="small">Sound: ${settings.sound ? 'ON' : 'OFF'}</button></div>
  <div class="dialog-actions"><button class="primary" data-action="back" autofocus>Back to harbor</button><button class="secondary small" data-action="export">Export records</button><button class="secondary small" data-action="import">Import records</button><button class="secondary small danger" data-action="reset">Erase</button></div>
  <p class="subtle" style="margin-top:13px">Records are local, not tamper-proof. File copies and browsers can have separate storage. Export before moving the game. Earlier logbooks are accepted. Existing stage records stay with their courses; circuits of different lengths are kept separate.</p>${!store.available ? '<div class="storage-warning">Persistent storage is unavailable. Export to preserve this session’s records.</div>' : ''}`);
@@ -504,11 +521,12 @@
  <div class="help-grid"><div><h3>The helm</h3><div class="key-row"><kbd>W</kbd> / <kbd>↑</kbd> one notch ahead<br><kbd>S</kbd> / <kbd>↓</kbd> one notch astern<br><kbd>A</kbd><kbd>D</kbd> / <kbd>←</kbd><kbd>→</kbd> hold rudder<br><kbd>Q</kbd><kbd>E</kbd> hold bow thruster<br><kbd>Space</kbd> neutral, not a brake<br><kbd>R</kbd> instant retry · <kbd>Esc</kbd> pause<br><kbd>G</kbd> ghost · <kbd>V</kbd> coast guide<br><kbd>Z</kbd> zoom · <kbd>M</kbd> audio · <kbd>H</kbd> horn<br><kbd>F</kbd> make / release towline<br><kbd>J</kbd><kbd>K</kbd> reel in / pay out (hold)</div><p style="margin-top:12px">The touch helm supports simultaneous fingers. Rudder and thruster return to center on release; throttle stays at its selected notch. Use the chart’s zoom button to follow the ship more closely.</p></div>
  <div><h3>Anticipate, don’t twitch</h3><p>Engine output spools over several seconds. Neutral leaves momentum intact. Order astern to brake an ahead-moving ship, then return to neutral before it starts backing away.</p><p>The rudder needs water flow and reverses its steering effect astern. The bow thruster both turns and pushes the bow sideways; it loses authority at speed. The dashed white line predicts 12 seconds after ordering neutral, with centered rudder, no thruster and no collisions.</p>
  <h3>Read the motion, not the throttle</h3><p>The ground-speed number shows + AHEAD when your velocity points toward the bow and − ASTERN when it points toward the stern. It can still read AHEAD while your engine is in reverse. ABEAM means almost pure sideways motion. The separate drift line shows port or starboard motion relative to the hull. All are measured over ground.</p>
+ <h3>Open water, finite assignment</h3><p>The archipelago has no perimeter seawall. Other harbors open west onto the fairway. A brief chart-limit warning appears near an open edge. If any part of your hull or a casualty crosses the chart edge, the attempt ends immediately. The sea does not bounce you back.</p>
  <h3>Find the lee</h3><p>Shaded LEE WATER basins reduce the local current and wind. The change fades in along the hull, so entering shelter never stops you instantly. Current arrows, the LOCAL SET instrument and the coast guide use the same spatial water model. Northwatch also has marked pulsing current lanes.</p>
  <h3>What counts as docked?</h3><p>Finish the marked tasks. Put the entire hull inside the green berth, with the bow matching the arrow. Slow below ${(level.berth.speed || .62) * KNOTS < 1 ? ((level.berth.speed || .62) * KNOTS).toFixed(2) : ((level.berth.speed || .62) * KNOTS).toFixed(1)} knots, reduce turn rate, set neutral, let engine output fall below 15%, and hold for two uninterrupted seconds.</p>
  <h3>Island ferry duty</h3><p>Match the amber loading or unloading outline with the entire hull, stop below 0.4 knots and select neutral. After the settle hold, the ramp opens and vehicles transfer automatically, one at a time. Cars, vans and buses add different masses. Propulsion is inhibited while a ramp is down. Ordering thrust aborts transfer and closes the ramp; transferred vehicles stay aboard. Re-enter the same slip to finish the call.</p>
  <h3>Tow a vessel, not a sprite</h3><p>Use your stern towing point and the casualty’s bow. Come within 44 metres at less than 1.6 knots relative speed; press F to make fast. Hold J to reel in or K to pay out (12–64 metres). A line pulls only when taut, and both vessels retain momentum. Keep its load below 100%; sustained overload or dragging the line over rock parts it and loses the clean run. Reconnect to recover. The casualty must settle inside its own marked berth for two seconds; shore crew then secure it and release your line. You still need to moor your own vessel. The dashed coast guide accounts for an attached tow, but never predicts collisions.</p>
- <h3>Fair, repeatable clocks</h3><p>Traffic, gates, tides and sluice pulses reset on retry. The main clock is in-game time. All contact types count against a clean run; wake violations and grounding do too. Pausing, opening menus mid-run or losing focus marks that attempt as practice. There is no instant brake, teleport or auto-dock.</p></div></div>
+ <h3>Fair, repeatable clocks</h3><p>Traffic, gates, tides and sluice pulses reset on retry. The main clock is in-game time. All contact types count against a clean run; wake violations and grounding do too. Pausing, opening menus mid-run or losing focus marks that attempt as practice. Ranked runs have no instant brake, teleport or auto-dock.</p></div></div>
  <div class="dialog-actions"><button class="primary" data-action="back" autofocus>Back to harbor</button><button class="secondary" data-action="log">Logbook & settings</button></div>`, true);
     }
     function back() {
@@ -670,7 +688,7 @@
         const last = run.splits[run.splits.length - 1], prev = previous[run.splits.length - 1], best = store.best(level.id);
         $('delta').textContent = last && Number.isFinite(prev) ? `${deltaFormat(last.time - prev)} SPLIT` : best ? 'PB ' + format(best.time) : 'NO RECORD';
         $('delta').style.color = last && prev && last.time > prev ? 'var(--amber)' : 'var(--green)';
-        $('clock-label').textContent = run.pausedUsed ? 'PRACTICE · UNRANKED' : marathon ? `${raceLabel().toUpperCase()} · ${marathon.position + 1}/${marathon.route.length}` : 'RUN TIME · IGT';
+        $('clock-label').textContent = run.pausedUsed ? `${developer?.rate === 0 ? 'FROZEN' : developer && developer.rate !== 1 ? developer.rate + '× PRACTICE' : 'PRACTICE'} · UNRANKED` : marathon ? `${raceLabel().toUpperCase()} · ${marathon.position + 1}/${marathon.route.length}` : 'RUN TIME · IGT';
         $('clock-label').classList.toggle('practice', run.pausedUsed);
         $('race-banner').hidden = !marathon;
         if (marathon)
@@ -910,6 +928,17 @@
         if (e.target.closest('.helm'))
             e.preventDefault();
     });
+    function simulationStep() {
+        if (status !== 'running') return false;
+        developer?.beforeStep();
+        advance(DT);
+        return developer?.afterStep() !== false;
+    }
+    function advanceSeconds(seconds) {
+        for (let i = 0; i < Math.round(seconds / DT) && status === 'running'; i++)
+            if (!simulationStep()) break;
+        updateHud();
+    }
     function frame(now) {
         if (lastFrame === null)
             lastFrame = now;
@@ -922,12 +951,13 @@
                 accumulator = 0;
             }
             else {
-                accumulator += elapsed;
+                accumulator += elapsed * (developer?.rate ?? 1);
                 let steps = 0;
-                while (accumulator >= DT && status === 'running' && steps < 120) {
-                    advance(DT);
+                while (accumulator >= DT && status === 'running' && steps < 480) {
+                    const keepStepping = simulationStep();
                     accumulator -= DT;
                     steps++;
+                    if (!keepStepping) { accumulator = 0; break; }
                 }
             }
         }
@@ -947,6 +977,25 @@
     }
     updateSettings();
     loadStage(0);
+    developer = HarborConsole.create({
+        levels: LEVELS,
+        quiet: new URLSearchParams(location.search).has('test'),
+        state: () => ({ index, level, status, run, input }),
+        load(i) { marathon = null; loadStage(i, true); },
+        practice: markPractice, advance: advanceSeconds, throttle, line: lineAction,
+        input(values) {
+            for (const key of ['rudder', 'thruster', 'winch'])
+                if (values[key] !== undefined) input[key] = values[key];
+        },
+        clearInput, hud: updateHud,
+        resetClock() { accumulator = 0; lastFrame = null; },
+        warp(x, y, a) {
+            Object.assign(run.ship, { x, y, a: P.wrap(a), vx: 0, vy: 0, r: 0, engine: 0, throttle: 0, rudder: 0 });
+            run.dockHold = 0; run.buoyHold = 0;
+        },
+        repair() { for (const body of [run.ship, ...run.jobs.bodies]) body.hull = 100; }
+    });
+    window.DeadSlow = developer.menu;
     requestAnimationFrame(frame);
     // Test-only harness, absent on normal launches. All shipped mechanics remain the same.
     if (new URLSearchParams(location.search).has('test')) {
@@ -958,11 +1007,8 @@
             }, load(i, start = true) {
                 marathon = null;
                 loadStage(i, start);
-            }, start: begin, advance(seconds) {
-                for (let i = 0; i < Math.round(seconds / DT) && status === 'running'; i++)
-                    advance(DT);
-                updateHud();
-            }, setShip(values) {
+            }, start: begin, advance: advanceSeconds, cheats: developer.menu, frame,
+            setShip(values) {
                 Object.assign(run.ship, values);
             }, throttle, lineAction, finish, pause: showPause, retry, marathon: startMarathon, next: nextHarbor, format, zoom: zoomChart, hud: updateHud, courses: showCourses
         };

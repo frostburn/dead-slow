@@ -18,7 +18,12 @@ hull containment/collisions, deterministic gates/tides/current, shelter,
 signed speed, records, migrations, route/circuit boundaries, retry accounting,
 convex island geometry, manifests, ramps, interrupted transfer, payload mass,
 unilateral rope forces, momentum transfer, winching, break/recovery,
-casualty berths, gate protection and local-server/build behavior.
+casualty berths, gate protection and local-server/build behavior. Open-water
+tests check every starting hull and coast configuration, all four exits,
+casualty exits, no rebound, stopped clocks, retries, and ten revised starts.
+Console tests cover argument validation, detached inspection, 0–32× fixed-step
+execution, bounded frame work, replay divergence and protection of records.
+Schema-4 tests cover archive preservation, idempotence and older imports.
 
 Some tests position the ship or casualty directly to isolate **objective state
 machines**. All twelve island job sequences are checked that way, including
@@ -31,19 +36,23 @@ The following complete trajectories use actual timed player controls and the
 same fixed-step state machine as the game. They do not alter positions,
 velocities, physics constants or objective progress:
 
-| Stage | Ranked clean completion | Fixture |
+| Stage | Clean control-only completion | Fixture |
 | --- | --- | --- |
 | World 2: No Lee Shore | About 78.64 s | `tests/exposed-crosscurrent-controls.json` |
 | World 3: The First Crossing | 123.95 s | `tests/fixtures/first-crossing-controls.json` |
 | World 3: A Bigger Boat | 187.90 s | `tests/fixtures/bigger-boat-controls.json` |
 
-The two island fixtures are replayed in both Node and Chromium and checked
+All three fixtures are replayed in both Node and Chromium and checked
 against their recorded completion times to within one 120 Hz simulation tick.
 The ferry boards, sails, brakes, unloads and moors. The tug makes fast, tows,
 casts off, brakes and moors while the yacht settles into its own rescue berth.
 The browser suite also completes World 1's first harbor through real thrust
 and braking. It does not claim optimal times or complete control-only coverage
-of all thirty-six levels.
+of all thirty-six levels. Later island spawn checks verify clearance and a
+required positioning leg, not complete new medal routes. Console playback is
+always unranked so it cannot seed player records. `DeadSlow.runs()` and
+`DeadSlow.times()` explicitly separate these recordings from design targets.
+After changing fixture JSON, run `npm run replays:sync` before rebuilding.
 
 ## Browser checks
 
@@ -75,7 +84,14 @@ Browser coverage includes keyboard and pointer input, three simultaneous touch
 controls, control release/cancel, mobile layout at multiple sizes, menus,
 world selection, job instruments, ferry transfer, winch operations, retry,
 all-stage chart rendering, objective guards, clean records and normal launches
-without a test harness. The standalone build is checked for external assets
+without a test harness. `browser_open_water.py` is called by the main browser
+suite and exercises the production console without `?test`: discovery,
+animated acceleration, freeze/resume, all three replays and out-of-bounds UI.
+It renders the actual WebAudio horn offline and checks signal level, sustained
+harmonics, attack/release, voice limiting and mute before/during a blast. This
+checks the signal, not a claim of measured real-world acoustic fidelity.
+
+The standalone build is checked for external assets
 and for making no network requests. The page-error listeners must stay empty.
 
 ## CI and release boundaries

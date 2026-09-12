@@ -1,5 +1,24 @@
 # Changelog
 
+## 3.1.0 — Open Water
+
+- Remove all archipelago perimeter coasts; open the west side of every Coast
+  and Northwatch harbor, sharing coast geometry between rendering and physics.
+- End the attempt when any part of the player or a casualty leaves the chart,
+  with a local edge warning, explicit failure reason, stopped clock and retry.
+- Start the ten later island assignments with real positioning legs: tugs away
+  from their casualties and empty ferries in the fairway. Keep both tutorials.
+- Replace the horn's two sine tones with four beating, harmonic-rich reeds,
+  saturation and filters; prevent stacked blasts and fade safely on mute.
+- Welcome console explorers to `DeadSlow.help()`: 0–32× fixed-step time,
+  stepping, level jumps, helm/warp/repair tools and detached state inspection.
+- Publish the three real input recordings for animated or immediate console
+  verification; distinguish measured author times from authored medal targets.
+- Keep assists and playback unranked; do not pollute PBs, ghosts or circuit times.
+- Migrate to logbook schema 4, archiving changed departures and island circuits
+  while retaining their old records, ghosts and splits in exports.
+- Add navigation/console/audio regressions and the console guide.
+
 ## 3.0.0 — The Archipelago
 
 - Twelve Nordic-inspired island-service stages; thirty-six stages across three worlds.

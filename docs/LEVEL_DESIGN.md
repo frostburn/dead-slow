@@ -31,6 +31,29 @@ A berth also has angular tolerance `angle` (degrees), a speed threshold in m/s
 and optional hold duration for rescue work. Own-ship final mooring always uses
 a two-second hold in the orchestrator. Pilot buoy speed limits are m/s too.
 
+## Open water and starting positions
+
+`openSides` is an array drawn from `['n', 'e', 's', 'w']`. Every shipped level
+has at least one open side. The catalog defaults Worlds 1/2 to west and World 3
+to all four. The shared navigation module removes both drawn coast and solid
+collision geometry for an open side; do not add a second hidden bounding wall.
+Internal islands, quays, gates and wavebreaks are unchanged. The limits remain
+`0 <= x <= width` and `0 <= y <= height` for every hull point. Leaving loses the
+assignment, including a casualty escaping while the player remains in bounds.
+A warning is drawn only within 30 metres of an open side.
+
+Keep the first ferry at its teaching slip and the first tug within attachment
+range. Later ferries depart empty in the middle half of the chart, at least
+80 metres from their first loading call. Later tug sterns begin more than 44
+metres from the active casualty's bow. Test full hull clearance, not just the
+spawn center. The positioning leg is counted in the trial; allow room to brake,
+reverse and turn without forcing an immediate exit or collision.
+
+Changing a start changes the speedrun route. Add the stage to the appropriate
+record migration and archive affected circuits rather than comparing old
+dock-side PBs/ghosts to new midwater starts. The ten version-3.1 departures are
+listed in `HarborStorage.RESTARTED`.
+
 ## Vehicle-ferry example
 
 ```js
@@ -75,7 +98,7 @@ Add a `towables` entry with unique `id`, display `name`, `start`, `length`,
 
 Every casualty should have one corresponding tow job. They remain anchored
 until the active job allows pickup. Begin a tutorial with the stern and bow
-attachment points close enough for F; later levels can require approach work.
+attachment points close enough for F; later levels require approach work.
 A player berth must fit the actual ferry or tug, not just the default cargo ship.
 
 The tug needs room **beyond the casualty's target**: it cannot tow from inside
@@ -96,7 +119,10 @@ Exercise job prerequisites separately from navigation. Then record real-control
 runs for representative levels. Put fixed event fixtures in `tests/fixtures/`
 and replay them through `tests/headless.cjs`. A fixture may contain input events,
 not position/velocity edits or directly completed objectives. The supplied
-island verifier shows the pattern.
+control verifier shows the pattern. Run `npm run replays:sync` after editing
+the published fixtures, so source play and the offline console replay the same
+input data. `DeadSlow.times()` must leave author times null for stages without
+a verified control recording.
 
 Pace times are design targets, not verified optimal times. Begin permissively;
 use observed human routes to tune later medals. Current puzzles should preserve

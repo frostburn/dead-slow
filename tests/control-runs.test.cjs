@@ -13,6 +13,7 @@ for (const fixture of fixtures) {
         assert.equal(work.line, null);
         assert.equal(work.onboard.length, 0);
         assert.equal(work.index, t.state.level.jobs.length);
-        assert.ok(work.stats.vehiclesDelivered > 0 || work.stats.vesselsDelivered > 0);
+        if (t.state.level.jobs.length)
+            assert.ok(work.stats.vehiclesDelivered > 0 || work.stats.vesselsDelivered > 0);
     });
 }

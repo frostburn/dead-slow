@@ -1,0 +1,188 @@
+/* The secret chart room. No devtools detection, polling, network calls or eval. */
+(function (root) {
+    'use strict';
+    const V = typeof module !== 'undefined' && module.exports ? require('./verification.js') : root.HarborVerification;
+    function create(bridge, logger = root.console) {
+        const copy = value => JSON.parse(JSON.stringify(value));
+        let rate = 1, playback = null, launching = false, lastReport = null;
+        const log = (method, ...args) => { if (!bridge.quiet) logger?.[method]?.(...args); };
+        function finite(value, min, max, name) {
+            if (!Number.isFinite(value) || value < min || value > max)
+                throw new RangeError(`${name} must be a finite number from ${min} to ${max}.`);
+            return value;
+        }
+        function live() {
+            if (bridge.state().status !== 'running') throw new Error('Start or resume a trial first; DeadSlow.level(3, 4) starts one.');
+        }
+        function practice(reason) { bridge.practice('Console practice: ' + reason); }
+        function findLevel(worldOrId, stage) {
+            const i = typeof worldOrId === 'string' ? bridge.levels.findIndex(l => l.id === worldOrId) :
+                bridge.levels.findIndex(l => l.worldNumber === worldOrId && l.stageNumber === stage);
+            if (i < 0) throw new RangeError('Unknown harbor. Use its id or (world 1–3, harbor 1–12); DeadSlow.levels() lists them.');
+            return i;
+        }
+        function fixture(id) {
+            const f = V.runs.find(f => f.level === id);
+            if (!f) throw new RangeError('No verified recording for this harbor. DeadSlow.runs() lists the available recordings.');
+            return f;
+        }
+        function load(i) {
+            launching = true;
+            try { bridge.load(i); } finally { launching = false; }
+            practice('harbor selected');
+            bridge.hud();
+        }
+        function controls(values) {
+            if (!values || typeof values !== 'object' || Array.isArray(values)) throw new TypeError('Supply a controls object.');
+            // Validate the entire command before applying any part of it.
+            for (const [key, v] of Object.entries(values)) {
+                if (!['throttle', 'rudder', 'thruster', 'winch'].includes(key)) throw new TypeError('Unknown control: ' + key);
+                finite(v, key === 'throttle' ? -3 : -1, key === 'throttle' ? 4 : 1, key);
+                if (key === 'throttle' && !Number.isInteger(v)) throw new RangeError('Throttle must be a whole notch.');
+            }
+            live(); practice('helm override');
+            if (values.throttle !== undefined) bridge.throttle(values.throttle - bridge.state().run.ship.throttle);
+            bridge.input(values);
+        }
+        function watch(id, speed = 8) {
+            const f = fixture(id), i = findLevel(id);
+            finite(speed, 0, 32, 'Speed');
+            rate = speed;
+            load(i);
+            playback = { fixture: f, tick: 0, event: 0, controls: { rudder: 0, thruster: 0, winch: 0 } };
+            lastReport = null;
+            practice('verification replay');
+            bridge.resetClock();
+            log('info', `Watching ${bridge.levels[i].name} at ${rate}×. Fixed controls, 120 Hz physics, unranked. Expected ${f.expectedTime.toFixed(3)} s.`);
+            return { level: id, expectedTime: f.expectedTime, speed: rate };
+        }
+        function beforeStep() {
+            if (rate !== 1) practice(rate === 0 ? 'manual stepping' : `${rate}× time`);
+            if (!playback) return;
+            const p = playback;
+            while (p.event < p.fixture.events.length && p.fixture.events[p.event].time <= p.tick * V.step + 1e-7) {
+                const e = p.fixture.events[p.event++];
+                if (e.line) bridge.line();
+                if (e.throttle !== undefined) bridge.throttle(e.throttle - bridge.state().run.ship.throttle);
+                for (const key of ['rudder', 'thruster', 'winch']) if (e[key] !== undefined) p.controls[key] = e[key];
+            }
+            bridge.input(p.controls);
+            p.tick++;
+        }
+        function afterStep() {
+            if (!playback) return;
+            const s = bridge.state(), p = playback;
+            if (s.status === 'running' && p.tick < Math.ceil(p.fixture.duration / V.step)) return;
+            const clean = s.run.result?.clean === true, error = s.run.time - p.fixture.expectedTime;
+            lastReport = {
+                level: p.fixture.level, status: s.status, clean, time: s.run.time,
+                expectedTime: p.fixture.expectedTime, difference: error,
+                verified: s.status === 'complete' && clean && Math.abs(error) <= V.step + 1e-6,
+                contacts: s.run.contacts, lineBreaks: s.run.jobs.stats.lineBreaks,
+                steps: p.tick, eventsApplied: p.event, ranked: false,
+                method: 'Fixed control inputs through the live game; no repositioning or objective shortcuts.'
+            };
+            playback = null;
+            bridge.clearInput();
+            if (s.status === 'running') rate = 0; // Stop a divergent recording at its declared end.
+            log(lastReport.verified ? 'info' : 'warn', lastReport.verified ? 'All fast! Control recording verified.' : 'Recording diverged; this is not a verified completion.');
+            log('table', [copy(lastReport)]);
+            return false; // Stop the caller's batch exactly here, including a divergent recording.
+        }
+        const menu = Object.freeze({
+            help() {
+                const commands = [
+                    ['DeadSlow.levels()', 'List all harbors; world and harbor numbers start at 1.'],
+                    ['DeadSlow.level(3, 4)', 'Start The Floating Sauna as unranked practice (or supply an id).'],
+                    ['DeadSlow.speed(8)', '0–32× wall-time rate. Physics always uses 1/120 second steps. 0 freezes.'],
+                    ['DeadSlow.step(30)', 'Advance up to 600 simulated seconds, including replay controls.'],
+                    ['DeadSlow.controls({throttle: 4})', 'Persistent helm: throttle −3…4; rudder/thruster/winch −1…1.'],
+                    ['DeadSlow.line()', 'Make fast / cast off using the real range and speed checks.'],
+                    ['DeadSlow.warp(150, 200, 0)', 'Reposition the player only, stop motion; heading in degrees.'],
+                    ['DeadSlow.repair()', 'Restore the hulls; does not erase contacts or failure.'],
+                    ['DeadSlow.state()', 'A detached snapshot; inspecting it never taints a normal run.'],
+                    ['DeadSlow.runs()', 'List the three real control recordings and their author times.'],
+                    ['DeadSlow.times()', 'All harbors: verified times or null, separately from medal targets.'],
+                    ['DeadSlow.timeline("bigger-boat")', 'Inspect the fixed-time input events.'],
+                    ['DeadSlow.watch("bigger-boat", 8)', 'Watch the actual verification run with the normal renderer.'],
+                    ['DeadSlow.verify("all")', 'Execute all three recordings now; return measured verification reports.'],
+                    ['DeadSlow.report()', 'Inspect the last replay result.'],
+                    ['DeadSlow.normal()', 'Restore 1× time and start a fresh, ranked individual attempt.']
+                ];
+                log('table', commands.map(([command, purpose]) => ({ command, purpose })));
+                log('info', 'Cheats are welcome aboard. Assisted runs never replace your records. Inspection alone is harmless.');
+                return commands;
+            },
+            levels() {
+                const rows = bridge.levels.map(l => ({ world: l.worldNumber, harbor: l.stageNumber, id: l.id, name: l.name }));
+                log('table', rows); return rows;
+            },
+            level(worldOrId, stage) { load(findLevel(worldOrId, stage)); return menu.state(); },
+            speed(value) {
+                if (value === undefined) return rate;
+                finite(value, 0, 32, 'Speed');
+                rate = value; practice(value === 0 ? 'time frozen' : `${value}× time`);
+                bridge.resetClock(); bridge.hud();
+                return rate;
+            },
+            step(seconds = V.step) {
+                finite(seconds, 0, 600, 'Seconds'); live(); practice('manual stepping');
+                bridge.advance(seconds); bridge.resetClock();
+                return menu.state();
+            },
+            controls,
+            line() { live(); practice('line override'); bridge.line(); },
+            warp(x, y, degrees = 0) {
+                const [w, h] = bridge.state().level.world;
+                finite(x, -w, 2 * w, 'X'); finite(y, -h, 2 * h, 'Y'); finite(degrees, -36000, 36000, 'Heading');
+                live(); practice('repositioned hull'); playback = null;
+                bridge.clearInput(); bridge.warp(x, y, degrees * Math.PI / 180); bridge.hud();
+            },
+            repair() { live(); practice('hull repaired'); bridge.repair(); bridge.hud(); },
+            state() {
+                const s = bridge.state();
+                return copy({ level: s.level.id, status: s.status, timeScale: rate, replay: playback?.fixture.level || null, input: s.input, run: s.run });
+            },
+            runs() {
+                const rows = V.runs.map(f => ({ id: f.level, authorTime: f.expectedTime, method: 'control-only', source: f.source }));
+                log('table', rows); return rows;
+            },
+            times() {
+                const rows = bridge.levels.map(l => ({
+                    world: l.worldNumber, harbor: l.stageNumber, id: l.id,
+                    verifiedAuthorTime: V.runs.find(f => f.level === l.id)?.expectedTime ?? null,
+                    goldTarget: l.pace[0], silverTarget: l.pace[1], bronzeTarget: l.pace[2]
+                }));
+                log('table', rows); log('info', 'null means no control-only author recording. Medal targets are design goals, not verified completion times.');
+                return rows;
+            },
+            timeline(id) { const events = copy(fixture(id).events); log('table', events); return events; },
+            watch,
+            verify(id = 'all') {
+                const runs = id === 'all' ? V.runs : [fixture(id)];
+                return runs.map(f => { watch(f.level, 0); bridge.advance(f.duration + V.step); bridge.resetClock(); return copy(lastReport); });
+            },
+            report() { return copy(lastReport); },
+            normal() {
+                rate = 1; playback = null;
+                bridge.load(bridge.state().index);
+                bridge.resetClock();
+                log('info', 'Back on the clock. Fresh individual trial, normal time, records enabled.');
+            }
+        });
+        if (!bridge.quiet) {
+            log('info', '%cAHOY, CAPTAIN! ☀', 'font-size:22px;font-weight:bold;color:#bcb66b');
+            log('info', 'You found the secret chart room. Coffee is hot, the sea is open, and the harbor master saw nothing. Type DeadSlow.help() for the spare keys.');
+        }
+        return {
+            menu, get rate() { return rate; }, beforeStep, afterStep,
+            onLoad() {
+                playback = null;
+                if (launching || rate !== 1) practice('test session');
+            }
+        };
+    }
+    const api = { create };
+    if (typeof module !== 'undefined' && module.exports) module.exports = api;
+    root.HarborConsole = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -2,9 +2,9 @@
 
 ## One simulation, two environments
 
-`physics.js`, `jobs.js`, `levels.js` and `storage.js` expose CommonJS exports for
-Node and named globals for the browser. `archipelago.js` supplies level data to
-`levels.js`. The source page loads eight scripts in a fixed order; `build.cjs`
+The physics, navigation, jobs, level, storage, console and verification modules
+expose CommonJS exports for Node and named globals for the browser. `archipelago.js` supplies level data to
+`levels.js`. The source page loads eleven scripts in a fixed order; `build.cjs`
 inlines the same files, without transforming the mechanics or fetching assets.
 
 `game.js` owns the current level, run, inputs, modal state and optional circuit.
@@ -12,7 +12,15 @@ inlines the same files, without transforming the mechanics or fetching assets.
 state. Simulation time, not frame count or wall-clock time, drives every hazard.
 Long frame gaps pause into practice rather than granting ranked catch-up time.
 
-The test harness is exposed only with the `?test` query parameter. Normal
+`console.js` publishes the small, frozen `DeadSlow` menu on ordinary launches.
+Inspection returns detached data; mutations mark the attempt and any circuit as
+practice. Animated acceleration feeds the same fixed-step loop, capped at 480
+ticks per frame with backlog retained. Manual stepping and replay also go
+through `simulationStep()`; there is no alternate fast physics implementation.
+`verification.js` is generated from the checked-in JSON input recordings, with
+its reproducibility tested. See `CONSOLE.md` for the public commands.
+
+The raw test harness is exposed only with the `?test` query parameter. Normal
 launches have no `DeadSlowTest` global. This is not an anti-cheat boundary: local
 code and records are intentionally inspectable and editable.
 
@@ -23,6 +31,13 @@ updates gate state, integrates free towable bodies and applies the tow
 constraint, then resolves solid/body contacts. It advances ordered pilot,
 lock and island-job objectives, recomputes mooring readiness, adds splits and
 samples the player ghost. See `advance()` for the exact ordering.
+
+`navigation.js` supplies the same coast rectangles to physics and rendering.
+Levels have explicit `openSides`: all four in the archipelago, west in the
+other worlds. Whole-hull containment is checked for the player and all
+casualties before and after contact resolution, before objective completion.
+An exit immediately fails the attempt; no clamp, collision penalty or rebound
+is applied. The renderer shows only a local warning near an open edge.
 
 Menus freeze all hulls, ramps, winches and clocks. Input state is cleared on
 pause, lost focus and pointer cancellation. Retry reconstructs the entire run,
@@ -98,10 +113,19 @@ tracks the player only. Ghost density is lower in longer archipelago stages;
 the retained sample cap is 12,000.
 
 `audio.js` is procedural and optional. Sound does not drive physics or clocks.
+The horn uses four detuned, harmonic-rich periodic waves, soft saturation,
+high/low-pass filtering and a sustained envelope. Voices cannot stack through
+repeated H presses; completed nodes disconnect. Mute fades the current envelope
+to zero. The browser suite renders the actual graph in an OfflineAudioContext.
+
 `storage.js` contains all local record filtering and migrations. The unchanged
-storage key is `dead-slow.records.v1`, even though the schema is version 3.
-Version-2 Grand Tours move to `archivedRaces['grand-tour-24']`; individual stage
-IDs and unchanged circuit IDs retain their records. Imported text is JSON, not
+storage key is `dead-slow.records.v1`, even though the schema is version 4.
+Version-2 Grand Tours move to `archivedRaces['grand-tour-24']`. Ten changed island
+departures move into `archivedStages`, preserving their ghosts and splits.
+Pre-schema-4 World 3/Grand Tour records move to the `archipelago-dock-starts`
+and `grand-tour-dock-starts` archives. The tutorials and World 1/2 stay active.
+Re-importing older data cannot revive incompatible current PBs, and the
+migration is idempotent. Imported text is JSON, not
 executable content. The UI rejects files over 5 MiB and renders imported fields
 as data. Local logbooks are not trusted evidence of competitive rankings.
 

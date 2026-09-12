@@ -101,7 +101,7 @@ test('v1 import preserves exposed PBs and archives the incompatible old circuit'
         ] };
     const s = S.create({ getItem: () => JSON.stringify(data), setItem() {
         } });
-    assert.equal(s.data.version, 3);
+    assert.equal(s.data.version, 4);
     assert.equal(s.best('crosscurrent').time, 123);
     assert.equal(s.best('crosscurrent-sheltered'), null);
     assert.equal(s.data.marathon[0].time, 2222);

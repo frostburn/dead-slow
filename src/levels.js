@@ -562,6 +562,8 @@
         l.worldNumber = w.number;
         l.stageNumber = i % 12 + 1;
         l.theme = w.theme;
+        // Working harbors open west onto the fairway; the skerries have no perimeter coast.
+        l.openSides = l.openSides || (w.number === 3 ? ['n', 'e', 's', 'w'] : ['w']);
         const oldTag = l.tag?.split(' / ')[1] || l.kind.toUpperCase();
         l.tag = `W${w.number} · ${String(l.stageNumber).padStart(2, '0')} / ${oldTag}`;
         l.current = l.current || [0, 0];

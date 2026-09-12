@@ -229,6 +229,8 @@ with sync_playwright() as p:
     check('Production launch has no JavaScript errors',not production_errors)
     production.close()
     check('No mobile JavaScript errors',not mobile_errors)
+    from browser_open_water import check_open_water
+    check_open_water(browser, check, html)
     report={'passed':len(checks),'checks':checks,'first_harbor_time':actual['result']['time'],'errors':errors+mobile_errors}
     if args.report:
         args.report.parent.mkdir(parents=True,exist_ok=True)

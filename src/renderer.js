@@ -1,6 +1,6 @@
 (function (root) {
     'use strict';
-    const P = root.HarborPhysics, J = root.HarborJobs;
+    const P = root.HarborPhysics, N = root.HarborNavigation, J = root.HarborJobs;
     const DAY = {
         water: '#123641', grid: '#315762', land: '#597175', edge: '#9aa9a0', green: '#7ce7b9', amber: '#ffbc75', muted: '#95b6bd', white: '#e6eeee', red: '#ff817a'
     };
@@ -344,30 +344,6 @@
                 text(z.name.toUpperCase(), z.x, z.y - z.ry * .31, '#f6f0d4', 3.2);
             }
         }
-        function archipelagoCoast(W, H) {
-            for (const z of [
-                { x: 0, y: 0, w: W, h: 20 }, { x: 0, y: H - 20, w: W, h: 20 }, { x: 0, y: 20, w: 20, h: H - 40 }, { x: W - 20, y: 20, w: 20, h: H - 40 }
-            ]) {
-                ctx.fillStyle = '#8b9679';
-                ctx.fillRect(z.x, z.y, z.w, z.h);
-                ctx.strokeStyle = '#d2d7b5';
-                ctx.lineWidth = 1;
-                ctx.strokeRect(z.x, z.y, z.w, z.h);
-            }
-            for (let x = 38; x < W - 26; x += 24) {
-                tree(x, 8, 3.4);
-                tree(x + 9, H - 9, 3);
-                if (x % 5 < 2)
-                    cabin(x + 9, 9, 8, 5);
-            }
-            for (let y = 69; y < H - 36; y += 39) {
-                tree(9, y, 3.2);
-                tree(W - 9, y + 8, 3.4);
-            }
-            ctx.fillStyle = '#2d5143';
-            ctx.fillRect(W * .5 - 68, H - 16, 136, 12);
-            text('S A A R I S T O  /  S K Ä R G Å R D', W / 2, H - 10, '#e8e4bd', 3.1);
-        }
         function car(x, y, a, v, alpha = 1) {
             ctx.save();
             ctx.globalAlpha = alpha;
@@ -670,24 +646,33 @@
                         ctx.restore();
                     }
             }
-            // The coast is real collision geometry, not a decorative frame.
-            if (islands)
-                archipelagoCoast(W, H);
-            else {
-                for (const p of [
-                    { x: 0, y: 0, w: W, h: 20 }, { x: 0, y: H - 20, w: W, h: 20 }, { x: 0, y: 20, w: 20, h: H - 40 }, { x: W - 20, y: 20, w: 20, h: H - 40 }
-                ])
-                    pier(p);
+            // Only closed edges have coast. Archipelago water continues past all four edges.
+            for (const coast of N.coasts(l)) pier(coast);
+            if (!islands) {
                 for (let x = 37; x < W - 40; x += 35) {
-                    ctx.fillStyle = night ? '#383d57' : '#455f63';
-                    ctx.fillRect(x, 5, 23, 8);
-                    ctx.fillRect(x, H - 13, 23, 8);
-                    ctx.strokeStyle = '#809592';
-                    ctx.lineWidth = .3;
-                    ctx.strokeRect(x, 5, 23, 8);
-                    ctx.strokeRect(x, H - 13, 23, 8);
+                    for (const side of ['n', 's']) {
+                        if (l.openSides.includes(side)) continue;
+                        const y = side === 'n' ? 5 : H - 13;
+                        ctx.fillStyle = night ? '#383d57' : '#455f63';
+                        ctx.fillRect(x, y, 23, 8);
+                        ctx.strokeStyle = '#809592';
+                        ctx.lineWidth = .3;
+                        ctx.strokeRect(x, y, 23, 8);
+                    }
                 }
-                text(night ? 'N O R T H W A T C H   /   N I G H T   S H I F T' : 'H A R B O R   A U T H O R I T Y', W / 2, H - 9, night ? '#c7c9e4' : '#c4cfbf', 2.9);
+                if (!l.openSides.includes('s'))
+                    text(night ? 'N O R T H W A T C H   /   N I G H T   S H I F T' : 'H A R B O R   A U T H O R I T Y', W / 2, H - 9, night ? '#c7c9e4' : '#c4cfbf', 2.9);
+            }
+            // A local warning only near danger, never a permanent frame around the islands.
+            const edge = [r.ship, ...r.jobs.bodies].map(body => {
+                const warning = N.warning(l, body);
+                return warning ? { ...warning, body } : null;
+            }).filter(Boolean).sort((a, b) => a.distance - b.distance)[0];
+            if (edge && view.status === 'running') {
+                const x = edge.side === 'w' ? 0 : edge.side === 'e' ? W : edge.body.x;
+                const y = edge.side === 'n' ? 0 : edge.side === 's' ? H : edge.body.y;
+                text('CHART LIMIT · ' + Math.floor(edge.distance) + ' m', x, y - 5, C.amber, 4.5);
+                line(edge.side === 'n' || edge.side === 's' ? [{x: x - 25, y}, {x: x + 25, y}] : [{x, y: y - 25}, {x, y: y + 25}], C.amber, .6, [2, 3]);
             }
             if (night) {
                 // Fixed industrial silhouettes and warm lights distinguish the night world.

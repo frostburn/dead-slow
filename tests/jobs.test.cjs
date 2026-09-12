@@ -396,13 +396,13 @@ test('v2 Grand Tour records are archived, not compared to the 36-stage route', (
                     { ...run, time: 71 }
                 ], ghost: [[0, 53, 121, 0]], bestSplits: [] } } };
     const out = S.sanitize(data);
-    assert.equal(out.version, 3);
+    assert.equal(out.version, 4);
     assert.equal(out.races['grand-tour'].length, 0);
     assert.equal(out.archivedRaces['grand-tour-24'][0].time, 2700);
     assert.equal(out.races.coast[0].time, 2700);
     assert.equal(out.stages['dead-slow'].runs[0].time, 71);
 });
-test('v3 export/import preserves island records, ghosts and archived route records', () => {
+test('current export/import preserves island records, ghosts and archived route records', () => {
     const s = S.create({ getItem: () => null, setItem() {
         } });
     s.record('bigger-boat', { time: 188, contacts: 0, clean: true }, [[0, 153, 156, 0], [10, 165, 156, 0]], [180]);

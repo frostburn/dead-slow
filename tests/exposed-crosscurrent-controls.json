@@ -27,5 +27,7 @@
       "throttle": 0
     }
   ],
-  "duration": 80.61477385974001
+  "duration": 80.61477385974001,
+  "expectedTime": 78.64166666666667,
+  "description": "Fixed-time controls only; no repositioning or objective shortcuts."
 }

@@ -57,6 +57,16 @@ vehicle ferries and a red working tug. You operate **MS Linnea** or **MT Sisu**.
 | Cars and a Casualty | Complete ferry duty, then use the empty ferry for a rescue. |
 | Midsummer Dispatch | Five vehicles, two village calls, clearance, a bridge and a tow. |
 
+The archipelago has **open water on all four sides**, without a perimeter
+seawall. Every Coast and Northwatch harbor has an open western approach. The
+chart remains the assignment area: crossing its edge with any part of your
+hull or a casualty ends the attempt. A small warning appears only within 30
+metres of an open edge; there is no invisible wall to bounce off.
+
+After the two island tutorials, ferries start empty in the fairway and must
+reach their first ramp; tugs start outside line-passing range and must approach
+the casualty. The positioning leg is part of the clock, not skipped setup.
+
 Every stage is selectable immediately. World circuits each cover twelve stages;
 the **Grand Tour** visits all thirty-six. Each route has its own record table.
 
@@ -143,10 +153,14 @@ leaderboard. Export the logbook before moving between files, browsers or hosts;
 then import it through **Logbook**. Import replaces the current local logbook.
 Storage denial or quota failure leaves the session playable and exportable.
 
-Logbooks from versions 1 and 2 are accepted. Existing stage and World 1/2 circuit
-records are preserved. A previous 24-stage Grand Tour is **archived**, never
-compared to the 36-stage route. The same storage key is retained for same-origin
-upgrades. Renaming a local HTML file may create a separate storage origin in
+Logbooks using schemas 1, 2 and 3 are accepted. Schema 4 preserves the ten
+repositioned island stages' previous records, ghosts and splits in an archive,
+not on the new departure routes' boards. Earlier World 3 and 36-stage Grand Tour
+circuits are also archived because their positioning legs differ. The two
+island tutorials and World 1/2 records stay active. A previous 24-stage Grand
+Tour remains **archived**, never compared to a 36-stage route. Archived times
+are visible in the logbook, and their complete data remains in exports.
+The same storage key is retained for same-origin upgrades. Renaming a local HTML file may create a separate storage origin in
 some browsers, so export/import is the reliable transfer path.
 
 ## Repository layout
@@ -156,12 +170,15 @@ index.html                 Source page; loads modules directly
 style.css                  Responsive bridge, dialogs and three palettes
 src/
   physics.js               Hulls, forces, collisions, water, tide, tow constraint
+  navigation.js            Shared open-edge collision, containment and warnings
   archipelago.js           Twelve island-service level definitions
   levels.js                World catalog and harbor level definitions
   jobs.js                  Manifest, ramp, towline and rescue state machines
   storage.js               Records, ghosts, validation and migrations
   renderer.js              Procedural Canvas chart and vessels
   audio.js                 Procedural Web Audio engine and signals
+  verification.js          Generated, checked-in control recordings for offline replay
+  console.js               Secret chart room, time controls and verification playback
   game.js                  Fixed-step orchestration, rules, input and UI
 tools/                    Offline builder, local server and trajectory verifier
 tests/                    Node tests, browser checks, fixed-input fixtures
@@ -179,7 +196,7 @@ bundle is ignored by git and rebuilt by the deployment workflow.
 npm run check              # Parse every JS module and check reproducible bundling
 npm run build
 npm test                   # Physics, jobs, records, control replays and local server
-npm run verify:runs        # Two complete island tutorial runs using timed inputs only
+npm run verify:runs        # All three published author runs, using timed inputs only
 ```
 
 Browser checks are optional development dependencies, separate from playing:
@@ -198,10 +215,22 @@ navigation and real local storage instead. `--inline` is for restricted test
 environments and uses an in-memory storage shim. See [testing notes](docs/TESTING.md)
 for coverage, limitations and reproducible trajectory details.
 
+## The secret chart room
+
+The browser console welcomes curious captains. Type `DeadSlow.help()` for
+level jumps, 0–32× time, frozen stepping, helm overrides, warping and the actual
+verification recordings. `DeadSlow.watch("bigger-boat", 8)` plays a real
+control-only rescue; `DeadSlow.verify("all")` measures the three reference runs.
+`DeadSlow.times()` keeps their author times separate from unverified medal
+pace targets. Assisted runs cannot replace normal records; `DeadSlow.normal()`
+starts fresh at normal speed. See the [console guide](docs/CONSOLE.md).
+
 ## Push and publish
 
-The archive has no embedded `.git`, personal credentials or repository-specific
-remote URL. Extract it and commit the project normally:
+For an existing checkout, apply the release patch on a new branch, run the
+checks, commit and push that branch for review. The full release archive has no
+embedded `.git` or credentials; do not overwrite an existing checkout's history.
+To start a separate repository from the archive instead:
 
 ```sh
 git init -b main

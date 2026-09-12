@@ -4,10 +4,8 @@
 const assert = require('node:assert/strict');
 const L = require('../src/levels.js');
 const { create } = require('../tests/headless.cjs');
-const fixtures = [
-    require('../tests/fixtures/first-crossing-controls.json'),
-    require('../tests/fixtures/bigger-boat-controls.json'),
-];
+// Historical filename retained; this now checks every published author run.
+const { runs: fixtures } = require('../src/verification.js');
 function replay(fixture) {
     const t = create();
     const index = L.findIndex(level => level.id === fixture.level);
@@ -35,6 +33,7 @@ if (require.main === module) {
         const t = replay(fixture);
         assert.equal(t.state.status, 'complete', `${fixture.level}: did not finish`);
         assert.ok(t.state.run.result.clean, `${fixture.level}: not clean`);
+        assert.ok(Math.abs(t.state.run.time - fixture.expectedTime) < 1 / 120, `${fixture.level}: author time diverged`);
         console.log(`${t.state.level.name}: ${t.state.run.time.toFixed(2)} s, ${t.state.run.contacts} contacts, ${t.state.run.jobs.stats.lineBreaks} parted lines`);
     }
 }

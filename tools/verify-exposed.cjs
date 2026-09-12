@@ -75,6 +75,12 @@ if (require.main === module) {
         test.advance(DT);
     }
     console.log('ACTUAL', test.state.status, test.state.run.time, test.state.run.contacts, test.state.run.ship);
-    fs.writeFileSync(path.join(__dirname, '../tests/exposed-crosscurrent-controls.json'), JSON.stringify({ level: id, events, duration: end + 3 }, null, 2));
+    if (test.state.status !== 'complete' || !test.state.run.result.clean)
+        throw new Error('Candidate is not a clean completion; the checked-in recording was not changed.');
+    fs.writeFileSync(path.join(__dirname, '../tests/exposed-crosscurrent-controls.json'), JSON.stringify({
+        level: id, events, duration: end + 3, expectedTime: Math.round(test.state.run.time * 120) / 120,
+        description: 'Fixed-time controls only; no repositioning or objective shortcuts.'
+    }, null, 2) + '\n');
+    console.log('Run npm run replays:sync to update the shipped recording.');
 }
 module.exports = { simulate, minimize };
