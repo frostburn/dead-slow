@@ -5,11 +5,35 @@
     const set = (id, text) => { const el = $(id); if (el) el.textContent = text; };
     function prepare(level) {
         const space = !!level.space;
+        $('radar-btn').hidden = !space;
+        root.document.title = space ? 'DEAD SLOW — The Black Meridian' : 'DEAD SLOW — Harbor Trials';
+        $('chart-section').setAttribute('aria-label', space ? 'Navigation sector and spacecraft' : 'Harbor chart and ship');
+        $('helm-controls').setAttribute('aria-label', space ? 'Spacecraft flight controls' : 'Ship helm controls');
+        $('neutral-btn').setAttribute('title', space ? 'Cut main thrust (Space)' : 'Set neutral (Space)');
+        $('throttle-down').setAttribute('title', space ? 'More reverse thrust (S)' : 'More astern (S)');
+        $('throttle-up').setAttribute('title', space ? 'More forward thrust (W)' : 'More ahead (W)');
+        $('horn-btn').innerHTML = (space ? 'RADAR PULSE' : 'SOUND HORN') + ' <kbd>H</kbd>';
+        $('horn-btn').setAttribute('title', space ? 'Send radar pulse (H)' : 'Sound horn (H)');
+        $('horn-btn').setAttribute('aria-label', space ? 'Send visual radar pulse with electronic ping (H)' : 'Sound horn (H)');
+        set('neutral-btn', space ? 'CUT THRUST' : 'NEUTRAL');
+        set('speed-frame-label', space ? 'SPEED / LOCAL FRAME' : 'SPEED / GROUND');
+        set('heading-label', space ? 'NOSE HEADING' : 'BOW HEADING');
+        set('chart-frame-label', space ? '+Y ↓ · LOCAL FRAME' : 'N ↑ · METRIC CHART');
+        set('check-objectives', space ? 'Mission tasks' : 'Clearance');
+        set('check-inside', space ? 'Inside cradle' : 'Inside berth');
+        set('check-aligned', space ? 'Nose aligned' : 'Bow aligned');
+        for (const [key, flight, sea] of [
+            ['port', '<b>↶</b> CCW', '<b>←</b> PORT'], ['starboard', 'CW <b>↷</b>', 'STBD <b>→</b>'],
+            ['bowport', '<b>«</b> LEFT', '<b>«</b> PORT'], ['bowstarboard', 'RIGHT <b>»</b>', 'STBD <b>»</b>']
+        ]) {
+            const button = root.document.querySelector(`[data-hold="${key}"]`);
+            if (button) button.innerHTML = space ? flight : sea;
+        }
         $('sea').setAttribute('aria-label', space ? 'Top-down spacecraft navigation chart. Fire main, lateral and rotational jets with the keyboard or flight helm.' : 'Top-down harbor chart. Use keyboard or the helm buttons below to control the ship.');
         $('work-panel').setAttribute('aria-label', space ? 'Spacecraft fuel, mission and beam instruments' : 'Island job instruments');
         $('manifest').setAttribute('aria-label', space ? 'Relative speed, spin and flight counters' : 'Vehicles aboard');
         for (const [id, flight, sea] of [['line-action','Lock or release rescue beam','Make or release towline'], ['line-in-label','Hold to attract friendly craft','Hold winch to reel in towline'], ['line-out-label','Hold to repel friendly craft','Hold winch to pay out towline']]) $(id).setAttribute('aria-label', space ? flight : sea);
-        for (const [key, flight, sea] of [['port','Rotate counterclockwise','Hold port rudder'], ['starboard','Rotate clockwise','Hold starboard rudder'], ['bowport','Translate to port','Hold bow thruster to port'], ['bowstarboard','Translate to starboard','Hold bow thruster to starboard']]) root.document.querySelector(`[data-hold="${key}"]`)?.setAttribute('aria-label', space ? flight : sea);
+        for (const [key, flight, sea] of [['port','Rotate counterclockwise','Hold port rudder'], ['starboard','Rotate clockwise','Hold starboard rudder'], ['bowport','Translate left relative to the spacecraft','Hold bow thruster to port'], ['bowstarboard','Translate right relative to the spacecraft','Hold bow thruster to starboard']]) root.document.querySelector(`[data-hold="${key}"]`)?.setAttribute('aria-label', space ? flight : sea);
         set('speed-unit', space ? 'm/s' : 'kn'); set('mobile-speed-unit', space ? 'm/s' : 'kn');
         set('helm-engine-label', space ? 'MAIN THRUST' : 'ENGINE TELEGRAPH');
         set('helm-rudder-label', space ? 'ROTATIONAL JETS' : 'RUDDER');
@@ -48,9 +72,6 @@
         set('line-action', st.beam ? 'F · RELEASE BEAM' : st.rescued ? 'CRAFT SECURED' : 'F · LOCK BEAM');
         set('line-in-label', 'J · ATTRACT'); set('line-out-label', 'K · REPEL');
         set('mobile-extra', `FUEL ${st.fuel.toFixed(0)}${c.flare ? ' · ' + (st.flare.active ? 'FLARE' : Math.ceil(st.flare.remaining) + 's') : ''}`);
-        const n = s.throttle;
-        set('telegraph-name', n < 0 ? 'RETRO BURN' : n > 0 ? 'FORWARD BURN' : 'COAST');
-        set('telegraph-detail', st.fuel <= 0 ? 'TANK EMPTY · COASTING' : st.inBlackout || c.solar && st.light < .01 ? 'NO POWER · COASTING' : n ? 'THRUST PERSISTS UNTIL CUT' : 'NO DRAG · NO AUTO-STOP');
         set('engine-read', Math.round(st.firingJets.main * 100));
         if (status === 'running') set('mission-status', root.HarborSpace.message(level, run));
         set('scale-label', c.century && root.document.getElementById('zoom-btn')?.textContent === '2.3×' ? 'SECTOR OVERVIEW' : '25 METRES');

@@ -1,15 +1,16 @@
-# Release verification — 4.0.0
+# Verification — Spaceflight feedback
 
 Prepared against `frostburn/dead-slow` main at
-`b2f5bd97ce17034139a505371a8609814eebfc1c` (tree
-`d0ade7abc630bbe09ab61eaddd1cf7acacb7f463`). The marine force model, stage
-geometry and twelve established control trajectories are unchanged.
+`e257b3c26a682a6a2215cca7cb5c924d422ff2df` (tree
+`fd7ab14cb1492fc69a2b4550c990b9a8d7d67766`). The merged contact-velocity,
+rotating-tender and bonus-progress fixes are preserved. This change touches
+sound and presentation, not physics, geometry, records or control recordings.
 
 | Check | Local result |
 | --- | --- |
-| JavaScript parse / deterministic offline bundle | 32 files; fifteen source modules inlined |
-| Node tests | 286 passed, 0 failed |
-| Chromium browser checks | 199 passed, 0 page errors |
+| JavaScript parse / deterministic offline bundle | 36 files; sixteen source modules inlined |
+| Node tests | 321 passed, 0 failed |
+| Chromium browser checks | 281 passed, 0 page errors |
 | Published control-only completions | 25 clean, measured in Node and the production browser console |
 | Space coverage | All twelve circuit sectors plus the Century Ship bonus |
 | Century Ship complete input replay | 1922.333333 s; three commands, zero contacts |
@@ -20,8 +21,11 @@ geometry and twelve established control trajectories are unchanged.
 | Persistence | Schema 4 stage/sea-circuit records retained; 36-stage Grand Tour archived |
 | Bonus routes | Century Ship selectable; excluded from Meridian and Grand Tour circuits |
 | Safety of assists | Replays/accelerated runs cannot replace PBs, ghosts, splits or circuit records |
-| Mixed audio | Existing engine/horn/cue tests pass at 44.1/48/96 kHz |
-| Digital clipping / non-finite samples | None in those mixed renders; peak below 0.1197 full scale |
+| Mixed audio | Sea and flight drive/radar/cue mixes pass at 44.1/48/96 kHz |
+| Digital clipping / non-finite samples | None; marine peak < 0.1197, flight peak < 0.10 full scale |
+| Flight feedback | All firing axes and beam audible; coasting silent; mute/pause/world changes fade correctly |
+| Radar | H and desktop/touch buttons; shared cooldown; visual works muted; no simulation/scoring effects |
+| Flight copy | Briefings, capture/PB/practice/circuit screens, pause/blur/hidden, logs/help and accessible labels |
 
 The [space guide](SPACE.md) lists all thirteen new author times. The
 [console guide](CONSOLE.md) lists the twelve established marine references.
@@ -49,9 +53,7 @@ states. Those tests are distinct from the full input-only trajectory tests.
 The long bonus executes every 120 Hz tick; no completion-time shortcut is used.
 
 Local browser checks use inline mounting and a storage shim, with system
-Chromium and the available Playwright 1.57.0. An isolated installation attempt
-could not obtain the requested 1.62.0 from this sandbox's package index.
-The committed requirement is **1.62.0**, as requested; GitHub Actions installs
+Chromium and the available Playwright 1.57.0. The repository requirement remains **1.62.0**, as requested; GitHub Actions installs
 that version afresh. Local results are not a claim about remote CI: see the PR's
 actual Actions conclusion. HTTP server behavior is also tested by Node; the
 remote browser workflow uses HTTP navigation and real local storage.

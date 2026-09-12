@@ -17,6 +17,8 @@
     const deltaFormat = t => `${t > 0 ? '+' : '−'}${Math.abs(t).toFixed(2)}`;
     let settings = store.data.settings;
     audio.enabled = settings.sound;
+    // Keep marine copy intact; shared menus choose flight terminology per mission.
+    const wording = (marine, flight) => level.space ? flight : marine;
     function esc(t) {
         return String(t).replace(/[&<>"']/g, c => ({
             '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -88,6 +90,7 @@
         level = LEVELS[index];
         selectedWorld = level.worldNumber;
         applyTheme();
+        audio.setSpace(!!level.space);
         clearInput();
         accumulator = 0;
         lastFrame = null;
@@ -95,7 +98,7 @@
         $('zoom-btn').textContent = '1×';
         const s = P.ship(...level.start, level.spec);
         run = {
-            ship: s, jobs: J.create(level, s), env: P.environmentAt(level, s, 0), time: 0, contacts: 0, wakes: 0, groundings: 0, grounded: false, dockHold: 0, buoyIndex: 0, buoyHold: 0, splits: [], sampleAt: 0, trailAt: 0, ghost: [[0, s.x, s.y, s.a]], trail: [], effects: [], gateStates: {}, lock: { phase: 'entry', hold: 0, clock: 0 }, wakeTimers: {}, wakeActive: {}, lastHits: {}, pausedUsed: false, practiceReason: '', loaded: false, throttleOrders: 0, thrusterTime: 0, distance: 0, maxSpeed: 0, dock: P.docking(s, level.berth, false), static: staticObstacles(), pb: false, result: null
+            radarPulse: null, ship: s, jobs: J.create(level, s), env: P.environmentAt(level, s, 0), time: 0, contacts: 0, wakes: 0, groundings: 0, grounded: false, dockHold: 0, buoyIndex: 0, buoyHold: 0, splits: [], sampleAt: 0, trailAt: 0, ghost: [[0, s.x, s.y, s.a]], trail: [], effects: [], gateStates: {}, lock: { phase: 'entry', hold: 0, clock: 0 }, wakeTimers: {}, wakeActive: {}, lastHits: {}, pausedUsed: false, practiceReason: '', loaded: false, throttleOrders: 0, thrusterTime: 0, distance: 0, maxSpeed: 0, dock: P.docking(s, level.berth, false), static: staticObstacles(), pb: false, result: null
         };
         if (level.space) {
             run.space = X.create(level, s);
@@ -179,7 +182,7 @@
         }
         if (marathon && status === 'complete') {
             marathon = null;
-            toast('Restarting this harbor as an individual trial.');
+            toast(wording('Restarting this harbor as an individual trial.', 'Restarting this sector as an individual flight.'));
         }
         loadStage(index, true);
     }
@@ -229,6 +232,16 @@
     function collision(obstacle, body = run.ship) {
         if (!body.moored)
             hitEvent(body, obstacle, P.contact(body, obstacle));
+    }
+    function signal() {
+        if (!run.space) return audio.horn();
+        if (status !== 'running') return false;
+        const now = performance.now() / 1000;
+        if (run.radarPulse && now - run.radarPulse.at < 1.1) return false;
+        // Presentation time only: no input event, fuel, clock or scoring changes.
+        run.radarPulse = { x: run.ship.x, y: run.ship.y, at: now };
+        audio.radar(); // The visual pulse remains available with sound muted/unavailable.
+        return true;
     }
     function lineAction() {
         if (status !== 'running')
@@ -388,7 +401,9 @@
     }
     function advanceSpace(dt) {
         run.time += dt;
+        const contacts = run.contacts;
         const events = X.update(level, run, input, dt) || [];
+        if (run.contacts > contacts) audio.impact();
         for (const name of events) addSplit(name);
         run.effects = run.effects.filter(e => run.time - e.t < 1);
         if (run.failure) {
@@ -465,12 +480,12 @@
             $('dialog').querySelector('[autofocus]')?.focus({ preventScroll: true });
         });
     }
-    function topModal(title, eyebrow = 'DEAD SLOW · HARBOR AUTHORITY') {
+    function topModal(title, eyebrow = wording('DEAD SLOW · HARBOR AUTHORITY', 'MERIDIAN FLIGHT AUTHORITY')) {
         return `<div class="modal-top"><div><div class="eyebrow">${eyebrow}</div><h2>${title}</h2></div><button data-action="back" aria-label="Close dialog">×</button></div>`;
     }
     function showIntro() {
         if (level.space) {
-            openDialog('intro', `<div class="eyebrow">WORLD 4 · THE BLACK MERIDIAN · ${level.bonus ? 'BONUS / OUTSIDE MARATHONS' : level.stageNumber + ' / 12'}</div><h1>${level.name}</h1><p>${level.brief}</p><div class="intro-details"><div><strong>${run.ship.length} m</strong><span>${esc(run.ship.name)}</span></div><div><strong>${level.space.fuel} Δv</strong><span>INITIAL PROPELLANT</span></div><div><strong>02 sec</strong><span>RELATIVE CAPTURE HOLD</span></div></div><p class="subtle">${level.tip}</p><div class="control-summary"><kbd>W</kbd><kbd>S</kbd> fore/aft thrust · <kbd>Space</kbd> cut thrust<br><kbd>A</kbd><kbd>D</kbd> rotational jets · <kbd>Q</kbd><kbd>E</kbd> sideways jets<br>${level.space.friendly ? '<kbd>F</kbd> lock / release beam · hold <kbd>J</kbd> attract / <kbd>K</kbd> repel<br>' : ''}Counterfire to stop rotation. Neutral does not brake. Touch controls support simultaneous holds.</div><p class="subtle">Keep every free spacecraft inside the navigation sector. Space is open; the assignment is not infinite.</p><div class="dialog-actions"><button class="primary" data-action="begin" autofocus>Release clamps →</button><button data-action="courses">Choose sector</button><button data-action="help">Flight manual</button></div>`);
+            openDialog('intro', `<div class="eyebrow">WORLD 4 · THE BLACK MERIDIAN · ${level.bonus ? 'BONUS / OUTSIDE MARATHONS' : level.stageNumber + ' / 12'}</div><h1>${level.name}</h1><p>${level.brief}</p><div class="intro-details"><div><strong>${run.ship.length} m</strong><span>${esc(run.ship.name)}</span></div><div><strong>${level.space.fuel} Δv</strong><span>INITIAL PROPELLANT</span></div><div><strong>02 sec</strong><span>RELATIVE CAPTURE HOLD</span></div></div><p class="subtle">${level.tip}</p><div class="control-summary"><kbd>W</kbd><kbd>S</kbd> fore/aft thrust · <kbd>Space</kbd> cut thrust<br><kbd>A</kbd><kbd>D</kbd> rotational jets · <kbd>Q</kbd><kbd>E</kbd> sideways jets<br>${level.space.friendly ? '<kbd>F</kbd> lock / release beam · hold <kbd>J</kbd> attract / <kbd>K</kbd> repel<br>' : ''}Counterfire to stop rotation. Cutting thrust does not brake. Touch controls support simultaneous holds.</div><p class="subtle">Keep every free spacecraft inside the navigation sector. Space is open; the assignment is not infinite.</p><div class="dialog-actions"><button class="primary" data-action="begin" autofocus>Release clamps →</button><button data-action="courses">Choose sector</button><button data-action="help">Flight manual</button></div>`);
             return;
         }
         const first = index === 0;
@@ -483,27 +498,27 @@
  <div class="dialog-actions"><button class="primary" data-action="begin" autofocus>Cast off <span aria-hidden="true">→</span></button><button data-action="courses">Choose harbor</button><button class="secondary small" data-action="help">How to dock</button></div>
  <p class="subtle" style="margin:16px 0 0">No installs. No accounts. Records stay in this browser.</p>${!store.available ? '<div class="storage-warning">Browser storage is unavailable. Records will last for this session only; export them from the logbook.</div>' : ''}`);
     }
-    function showPause(reason = 'The harbor can wait.') {
+    function showPause(reason = wording('The harbor can wait.', 'Flight control on standby.')) {
         pauseForMenu();
         openDialog('pause', `
- <div class="eyebrow">PAUSED · PRACTICE RUN</div><h1>${reason}</h1><p>Your ship and the harbor clock are stopped. This attempt is now practice and will not overwrite your records. A retry starts a record-eligible attempt.</p>
- <div class="result-time">${format(run.time)}</div><div class="dialog-actions"><button class="primary" data-action="resume" autofocus>Resume practice</button><button data-action="retry">Retry fresh · R</button><button class="secondary" data-action="courses">Harbors</button></div>`);
+ <div class="eyebrow">PAUSED · PRACTICE RUN</div><h1>${reason}</h1><p>${wording('Your ship and the harbor clock are stopped.', 'Your spacecraft and the mission clock are suspended.')} This attempt is now practice and will not overwrite your records. A retry starts a record-eligible attempt.</p>
+ <div class="result-time">${format(run.time)}</div><div class="dialog-actions"><button class="primary" data-action="resume" autofocus>Resume practice</button><button data-action="retry">Retry fresh · R</button><button class="secondary" data-action="courses">${wording("Harbors", "Sectors")}</button></div>`);
     }
     function showResult() {
         const r = run.result;
         if (!r)
             return;
-        const rank = r.time <= level.pace[0] ? 'GOLD PACE' : r.time <= level.pace[1] ? 'SILVER PACE' : r.time <= level.pace[2] ? 'BRONZE PACE' : 'SAFELY MOORED';
+        const rank = r.time <= level.pace[0] ? 'GOLD PACE' : r.time <= level.pace[1] ? 'SILVER PACE' : r.time <= level.pace[2] ? 'BRONZE PACE' : wording('SAFELY MOORED', 'CAPTURE SECURED');
         const marathonDone = marathon && !hasNext();
-        openDialog('result', `<div class="eyebrow">${run.pausedUsed ? 'PRACTICE COMPLETE' : run.pb ? 'NEW PERSONAL BEST' : 'LINES ASHORE'} · ${level.name.toUpperCase()}</div>
- <h1>${marathonDone ? (marathon.id === 'grand-tour' ? 'Four worlds. One captain.' : 'One world. All fast.') : run.space ? 'Capture confirmed.' : 'All fast. At last.'}</h1><div class="result-badge">${run.pausedUsed ? 'UNRANKED PRACTICE' : rank}${r.clean ? ' · CLEAN' : ''}</div><div class="result-time">${format(r.time)}</div>
- <p class="subtle">${run.pausedUsed ? esc(run.practiceReason || 'Practice attempt') + '. This time was not saved to the leaderboards.' : run.pb ? 'Your new best line is saved as the ghost for this harbor.' : 'A harbor conquered. A braking point learned.'}</p>
+        openDialog('result', `<div class="eyebrow">${run.pausedUsed ? 'PRACTICE COMPLETE' : run.pb ? 'NEW PERSONAL BEST' : wording('LINES ASHORE', 'CAPTURE CONFIRMED')} · ${level.name.toUpperCase()}</div>
+ <h1>${marathonDone ? (marathon.id === 'grand-tour' ? 'Four worlds. One captain.' : wording('One world. All fast.', 'Twelve sectors. Mission complete.')) : run.space ? 'Capture confirmed.' : 'All fast. At last.'}</h1><div class="result-badge">${run.pausedUsed ? 'UNRANKED PRACTICE' : rank}${r.clean ? ' · CLEAN' : ''}</div><div class="result-time">${format(r.time)}</div>
+ <p class="subtle">${run.pausedUsed ? esc(run.practiceReason || 'Practice attempt') + '. This time was not saved to the leaderboards.' : run.pb ? wording('Your new best line is saved as the ghost for this harbor.', 'Your best flight is saved as the ghost for this sector.') : wording('A harbor conquered. A braking point learned.', 'Rendezvous complete. Counterburn mastered.')}</p>
  <div class="result-grid"><div><strong>${r.contacts}</strong><span>HULL CONTACTS</span></div><div><strong>${r.hull}%</strong><span>HULL REMAINING</span></div><div><strong>${r.commands}</strong><span>ENGINE ORDERS</span></div></div>
  <p class="subtle">${r.space ? `${r.distance} m traveled · ${r.space.fuelUsed.toFixed(2)} Δv propellant used · ${r.space.shots} shots · ${r.space.captures} captures<br>Clean = no hull contacts. Moving cradles require relative rest, not absolute rest.` : `${r.distance} m traveled · ${r.thruster.toFixed(1)} s bow thrust · ${r.wakes} wake violations · ${r.groundings} groundings<br>Clean = no contacts, wake violations, grounding or parted towlines.`} No hidden time penalties.</p>
  ${run.space ? `<div class="work-summary">${r.space.fuelUsed.toFixed(2)} Δv propellant expended · ${r.space.burnTime.toFixed(1)} s burning<br>${r.space.shots} shots · ${r.space.hits} hits · ${r.space.captures} captures · ${r.space.jumps} temporal insertions</div>` : ''}
  ${level.jobs.length ? `<div class="work-summary">${r.work.vehiclesDelivered} vehicles delivered · ${r.work.vesselsDelivered} vessels secured · ${r.work.lineBreaks} lines parted<br>${Math.round(r.work.towDistance)} m towed · ${r.work.lineChanges} line operations · ${r.work.winchTime.toFixed(1)} s winch</div>` : ''}
  ${marathon ? `<div class="race-banner">${esc(raceLabel().toUpperCase())} ${marathon.stages}/${marathon.route.length} · ${format(marathon.total)} · ${marathon.retries} retries${marathon.practice ? ' · PRACTICE' : ''}</div>` : ''}
- <div class="dialog-actions"><button class="primary" data-action="${hasNext() ? 'next' : 'courses'}" autofocus>${hasNext() ? 'Next harbor →' : 'World chart'}</button><button data-action="retry">Retry · R</button><button class="secondary small" data-action="log">Logbook</button></div>
+ <div class="dialog-actions"><button class="primary" data-action="${hasNext() ? 'next' : 'courses'}" autofocus>${hasNext() ? wording('Next harbor →', 'Next sector →') : 'World chart'}</button><button data-action="retry">Retry · R</button><button class="secondary small" data-action="log">Logbook</button></div>
  ${!store.available ? '<div class="storage-warning">Save failed: export your logbook to keep these records.</div>' : ''}`);
     }
     function showFailure() {
@@ -530,7 +545,7 @@
         openDialog('courses', `${topModal(w.name, `WORLD ${w.number} · ${w.subtitle}`)}
  <div class="world-tabs" role="tablist" aria-label="Select world">${WORLDS.map(v => `<button role="tab" aria-selected="${v.number === selectedWorld}" class="world-tab ${v.number === selectedWorld ? 'active' : ''}" data-world="${v.number}"><span>WORLD ${v.number}</span><strong>${v.name}</strong><small>${v.subtitle}</small></button>`).join('')}</div>
  <p>${w.description}</p><div class="world-progress"><span>${arrivals} / ${sectors.length} ${w.number === 4 ? 'SECTORS CLEARED' : 'HARBORS MOORED'}</span>${bonuses.length ? `<span>${bonusArrivals} / ${bonuses.length} BONUS CLEARED</span>` : ''}<span>ALL STAGES AVAILABLE</span></div>
- ${marathon ? '<p class="subtle">Selecting a harbor starts an individual trial and ends your current circuit.</p>' : ''}
+ ${marathon ? '<p class="subtle">Selecting an assignment starts an individual trial and ends your current circuit.</p>' : ''}
  <div class="level-grid">${stages.map(l => {
             const i = LEVELS.indexOf(l), b = store.best(l.id);
             return `<button class="level-card ${i === index ? 'selected' : ''}" data-stage="${i}"><span class="number">W${l.worldNumber} · ${l.bonus ? 'BONUS' : (l.space ? 'SECTOR ' : 'HARBOR ') + String(l.stageNumber).padStart(2, '0')}${store.best(l.id, true) ? ' · CLEAN' : ''}</span><span class="name">${l.name}</span><span class="kind">${l.kind}</span><span class="pb">${b ? 'PB ' + format(b.time) : 'NO TIME ON FILE'}</span></button>`;
@@ -542,21 +557,21 @@
     function showLog(filter = 'overall') {
         pauseForMenu();
         const s = store.stage(level.id), runs = s.runs.filter(r => filter !== 'clean' || r.clean).slice(0, 10);
-        openDialog('log', `${topModal('The captain’s logbook.')}
- <p>World ${level.worldNumber} / ${level.stageNumber} · ${level.name} · ${s.attempts} departures · ${s.clears} ranked arrivals</p>
+        openDialog('log', `${topModal(wording('The captain’s logbook.', 'The flight logbook.'))}
+ <p>World ${level.worldNumber} / ${level.bonus ? "BONUS" : level.stageNumber} · ${level.name} · ${s.attempts} ${wording("departures", "launches")} · ${s.clears} ranked ${wording("arrivals", "captures")}</p>
  <div class="dialog-actions" style="margin-top:8px"><button class="${filter === 'overall' ? 'primary' : 'secondary'} small" data-filter="overall">Overall</button><button class="${filter === 'clean' ? 'primary' : 'secondary'} small" data-filter="clean">Clean only</button></div>
- <table class="log-table"><thead><tr><th>#</th><th>TIME / IGT</th><th>CONTACTS</th><th>CLASS</th></tr></thead><tbody>${runs.length ? runs.map((r, i) => `<tr><td>${String(i + 1).padStart(2, '0')}</td><td>${format(r.time)}</td><td>${r.contacts}</td><td class="${r.clean ? 'clean' : ''}">${r.clean ? 'CLEAN' : 'OPEN'}</td></tr>`).join('') : '<tr><td colspan="4">No ranked arrival yet. The harbor is waiting.</td></tr>'}</tbody></table>
- <h3 class="circuit-heading">Circuit records</h3><table class="log-table"><thead><tr><th>ROUTE</th><th>OVERALL</th><th>CLEAN</th></tr></thead><tbody>${[...WORLDS.map(w => [w.id, `World ${w.number} · ${w.name}`]), ['grand-tour', `Grand Tour · ${LEVELS.filter(l => !l.bonus).length}`]].map(([id, name]) => `<tr><td>${name}</td><td>${format(store.bestRace(id)?.time)}</td><td class="clean">${format(store.bestRace(id, true)?.time)}</td></tr>`).join('')}</tbody></table><p class="subtle">${store.data.archivedRaces?.['grand-tour-24']?.length ? '24-harbor Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-24'][0].time) + '<br>' : ''}${store.data.archivedRaces?.['grand-tour-36']?.length ? '36-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-36'][0].time) + '<br>' : ''}${store.data.marathon.length ? '12-harbor circuit (archived): ' + format(store.data.marathon[0].time) + '<br>' : ''}Times use a fixed 120 Hz simulation clock. Paused runs are unranked. Gold / silver / bronze are course pace targets, not online rankings.</p>
+ <table class="log-table"><thead><tr><th>#</th><th>TIME / IGT</th><th>CONTACTS</th><th>CLASS</th></tr></thead><tbody>${runs.length ? runs.map((r, i) => `<tr><td>${String(i + 1).padStart(2, '0')}</td><td>${format(r.time)}</td><td>${r.contacts}</td><td class="${r.clean ? 'clean' : ''}">${r.clean ? 'CLEAN' : 'OPEN'}</td></tr>`).join('') : `<tr><td colspan="4">${wording('No ranked arrival yet. The harbor is waiting.', 'No ranked capture yet. Your sector is waiting.')}</td></tr>`}</tbody></table>
+ <h3 class="circuit-heading">Circuit records</h3><table class="log-table"><thead><tr><th>ROUTE</th><th>OVERALL</th><th>CLEAN</th></tr></thead><tbody>${[...WORLDS.map(w => [w.id, `World ${w.number} · ${w.name}`]), ['grand-tour', `Grand Tour · ${LEVELS.filter(l => !l.bonus).length}`]].map(([id, name]) => `<tr><td>${name}</td><td>${format(store.bestRace(id)?.time)}</td><td class="clean">${format(store.bestRace(id, true)?.time)}</td></tr>`).join('')}</tbody></table><p class="subtle">${store.data.archivedRaces?.['grand-tour-24']?.length ? '24-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-24'][0].time) + '<br>' : ''}${store.data.archivedRaces?.['grand-tour-36']?.length ? '36-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-36'][0].time) + '<br>' : ''}${store.data.marathon.length ? '12-stage circuit (archived): ' + format(store.data.marathon[0].time) + '<br>' : ''}Times use a fixed 120 Hz simulation clock. Paused runs are unranked. Gold / silver / bronze are course pace targets, not online rankings.</p>
  ${store.data.archivedStages[level.id]?.runs.length ? `<details><summary>Archived dock-side departure records</summary><p class="subtle">These runs use a different starting position. Their ghosts and splits are preserved in exports, not compared with this approach route.</p><table class="log-table"><thead><tr><th>TIME / IGT</th><th>CONTACTS</th><th>CLASS</th></tr></thead><tbody>${store.data.archivedStages[level.id].runs.map(r => `<tr><td>${format(r.time)}</td><td>${r.contacts}</td><td>${r.clean ? 'CLEAN' : 'OPEN'}</td></tr>`).join('')}</tbody></table></details>` : ''}
  ${['archipelago', 'grand-tour'].some(id => store.data.archivedRaces[id + '-dock-starts']?.length) ? `<details><summary>Archived dock-side island circuits</summary><p class="subtle">Approach legs change these routes. Earlier records are retained separately.</p>${['archipelago', 'grand-tour'].map(id => { const rows = store.data.archivedRaces[id + '-dock-starts']; return rows.length ? `<p>${id === 'archipelago' ? 'World 3' : 'Grand Tour'} · ${format(rows[0].time)}</p>` : ''; }).join('')}</details>` : ''}
- <div class="dialog-actions"><button data-action="toggle-ghost" class="small">Ghost: ${settings.ghost ? 'ON' : 'OFF'}</button><button data-action="toggle-guide" class="small">Coast guide: ${settings.guide ? 'ON' : 'OFF'}</button><button data-action="toggle-sound" class="small">Sound: ${settings.sound ? 'ON' : 'OFF'}</button></div>
- <div class="dialog-actions"><button class="primary" data-action="back" autofocus>Back to harbor</button><button class="secondary small" data-action="export">Export records</button><button class="secondary small" data-action="import">Import records</button><button class="secondary small danger" data-action="reset">Erase</button></div>
+ <div class="dialog-actions"><button data-action="toggle-ghost" class="small">Ghost: ${settings.ghost ? 'ON' : 'OFF'}</button><button data-action="toggle-guide" class="small">${wording("Coast guide", "Drift vector")}: ${settings.guide ? 'ON' : 'OFF'}</button><button data-action="toggle-sound" class="small">Sound: ${settings.sound ? 'ON' : 'OFF'}</button></div>
+ <div class="dialog-actions"><button class="primary" data-action="back" autofocus>${wording("Back to harbor", "Back to flight")}</button><button class="secondary small" data-action="export">Export records</button><button class="secondary small" data-action="import">Import records</button><button class="secondary small danger" data-action="reset">Erase</button></div>
  <p class="subtle" style="margin-top:13px">Records are local, not tamper-proof. File copies and browsers can have separate storage. Export before moving the game. Earlier logbooks are accepted. Existing stage records stay with their courses; circuits of different lengths are kept separate.</p>${!store.available ? '<div class="storage-warning">Persistent storage is unavailable. Export to preserve this session’s records.</div>' : ''}`);
     }
     function showHelp() {
         if (level.space) {
             pauseForMenu();
-            openDialog('help', `${topModal('Flight manual.', 'MERIDIAN FLIGHT AUTHORITY')}<div class="help-grid"><div><h3>No free brakes</h3><p>W/S select persistent fore/aft thrust, from full retro to full forward. Space cuts main thrust. Velocity persists when engines stop. A/D fire rotational jets: rotation also persists after release, so counterfire. Q/E translate sideways without turning. The controls and touch buttons work simultaneously.</p><h3>Capture is relative</h3><p>Fit the whole hull in the cradle, match its bow arrow and velocity, reduce relative spin below 0.69°/s, cut every jet, and hold for two seconds. Fuel and assembly collars show their own progress. Moving cradles do not stop while you dock.</p><h3>Propellant</h3><p>Fuel is a reference-mass impulse budget (Δv in m/s), shared by main, lateral, attitude and beam systems. Heavier spacecraft gain less velocity from each unit. Rotation consumes fuel too. Solar craft cannot fire jets in full shadow; scanners also inhibit power. No hidden drag makes up for an empty tank.</p></div><div><h3>Special assignments</h3><p>F acquires/releases a rescue beam within 170 m and with clear line of sight. J attracts; K repels. Forces are equal and opposite. Friendly craft must settle in their own capture cradle; then dock the tug.</p><p>For gunnery, move into the firing box, face the lead diamond and hold still with all jets off for three seconds. Firing and projectile flight are automatic; recoil is a physical impulse. A confirmed hit unlocks the home berth.</p><p>Flares heat exposed hulls. Actual asteroid silhouettes cast shadows; partial cover is only partial protection. The solar assignment reverses that rule: darkness removes thrust, not momentum.</p><p>The chronogate records your first flight, sends you to the return lane and plays that exact history as a solid craft. Your clock never rewinds. The Century Ship is a separate 30+ minute bonus, excluded from the 48-stage Grand Tour.</p><h3>Local-frame simulation</h3><p>These are planar, non-orbital navigation puzzles. There is no gravity or relativity. The Century Ship uses a compressed distance scale. Onboard audio is instrument feedback, not sound propagating through vacuum.</p></div></div><div class="dialog-actions"><button class="primary" data-action="back" autofocus>Back to flight</button></div>`, true); return;
+            openDialog('help', `${topModal('Flight manual.', 'MERIDIAN FLIGHT AUTHORITY')}<div class="help-grid"><div><h3>No free brakes</h3><p>W/S select persistent fore/aft thrust, from full retro to full forward. Space cuts main thrust. Velocity persists when engines stop. A/D fire rotational jets: rotation also persists after release, so counterfire. H (or RADAR PULSE) sends a visual scan with an electronic ping; M mutes the audio but not the scan. Q/E translate sideways without turning. The controls and touch buttons work simultaneously.</p><h3>Capture is relative</h3><p>Fit the whole hull in the cradle, match its nose arrow and velocity, reduce relative spin below 0.69°/s, cut every jet, and hold for two seconds. Fuel and assembly collars show their own progress. Moving cradles do not stop while you dock.</p><h3>Propellant</h3><p>Fuel is a reference-mass impulse budget (Δv in m/s), shared by main, lateral, attitude and beam systems. Heavier spacecraft gain less velocity from each unit. Rotation consumes fuel too. Solar craft cannot fire jets in full shadow; scanners also inhibit power. No hidden drag makes up for an empty tank.</p></div><div><h3>Special assignments</h3><p>F acquires/releases a rescue beam within 170 m and with clear line of sight. J attracts; K repels. Forces are equal and opposite. Friendly craft must settle in their own capture cradle; then dock the tug.</p><p>For gunnery, move into the firing box, face the lead diamond and hold still with all jets off for three seconds. Firing and projectile flight are automatic; recoil is a physical impulse. A confirmed hit unlocks the home cradle.</p><p>Flares heat exposed hulls. Actual asteroid silhouettes cast shadows; partial cover is only partial protection. The solar assignment reverses that rule: darkness removes thrust, not momentum.</p><p>The chronogate records your first flight, sends you to the return lane and plays that exact history as a solid craft. Your clock never rewinds. The Century Ship is a separate 30+ minute bonus, excluded from the 48-stage Grand Tour.</p><h3>Local-frame simulation</h3><p>These are planar, non-orbital navigation puzzles. There is no gravity or relativity. The Century Ship uses a compressed distance scale. Onboard audio is instrument feedback, not sound propagating through vacuum.</p></div></div><div class="dialog-actions"><button class="primary" data-action="back" autofocus>Back to flight</button></div>`, true); return;
         }
         pauseForMenu();
         openDialog('help', `${topModal('It handles like a ship.')}
@@ -569,7 +584,7 @@
  <h3>Island ferry duty</h3><p>Match the amber loading or unloading outline with the entire hull, stop below 0.4 knots and select neutral. After the settle hold, the ramp opens and vehicles transfer automatically, one at a time. Cars, vans and buses add different masses. Propulsion is inhibited while a ramp is down. Ordering thrust aborts transfer and closes the ramp; transferred vehicles stay aboard. Re-enter the same slip to finish the call.</p>
  <h3>Tow a vessel, not a sprite</h3><p>Use your stern towing point and the casualty’s bow. Come within 44 metres at less than 1.6 knots relative speed; press F to make fast. Hold J to reel in or K to pay out (12–64 metres). A line pulls only when taut, and both vessels retain momentum. Keep its load below 100%; sustained overload or dragging the line over rock parts it and loses the clean run. Reconnect to recover. The casualty must settle inside its own marked berth for two seconds; shore crew then secure it and release your line. You still need to moor your own vessel. The dashed coast guide accounts for an attached tow, but never predicts collisions.</p>
  <h3>Fair, repeatable clocks</h3><p>Traffic, gates, tides and sluice pulses reset on retry. The main clock is in-game time. All contact types count against a clean run; wake violations and grounding do too. Pausing, opening menus mid-run or losing focus marks that attempt as practice. Ranked runs have no instant brake, teleport or auto-dock.</p></div></div>
- <div class="dialog-actions"><button class="primary" data-action="back" autofocus>Back to harbor</button><button class="secondary" data-action="log">Logbook & settings</button></div>`, true);
+ <div class="dialog-actions"><button class="primary" data-action="back" autofocus>${wording("Back to harbor", "Back to flight")}</button><button class="secondary" data-action="log">Logbook & settings</button></div>`, true);
     }
     function back() {
         if (status === 'paused')
@@ -624,11 +639,11 @@
     function missionText() {
         if (run.space && status === 'running') return X.message(level, run);
         if (status === 'ready')
-            return 'Awaiting departure. The clock starts when you cast off.';
+            return wording('Awaiting departure. The clock starts when you cast off.', 'Clamps engaged. The clock starts when you release them.');
         if (status === 'complete')
             return run.space ? 'Capture complete. All thrusters secured.' : 'Mooring complete. All lines secured.';
         if (status === 'failed')
-            return 'Hull lost. Press R to retry.';
+            return wording('Hull lost. Press R to retry.', 'Flight terminated. Press R to retry.');
         if (status === 'paused')
             return 'Paused. This attempt is now practice.';
         if (run.grounded)
@@ -667,9 +682,18 @@
         const n = run.ship.throttle, names = {
             '-3': 'FULL ASTERN', '-2': 'HALF ASTERN', '-1': 'DEAD SLOW ASTERN', '0': 'STOP', '1': 'DEAD SLOW AHEAD', '2': 'SLOW AHEAD', '3': 'HALF AHEAD', '4': 'FULL AHEAD'
         };
-        $('telegraph-name').textContent = names[n];
+        const st = run.space;
+        if (st) {
+            $('telegraph-name').textContent = n < 0 ? 'RETRO BURN' : n > 0 ? 'FORWARD BURN' : 'COAST';
+            $('telegraph-detail').textContent = st.fuel <= 0 ? 'TANK EMPTY · COASTING'
+                : st.inBlackout || level.space.solar && st.light < .01 ? 'NO POWER · COASTING'
+                : n ? 'THRUST PERSISTS UNTIL CUT' : 'NO DRAG · NO AUTO-STOP';
+        } else {
+            $('telegraph-name').textContent = names[n];
+            $('telegraph-detail').textContent = n === 0 ? 'NEUTRAL · STILL COASTING'
+                : `${n > 0 ? '+' : ''}${n} / ${n > 0 ? 4 : 3} · ${run.loaded ? 'LOADED' : 'TELEGRAPH'}`;
+        }
         $('telegraph-name').style.color = n < 0 ? 'var(--amber)' : 'var(--green)';
-        $('telegraph-detail').textContent = n === 0 ? 'NEUTRAL · STILL COASTING' : `${n > 0 ? '+' : ''}${n} / ${n > 0 ? 4 : 3} · ${run.loaded ? 'LOADED' : 'TELEGRAPH'}`;
         $('notches').innerHTML = Array.from({ length: 8 }, (_, i) => {
             const v = i - 3;
             return `<span class="notch ${v < 0 ? 'reverse' : v === 0 ? 'zero' : ''} ${v === n ? 'active' : ''}"></span>`;
@@ -685,11 +709,11 @@
         $('mobile-speed').textContent = speedText;
         $('speed').style.color = color;
         $('mobile-speed').style.color = color;
-        $('speed-direction').textContent = direction.toUpperCase();
+        $('speed-direction').textContent = run.space ? { ahead: 'FORWARD', astern: 'REVERSE', abeam: 'LATERAL', stopped: 'STOPPED' }[direction] : direction.toUpperCase();
         $('speed-direction').style.color = color;
-        $('mobile-direction').textContent = { ahead: 'AHD', astern: 'AST', abeam: 'BEAM', stopped: 'STOP' }[direction];
+        $('mobile-direction').textContent = (run.space ? { ahead: 'FWD', astern: 'REV', abeam: 'LAT', stopped: 'STOP' } : { ahead: 'AHD', astern: 'AST', abeam: 'BEAM', stopped: 'STOP' })[direction];
         $('mobile-direction').style.color = color;
-        $('drift').textContent = Math.abs(motion.sway) < .025 ? 'NO SIDEWAYS DRIFT' : `${motion.sway < 0 ? '← PORT' : 'STBD →'} DRIFT ${(Math.abs(motion.sway) * units).toFixed(1)} ${run.space ? 'm/s' : 'kn'}`;
+        $('drift').textContent = Math.abs(motion.sway) < .025 ? 'NO SIDEWAYS DRIFT' : `${motion.sway < 0 ? wording('← PORT', '← LEFT') : wording('STBD →', 'RIGHT →')} DRIFT ${(Math.abs(motion.sway) * units).toFixed(1)} ${run.space ? 'm/s' : 'kn'}`;
         const env = P.environmentAt(level, s, run.time), set = Math.hypot(env.current.x, env.current.y), lee = env.shelter > .8;
         $('shelter-status').textContent = lee ? 'IN THE LEE' : env.shelter > .08 ? 'ENTERING / LEAVING LEE' : 'OPEN WATER';
         $('shelter-status').classList.toggle('sheltered', lee);
@@ -795,7 +819,8 @@
     };
     $('retry-btn').onclick = retry;
     $('quick-retry-btn').onclick = retry;
-    $('horn-btn').onclick = () => audio.horn();
+    $('horn-btn').onclick = signal;
+    $('radar-btn').onclick = signal;
     $('sound-btn').onclick = () => toggleSetting('sound');
     $('ghost-btn').onclick = () => toggleSetting('ghost');
     $('zoom-btn').onclick = zoomChart;
@@ -905,7 +930,7 @@
             return;
         }
         if (e.code === 'KeyH') {
-            audio.horn();
+            signal();
             return;
         }
         if (status !== 'running')
@@ -929,7 +954,7 @@
         clearInput();
         if (status === 'running') {
             markPractice('Window lost focus');
-            showPause('The bridge is unattended.');
+            showPause(wording('The bridge is unattended.', 'The flight deck is unattended.'));
         }
     });
     document.addEventListener('visibilitychange', () => {
@@ -938,7 +963,7 @@
             clearInput();
             if (status === 'running') {
                 markPractice('Tab hidden');
-                showPause('The bridge is unattended.');
+                showPause(wording('The bridge is unattended.', 'The flight deck is unattended.'));
             }
         }
         else {
@@ -991,7 +1016,7 @@
         if (status === 'running') {
             if (elapsed > 1) {
                 markPractice('Long rendering interruption');
-                showPause('A watchkeeping interruption.');
+                showPause(wording('A watchkeeping interruption.', 'A flight-control interruption.'));
                 accumulator = 0;
             }
             else {
@@ -1016,7 +1041,7 @@
         renderer.render({
             level, run, index, status, input, zoom, settings, ghost: store.stage(level.id).ghost, visualTime: now / 1000
         });
-        audio.tick(run.space ? { engine: run.space.firingJets.main } : run.ship, status === 'running');
+        audio.tick(run.ship, status === 'running' && developer?.rate !== 0, run.space);
         requestAnimationFrame(frame);
     }
     updateSettings();
@@ -1054,7 +1079,7 @@
             }, start: begin, advance: advanceSeconds, cheats: developer.menu, frame,
             setShip(values) {
                 Object.assign(run.ship, values);
-            }, throttle, lineAction, finish, pause: showPause, retry, marathon: startMarathon, next: nextHarbor, format, zoom: zoomChart, hud: updateHud, courses: showCourses
+            }, throttle, lineAction, signal, finish, pause: showPause, retry, marathon: startMarathon, next: nextHarbor, format, zoom: zoomChart, hud: updateHud, courses: showCourses
         };
     }
 })();

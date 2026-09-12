@@ -233,6 +233,8 @@ with sync_playwright() as p:
     check_open_water(browser, check, html)
     from browser_space import check_space
     check_space(browser, check, html, args.screenshots)
+    from browser_flight_presentation import check_flight_presentation
+    check_flight_presentation(browser, check, html, args.screenshots)
     report={'passed':len(checks),'checks':checks,'first_harbor_time':actual['result']['time'],'errors':errors+mobile_errors}
     if args.report:
         args.report.parent.mkdir(parents=True,exist_ok=True)
