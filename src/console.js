@@ -181,7 +181,7 @@
             }
         });
         if (!bridge.quiet) {
-            log('info', '%cWELCOME ABOARD, CAPTAIN! ✦', 'font-size:22px;font-weight:bold;color:#bcb66b');
+            log('info', '%cAHOY, CAPTAIN! ✦', 'font-size:22px;font-weight:bold;color:#bcb66b');
             log('info', 'You found the secret chart room. Coffee is hot, the controls are yours, and mission control saw nothing. Type DeadSlow.help() for the spare keys.');
         }
         return {
