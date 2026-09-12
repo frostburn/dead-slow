@@ -4,7 +4,7 @@
 
 The physics, navigation, jobs, level, storage, console and verification modules
 expose CommonJS exports for Node and named globals for the browser. `archipelago.js` supplies level data to
-`levels.js`. The source page loads fifteen scripts in a fixed order; `build.cjs`
+`levels.js`. The source page loads sixteen scripts in a fixed order; `build.cjs`
 inlines the same files, without transforming the mechanics or fetching assets.
 
 `game.js` owns the current level, run, inputs, modal state and optional circuit.
@@ -143,7 +143,7 @@ unintentional handling drift in both an exposed berth and the island tutorials.
 spacecraft physics and mission state; it shares hull/SAT/contact helpers, not
 water integration or rudder forces. `space-renderer.js` consumes simulation
 state without changing it. `space-ui.js` maps the shared helm to flight labels
-and restores marine labels on return. The offline builder now inlines fifteen
+and restores marine labels on return. The offline builder now inlines sixteen
 modules in explicit source-page order.
 
 The game dispatches each fixed tick to `advanceSpace` for space sectors, keeping

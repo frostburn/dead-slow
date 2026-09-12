@@ -1,6 +1,24 @@
 # Changelog
 
-## Unreleased — Space contact and campaign progress fixes
+## Unreleased — Spaceflight feedback and fixes
+
+### Flight feedback
+
+- Give spacecraft a separate ion-drive/jet/beam sound palette, driven by actual
+  firing rather than the marine engine; coasting, disabled jets and frozen flight
+  are silent. Add electronic order, mission, impact and capture cues.
+- Replace the space horn with a cosmetic radar pulse and frequency-swept ping.
+  H, the flight-deck button and the touch chart button share a cooldown. Muting
+  audio leaves the scan visible and never changes fuel, clocks or records.
+- Use flight terminology in capture, pause, unattended, logbook, help and circuit
+  screens, browser titles, live instruments and accessible labels. Restore marine
+  controls and the original horn on return to sea.
+- Schedule cue sequences on the audio clock; fade and cancel stale sounds on mute
+  and stage changes. Bound rapid-command/replay polyphony and test mixed levels.
+- Show `stage` in console catalogs, retaining the legacy numeric `harbor` property
+  as a non-enumerable compatibility alias.
+
+### Space contact and campaign progress
 
 - Pass actual velocity vectors to asteroid, target-vessel and docked-tender
   contacts. Gentle collisions no longer turn world coordinates into impact speed.

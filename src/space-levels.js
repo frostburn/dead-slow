@@ -30,7 +30,7 @@
             id: 'last-fill', name: 'The Last Fill Before Dark', kind: 'Rendezvous · refuel · intercept',
             world: [5200, 650], start: [110, 330, 0], berth: berth(780, 330, 0, { motion: { vx: 4.2 } }),
             brief: 'Your tank contains only 4 m/s of impulse. Faraday Port is already receding at 4.2 m/s: you cannot catch it on that reserve. Rendezvous with the slower tanker, hold for refuelling, then intercept the port.',
-            tip: 'The amber tanker moves at 1.1 m/s. Match its velocity with less than 0.24 m/s relative drift. Refuelling takes six uninterrupted seconds in neutral. You keep moving together.',
+            tip: 'The amber tanker moves at 1.1 m/s. Match its velocity with less than 0.24 m/s relative drift. Refuelling takes six uninterrupted seconds with every jet cut. You keep moving together.',
             pace: [285, 400, 570], space: {
                 mission: 'refuel', fuel: 4, capacity: 85, acceleration: .34,
                 depot: berth(320, 330, 0, { motion: { vx: 1.1 }, label: 'LAST FILL', hold: 6 })
@@ -51,7 +51,7 @@
             id: 'newtons-broadside', name: 'Newton’s Broadside', kind: 'Steady · fire · recover',
             world: [1000, 650], start: [150, 450, 0], spec: warship, berth: berth(150, 450, 0, { l: 64, w: 32 }),
             brief: 'Move Resolute into the marked firing box. Rotate toward the practice target, stop drifting and spinning, and hold the firing solution for three seconds. The cannon fires automatically. Recover from recoil and return home.',
-            tip: 'Follow the lead diamond. All jets must be cut to charge the cannon. A miss can be corrected and retried; a hit unlocks the home berth. Recoil changes velocity, not just the screen.',
+            tip: 'Follow the lead diamond. All jets must be cut to charge the cannon. A miss can be corrected and retried; a hit unlocks the home capture cradle. Recoil changes velocity, not just the screen.',
             pace: [230, 350, 500], space: {
                 mission: 'gunnery', fuel: 240, acceleration: .5,
                 firing: berth(555, 440, -PI / 2, { l: 78, w: 70 }),
@@ -96,7 +96,7 @@
             id: 'borrowed-sun', name: 'Borrowed Sunlight', kind: 'Solar-only thrust',
             world: [1000, 620], start: [125, 370, 0], berth: berth(850, 270),
             brief: 'No battery, no reactor. Your solar cells power all thrusters directly, and nothing fires in complete shadow. Pass the sunlit survey marker, then coast very gently into the dark-side observatory.',
-            tip: 'Sunlight powers rotation and translation alike. Neutral coasting still works in the dark. Brake in the light before entering the final shadow; escape to sunlight to correct a missed approach.',
+            tip: 'Sunlight powers rotation and translation alike. Coasting with thrust cut still works in the dark. Brake in the light before entering the final shadow; escape to sunlight to correct a missed approach.',
             pace: [280, 420, 640], space: {
                 mission: 'solar', fuel: 180, acceleration: .36, solar: true,
                 survey: { x: 600, y: 175, r: 38, hold: 1, name: 'Solar survey' },

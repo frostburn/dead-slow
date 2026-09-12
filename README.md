@@ -124,7 +124,7 @@ verified times and the Century Ship's lower-bound argument.
 | R | Instant retry; avoids opening a menu. |
 | Escape | Pause / return. Pausing makes the attempt unranked. |
 | Z | Cycle chart zoom. |
-| G / V / M / H | Toggle ghost / coast guide / audio; sound horn. |
+| G / V / M / H | Toggle ghost / coast guide / audio; horn at sea, radar pulse in space. |
 
 Buttons provide the same controls on touchscreens. Rudder, thruster and winch
 can be held simultaneously; cancelling a touch releases its command. The
@@ -142,7 +142,10 @@ rotation and Q/E for pure sideways translation. Counterfire to stop each motion.
 For rescue jobs, F locks/releases the beam, J attracts and K repels. Both craft
 feel the opposite force. Space HUD speeds are **m/s**, not knots; fuel is a
 reference-mass impulse budget, shared across jets and beams. Keyboard and touch
-controls can be held simultaneously.
+controls can be held simultaneously. In space, **H** sends a visual radar pulse
+and electronic ping; the **◎** chart button works on touchscreens. Coasting is
+quiet, while actual main, lateral, rotational and beam firing has distinct
+onboard feedback. **M** mutes audio without hiding the pulse.
 
 ### Ferry calls
 
@@ -223,6 +226,7 @@ some browsers, so export/import is the reliable transfer path.
 index.html                 Source page; loads modules directly
 style.css                  Responsive bridge, dialogs and four palettes
 src/
+  space-audio.js           Ion-drive, reaction jets and electronic flight cues
   physics.js               Hulls, forces, collisions, water, tide, tow constraint
   navigation.js            Shared open-edge collision, containment and warnings
   archipelago.js           Twelve island-service level definitions

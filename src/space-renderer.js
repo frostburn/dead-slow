@@ -221,6 +221,27 @@
                     vessel({ ...s, x: P.lerp(a[1], b[1], u), y: P.lerp(a[2], b[2], u), a: a[3] + P.wrap(b[3] - a[3]) * u }, C.ice, null, .2);
                 }
             }
+            // Radar is a cosmetic instrument pulse on presentation time. It never
+            // changes ephemerides, collision state, fuel, objective progress or IGT.
+            const pulse = r.radarPulse, age = pulse ? view.visualTime - pulse.at : -1;
+            if (age >= 0 && age < 1.1) {
+                const radius = age / 1.1 * Math.max(230, 280 / scale);
+                ctx.save();
+                ctx.globalAlpha = .65 * (1 - age / 1.1);
+                circle(pulse.x, pulse.y, radius, null, C.ice, 1.6 / scale);
+                if (radius > 14 / scale) {
+                    ctx.globalAlpha *= .4;
+                    circle(pulse.x, pulse.y, radius - 12 / scale, null, C.ice, .8 / scale);
+                }
+                for (const target of [...st.rocks, st.port, st.depot, st.target, st.friendly, st.mother, st.second].filter(Boolean)) {
+                    const range = Math.hypot(target.x - pulse.x, target.y - pulse.y);
+                    if (Math.abs(range - radius) < 28 / scale) {
+                        ctx.globalAlpha = .7 * (1 - Math.abs(range - radius) * scale / 28);
+                        circle(target.x, target.y, 7 / scale, null, C.ice, 1.2 / scale);
+                    }
+                }
+                ctx.restore();
+            }
             vessel(s, C.white, view.status === 'running' ? st.firingJets : null);
             for (const tender of st.tenders || []) {
                 const p = P.localPoint(st.mother, 0, tender.offset);
