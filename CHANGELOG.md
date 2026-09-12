@@ -1,5 +1,17 @@
 # Changelog
 
+## 5.0.0-preview.1 — Gerbozilla’s first outing
+
+- Add World 5’s orienteering-paper theme and one standalone rolling-ball course.
+- Add downhill gravity, momentum, tractionless lake crossings, mutual ramming
+  damage, telegraphed city fire and a temporary shield with recharge.
+- Synchronize animated shell ribs and squeaky ee-oo bearings to rolling phase.
+- Add a ball-specific multitouch pad, menus, field log, counters and one clean
+  89.508333-second watchable reference. No further courses are stubbed in.
+- Keep all four established worlds, the 48-stage Grand Tour, saved-record schema
+  and Codex’s migration fix intact. The preview has independent stage records.
+- Add focused mechanics/browser/audio tests and update catalog-size assertions.
+
 ## Unreleased — Moving Cover and Recurring Histories
 
 - Offset the first spaceport and add two straight-line outbound asteroid flybys.

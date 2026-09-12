@@ -14,7 +14,7 @@ def check_space(browser, check, html, screenshots=None):
             Path(screenshots).mkdir(parents=True,exist_ok=True)
             page.screenshot(path=str(Path(screenshots)/name))
     page.evaluate('DeadSlow.level(4,1);DeadSlow.speed(0);DeadSlowTest.courses(4)')
-    check('Fourth world lists twelve sectors plus a selectable bonus',page.locator('.world-tab').count()==4 and page.locator('.level-card').count()==13)
+    check('Fourth world lists twelve sectors plus a selectable bonus',page.locator('.world-tab').count()==5 and page.locator('.level-card').count()==13)
     check('Bonus is explicitly excluded from the 48-stage Grand Tour','excluded from every circuit' in page.locator('#dialog').inner_text() and 'all 48' in page.locator('#dialog').inner_text())
     shot('worlds-four.png')
     # Progress is campaign-only; the selectable Century Ship has its own tally.

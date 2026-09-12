@@ -23,8 +23,8 @@ function bundle(root = ROOT) {
         scripts++;
         return '<script>\n' + readAsset(root, file).replace(/<\/script/gi, '<\\/script') + '\n</script>';
     });
-    if (sheets !== 1 || scripts !== 16)
-        throw new Error(`Expected 1 stylesheet and 16 modules; found ${sheets} and ${scripts}. Update build checks when adding modules.`);
+    if (sheets !== 1 || scripts !== 19)
+        throw new Error(`Expected 1 stylesheet and 19 modules; found ${sheets} and ${scripts}. Update build checks when adding modules.`);
     if (/<script\b[^>]*\bsrc\s*=|<link\b[^>]*\brel=["']stylesheet/i.test(html))
         throw new Error('Build still has external code assets.');
     return html;

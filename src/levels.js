@@ -557,12 +557,14 @@
     worlds.push({ id: 'meridian', number: 4, name: 'The Black Meridian', subtitle: 'DEEP SPACE · NO FREE BRAKES', theme: 'space', description: 'Twelve spacecraft assignments: moving cradles, fuel rendezvous, assembly, recoil, beam rescue, stellar shadows and a collision with your own history. The Century Ship is a separate long-haul bonus, outside every marathon.' });
     const spaceLevels = typeof module !== 'undefined' && module.exports ? require('./space-levels.js') : root.HarborSpaceLevels;
     const islandLevels = typeof module !== 'undefined' && module.exports ? require('./archipelago.js') : root.HarborArchipelago;
-    levels.push(...night, ...islandLevels, ...spaceLevels);
+    const rampageLevels = typeof module !== 'undefined' && module.exports ? require('./rampage.js').levels : root.GerboRampage.levels;
+    worlds.push({ id: 'gerbozilla', number: 5, name: 'Gerbozilla’s Rampage', subtitle: 'GIANT PET · OPENING COURSE', theme: 'rampage', preview: true, description: 'One playable orienteering-map course: a colossal hamster ball, rolling hills, a momentum-only lake crossing, two evacuated city districts and timed shields. A standalone preview outside the existing Grand Tour.' });
+    levels.push(...night, ...islandLevels, ...spaceLevels, ...rampageLevels);
     levels.forEach((l, i) => {
-        const w = worlds[Math.min(3, Math.floor(i / 12))];
+        const w = l.rampage ? worlds[4] : worlds[Math.min(3, Math.floor(i / 12))];
         l.campaign = w.id;
         l.worldNumber = w.number;
-        l.stageNumber = i >= 36 ? i - 35 : i % 12 + 1;
+        l.stageNumber = l.rampage ? rampageLevels.indexOf(l) + 1 : i >= 36 ? i - 35 : i % 12 + 1;
         l.theme = w.theme;
         // Working harbors open west onto the fairway; the skerries have no perimeter coast.
         l.openSides = l.openSides || (w.number >= 3 ? ['n', 'e', 's', 'w'] : ['w']);
