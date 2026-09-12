@@ -22,6 +22,7 @@ with sync_playwright() as pw:
     check('World 5 selector has nine real courses, not twelve placeholders',page.locator('.level-card').count()==9 and '0 / 9 COURSES COMPLETE' in page.locator('#dialog').inner_text())
     check('Grand Tour remains 48 stages','all 48' in page.locator('#dialog').inner_text())
     page.locator('.level-card').first.click();check('Ball introduction explains map controls and shields','W A S D' in page.locator('#dialog').inner_text() and 'shield' in page.locator('#dialog').inner_text())
+    check('Seedhaven introduction counts controls and districts as objectives','04\nMISSION OBJECTIVES' in page.locator('#dialog').inner_text())
     shot('gerbo-intro.png');page.click('[data-action="begin"]');page.evaluate('DeadSlow.speed(0)')
     check('Rolling UI is visible with a separate directional pad',page.locator('.rampage-helm').is_visible() and not page.locator('#throttle-up').is_visible())
     page.keyboard.down('d');page.keyboard.down('w');page.evaluate('DeadSlow.step(1)')
@@ -56,15 +57,18 @@ with sync_playwright() as pw:
     check('Regression setup really hides the tow manifest',page.locator('#manifest').evaluate('(e)=>e.hidden'))
     page.evaluate('DeadSlow.level(5,1);DeadSlow.speed(0);DeadSlowTest.hud()')
     check('Switching from tow duty restores visible rolling and shield counters',page.locator('#manifest').is_visible() and 'ROLLED' in page.locator('#manifest').inner_text() and 'HITS BLOCKED' in page.locator('#manifest').inner_text())
-    for id,number in [('gerbo-banking',2),('gerbo-lake-skipping',3),('gerbo-downhill',4),('gerbo-forest-slalom',5),('gerbo-fort-pillow',6)]:
+    for id,number in [('gerbo-banking',2),('gerbo-lake-skipping',3),('gerbo-downhill',4),('gerbo-forest-slalom',5),('gerbo-fort-pillow',6),
+                      ('gerbo-cavy-clash',7),('gerbo-pepperbreath',8),('gerbo-whiskerdoom',9)]:
         seconds=json.loads((ROOT/'tests/fixtures'/f'{id}-controls.json').read_text())['duration']
         page.evaluate('(id)=>{DeadSlow.watch(id,0);DeadSlow.step(40)}',id)
         page.wait_for_timeout(100);shot(f'gerbo-course-{number}.png')
         page.evaluate('(seconds)=>DeadSlow.step(seconds)',seconds-40)
         check(f'Course {number} completes its own clean production replay',page.evaluate('DeadSlow.report().verified && DeadSlow.report().clean'))
         check(f'Course {number} has no leaderboard pollution',page.evaluate('(id)=>DeadSlowTest.state.storage.stages[id].runs.length===0',id))
-    check('Sixth course has no nonexistent seventh-stage button',not page.locator('[data-action=next]').count())
-    check('Sixth course result counts its two districts','2 / 2' in page.locator('#dialog').inner_text())
+        if id=='gerbo-pepperbreath':
+            check('Pepperbreath result counts its control and three districts','4 / 4' in page.locator('#dialog').inner_text())
+    check('Ninth course has no nonexistent tenth-stage button',not page.locator('[data-action=next]').count())
+    check('Ninth course result counts locks, sentry, and rescue','4 / 4' in page.locator('#dialog').inner_text())
     page.evaluate('DeadSlow.watch("gerbo-first-outing",0);DeadSlow.step(20)')
     page.click('#zoom-btn');page.wait_for_timeout(100);shot('gerbo-hind-paws.png')
     phase=page.evaluate('DeadSlowTest.state.run.rampage.pawPhase')
