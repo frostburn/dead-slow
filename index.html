@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07141d"><meta name="description" content="Dead Slow: thirty-six ship-docking and island-service trials across three worlds, deterministic harbor puzzles, local records, and ghost runs. A self-contained offline browser game.">
+<title>DEAD SLOW — Harbor Trials</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="coast">
+<div class="app">
+ <header class="topbar">
+  <div class="brand"><div class="brand-symbol" aria-hidden="true"></div><div><div class="brand-name">DEAD SLOW</div><div class="brand-sub" id="world-label">WORLD 1 · DAY WATCH</div></div></div>
+  <div class="clock-block"><div class="clock-label" id="clock-label">RUN TIME · IGT</div><div class="main-clock" id="clock">00:00.00</div></div>
+  <div class="clock-delta" id="delta">NO RECORD</div>
+  <nav class="top-actions" aria-label="Game menu">
+   <button class="small" id="courses-btn">Harbors</button><button class="small hide-phone" id="log-btn">Logbook</button>
+   <button class="icon hide-phone" id="sound-btn" title="Toggle audio (M)" aria-label="Toggle audio" aria-pressed="true">♪</button>
+   <button class="icon desktop-only" id="ghost-btn" title="Toggle personal-best ghost (G)" aria-label="Toggle personal-best ghost" aria-pressed="true">◇</button>
+   <button class="icon" id="quick-retry-btn" title="Instant retry (R)" aria-label="Instant retry">↻</button>
+   <button class="icon" id="pause-btn" title="Pause (Escape)" aria-label="Pause">Ⅱ</button>
+   <button class="icon" id="help-btn" title="Controls and rules (F1)" aria-label="Controls and rules">?</button>
+  </nav>
+ </header>
+ <main class="workspace">
+  <section class="sea-section" aria-label="Harbor chart and ship">
+   <canvas id="sea" role="img" aria-label="Top-down harbor chart. Use keyboard or the helm buttons below to control the ship."></canvas>
+   <div class="chart-heading"><div class="eyebrow" id="stage-tag"></div><div class="chart-title" id="chart-title"></div></div>
+   <div class="chart-meta"><div><strong id="ship-name">MV PATIENCE</strong></div><div id="weather-text">CALM WATER</div><div class="desktop-only">N ↑ · METRIC CHART</div></div>
+   <section id="work-panel" class="work-panel" aria-label="Island job instruments" hidden>
+    <div id="work-order" class="work-order"></div><div id="work-readout" class="work-readout"></div>
+    <div class="bar"><i id="work-progress"></i></div><div id="manifest" class="manifest" aria-label="Vehicles aboard"></div>
+    <div id="tow-controls" class="tow-controls" hidden><button id="line-action" aria-label="Make or release towline">F · MAKE FAST</button><button data-hold="linein" aria-label="Hold winch to reel in towline">J · REEL IN</button><button data-hold="lineout" aria-label="Hold winch to pay out towline">K · PAY OUT</button></div>
+   </section>
+   <div class="mobile-instruments"><span><strong id="mobile-speed">0.0</strong> kn <b id="mobile-direction">STOP</b></span><span>HULL <strong id="mobile-hull">100</strong>%</span><span>HITS <strong id="mobile-hits">0</strong></span><span id="mobile-extra">NEUTRAL</span></div>
+   <div class="chart-bottom"><div class="mission-strip" id="mission-strip"><span class="status-dot"></span><span id="mission-status">Awaiting departure.</span></div><div class="chart-scale" id="scale-label">25 METRES</div></div>
+   <button id="zoom-btn" class="chart-zoom" aria-label="Cycle chart zoom" title="Chart zoom (Z)">1×</button>
+   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </section>
+  <aside class="sidebar">
+   <div class="section-label">CURRENT ASSIGNMENT</div><h1 class="mission-name" id="mission-name"></h1><p class="brief" id="brief"></p>
+   <div class="rule"></div>
+   <div class="instruments"><div><div class="section-label">SPEED / GROUND</div><div class="reading green"><span id="speed">0.0</span> <small>kn</small></div><div class="motion-label" id="speed-direction">STOPPED</div><div class="drift-label" id="drift">NO SIDEWAYS DRIFT</div></div><div><div class="section-label">BOW HEADING</div><div class="reading"><span id="heading">090</span><small>°</small></div></div><div><div class="section-label">CONTACTS</div><div class="reading"><span id="contacts">0</span></div></div><div><div class="section-label">ENGINE OUTPUT</div><div class="reading"><span id="engine-read">0</span><small>%</small></div></div></div>
+   <div class="local-water"><span id="shelter-status">OPEN WATER</span><strong id="local-set">SET 0.0 kn</strong></div><div class="hull-row"><span>HULL INTEGRITY</span><span id="hull-label">100%</span></div><div class="bar"><i id="hull-bar"></i></div>
+   <div class="rule"></div><div class="section-label">MOORING CHECKLIST</div>
+   <div class="dock-checks"><div class="check" id="check-objectives">Clearance</div><div class="check" id="check-inside">Inside berth</div><div class="check" id="check-aligned">Bow aligned</div><div class="check" id="check-slow">Slow + neutral</div></div><div class="bar dock-bar"><i id="dock-bar"></i></div>
+   <div class="rule"></div><div class="section-label">SECTOR SPLITS</div><div class="splits" id="splits"></div>
+   <div class="record-pair"><span>BEST OVERALL</span><strong id="best-overall">—</strong></div><div class="record-pair"><span>BEST CLEAN</span><strong id="best-clean">—</strong></div>
+   <p class="hint" id="hint"></p><div id="race-banner" class="race-banner" hidden></div>
+  </aside>
+ </main>
+ <footer class="helm" aria-label="Ship helm controls">
+  <div class="helm-group engine"><div class="helm-heading"><span>ENGINE TELEGRAPH</span><span class="key-hint">W / S · NOTCH UP / DOWN</span></div><div class="throttle-controls"><button id="throttle-down" aria-label="Decrease throttle one notch" title="More astern (S)">−</button><div class="telegraph-name"><span id="telegraph-name">STOP</span><small id="telegraph-detail">NEUTRAL · STILL COASTING</small><div class="notches" id="notches"></div></div><button id="throttle-up" aria-label="Increase throttle one notch" title="More ahead (W)">+</button></div><button class="neutral secondary" id="neutral-btn" title="Set neutral (Space)">NEUTRAL</button></div>
+  <div class="helm-group"><div class="helm-heading"><span>RUDDER</span><span class="key-hint">A / D · HOLD</span></div><div class="dual-buttons"><button class="hold-control" data-hold="port" aria-label="Hold port rudder"><b>←</b> PORT</button><button class="hold-control" data-hold="starboard" aria-label="Hold starboard rudder">STBD <b>→</b></button></div><div class="rudder-meter"><i id="rudder-indicator"></i></div></div>
+  <div class="helm-group"><div class="helm-heading"><span>BOW THRUSTER</span><span class="key-hint">Q / E · HOLD</span></div><div class="dual-buttons"><button class="hold-control" data-hold="bowport" aria-label="Hold bow thruster to port"><b>«</b> PORT</button><button class="hold-control" data-hold="bowstarboard" aria-label="Hold bow thruster to starboard">STBD <b>»</b></button></div><div class="helm-caption">Most effective at low water speed</div></div>
+  <div class="utility"><button id="retry-btn">↻ RETRY <kbd>R</kbd></button><button class="secondary" id="horn-btn">SOUND HORN <kbd>H</kbd></button><div class="utility-note">NEUTRAL IS NOT A BRAKE</div></div>
+ </footer>
+</div>
+<div class="overlay" id="overlay"><section class="dialog" id="dialog" role="dialog" aria-modal="true" aria-label="Game menu"></section></div>
+<input type="file" accept="application/json,.json" id="import-file" hidden>
+<script src="src/physics.js"></script><script src="src/archipelago.js"></script><script src="src/levels.js"></script><script src="src/jobs.js"></script><script src="src/storage.js"></script><script src="src/renderer.js"></script><script src="src/audio.js"></script><script src="src/game.js"></script>
+</body></html>

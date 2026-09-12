@@ -1,0 +1,20 @@
+{
+  "level": "first-crossing",
+  "description": "Fixed-time player inputs only. No repositioning, altered physics or objective-state shortcuts.",
+  "events": [
+    {
+      "time": 8,
+      "throttle": 4
+    },
+    {
+      "time": 76.6,
+      "throttle": -3
+    },
+    {
+      "time": 108.45,
+      "throttle": 0
+    }
+  ],
+  "duration": 129,
+  "expectedTime": 123.95
+}

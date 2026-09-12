@@ -1,0 +1,15 @@
+{
+  "name": "dead-slow-harbor-trials",
+  "version": "3.0.0",
+  "private": true,
+  "description": "Thirty-six inertial docking, towing and car-ferry trials across three worlds. A dependency-free offline browser game.",
+  "license": "MIT",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "build": "node tools/build.cjs",
+    "test": "node --test tests/*.test.cjs",
+    "check": "node tools/check.cjs",
+    "serve": "node tools/serve.cjs",
+    "verify:runs": "node tools/verify-island-runs.cjs"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "level": "crosscurrent",
+  "events": [
+    {
+      "time": 0,
+      "throttle": 4,
+      "thruster": -1
+    },
+    {
+      "time": 5.212383930767489,
+      "thruster": 0
+    },
+    {
+      "time": 50.682461793005615,
+      "throttle": -3
+    },
+    {
+      "time": 60.40500102776396,
+      "thruster": 1
+    },
+    {
+      "time": 68.67199376076813,
+      "thruster": 0
+    },
+    {
+      "time": 70.37714572310645,
+      "throttle": 0
+    }
+  ],
+  "duration": 80.61477385974001
+}

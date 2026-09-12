@@ -1,0 +1,28 @@
+{
+  "level": "bigger-boat",
+  "description": "Fixed-time player inputs only. No repositioning, altered physics or objective-state shortcuts.",
+  "events": [
+    {
+      "time": 0,
+      "line": true
+    },
+    {
+      "time": 0,
+      "throttle": 4
+    },
+    {
+      "time": 35,
+      "line": true
+    },
+    {
+      "time": 63.45,
+      "throttle": -3
+    },
+    {
+      "time": 77,
+      "throttle": 0
+    }
+  ],
+  "duration": 193,
+  "expectedTime": 187.9
+}
