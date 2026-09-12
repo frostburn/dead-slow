@@ -1,5 +1,30 @@
 # Changelog
 
+## 5.0.0-preview.4 — Into the Wilds
+
+- Expand World 5 to nine standalone courses. Replace the repetitive Reservoir
+  Hairpin with an ordered, city-free woodland course; add a guinea-pig duel,
+  fire-only walled keep and Lady Whiskerdoom's rescue/escort.
+- Make forest patches add rolling resistance and black boulders block whole
+  ball footprints. Shared outlines drive the map and simulation; shields do
+  not allow phasing through rocks. Keep the other five existing layouts intact.
+- Add massive pet bodies, announced locked-direction charges, recovery windows,
+  mutual momentum/damage and harmless defeated pets. Shields protect the player.
+- Add a pepper pickup and finite, aimable fire breath (H/touch). Flame passes
+  over low walls, stops at boulders and cannot fire underwater. Armored city
+  cores require fire rather than rams.
+- Free Lady Whiskerdoom by breaking two locks, then lead her on a recorded path
+  to the recovery meadow. She has her own momentum and integrity; both hamsters
+  must arrive intact for a clean result.
+- Layer a faint inharmonic resonance beneath dry wheel creaks. Preserve the
+  accepted water graph and add a soft filtered fire hiss, with mute/headroom checks.
+- Publish four input-only recordings; retain the five unchanged Rampage runs.
+  There are 34 recordings and 58 assignments; the Grand Tour stays at 48.
+- Schema 9 archives only the retired Hairpin's active record, ghost and splits.
+  Keep prior archives, unchanged course records and all circuit records.
+- Add focused mechanics, controls, rendering, audio and migration regressions.
+  Preserve Codex fixes, dependencies and CI configuration.
+
 
 ## 5.0.0-preview.3 — Fortified Cities
 

@@ -1,6 +1,7 @@
-/* Gerbozilla: rolling terrain, water traction and six standalone field courses. */
+/* Gerbozilla: rolling terrain, water traction and nine standalone field courses. */
 (function (root) {
     'use strict';
+    const P = typeof module !== 'undefined' && module.exports ? require('./physics.js') : root.HarborPhysics;
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
     const level = {
         id: 'gerbo-first-outing', name: 'A Small Problem in Seedhaven', kind: 'Rolling / ridge / lake / two districts',
@@ -92,21 +93,6 @@
             districts:[{id:'caldera',name:'Caldera Vault',x:1540,y:860,r:41,health:185,defence:true}],
             finish:{x:2070,y:970,r:92},authorSpeed:40
         });
-    const hairpin = course('gerbo-hairpin', 'The Reservoir Hairpin', 'Climb-in basin / reverse approach / reservoir crossing',
-        [230,1410,0],[2060,1780],
-        'The valley route ends at a mountain-walled pumping town. Crest its bowl and flatten Pump House, then take the northern saddle west. Use that dry bank as the run-up for the reservoir island; the second town must be approached from the other direction.',
-        'This is not a straight demolition line. The numbered northern saddle unlocks after Pump House falls. Slow on dry ground, turn, and rebuild momentum before committing west across the reservoir.',{
-            sheet:'THE OATWATER RESERVOIR',subtitle:'THE RESERVOIR HAIRPIN',
-            hills:[{x:820,y:1050,rx:120,ry:290,height:95,angle:.3,lobes:[{x:95,y:100,rx:84,ry:135,height:40}]},
-                {x:1580,y:1070,rx:125,ry:320,height:76,angle:-.2,lobes:[{x:-70,y:150,rx:90,ry:135,height:31}]}],
-            rims:[{x:1310,y:560,r:160,width:27,height:43,shore:[.07,.03,1.2],name:'PUMP HOUSE WALL'}],
-            lakes:[{x:520,y:470,rx:245,ry:235,inner:.43,shore:[.08,.035,2.1],name:'OATWATER'}],
-            controls:[{x:1190,y:1190,r:75,name:'Enter the valley'},
-                {x:1270,y:230,r:75,name:'Northern saddle',after:'pump-house',number:3}],
-            districts:[{number:2,id:'pump-house',name:'Pump House',x:1310,y:560,r:35,health:105,defence:true},
-                {id:'island-mill',name:'Island Mill',x:520,y:470,r:34,health:95,defence:true}],
-            finish:{x:350,y:1020,r:90},authorSpeed:35
-        });
     const fortress = course('gerbo-fort-pillow', 'Fort Pillow', 'Double moat / mountain wall / siege and extraction',
         [150,1110,0],[3100,1930],
         'Fort Pillow has two water moats with a steep mountain ring between them. One long run-up must pay for the outer crossing, the uphill crest and the inner crossing. Destroy the command core, escape its retaliatory strike pattern, then take the northern satellite fort before extraction.',
@@ -123,6 +109,73 @@
                 {id:'satellite-fort',name:'Satellite Fort',x:2170,y:370,r:36,health:110,defence:true}],
             retaliation:{delays:[10,18,26],warning:7.5,lead:0,radius:74,damage:26},
             finish:{x:2810,y:355,r:90},authorSpeed:42
+        });
+    // Orienteering routes and the three new gimmick missions. Black geometry
+    // is impassable even with a shield; forest drag is separate from elevation.
+    const boulder = (x,y,rx,ry,phase=0) => ({x,y,rx,ry,phase});
+    const wall = (x,y,w,h,extra={}) => ({poly:[{x,y},{x:x+w,y},{x:x+w,y:y+h},{x,y:y+h}], lowWall:true, ...extra});
+    const forest = course('gerbo-forest-slalom', 'The Black Boulder Wood', 'Orienteering / ordered controls / forest versus clearings',
+        [180,1100,0],[1800,1320],
+        'No cities today. Punch five controls in order through Bramble Wood. Black boulders are solid, not hills to crest. The darkest forest eats rolling speed; longer routes through pale clearings can be faster than a direct push through the trees.',
+        'Read the magenta numbers before committing. Ease off before the boulder chicanes. Shields prevent damage, not collisions. Finish with paws off in the southern clearing.', {
+            retiredId:'gerbo-hairpin',sheet:'BRAMBLE WOOD',subtitle:'THE BLACK BOULDER WOOD',
+            hills:[{x:1060,y:1020,rx:140,ry:90,height:23,lobes:[{x:70,y:-20,rx:90,ry:60,height:11}]}],
+            forests:[{x:570,y:820,rx:380,ry:280,shore:[.15,.08,.7],density:.75},
+                {x:940,y:380,rx:260,ry:150,shore:[.18,.08,2],density:1},
+                {x:1530,y:1000,rx:160,ry:180,shore:[.12,.1,1],density:.55}],
+            rocks:[boulder(550,960,115,125,.5),boulder(670,480,180,105,1),
+                boulder(1170,440,130,195,2),boulder(1390,890,125,95,.1)],
+            lakes:[{x:285,y:265,rx:125,ry:120,shore:[.15,.09,2],name:'FERN POND'}],
+            controls:[{x:330,y:650,r:65,name:'Fern clearing'},{x:880,y:710,r:65,name:'South of the split stone'},
+                {x:940,y:180,r:60,name:'Northern notch'},{x:1500,y:230,r:65,name:'Beyond the black wall'},
+                {x:1620,y:720,r:60,name:'Birch clearing'}],districts:[],finish:{x:1560,y:1120,r:87},authorSpeed:24
+        });
+    const duel = course('gerbo-cavy-clash', 'A Very Territorial Guinea Pig', 'Telegraphed charges / mutual impacts / recovery windows',
+        [260,1020,0],[1950,1350],
+        'Cavyclasm has declared this entire valley his food bowl. He marks a charge, commits to that line and needs a breather afterwards. Build a run-up and shield the collision. Both giants recoil; your shield does not stop him moving.',
+        'Red dashes show a locked charge, not a homing attack. Bait him past a boulder, then strike during recovery. A defeated pet curls up for a nap. Clear the approach control and return to the western meadow.', {
+            sheet:'CAVYCLASM’S FOOD BOWL',subtitle:'A VERY TERRITORIAL GUINEA PIG',
+            hills:[{x:1630,y:285,rx:170,ry:80,height:30,lobes:[{x:60,y:30,rx:80,ry:50,height:12}]}],
+            forests:[{x:660,y:1050,rx:180,ry:160,density:.7,shore:[.16,.07,.8]},
+                {x:1600,y:530,rx:170,ry:190,density:.5,shore:[.14,.08,2]}],
+            rocks:[boulder(880,310,100,95,.5),boulder(1490,850,105,180,2),boulder(480,550,90,120,1)],
+            lakes:[],controls:[{x:550,y:970,r:75,name:'Enter the feeding grounds'}],districts:[],
+            monsters:[{id:'cavyclasm',name:'Cavyclasm',kind:'guinea-pig',x:1160,y:610,r:60,mass:14,health:240}],
+            finish:{x:285,y:250,r:95},authorSpeed:28
+        });
+    const fire = course('gerbo-pepperbreath', 'Pepperbreath at Marshmallow Keep', 'Pepper pickup / fire arcs / armored walls',
+        [180,680,0],[1800,1300],
+        'Marshmallow Keep’s low stone walls stop even a mountain-sized exercise ball. Collect the giant pepper, then circle the keep and breathe fire over its walls into three armored districts. There is no ramming shortcut through the masonry.',
+        'Hold H to breathe fire toward your last directional push. Release H to refill the breath meter. Low walls can be fired over; giant black boulders block the flame. Fire is unavailable in deep water. Shield the automated return fire.', {
+            sheet:'MARSHMALLOW KEEP',subtitle:'PEPPERBREATH',
+            hills:[{x:240,y:220,rx:120,ry:60,height:18,lobes:[{x:55,y:-20,rx:65,ry:45,height:8}]}],
+            forests:[{x:420,y:320,rx:210,ry:150,shore:[.18,.08,1],density:.65}],
+            rocks:[wall(880,340,630,22),wall(880,920,630,22),wall(880,340,22,602),wall(1488,340,22,602),
+                boulder(740,1040,85,110,1),boulder(1590,270,75,100,2)],
+            lakes:[],controls:[{x:420,y:680,r:65,name:'Giant pepper collected'}],
+            fire:{unlockControl:1,range:340,spread:.38,capacity:3,recharge:.6,dps:44},
+            districts:[{id:'sugar',name:'Sugar Battery',x:1050,y:540,r:33,health:100,defence:true,fireOnly:true},
+                {id:'mallow',name:'Mallow Foundry',x:1250,y:540,r:33,health:100,defence:true,fireOnly:true},
+                {id:'fluff',name:'Fluff Command',x:1350,y:740,r:33,health:100,defence:true,fireOnly:true}],
+            finish:{x:400,y:1030,r:90},authorSpeed:26
+        });
+    const rescue = course('gerbo-whiskerdoom', 'Nobody Puts Whiskerdoom in a Cage', 'Break two locks / rabbit sentry / breadcrumb escort',
+        [180,1260,0],[2400,1580],
+        'Lady Whiskerdoom is being held in a granite menagerie. Flatten both external lock pylons to open its western gate and send Sir Flops-a-Lot to sleep. Roll close to greet her, then lead her along a safe route to the recovery meadow.',
+        'She follows your trail with her own momentum; she cannot teleport through stone. Give her room in the gate, avoid ramming her and wait for her to catch up. Your shield protects your shell only. Both hamsters must get home.', {
+            sheet:'THE GRANITE MENAGERIE',subtitle:'LADY WHISKERDOOM’S RESCUE',
+            hills:[{x:470,y:375,rx:210,ry:90,height:22,lobes:[{x:100,y:30,rx:90,ry:60,height:10}]}],
+            forests:[{x:1090,y:1190,rx:330,ry:170,shore:[.17,.09,1.6],density:.5},
+                {x:620,y:570,rx:200,ry:180,shore:[.17,.07,2.4],density:.7}],
+            rocks:[boulder(1230,440,155,180,1),boulder(750,910,140,180,2),
+                wall(1660,300,380,22),wall(1660,600,380,22),wall(2018,300,22,322),
+                wall(1660,300,22,120),wall(1660,500,22,122),wall(1660,420,22,80,{gate:true})],
+            lakes:[{x:2070,y:1100,rx:150,ry:185,shore:[.17,.08,1],name:'TEARDROP MERE'}],
+            controls:[],districts:[{id:'north-lock',name:'North Lock',x:1550,y:335,r:25,health:70,defence:false},
+                {id:'south-lock',name:'South Lock',x:1550,y:630,r:25,health:70,defence:false}],
+            monsters:[{id:'flops',name:'Sir Flops-a-Lot',kind:'rabbit',x:1180,y:890,r:48,mass:11,health:160}],
+            rescue:{name:'Lady Whiskerdoom',x:1840,y:460,r:23,mass:7,health:100},
+            finish:{x:410,y:1340,r:115},authorSpeed:26
         });
     // Gaussian shoulders make asymmetrical summits and saddles, while keeping
     // an exact analytical gradient shared by the physics and contour renderer.
@@ -177,12 +230,191 @@
         }
         return wet / 5;
     }
+    function woodland(c, s) {
+        // Feathered footprint sampling at the same rounded boundary drawn on paper.
+        let cover = 0;
+        for (const [dx,dy] of [[0,0],[.7,0],[-.7,0],[0,.7],[0,-.7]])
+            cover += Math.max(0, ...(c.forests || []).filter(f => inLake(f,s.x+dx*c.radius,s.y+dy*c.radius)).map(f=>f.density));
+        return cover / 5;
+    }
+    function rockPolygon(b) {
+        if (b.poly) return b.poly.map(p=>({...p}));
+        // Rounded but convex irregular boulders, exactly shared by physics and ink.
+        return Array.from({length:9},(_,i)=>{
+            const a=i*Math.PI*2/9+(b.phase || 0), r=1+.065*Math.cos(i*2+(b.phase || 0));
+            return {x:b.x+Math.cos(a)*b.rx*r,y:b.y+Math.sin(a)*b.ry*r};
+        });
+    }
+    function circleContact(s, radius, poly) {
+        let inside=false, best=Infinity, closest=null;
+        for(let i=0,j=poly.length-1;i<poly.length;j=i++) {
+            const a=poly[j],b=poly[i],dx=b.x-a.x,dy=b.y-a.y;
+            if((a.y>s.y)!==(b.y>s.y) && s.x<(b.x-a.x)*(s.y-a.y)/(b.y-a.y)+a.x) inside=!inside;
+            const u=clamp(((s.x-a.x)*dx+(s.y-a.y)*dy)/(dx*dx+dy*dy || 1),0,1);
+            const x=a.x+u*dx,y=a.y+u*dy,d=Math.hypot(s.x-x,s.y-y);
+            if(d<best){best=d;closest={x,y,dx,dy};}
+        }
+        if(!inside && best>=radius) return null;
+        let nx=(s.x-closest.x)/(best || 1),ny=(s.y-closest.y)/(best || 1);
+        if(inside){nx=-nx;ny=-ny;}
+        if(best<1e-9){const n=Math.hypot(closest.dx,closest.dy);nx=closest.dy/n;ny=-closest.dx/n;}
+        return {nx,ny,depth:inside?radius+best:radius-best};
+    }
+    const solids = st => st.rocks.filter(r=>!r.gate || !st.unlocked);
+    function blocked(st, a, b) {
+        return solids(st).some(r=>!r.lowWall && P.segmentHitsPoly(a,b,r.poly));
+    }
+    function collideRock(run, body, radius, kind='player') {
+        const st=run.rampage;
+        for(const rock of solids(st)) {
+            const h=circleContact(body,radius,rock.poly);
+            if(!h) continue;
+            body.x+=h.nx*(h.depth+.001);body.y+=h.ny*(h.depth+.001);
+            const closing=-(body.vx*h.nx+body.vy*h.ny);
+            if(closing<=0) continue;
+            body.vx+=1.18*closing*h.nx;body.vy+=1.18*closing*h.ny;
+            if(closing>2) {
+                if(kind==='player'){st.stats.rockHits++;hurt(run,.045*closing*closing);}
+                else if(kind==='lady') hurtLady(run,.025*closing*closing);
+                else body.health=Math.max(0,body.health-.07*closing*closing);
+            }
+        }
+    }
+    function petPair(run, b, friendly=false) {
+        const s=run.ship,st=run.rampage,dx=s.x-b.x,dy=s.y-b.y,d=Math.hypot(dx,dy),r=st.radius+b.r;
+        if(d>=r) return;
+        const nx=d?dx/d:1,ny=d?dy/d:0,ia=1/(s.mass || 8),ib=1/b.mass,sum=ia+ib;
+        s.x+=nx*(r-d+.001)*ia/sum;s.y+=ny*(r-d+.001)*ia/sum;
+        b.x-=nx*(r-d+.001)*ib/sum;b.y-=ny*(r-d+.001)*ib/sum;
+        const closing=-((s.vx-b.vx)*nx+(s.vy-b.vy)*ny);
+        if(closing<=0) return;
+        const impulse=1.12*closing/sum;
+        s.vx+=nx*impulse*ia;s.vy+=ny*impulse*ia;b.vx-=nx*impulse*ib;b.vy-=ny*impulse*ib;
+        if(closing<(friendly?4:.5) || run.time-b.hitAt<.65) return;
+        b.hitAt=run.time;st.flashes.push({x:b.x,y:b.y,t:run.time});
+        if(friendly){hurt(run,.022*closing*closing);hurtLady(run,.022*closing*closing);}
+        else {b.health=Math.max(0,b.health-.5*closing*closing);hurt(run,.035*closing*closing);st.stats.monsterImpacts++;}
+    }
+    function hurtLady(run, amount) {
+        const st=run.rampage, loss=Math.min(st.lady.health,amount);
+        st.lady.health-=loss;st.stats.ladyDamage+=loss;st.stats.damage+=loss;run.contacts++;
+    }
+    function actorStep(c, b, ax, ay, dt) {
+        const wet=water({...c,radius:b.r},b), trees=woodland(c,b),t=terrain(c,b.x,b.y);
+        const drag=.05+trees*.10+wet*.03;
+        ax=(1-wet)*ax-7.007*t.dx-drag*b.vx;ay=(1-wet)*ay-7.007*t.dy-drag*b.vy;
+        b.roll=(b.roll||0)+Math.hypot(b.vx,b.vy)*dt/b.r;
+        b.x+=b.vx*dt+ax*dt*dt/2;b.y+=b.vy*dt+ay*dt*dt/2;
+        b.vx+=ax*dt;b.vy+=ay*dt;
+    }
+    function monsterUpdate(level, run, dt, events) {
+        const st=run.rampage,c=level.rampage,s=run.ship;
+        for(const m of st.monsters) {
+            if(m.health<=0) {
+                if(!m.defeated){m.defeated=true;st.stats.monsters++;events.push(m.name+' is taking a nap');}
+                m.vx=m.vy=0;continue;
+            }
+            const dx=s.x-m.x,dy=s.y-m.y,d=Math.hypot(dx,dy);
+            if(m.state==='prowl' && d<600 && run.time>=m.until) {
+                m.state='warning';m.until=run.time+2.2;
+                const a=Math.atan2(dy+s.vy*1.2,dx+s.vx*1.2);
+                m.aim={x:m.x+Math.cos(a)*440,y:m.y+Math.sin(a)*440};m.angle=a;
+            } else if(m.state==='warning' && run.time>=m.until) {m.state='charge';m.until=run.time+3.5;}
+            else if(m.state==='charge' && run.time>=m.until) {m.state='rest';m.until=run.time+6;}
+            else if(m.state==='rest' && run.time>=m.until) {m.state='prowl';m.until=run.time+2;}
+            let ax=0,ay=0;
+            if(m.state==='charge'){ax=6*Math.cos(m.angle);ay=6*Math.sin(m.angle);}
+            else if(m.state==='prowl') {
+                const speed=d>250?5:0;ax=clamp((dx/(d||1)*speed-m.vx)*.8,-1.1,1.1);ay=clamp((dy/(d||1)*speed-m.vy)*.8,-1.1,1.1);
+            } else {ax=clamp(-m.vx*.6,-2,2);ay=clamp(-m.vy*.6,-2,2);}
+            actorStep(c,m,ax,ay,dt);collideRock(run,m,m.r,'monster');
+            // Pets remain on the play field; this edge turn gives no free attack impulse.
+            for(const [axis,v,size] of [['x','vx',level.world[0]],['y','vy',level.world[1]]]) {
+                if(m[axis]<m.r || m[axis]>size-m.r){m[axis]=clamp(m[axis],m.r,size-m.r);m[v]*=-.25;m.state='rest';m.until=run.time+6;}
+            }
+            petPair(run,m);
+            if(m.health<=0){m.defeated=true;st.stats.monsters++;events.push(m.name+' is taking a nap');}
+            if(st.lady?.following && !st.rescued && m.health>0) {
+                const l=st.lady,x=l.x-m.x,y=l.y-m.y,dist=Math.hypot(x,y),r=l.r+m.r;
+                if(dist<r) {
+                    const nx=x/(dist||1),ny=y/(dist||1),impact=Math.max(0,-((l.vx-m.vx)*nx+(l.vy-m.vy)*ny));
+                    l.x=m.x+nx*(r+.01);l.y=m.y+ny*(r+.01);
+                    if(impact>1 && run.time-l.hitAt>.8){l.hitAt=run.time;hurtLady(run,impact*impact*.05);}
+                    l.vx+=nx*impact;l.vy+=ny*impact;
+                }
+            }
+        }
+    }
+    function flattened(level,run,d,events) {
+        const st=run.rampage;
+        st.stats.districts++;events.push(d.name+(level.rampage.rescue?' unlocked':' flattened'));
+        d.aim=null;d.shotAt=null;st.flashes.push({x:d.x,y:d.y,t:run.time,demolished:true});
+        retaliation(level,run,d);
+    }
+    function breathe(level,run,input,dt,events) {
+        const st=run.rampage,c=level.rampage,fire=c.fire;
+        st.fireActive=false;
+        if(!fire) return;
+        const permitted=st.control>=fire.unlockControl && st.wet<.5;
+        if(input.winch>0 && permitted && st.breath>0) {
+            const time=Math.min(dt,st.breath);st.breath-=time;st.stats.fireTime+=time;st.fireActive=true;
+            for(const d of st.districts.filter(d=>d.health>0)) {
+                const dx=d.x-run.ship.x,dy=d.y-run.ship.y,dist=Math.hypot(dx,dy);
+                const error=Math.abs(Math.atan2(Math.sin(Math.atan2(dy,dx)-st.aim),Math.cos(Math.atan2(dy,dx)-st.aim)));
+                if(dist>fire.range+d.r || error>fire.spread+Math.asin(Math.min(1,d.r/(dist||1))) || blocked(st,run.ship,d)) continue;
+                d.health=Math.max(0,d.health-fire.dps*time);
+                if(d.health===0) flattened(level,run,d,events);
+            }
+        } else if((input.winch||0)<=0) st.breath=Math.min(fire.capacity,st.breath+fire.recharge*dt);
+    }
+    function rescueUpdate(level,run,dt,events) {
+        const st=run.rampage,c=level.rampage,l=st.lady;
+        if(!l) return;
+        if(l.health<=0){run.failure={type:'lost-friend',message:'Lady Whiskerdoom’s shell broke. Lead her clear of rocks and the sentry.'};return;}
+        if(!st.unlocked && st.districts.every(d=>d.health<=0)) {st.unlocked=true;events.push('Menagerie gate open');}
+        if(!l.following && st.unlocked && Math.hypot(l.x-run.ship.x,l.y-run.ship.y)<115) {
+            l.following=true;st.breadcrumbs=[{x:run.ship.x,y:run.ship.y}];events.push('Lady Whiskerdoom joins you');
+        }
+        if(l.following && !st.rescued) {
+            const s=run.ship;
+            // Greet first, then follow as the player leads OUT of the cage.
+            // Never accelerate a newly rescued friend into an approaching ball.
+            const separation=Math.hypot(s.x-l.x,s.y-l.y);
+            if(!l.departed && (s.x-l.x)*s.vx+(s.y-l.y)*s.vy>0 && separation>90)l.departed=true;
+            if(!l.departed)return;
+            const last=st.breadcrumbs.at(-1);
+            if(Math.hypot(s.x-last.x,s.y-last.y)>28 && st.breadcrumbs.length<4096) st.breadcrumbs.push({x:s.x,y:s.y});
+            while(st.breadcrumbs.length>1 && Math.hypot(l.x-st.breadcrumbs[0].x,l.y-st.breadcrumbs[0].y)<22) st.breadcrumbs.shift();
+            const target=st.breadcrumbs[0],dx=target.x-l.x,dy=target.y-l.y,d=Math.hypot(dx,dy),f=c.finish;
+            // Slow to a real rest at each end. Never assign the follower's position.
+            const nearHome=Math.hypot(s.x-f.x,s.y-f.y)<f.r-24;
+            const gap=st.breadcrumbs.length===1?(nearHome?68:100):0;
+            const speed=Math.min(15,Math.sqrt(2*1.5*Math.max(0,d-gap)));
+            let ax=(dx/(d||1)*speed-l.vx)*1.4+.05*l.vx,ay=(dy/(d||1)*speed-l.vy)*1.4+.05*l.vy;
+            const nx=(s.x-l.x)/(separation||1),ny=(s.y-l.y)/(separation||1);
+            const closing=(l.vx-s.vx)*nx+(l.vy-s.vy)*ny;
+            if(closing>0 && separation<82+closing*closing/4.4){ax=-nx*2.4;ay=-ny*2.4;}
+            const a=Math.max(1,Math.hypot(ax,ay)/2.4);ax/=a;ay/=a;
+            actorStep(c,l,ax,ay,dt);collideRock(run,l,l.r,'lady');petPair(run,l,true);
+            if(Math.hypot(l.vx,l.vy)>.03)l.a=Math.atan2(l.vy,l.vx);
+            if(l.x<l.r || l.y<l.r || l.x>level.world[0]-l.r || l.y>level.world[1]-l.r)
+                run.failure={type:'lost-friend',message:'Lady Whiskerdoom left the field sheet. Lead her along a safe route.'};
+            st.rescueHold=Math.hypot(l.x-f.x,l.y-f.y)<f.r-l.r && Math.hypot(l.vx,l.vy)<.8?st.rescueHold+dt:0;
+            if(st.rescueHold>=2){st.rescued=true;l.vx=l.vy=0;events.push('Lady Whiskerdoom is safe');}
+        }
+        if(l.health<=0)run.failure={type:'lost-friend',message:'Lady Whiskerdoom’s shell broke. Clear the sentry, give her room and lead her away from the black rocks.'};
+    }
     function create(level, ship) {
         ship.vessel = 'ball'; ship.radius = level.rampage.radius;
-        return { roll: 0, pawPhase: 0, radius: level.rampage.radius, slip: 0, wet: 0, effort: 0, elevation: 0, control: 0, controlCount: level.rampage.controls.length,
+        const c=level.rampage;
+        return { rocks:(c.rocks || []).map((r,i)=>({...r,id:'rock-'+i,poly:rockPolygon(r)})),
+            monsters:(c.monsters || []).map(m=>({...m,maxHealth:m.health,vx:0,vy:0,state:'prowl',until:0,hitAt:-100})),
+            lady:c.rescue?{...c.rescue,vx:0,vy:0,a:0,hitAt:-100,following:false}:null,
+            breadcrumbs:[],unlocked:false,rescued:false,rescueHold:0,forest:0,aim:0,breath:c.fire?.capacity || 0,fireActive:false,
+            roll: 0, pawPhase: 0, radius: level.rampage.radius, slip: 0, wet: 0, effort: 0, elevation: 0, control: 0, controlCount: level.rampage.controls.length,
             shieldUntil: 0, shieldReady: 0, shots: [], strikes: [], flashes: [], hold: 0,
             districts: level.rampage.districts.map(d => ({ ...d, maxHealth: d.health, nextShot: 0, aim: null, shotAt: null, hitAt: -100 })),
-            stats: { districts: 0, damage: 0, blocked: 0, shields: 0, impacts: 0, waterTime: 0, salvos: 0, strikeHits: 0, strikeDodges: 0, strikeBlocks: 0 }
+            stats: { districts: 0, damage: 0, blocked: 0, shields: 0, impacts: 0, waterTime: 0, salvos: 0, strikeHits: 0, strikeDodges: 0, strikeBlocks: 0, rockHits:0, forestTime:0, monsters:0, monsterImpacts:0, fireTime:0, ladyDamage:0 }
         };
     }
     function shield(run) {
@@ -199,7 +431,8 @@
         run.ship.hull -= loss; st.stats.damage += loss; run.contacts++;
     }
     function ready(run) {
-        return run.rampage.control === run.rampage.controlCount && run.rampage.districts.every(d => d.health <= 0);
+        return run.rampage.control === run.rampage.controlCount && run.rampage.districts.every(d => d.health <= 0) &&
+            run.rampage.monsters.every(m=>m.health<=0) && (!run.rampage.lady || run.rampage.rescued);
     }
     function controlAvailable(c, st) {
         const cp=c.controls[st.control];
@@ -238,11 +471,13 @@
         const c = level.rampage, st = run.rampage, s = run.ship, events = [];
         let px = clamp(input.rudder || 0, -1, 1), py = clamp(input.thruster || 0, -1, 1);
         const norm = Math.max(1, Math.hypot(px, py)); px /= norm; py /= norm;
-        st.effort = Math.hypot(px, py); st.wet = water(c, s);
+        st.effort = Math.hypot(px, py); st.wet = water(c, s); st.forest=woodland(c,s);
+        if(st.effort>.05)st.aim=Math.atan2(py,px);
+        if(st.forest>0)st.stats.forestTime+=dt;
         const t = terrain(c, s.x, s.y); st.elevation = t.height;
         // 5/7 g is the translation part of an ideal solid rolling body's acceleration.
         // Momentum and downhill gravity remain when Gerbozilla loses water traction.
-        const grip = 1 - st.wet, drag = c.resistance * grip + c.waterResistance * st.wet;
+        const grip = 1 - st.wet, drag = c.resistance * grip + c.waterResistance * st.wet + st.forest*.11*grip;
         const ax = grip * px * c.drive - 7.007 * t.dx - drag * s.vx;
         const ay = grip * py * c.drive - 7.007 * t.dy - drag * s.vy;
         const ox = s.x, oy = s.y;
@@ -260,6 +495,8 @@
         run.distance += distance; run.maxSpeed = Math.max(run.maxSpeed, speed);
         if (s.x-c.radius < 0 || s.y-c.radius < 0 || s.x+c.radius > level.world[0] || s.y+c.radius > level.world[1])
             run.failure = { type: 'off-map', message: 'Gerbozilla rolled off the survey map. Retry for a fresh run-up.' };
+        collideRock(run,s,c.radius);
+        monsterUpdate(level,run,dt,events);
         const cp = c.controls[st.control];
         if (controlAvailable(c,st) && Math.hypot(s.x-cp.x, s.y-cp.y) < cp.r) { st.control++; events.push(cp.name); }
         for (const d of st.districts) {
@@ -270,13 +507,12 @@
                 const impact = Math.max(0, -(s.vx*nx+s.vy*ny));
                 if (impact > .15) {
                     d.hitAt = run.time; st.stats.impacts++;
-                    d.health = Math.max(0, d.health - .65*impact*impact);
+                    d.health = Math.max(0, d.health - (d.fireOnly ? 0 : .65*impact*impact));
                     hurt(run, .045*impact*impact);
                     st.flashes.push({x:d.x,y:d.y,t:run.time,demolished:d.health===0});
                     if (d.health === 0) {
-                        st.stats.districts++; s.vx *= .84; s.vy *= .84;
-                        events.push(d.name + ' flattened'); d.aim = null; d.shotAt = null;
-                        retaliation(level,run,d);
+                        s.vx *= .84; s.vy *= .84;
+                        flattened(level,run,d,events);
                     } else {
                         // Surviving structures deflect the ball; shield never supplies a free impulse.
                         s.vx += nx*impact*1.12; s.vy += ny*impact*1.12;
@@ -285,7 +521,7 @@
                 }
             }
             if (d.health <= 0 || !d.defence) continue;
-            if (d.shotAt === null && run.time >= d.nextShot && dist < 145) {
+            if (d.shotAt === null && run.time >= d.nextShot && dist < (d.range || (c.fire ? 285 : 145)) && !blocked(st,d,s)) {
                 const flight = dist/80;
                 d.aim = { x:s.x+s.vx*flight, y:s.y+s.vy*flight };
                 d.shotAt = run.time + 1.2; // Marked warning; no instantaneous hitscan damage.
@@ -297,12 +533,16 @@
             }
         }
         st.shots = st.shots.filter(b => {
+            const from={x:b.x,y:b.y};
             b.x += b.vx*dt; b.y += b.vy*dt; b.life -= dt;
+            if(blocked(st,from,b))return false;
             if (Math.hypot(b.x-s.x,b.y-s.y)<c.radius+3) {
                 hurt(run,8); st.flashes.push({x:b.x,y:b.y,t:run.time}); return false;
             }
             return b.life > 0;
         });
+        breathe(level,run,input,dt,events);
+        rescueUpdate(level,run,dt,events);
         strikeUpdate(level,run);
         st.flashes = st.flashes.filter(f => run.time-f.t < 1.5);
         if (s.hull <= 0) run.failure = { type:'shell-broken',message:'The exercise ball cracked. Use the shield for defensive fire and high-speed impacts.' };
@@ -321,12 +561,16 @@
         if (run.dockHold > 0) return 'RECOVERY MEADOW · paws off · settling ' + Math.max(0,2-run.dockHold).toFixed(1)+' s';
         const cp = level.rampage.controls[st.control];
         if (controlAvailable(level.rampage,st)) return `${String(st.control + 1).padStart(2, '0')} · ${cp.name.toUpperCase()} · keep your momentum`;
+        const monster=st.monsters.find(m=>m.health>0);
+        if(monster) return monster.name.toUpperCase()+' · '+(monster.state==='warning'?'CHARGE LOCKED · '+Math.max(0,monster.until-run.time).toFixed(1)+' s':monster.state==='rest'?'RECOVERING · SHIELD AND RAM':'KEEP ROOM FOR A RUN-UP');
+        if(st.lady && st.unlocked && !st.rescued)return st.lady.following?'ESCORT LADY WHISKERDOOM · '+Math.ceil(st.lady.health)+'% SHELL · BRING BOTH HAMSTERS HOME':'GATE OPEN · APPROACH LADY WHISKERDOOM TO GREET HER';
         const d = st.districts.find(d=>d.health>0);
+        if(d && level.rampage.fire)return d.name.toUpperCase()+' · HOLD H TO BREATHE · RELEASE TO REFILL';
         if (d) return `${d.name.toUpperCase()} · RAM WITH MOMENTUM · SPACE / F TO SHIELD`;
         if (st.strikes.length) return 'RETALIATION INBOUND · clear the marked strikes before recovery';
         return 'RECOVERY MEADOW · push against motion to brake, then release all directions';
     }
-    const api = { levels:[level, bank, lakes, downhill, hairpin, fortress], terrain, shoreRadius, lakePoint, inLake, water, create, shield, protectedAt, ready, controlAvailable, update, message };
+    const api = { levels:[level, bank, lakes, downhill, forest, fortress, duel, fire, rescue], terrain, shoreRadius, lakePoint, inLake, water, woodland, rockPolygon, circleContact, solids, blocked, petPair, create, shield, protectedAt, ready, controlAvailable, update, message };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     root.GerboRampage = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

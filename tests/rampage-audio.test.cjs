@@ -24,17 +24,17 @@ test('faster natural strokes retain silence between syllables',()=>{
 test('wheel construction and stationary active ticks do not start any oscillator',()=>{
  const ctx=context(),w=A.createWheel(ctx);w.tick({roll:0,audioSpeed:0,slip:0},true);assert.equal(ctx.sources.length,0);w.dispose();
 });
-test('one phase crossing creates one finite voice, never a burst of missed strokes',()=>{
- const ctx=context(),w=A.createWheel(ctx);w.tick({roll:0,audioSpeed:24},true);assert.equal(ctx.sources.length,1);assert.ok(ctx.sources[0].stopped);
- ctx.currentTime=3;w.tick({roll:0,audioSpeed:24},true);assert.equal(ctx.sources.length,1);
- w.tick({roll:100,audioSpeed:24},true);assert.equal(ctx.sources.length,2);
- ctx.currentTime=3.01;w.tick({roll:110,audioSpeed:24},true);assert.equal(ctx.sources.length,2);
- w.dispose();ctx.currentTime=10;w.tick({roll:200,audioSpeed:24},true);assert.equal(ctx.sources.length,2);
+test('one phase crossing creates one finite layered stroke, never a burst of missed strokes',()=>{
+ const ctx=context(),w=A.createWheel(ctx);w.tick({roll:0,audioSpeed:24},true);assert.equal(ctx.sources.length,2);assert.ok(ctx.sources[0].stopped);
+ ctx.currentTime=3;w.tick({roll:0,audioSpeed:24},true);assert.equal(ctx.sources.length,2);
+ w.tick({roll:100,audioSpeed:24},true);assert.equal(ctx.sources.length,4);
+ ctx.currentTime=3.01;w.tick({roll:110,audioSpeed:24},true);assert.equal(ctx.sources.length,4);
+ w.dispose();ctx.currentTime=10;w.tick({roll:200,audioSpeed:24},true);assert.equal(ctx.sources.length,4);
 });
 
 test('dry creaks use serial broad filters instead of vocal formants',()=>{
  const ctx=context(),w=A.createWheel(ctx);w.tick({roll:0,audioSpeed:24},true);
- assert.equal(ctx.sources[0].type,'triangle');assert.deepEqual(ctx.filters.map(f=>f.type),['highpass','lowpass']);w.dispose();
+ assert.equal(ctx.sources[0].type,'triangle');assert.equal(ctx.sources[1].type,'sine');assert.deepEqual(ctx.filters.map(f=>f.type),['highpass','lowpass']);w.dispose();
 });
 test('water chirps retain their accepted pitches, duration and parallel bandpass colors',()=>{
  const ctx=context(),w=A.createWheel(ctx);const st={roll:0,wet:1,slip:1.8,audioSpeed:0};

@@ -1,133 +1,124 @@
-# Gerbozilla’s Rampage — six field courses
+# Gerbozilla’s field guide
 
-The courses are standalone; this is not yet a twelve-course campaign. They are
-excluded from every circuit, so the 48-stage Grand Tour and its records are
-unchanged. Gerbozilla and the exercise ball are 48 metres across.
+World 5 has **nine standalone courses**, outside the existing 48-stage Grand
+Tour. Every course is immediately selectable. There are no placeholder levels.
+The ball is 48 metres across; momentum, rolling resistance and slope—not an
+instant direction change—decide where it goes.
 
-## Controls and completion
+## Controls and map
 
 Hold WASD or arrows to push in map directions. Diagonal input is normalized.
-Release to coast, counter-push to brake. Space or F gives three seconds of
-protection and six more seconds of recharge. Touch supports simultaneous pushes
-and shielding. Shielded rams still lose momentum.
+Counter-push to brake. Space or F activates a three-second shield with a six-second
+recharge after it expires. The touch pad supports simultaneous directions and
+shield/fire actions. R retries, Z changes zoom, M mutes.
 
-Visit the numbered controls in order and flatten every evacuated city core.
-Some controls activate only after a named district has fallen; the map labels
-these and the mission status points at the next available assignment. Later
-city/marker numbers follow that actual order. Small buildings are scenery;
-the striped core is the damageable structure.
+Brown contours use the actual elevation field. Green forest footprints add
+rolling resistance in proportion to their density; take clearings for faster
+runs. White ground is open. Blue shores remove paw traction, not gravity or
+momentum. Closed moat rings have real dry islands. Black irregular boulders
+are indestructible: their faces and corners stop the entire circular ball,
+even while shielded. Gray low walls block rolling but admit fire over their tops.
+Magenta numbered controls must be visited in order, with a double-ring finish.
 
-Settle the whole ball in the recovery circle below 0.8 m/s, paws off, for two
-seconds. A clean run means zero shell damage, not zero destruction. Recovery
-cannot finish while an off-map retaliation salvo remains pending.
+Forest and water use the same rounded outlines for queries and rendering.
+Rock collision uses the drawn polygon. Retained slopes still apply downhill
+acceleration without scaling it by water grip. New features are optional level
+data; the five retained courses do not acquire new forest or boulder collisions.
 
-## Different routes
+## Course progression
 
-**1. A Small Problem in Seedhaven.** Ridge, crooked lake and a small redirection: the unchanged introduction.
+Seedhaven teaches the ridge, lake and city ram. Banking adds mountain bowls;
+Lake Skipping introduces complete moats and retaliation. Downhill exchanges
+summit height for the speed needed by a heavy city core. **The Black Boulder
+Wood** replaces the Reservoir Hairpin with five ordered controls through
+woodland and boulder chicanes: no guns, cities or destruction requirement.
+Fort Pillow retains the double moat and mountain ring.
 
-**2. Banks for the Memories.** Closed mountain-ring citadels. Carry speed both into and out of the bowls.
+**A Very Territorial Guinea Pig** introduces Cavyclasm. A warning line commits
+the pet to its charge direction; it cannot perfectly home after that warning.
+A finite charge is followed by a rest. The massive pet responds to terrain,
+water and rocks, and collisions exchange equal/opposite momentum. Player and
+pet both take impact damage. The shield changes only player damage, not the
+impulse or the pet's damage. A defeated pet rests harmlessly and no longer attacks.
 
-**3. No Grip, No Problem.** Three water-moat islands. Each demolition launches three long-range strikes.
+**Pepperbreath at Marshmallow Keep** begins with a pepper pickup. Hold H or the
+BREATH button to fire toward the last push direction; direction and velocity
+can differ. The cone has limited range and angular spread. It passes over low
+city walls but is blocked by giant boulders. Its three-second reserve recharges
+at 0.6 seconds per simulated second only after release. More than half immersion
+suppresses firing. Armored cores only take fire damage; a shielded ram is not a
+shortcut. The flame can outrange the keep's guns, rewarding careful positioning.
 
-**4. It All Goes Downhill.** A summit descent into a flooded caldera with one heavily armored core.
+**Nobody Puts Whiskerdoom in a Cage** has two external lock pylons and Sir
+Flops-a-Lot, an enlarged rabbit sentry. Breaking both locks opens the gate.
+Approach Lady Whiskerdoom to greet her, then lead out of the cage. She waits for
+you to begin moving away, follows sampled breadcrumbs from your travelled route,
+and brakes with her own inertia. She is not attached by an invisible towline
+and never teleports to you. Avoid close rock corners and abrupt reversals; your
+shield does not protect her. Clear the guardian and bring both balls into the
+recovery meadow. Losing her shell or leading her off-map fails the rescue.
+A clean run records no damage to either hamster.
 
-**5. The Reservoir Hairpin.** Breach Pump House, use the northern saddle to reverse approach, then cross the reservoir.
+## Retaliation and recovery
 
-**6. Fort Pillow.** A double moat with a steep ring between them, followed by a northern satellite fort.
+Course 3 and Fort Pillow keep their off-map strikes. Each destroyed city queues
+three impacts at +10, +18 and +26 seconds. A red target mark locks 7.5 seconds
+before impact, then remains fixed. Evade or shield; killing local guns does not
+cancel it. Recovery waits for all queued strikes. Finishing any course requires
+all controls and special objectives, fitting the ball in the meadow and holding
+nearly still for two seconds.
 
-The second course demands entry and exit momentum. Course 3 deliberately
-provides dry turning ground after Oatbridge: turning inside its wet moat bleeds
-speed exactly when the response battery is lining up a strike. The fourth
-course trades starting elevation for crossing energy. The fifth reverses the
-main direction of approach halfway through. The sixth nests the defenses:
-outer water, steep terrain, inner water, command core, then an extraction leg.
+## Sound
 
-## Terrain model
+Four phase boundaries per shell revolution trigger alternating rubber creaks,
+with actual gaps. A quiet second, inharmonic oscillator now colors the dry
+bearing sound without adding vocal formants or a continuous whine. The accepted
+water oscillator, filters, pitch contour and envelope are unchanged. Muting,
+stopping and switching modes clear active voices; accelerated play drops skipped
+strokes instead of stacking them. Fire adds a filtered noise hiss. All synthesis
+is local and dependency-free. The little hind paws still animate behind the belly.
 
-Ordinary hills are rotated Gaussian summits and offset shoulders. Fortification
-rims add an irregular annular Gaussian height profile. Both use analytical
-slopes in `terrain()`; the cached contour renderer samples that same field.
-Rims are not binary speed gates, walls with special collision shortcuts or
-scripted launchers. Counter-pushing, water drag and gradient forces all remain
-active. A focused test starts at Cushion Wall's foot: maximum push from rest
-cannot reach the crest, while a 30 m/s run-up crosses the bowl.
+## Input-only references
 
-Irregular lake shores use low-order radial waves. Optional `inner` scales the
-same boundary to form an island. Renderer fill and clipping use both paths with
-even-odd fill; traction checks exclude the exact same inner area. No cosmetic
-road is drawn over a moat, so a white line cannot masquerade as a bridge.
+| ID | Course | Clean time (seconds) |
+| --- | --- | ---: |
+| `gerbo-first-outing` | Seedhaven | 100.258333 |
+| `gerbo-banking` | Banks for the Memories | 95.008333 |
+| `gerbo-lake-skipping` | No Grip, No Problem | 172.758333 |
+| `gerbo-downhill` | It All Goes Downhill | 71.758333 |
+| `gerbo-forest-slalom` | The Black Boulder Wood | 187.508333 |
+| `gerbo-fort-pillow` | Fort Pillow | 169.508333 |
+| `gerbo-cavy-clash` | A Very Territorial Guinea Pig | 151.258333 |
+| `gerbo-pepperbreath` | Pepperbreath at Marshmallow Keep | 341.758333 |
+| `gerbo-whiskerdoom` | Nobody Puts Whiskerdoom in a Cage | 456.491667 |
 
-Acceleration remains `grip * playerDrive - 7.007 * terrainGradient - drag * velocity`.
-No traction means no player drive, not no gravity. A stationary wet ball on a
-slope can move downhill; a flat-water push only spins the shell. The closed
-moats cannot be driven across from rest in deep water.
+Run `DeadSlow.watch(id, 8)` one recording at a time. `timeline(id)` exposes its
+inputs; `report()` gives the actual result. They are generated reference routes,
+not human keyboard captures or optimal-speedrun claims. `tools/record-rampage.cjs`
+and `tools/record-wilds.cjs` compose ordinary directional, shield and fire inputs
+through the real state machine; neither changes poses, health or objectives.
+These authoring helpers are not shipped as a ranked-play autopilot.
 
-## Long-range response
+The four replacement/new runs were reverified in Node and Chromium in this pass.
+The other five recordings are retained unchanged and were not rerun locally.
+All playback remains unranked and cannot overwrite normal records.
 
-`retaliation` is optional level data. Each destroyed city queues three strikes
-at +10, +18 and +26 seconds. A mark appears 7.5 seconds before each impact and
-locks once. It never follows later steering. There is no instantaneous invisible
-hitscan: players see the affected circle and countdown for the full warning.
+## Records and focused checks
 
-Impact checks the ball's circular footprint against the blast radius once.
-A shield blocks it; distance evades it. The finite response continues after
-local guns stop. Overlapping salvos are ordered by impact time; retry resets
-both queue and statistics. Read the impending strike in the work panel and
-mission strip. `salvos`, `strikeHits`, `strikeDodges` and `strikeBlocks` appear
-in detached console state/results alongside the existing damage counters.
-
-## Sound and animation
-
-Four rotation-phase boundaries per revolution trigger separate alternating
-land creaks. Broad serial high/low-pass filters and short stick/slip pitch bends
-replace the previous glottal waveform and vowel formants. There is no sustained
-wheel tone. Faster roll gives more strokes and slightly more level. The water
-triangle wave, pitch contour, two band-pass colors, envelope, and cadence are
-unchanged. Accelerated playback drops missed strokes rather than stacking them.
-
-Hind paws animate contact/reach using the existing effort-driven gait. Hips and
-feet are painted before the body, so the belly naturally covers the hips and
-the toes peek around it. Coasting paws rest. Wheelspin still paddles in water.
-
-## Reference recordings
-
-| Console ID | Clean time (seconds) |
-| --- | ---: |
-| `gerbo-first-outing` | 100.258333 |
-| `gerbo-banking` | 95.008333 |
-| `gerbo-lake-skipping` | 172.758333 |
-| `gerbo-downhill` | 71.758333 |
-| `gerbo-hairpin` | 189.258333 |
-| `gerbo-fort-pillow` | 169.508333 |
-
-Use `DeadSlow.watch(id, 8)` or `DeadSlow.timeline(id)`. The offline
-`tools/record-rampage.cjs` controller composes bounded directional and shield
-inputs through the live state machine. These are generated input recordings,
-not human keyboard captures; no poses, velocities, health, terrain, or objectives
-are assigned to obtain their results. The helper is outside the browser bundle,
-not an autopilot in ranked play. All replays remain unranked.
-
-Seedhaven's recording is unchanged. Five updated/new recordings are shipped;
-the third course evades nine strikes, and the finale evades five and shields
-one. Times are reference completions, not optimality claims.
-
-## Records and targeted checks
-
-Schema 8 archives only `gerbo-banking` and `gerbo-lake-skipping` from schema 7.
-Their earlier ghosts and splits remain exportable, with archived times in the
-field log. Seedhaven, old archives, all other missions and circuits are retained.
-The schema-specific Codex migration remains intact.
+Schema 9 archives the retired `gerbo-hairpin` record from schema 8, including its
+full ghost and split data. The replacement forest course starts fresh and its
+field log displays the Hairpin archive. No other course or circuit is reset;
+Codex's earlier schema-specific migrations and all existing archives remain.
 
 ```sh
 npm run build
-node --test tests/rampage.test.cjs tests/rampage-audio.test.cjs tests/rampage-fortresses.test.cjs
-python tests/browser_rampage.py --screenshots reports/gerbozilla
+node --test tests/rampage-wilds.test.cjs tests/rampage-audio.test.cjs tests/rampage-fortresses.test.cjs
+python tests/browser_wilds.py
 ```
 
-Coverage includes the six input replays, finite-difference slope checks, closed
-moats and inner shores, run-up versus standing push, retaliation scheduling,
-locking, shields/dodges, objective ordering, non-phonetic dry filters and
-unchanged wet parameters, audio waveform headroom/gaps, paw layer order, record
-migration, relevant keyboard/touch controls, and transitions out of tow duty.
-The unrelated sea/space runs and broad suites are deliberately not part of
-this focused iteration.
+The focused browser check writes screenshots and a JSON report under ignored
+`screenshots/wilds/` and `reports/`. It uses inline mounting with a storage shim
+and system Chromium when available, otherwise Playwright's installed Chromium.
+`tests/fixtures/gerbo-wheel-fortresses.js` is a fixed, test-only audio reference,
+not shipped game code; it makes the water comparison independent of Git history.
+The broader marine/space tests are intentionally not part of this iteration.

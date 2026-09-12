@@ -1,3 +1,5 @@
+/* Audio regression reference from main f51d8ff; not loaded by the game.
+ * Keep this graph fixed to test the accepted water sound and new dry layer. */
 /* Discrete rubber-bearing creaks on land; unchanged tiny wheelspin chirps in water. */
 (function (root) {
     'use strict';
@@ -16,14 +18,12 @@
     function createWheel(ctx, destination = ctx.destination) {
         const bus = ctx.createGain(); bus.gain.value = 1; bus.connect(destination);
         const voices = new Set();
-        let hiss = null;
         let stroke = null, lastRoll = -1, next = 0, sequence = 0, disposed = false;
         function hush() {
             bus.gain.cancelScheduledValues(ctx.currentTime);
             bus.gain.setTargetAtTime(0, ctx.currentTime, .006);
             // A mode switch or mute must not resurrect an unfinished syllable.
-            for (const voice of voices) for (const source of voice.sources) source.stop(ctx.currentTime + .03);
-            if (hiss) hiss.gain.gain.setTargetAtTime(0, ctx.currentTime, .012);
+            for (const voice of voices) voice.source.stop(ctx.currentTime + .03);
             stroke = null; lastRoll = -1;
         }
         function speak(st) {
@@ -58,24 +58,9 @@
             if (p.wet) { source.connect(f1); source.connect(f2); f1.connect(env); f2.connect(env); }
             else { source.connect(f1); f1.connect(f2); f2.connect(env); }
             env.connect(bus);
-            const sources = [source], extras=[];
-            if (!p.wet) {
-                // A faint, inharmonic shell resonance adds a woody rattle without
-                // restoring the vocal formants. Water's accepted graph is untouched.
-                const ring=ctx.createOscillator(), level=ctx.createGain();
-                ring.type='sine';level.gain.value=.18;
-                ring.frequency.setValueAtTime(p.pitch*2.41,now);
-                ring.frequency.exponentialRampToValueAtTime(p.pitch*2.17,now+p.duration*.43);
-                ring.frequency.exponentialRampToValueAtTime(p.pitch*2.32,now+p.duration);
-                ring.connect(level);level.connect(f1);sources.push(ring);extras.push(level);
-                ring.start(now);ring.stop(now+p.duration+.02);
-            }
-            const voice = { sources }; voices.add(voice); let ended=0;
-            for (const oscillator of sources) oscillator.onended = () => {
-                oscillator.disconnect();
-                if (++ended===sources.length) {
-                    f1.disconnect(); f2.disconnect(); env.disconnect();extras.forEach(n=>n.disconnect());voices.delete(voice);
-                }
+            const voice = { source }; voices.add(voice);
+            source.onended = () => {
+                source.disconnect(); f1.disconnect(); f2.disconnect(); env.disconnect(); voices.delete(voice);
             };
             bus.gain.cancelScheduledValues(now); bus.gain.setTargetAtTime(1, now, .006);
             source.start(now); source.stop(now + p.duration + .02);
@@ -84,15 +69,6 @@
         return {
             tick(st, active) {
                 if (disposed) return;
-                if(st?.fireActive && active && !hiss) {
-                    const noise=ctx.createBufferSource(), filter=ctx.createBiquadFilter(), gain=ctx.createGain();
-                    const buffer=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate),data=buffer.getChannelData(0);
-                    let seed=17;for(let i=0;i<data.length;i++){seed=(1664525*seed+1013904223)>>>0;data[i]=seed/2147483648-1;}
-                    noise.buffer=buffer;noise.loop=true;filter.type='lowpass';filter.frequency.value=1600;
-                    gain.gain.value=0;noise.connect(filter);filter.connect(gain);gain.connect(destination);noise.start();
-                    hiss={noise,filter,gain};
-                }
-                if(hiss)hiss.gain.gain.setTargetAtTime(active && st?.fireActive ? .045 : 0,ctx.currentTime,.025);
                 if (!active || !st || syllableParameters(st, 0).rate < .015) {
                     if (stroke !== null) hush();
                     return;
@@ -107,11 +83,10 @@
             dispose() {
                 if (disposed) return;
                 hush(); disposed = true; bus.disconnect();
-                if(hiss){hiss.noise.stop();hiss.noise.disconnect();hiss.filter.disconnect();hiss.gain.disconnect();}
             }
         };
     }
     const api = { STROKE, syllableParameters, createWheel };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
-    root.GerboAudio = api;
+    root.OldGerboAudio = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

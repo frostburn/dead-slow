@@ -1,0 +1,1819 @@
+{
+  "level": "gerbo-forest-slalom",
+  "description": "Recorded directional pushes and shield inputs through the production game, composed by tools/record-rampage.cjs. No repositioning, altered physics or objective shortcuts. Reference completion, not an optimal route.",
+  "events": [
+    {
+      "time": 0,
+      "rudder": 0.32,
+      "thruster": -0.95
+    },
+    {
+      "time": 4,
+      "rudder": 0.31
+    },
+    {
+      "time": 4.25,
+      "rudder": 0.32
+    },
+    {
+      "time": 4.5,
+      "rudder": 0.31
+    },
+    {
+      "time": 4.75,
+      "rudder": 0.32
+    },
+    {
+      "time": 5,
+      "rudder": 0.31
+    },
+    {
+      "time": 5.25,
+      "rudder": 0.32
+    },
+    {
+      "time": 5.5,
+      "rudder": 0.31
+    },
+    {
+      "time": 5.75,
+      "rudder": 0.32
+    },
+    {
+      "time": 6,
+      "rudder": 0.31
+    },
+    {
+      "time": 6.25,
+      "rudder": 0.32
+    },
+    {
+      "time": 6.5,
+      "rudder": 0.31
+    },
+    {
+      "time": 6.75,
+      "rudder": 0.32
+    },
+    {
+      "time": 7,
+      "rudder": 0.31
+    },
+    {
+      "time": 7.25,
+      "rudder": 0.32
+    },
+    {
+      "time": 7.5,
+      "rudder": 0.31
+    },
+    {
+      "time": 7.75,
+      "rudder": 0.32
+    },
+    {
+      "time": 8.25,
+      "rudder": 0.31
+    },
+    {
+      "time": 8.5,
+      "rudder": 0.32
+    },
+    {
+      "time": 8.75,
+      "rudder": 0.31
+    },
+    {
+      "time": 9,
+      "rudder": 0.32
+    },
+    {
+      "time": 9.25,
+      "rudder": 0.31
+    },
+    {
+      "time": 9.5,
+      "rudder": 0.32
+    },
+    {
+      "time": 9.75,
+      "rudder": 0.31
+    },
+    {
+      "time": 10,
+      "rudder": 0.32
+    },
+    {
+      "time": 10.25,
+      "rudder": 0.31
+    },
+    {
+      "time": 10.5,
+      "rudder": 0.32
+    },
+    {
+      "time": 11,
+      "rudder": 0.31
+    },
+    {
+      "time": 11.25,
+      "rudder": 0.32
+    },
+    {
+      "time": 11.5,
+      "rudder": 0.31
+    },
+    {
+      "time": 11.75,
+      "rudder": 0.32
+    },
+    {
+      "time": 12,
+      "rudder": 0.31
+    },
+    {
+      "time": 12.25,
+      "rudder": 0.32
+    },
+    {
+      "time": 12.5,
+      "rudder": 0.31
+    },
+    {
+      "time": 12.75,
+      "rudder": 0.32
+    },
+    {
+      "time": 13,
+      "rudder": 0.31
+    },
+    {
+      "time": 13.25,
+      "rudder": 0.32
+    },
+    {
+      "time": 13.75,
+      "rudder": 0.31
+    },
+    {
+      "time": 14,
+      "rudder": 0.32
+    },
+    {
+      "time": 14.25,
+      "rudder": 0.31
+    },
+    {
+      "time": 14.5,
+      "rudder": 0.32
+    },
+    {
+      "time": 14.75,
+      "rudder": 0.31
+    },
+    {
+      "time": 15,
+      "rudder": 0.29,
+      "thruster": -0.87
+    },
+    {
+      "time": 15.25,
+      "rudder": 0.26,
+      "thruster": -0.79
+    },
+    {
+      "time": 15.5,
+      "rudder": 0.25,
+      "thruster": -0.76
+    },
+    {
+      "time": 16,
+      "rudder": 0.26,
+      "thruster": -0.77
+    },
+    {
+      "time": 16.25,
+      "rudder": 0.27,
+      "thruster": -0.8
+    },
+    {
+      "time": 16.5,
+      "rudder": 0.28,
+      "thruster": -0.83
+    },
+    {
+      "time": 16.75,
+      "rudder": 0.3,
+      "thruster": -0.89
+    },
+    {
+      "time": 17,
+      "rudder": 0.31,
+      "thruster": -0.95
+    },
+    {
+      "time": 17.25,
+      "rudder": 0.32
+    },
+    {
+      "time": 17.75,
+      "rudder": 0.31
+    },
+    {
+      "time": 18,
+      "rudder": 0.32
+    },
+    {
+      "time": 18.5,
+      "rudder": 0.31
+    },
+    {
+      "time": 18.75,
+      "rudder": 0.32
+    },
+    {
+      "time": 19.25,
+      "rudder": 0.31
+    },
+    {
+      "time": 19.5,
+      "rudder": 0.32
+    },
+    {
+      "time": 20,
+      "rudder": 0.31
+    },
+    {
+      "time": 20.25,
+      "rudder": 0.32
+    },
+    {
+      "time": 20.75,
+      "rudder": 0.31
+    },
+    {
+      "time": 21,
+      "rudder": 0.32
+    },
+    {
+      "time": 21.25,
+      "rudder": 0.31
+    },
+    {
+      "time": 21.5,
+      "rudder": 0.32
+    },
+    {
+      "time": 22,
+      "rudder": 0.31
+    },
+    {
+      "time": 22.25,
+      "rudder": 0.32
+    },
+    {
+      "time": 22.75,
+      "rudder": 0.31
+    },
+    {
+      "time": 23,
+      "rudder": 0.32
+    },
+    {
+      "time": 23.25,
+      "rudder": 0.31
+    },
+    {
+      "time": 23.5,
+      "rudder": 0.32
+    },
+    {
+      "time": 24,
+      "rudder": 0.31
+    },
+    {
+      "time": 24.25,
+      "rudder": 0.32
+    },
+    {
+      "time": 24.5,
+      "rudder": 0.31
+    },
+    {
+      "time": 24.75,
+      "rudder": 0.32
+    },
+    {
+      "time": 25.25,
+      "rudder": 0.31
+    },
+    {
+      "time": 25.5,
+      "rudder": 0.32
+    },
+    {
+      "time": 25.75,
+      "rudder": 0.31
+    },
+    {
+      "time": 26,
+      "rudder": 0.74,
+      "thruster": 0.68
+    },
+    {
+      "time": 26.25,
+      "thruster": 0.67
+    },
+    {
+      "time": 26.5,
+      "rudder": 0.75,
+      "thruster": 0.66
+    },
+    {
+      "time": 26.75,
+      "rudder": 0.76,
+      "thruster": 0.65
+    },
+    {
+      "time": 27,
+      "rudder": 0.77,
+      "thruster": 0.64
+    },
+    {
+      "time": 27.25,
+      "rudder": 0.78,
+      "thruster": 0.63
+    },
+    {
+      "time": 27.5,
+      "rudder": 0.79,
+      "thruster": 0.62
+    },
+    {
+      "time": 27.75,
+      "thruster": 0.61
+    },
+    {
+      "time": 28,
+      "rudder": 0.8,
+      "thruster": 0.6
+    },
+    {
+      "time": 28.25,
+      "rudder": 0.81,
+      "thruster": 0.59
+    },
+    {
+      "time": 28.5,
+      "rudder": 0.82,
+      "thruster": 0.58
+    },
+    {
+      "time": 28.75,
+      "thruster": 0.57
+    },
+    {
+      "time": 29,
+      "rudder": 0.83,
+      "thruster": 0.55
+    },
+    {
+      "time": 29.25,
+      "rudder": 0.84,
+      "thruster": 0.54
+    },
+    {
+      "time": 29.5,
+      "rudder": 0.85,
+      "thruster": 0.53
+    },
+    {
+      "time": 29.75,
+      "thruster": 0.52
+    },
+    {
+      "time": 30,
+      "rudder": 0.86,
+      "thruster": 0.51
+    },
+    {
+      "time": 30.25,
+      "thruster": 0.5
+    },
+    {
+      "time": 30.5,
+      "rudder": 0.87,
+      "thruster": 0.49
+    },
+    {
+      "time": 30.75,
+      "rudder": 0.88,
+      "thruster": 0.48
+    },
+    {
+      "time": 31,
+      "thruster": 0.47
+    },
+    {
+      "time": 31.25,
+      "rudder": 0.89,
+      "thruster": 0.46
+    },
+    {
+      "time": 31.5,
+      "thruster": 0.45
+    },
+    {
+      "time": 31.75,
+      "rudder": 0.9,
+      "thruster": 0.44
+    },
+    {
+      "time": 32,
+      "thruster": 0.43
+    },
+    {
+      "time": 32.25,
+      "rudder": 0.91,
+      "thruster": 0.42
+    },
+    {
+      "time": 32.75,
+      "thruster": 0.41
+    },
+    {
+      "time": 33,
+      "rudder": 0.92,
+      "thruster": 0.4
+    },
+    {
+      "time": 33.25,
+      "thruster": 0.39
+    },
+    {
+      "time": 33.5,
+      "thruster": 0.38
+    },
+    {
+      "time": 33.75,
+      "rudder": 0.93,
+      "thruster": 0.37
+    },
+    {
+      "time": 34,
+      "thruster": 0.36
+    },
+    {
+      "time": 34.5,
+      "rudder": 0.94,
+      "thruster": 0.35
+    },
+    {
+      "time": 34.75,
+      "thruster": 0.34
+    },
+    {
+      "time": 35,
+      "thruster": 0.33
+    },
+    {
+      "time": 35.25,
+      "rudder": 0.95
+    },
+    {
+      "time": 35.5,
+      "thruster": 0.32
+    },
+    {
+      "time": 35.75,
+      "thruster": 0.31
+    },
+    {
+      "time": 36,
+      "thruster": 0.3
+    },
+    {
+      "time": 36.5,
+      "rudder": 0.96,
+      "thruster": 0.29
+    },
+    {
+      "time": 37,
+      "thruster": 0.28
+    },
+    {
+      "time": 37.5,
+      "thruster": 0.27
+    },
+    {
+      "time": 37.75,
+      "thruster": 0.26
+    },
+    {
+      "time": 38,
+      "rudder": 0.97
+    },
+    {
+      "time": 38.5,
+      "thruster": 0.25
+    },
+    {
+      "time": 39,
+      "thruster": 0.24
+    },
+    {
+      "time": 39.5,
+      "thruster": 0.23
+    },
+    {
+      "time": 40.25,
+      "thruster": 0.22
+    },
+    {
+      "time": 40.5,
+      "rudder": 0.98
+    },
+    {
+      "time": 41,
+      "thruster": 0.21
+    },
+    {
+      "time": 42,
+      "thruster": 0.2
+    },
+    {
+      "time": 43.25,
+      "thruster": 0.19
+    },
+    {
+      "time": 44.75,
+      "thruster": 0.18
+    },
+    {
+      "time": 47.25,
+      "thruster": 0.17
+    },
+    {
+      "time": 48.5,
+      "rudder": 0.99
+    },
+    {
+      "time": 54.5,
+      "thruster": 0.16
+    },
+    {
+      "time": 54.75,
+      "thruster": 0.17
+    },
+    {
+      "time": 55,
+      "thruster": 0.16
+    },
+    {
+      "time": 55.25,
+      "thruster": 0.17
+    },
+    {
+      "time": 55.5,
+      "thruster": 0.16
+    },
+    {
+      "time": 55.75,
+      "thruster": 0.17
+    },
+    {
+      "time": 56,
+      "thruster": 0.16
+    },
+    {
+      "time": 56.25,
+      "thruster": 0.17
+    },
+    {
+      "time": 56.5,
+      "thruster": 0.16
+    },
+    {
+      "time": 57,
+      "thruster": 0.17
+    },
+    {
+      "time": 57.25,
+      "thruster": 0.16
+    },
+    {
+      "time": 57.5,
+      "thruster": 0.17
+    },
+    {
+      "time": 57.75,
+      "thruster": 0.16
+    },
+    {
+      "time": 58,
+      "thruster": 0.17
+    },
+    {
+      "time": 58.25,
+      "thruster": 0.16
+    },
+    {
+      "time": 58.5,
+      "thruster": 0.17
+    },
+    {
+      "time": 58.75,
+      "thruster": 0.16
+    },
+    {
+      "time": 59,
+      "thruster": 0.17
+    },
+    {
+      "time": 59.25,
+      "thruster": 0.16
+    },
+    {
+      "time": 59.5,
+      "thruster": 0.17
+    },
+    {
+      "time": 60,
+      "thruster": 0.16
+    },
+    {
+      "time": 60.25,
+      "thruster": 0.17
+    },
+    {
+      "time": 60.5,
+      "thruster": 0.16
+    },
+    {
+      "time": 60.75,
+      "thruster": 0.17
+    },
+    {
+      "time": 61,
+      "thruster": 0.16
+    },
+    {
+      "time": 61.25,
+      "thruster": 0.17
+    },
+    {
+      "time": 61.75,
+      "thruster": 0.16
+    },
+    {
+      "time": 62,
+      "thruster": 0.17
+    },
+    {
+      "time": 62.25,
+      "thruster": 0.16
+    },
+    {
+      "time": 62.5,
+      "thruster": 0.17
+    },
+    {
+      "time": 63,
+      "thruster": 0.16
+    },
+    {
+      "time": 63.25,
+      "thruster": 0.17
+    },
+    {
+      "time": 64,
+      "rudder": -0.36,
+      "thruster": -0.93
+    },
+    {
+      "time": 64.25,
+      "rudder": -0.35,
+      "thruster": -0.94
+    },
+    {
+      "time": 64.5,
+      "rudder": -0.34
+    },
+    {
+      "time": 65,
+      "rudder": -0.33
+    },
+    {
+      "time": 65.25,
+      "rudder": -0.32,
+      "thruster": -0.95
+    },
+    {
+      "time": 65.5,
+      "rudder": -0.31
+    },
+    {
+      "time": 65.75,
+      "rudder": -0.3
+    },
+    {
+      "time": 66,
+      "thruster": -0.96
+    },
+    {
+      "time": 66.25,
+      "rudder": -0.29
+    },
+    {
+      "time": 66.5,
+      "rudder": -0.28
+    },
+    {
+      "time": 66.75,
+      "rudder": -0.27
+    },
+    {
+      "time": 67,
+      "rudder": -0.26
+    },
+    {
+      "time": 67.25,
+      "thruster": -0.97
+    },
+    {
+      "time": 67.5,
+      "rudder": -0.25
+    },
+    {
+      "time": 67.75,
+      "rudder": -0.24
+    },
+    {
+      "time": 68,
+      "rudder": -0.23
+    },
+    {
+      "time": 68.25,
+      "rudder": -0.22
+    },
+    {
+      "time": 68.5,
+      "rudder": -0.21,
+      "thruster": -0.98
+    },
+    {
+      "time": 69,
+      "rudder": -0.2
+    },
+    {
+      "time": 69.25,
+      "rudder": -0.19
+    },
+    {
+      "time": 69.5,
+      "rudder": -0.18
+    },
+    {
+      "time": 70,
+      "rudder": -0.17,
+      "thruster": -0.99
+    },
+    {
+      "time": 70.25,
+      "rudder": -0.16
+    },
+    {
+      "time": 70.5,
+      "rudder": -0.15
+    },
+    {
+      "time": 71,
+      "rudder": -0.14
+    },
+    {
+      "time": 71.25,
+      "rudder": -0.13
+    },
+    {
+      "time": 71.5,
+      "rudder": -0.12
+    },
+    {
+      "time": 72,
+      "rudder": -0.11
+    },
+    {
+      "time": 72.25,
+      "rudder": -0.1
+    },
+    {
+      "time": 72.5,
+      "thruster": -1
+    },
+    {
+      "time": 72.75,
+      "rudder": -0.09
+    },
+    {
+      "time": 73.25,
+      "rudder": -0.08
+    },
+    {
+      "time": 73.5,
+      "rudder": -0.07
+    },
+    {
+      "time": 74,
+      "rudder": -0.06
+    },
+    {
+      "time": 74.5,
+      "rudder": -0.05
+    },
+    {
+      "time": 75.25,
+      "rudder": -0.04
+    },
+    {
+      "time": 76.25,
+      "rudder": -0.03
+    },
+    {
+      "time": 78.75,
+      "rudder": -0.02
+    },
+    {
+      "time": 80.75,
+      "rudder": -0.01
+    },
+    {
+      "time": 81.5,
+      "rudder": 0
+    },
+    {
+      "time": 81.75,
+      "rudder": 0.01
+    },
+    {
+      "time": 82.25,
+      "rudder": 0.02
+    },
+    {
+      "time": 82.75,
+      "rudder": 0.03
+    },
+    {
+      "time": 83.25,
+      "rudder": 0.04
+    },
+    {
+      "time": 84.25,
+      "rudder": 0.05
+    },
+    {
+      "time": 86.25,
+      "rudder": 0.06
+    },
+    {
+      "time": 97.75,
+      "rudder": 0.07
+    },
+    {
+      "time": 98,
+      "rudder": 0.06
+    },
+    {
+      "time": 98.25,
+      "rudder": 0.07
+    },
+    {
+      "time": 98.5,
+      "rudder": 0.06
+    },
+    {
+      "time": 98.75,
+      "rudder": 0.07
+    },
+    {
+      "time": 99,
+      "rudder": 0.06
+    },
+    {
+      "time": 99.25,
+      "rudder": 0.07
+    },
+    {
+      "time": 99.5,
+      "rudder": 0.06
+    },
+    {
+      "time": 99.75,
+      "rudder": 0.07
+    },
+    {
+      "time": 100,
+      "rudder": 0.06
+    },
+    {
+      "time": 100.25,
+      "rudder": 0.07
+    },
+    {
+      "time": 100.5,
+      "rudder": 0.06
+    },
+    {
+      "time": 100.75,
+      "rudder": 0.07
+    },
+    {
+      "time": 101,
+      "rudder": 0.06
+    },
+    {
+      "time": 101.25,
+      "rudder": 0.07
+    },
+    {
+      "time": 101.5,
+      "rudder": 0.86,
+      "thruster": 0.51
+    },
+    {
+      "time": 104,
+      "thruster": 0.52
+    },
+    {
+      "time": 106.5,
+      "rudder": 0.85
+    },
+    {
+      "time": 106.75,
+      "rudder": 0.86
+    },
+    {
+      "time": 109.25,
+      "thruster": 0.51
+    },
+    {
+      "time": 111.5,
+      "thruster": 0.5
+    },
+    {
+      "time": 112,
+      "rudder": 0.87
+    },
+    {
+      "time": 112.75,
+      "thruster": 0.49
+    },
+    {
+      "time": 113.75,
+      "rudder": 0.88,
+      "thruster": 0.48
+    },
+    {
+      "time": 114.5,
+      "thruster": 0.47
+    },
+    {
+      "time": 115.25,
+      "rudder": 0.89,
+      "thruster": 0.46
+    },
+    {
+      "time": 115.75,
+      "thruster": 0.45
+    },
+    {
+      "time": 116.25,
+      "rudder": 0.9,
+      "thruster": 0.44
+    },
+    {
+      "time": 116.5,
+      "thruster": 0.43
+    },
+    {
+      "time": 117,
+      "rudder": 0.91,
+      "thruster": 0.42
+    },
+    {
+      "time": 117.25,
+      "thruster": 0.41
+    },
+    {
+      "time": 117.75,
+      "rudder": 0.92,
+      "thruster": 0.4
+    },
+    {
+      "time": 118,
+      "thruster": 0.39
+    },
+    {
+      "time": 118.25,
+      "rudder": 0.93,
+      "thruster": 0.38
+    },
+    {
+      "time": 118.5,
+      "rudder": 0.9,
+      "thruster": 0.35
+    },
+    {
+      "time": 118.75,
+      "rudder": 0.81,
+      "thruster": 0.3
+    },
+    {
+      "time": 119,
+      "rudder": 0.73,
+      "thruster": 0.26
+    },
+    {
+      "time": 119.25,
+      "rudder": 0.67,
+      "thruster": 0.23
+    },
+    {
+      "time": 119.5,
+      "rudder": 0.62,
+      "thruster": 0.2
+    },
+    {
+      "time": 119.75,
+      "rudder": 0.58,
+      "thruster": 0.18
+    },
+    {
+      "time": 120,
+      "rudder": 0.54,
+      "thruster": 0.16
+    },
+    {
+      "time": 120.25,
+      "rudder": 0.51,
+      "thruster": 0.15
+    },
+    {
+      "time": 120.5,
+      "rudder": 0.49,
+      "thruster": 0.14
+    },
+    {
+      "time": 120.75,
+      "rudder": 0.48,
+      "thruster": 0.12
+    },
+    {
+      "time": 121,
+      "rudder": 0.46
+    },
+    {
+      "time": 121.25,
+      "rudder": 0.45,
+      "thruster": 0.11
+    },
+    {
+      "time": 121.5,
+      "rudder": 0.44,
+      "thruster": 0.1
+    },
+    {
+      "time": 121.75,
+      "rudder": 0.43
+    },
+    {
+      "time": 122,
+      "rudder": 0.42,
+      "thruster": 0.09
+    },
+    {
+      "time": 122.75,
+      "rudder": 0.41,
+      "thruster": 0.08
+    },
+    {
+      "time": 123.5,
+      "rudder": 0.4
+    },
+    {
+      "time": 125.25,
+      "thruster": 0.07
+    },
+    {
+      "time": 125.5,
+      "thruster": 0.08
+    },
+    {
+      "time": 125.75,
+      "thruster": 0.07
+    },
+    {
+      "time": 126,
+      "thruster": 0.08
+    },
+    {
+      "time": 126.25,
+      "thruster": 0.07
+    },
+    {
+      "time": 126.5,
+      "thruster": 0.08
+    },
+    {
+      "time": 126.75,
+      "thruster": 0.07
+    },
+    {
+      "time": 127.25,
+      "thruster": 0.08
+    },
+    {
+      "time": 127.5,
+      "thruster": 0.07
+    },
+    {
+      "time": 127.75,
+      "thruster": 0.08
+    },
+    {
+      "time": 128,
+      "thruster": 0.07
+    },
+    {
+      "time": 128.25,
+      "thruster": 0.08
+    },
+    {
+      "time": 128.5,
+      "rudder": 0.39,
+      "thruster": 0.07
+    },
+    {
+      "time": 128.75,
+      "rudder": 0.4
+    },
+    {
+      "time": 129,
+      "thruster": 0.08
+    },
+    {
+      "time": 129.25,
+      "thruster": 0.07
+    },
+    {
+      "time": 129.5,
+      "rudder": 0.39,
+      "thruster": 0.08
+    },
+    {
+      "time": 129.75,
+      "rudder": 0.4,
+      "thruster": 0.07
+    },
+    {
+      "time": 130,
+      "thruster": 0.08
+    },
+    {
+      "time": 130.25,
+      "rudder": 0.39,
+      "thruster": 0.07
+    },
+    {
+      "time": 130.5,
+      "rudder": 0.4,
+      "thruster": 0.08
+    },
+    {
+      "time": 130.75,
+      "thruster": 0.07
+    },
+    {
+      "time": 131,
+      "rudder": -0.62,
+      "thruster": 0.79
+    },
+    {
+      "time": 132,
+      "rudder": -0.61
+    },
+    {
+      "time": 133.75,
+      "thruster": 0.8
+    },
+    {
+      "time": 134,
+      "rudder": -0.6
+    },
+    {
+      "time": 136,
+      "rudder": -0.59
+    },
+    {
+      "time": 136.25,
+      "thruster": 0.81
+    },
+    {
+      "time": 137.5,
+      "rudder": -0.58
+    },
+    {
+      "time": 138.25,
+      "thruster": 0.82
+    },
+    {
+      "time": 138.75,
+      "rudder": -0.57
+    },
+    {
+      "time": 139.75,
+      "rudder": -0.56,
+      "thruster": 0.83
+    },
+    {
+      "time": 140.75,
+      "rudder": -0.55
+    },
+    {
+      "time": 141,
+      "thruster": 0.84
+    },
+    {
+      "time": 141.5,
+      "rudder": -0.54
+    },
+    {
+      "time": 142,
+      "rudder": -0.53,
+      "thruster": 0.85
+    },
+    {
+      "time": 142.5,
+      "rudder": -0.52
+    },
+    {
+      "time": 143,
+      "rudder": -0.51,
+      "thruster": 0.86
+    },
+    {
+      "time": 143.5,
+      "rudder": -0.5,
+      "thruster": 0.87
+    },
+    {
+      "time": 143.75,
+      "rudder": -0.49
+    },
+    {
+      "time": 144.25,
+      "rudder": -0.48,
+      "thruster": 0.88
+    },
+    {
+      "time": 144.5,
+      "rudder": -0.47
+    },
+    {
+      "time": 144.75,
+      "rudder": -0.46,
+      "thruster": 0.89
+    },
+    {
+      "time": 145,
+      "rudder": -0.45
+    },
+    {
+      "time": 145.25,
+      "thruster": 0.9
+    },
+    {
+      "time": 145.5,
+      "rudder": -0.43
+    },
+    {
+      "time": 145.75,
+      "rudder": -0.42,
+      "thruster": 0.91
+    },
+    {
+      "time": 146,
+      "rudder": -0.41
+    },
+    {
+      "time": 146.25,
+      "rudder": -0.4,
+      "thruster": 0.92
+    },
+    {
+      "time": 146.5,
+      "rudder": -0.38,
+      "thruster": 0.93
+    },
+    {
+      "time": 146.75,
+      "rudder": -0.36
+    },
+    {
+      "time": 147,
+      "rudder": -0.34,
+      "thruster": 0.94
+    },
+    {
+      "time": 147.25,
+      "rudder": -0.29,
+      "thruster": 0.85
+    },
+    {
+      "time": 147.5,
+      "rudder": -0.24,
+      "thruster": 0.77
+    },
+    {
+      "time": 147.75,
+      "rudder": -0.2,
+      "thruster": 0.7
+    },
+    {
+      "time": 148,
+      "rudder": -0.17,
+      "thruster": 0.64
+    },
+    {
+      "time": 148.25,
+      "rudder": -0.14,
+      "thruster": 0.6
+    },
+    {
+      "time": 148.5,
+      "rudder": -0.12,
+      "thruster": 0.56
+    },
+    {
+      "time": 148.75,
+      "rudder": -0.09,
+      "thruster": 0.53
+    },
+    {
+      "time": 149,
+      "rudder": -0.08,
+      "thruster": 0.51
+    },
+    {
+      "time": 149.25,
+      "rudder": -0.07,
+      "thruster": 0.49
+    },
+    {
+      "time": 149.5,
+      "rudder": -0.05,
+      "thruster": 0.47
+    },
+    {
+      "time": 149.75,
+      "thruster": 0.46
+    },
+    {
+      "time": 150,
+      "rudder": -0.04,
+      "thruster": 0.45
+    },
+    {
+      "time": 150.25,
+      "rudder": -0.03,
+      "thruster": 0.44
+    },
+    {
+      "time": 150.5,
+      "rudder": -0.02
+    },
+    {
+      "time": 150.75,
+      "thruster": 0.43
+    },
+    {
+      "time": 151,
+      "thruster": 0.42
+    },
+    {
+      "time": 151.25,
+      "rudder": -0.01
+    },
+    {
+      "time": 152,
+      "thruster": 0.41
+    },
+    {
+      "time": 152.25,
+      "rudder": 0
+    },
+    {
+      "time": 153.75,
+      "thruster": 0.4
+    },
+    {
+      "time": 154,
+      "thruster": 0.41
+    },
+    {
+      "time": 154.25,
+      "thruster": 0.4
+    },
+    {
+      "time": 154.5,
+      "thruster": 0.41
+    },
+    {
+      "time": 154.75,
+      "thruster": 0.4
+    },
+    {
+      "time": 155.25,
+      "thruster": 0.41
+    },
+    {
+      "time": 155.5,
+      "thruster": 0.4
+    },
+    {
+      "time": 155.75,
+      "thruster": 0.41
+    },
+    {
+      "time": 156,
+      "thruster": 0.4
+    },
+    {
+      "time": 156.25,
+      "rudder": -0.54,
+      "thruster": -0.84
+    },
+    {
+      "time": 156.5,
+      "rudder": -0.57,
+      "thruster": -0.82
+    },
+    {
+      "time": 156.75,
+      "rudder": -0.59,
+      "thruster": -0.81
+    },
+    {
+      "time": 157,
+      "rudder": -0.62,
+      "thruster": -0.78
+    },
+    {
+      "time": 157.25,
+      "rudder": -0.66,
+      "thruster": -0.75
+    },
+    {
+      "time": 157.5,
+      "rudder": -0.58,
+      "thruster": -0.58
+    },
+    {
+      "time": 157.75,
+      "rudder": -0.48,
+      "thruster": -0.41
+    },
+    {
+      "time": 158,
+      "rudder": -0.41,
+      "thruster": -0.28
+    },
+    {
+      "time": 158.25,
+      "rudder": -0.34,
+      "thruster": -0.17
+    },
+    {
+      "time": 158.5,
+      "rudder": -0.29,
+      "thruster": -0.08
+    },
+    {
+      "time": 158.75,
+      "rudder": -0.25,
+      "thruster": 0
+    },
+    {
+      "time": 159,
+      "rudder": -0.21,
+      "thruster": 0.06
+    },
+    {
+      "time": 159.25,
+      "rudder": -0.19,
+      "thruster": 0.1
+    },
+    {
+      "time": 159.5,
+      "rudder": -0.16,
+      "thruster": 0.14
+    },
+    {
+      "time": 159.75,
+      "rudder": -0.14,
+      "thruster": 0.18
+    },
+    {
+      "time": 160,
+      "rudder": -0.12,
+      "thruster": 0.2
+    },
+    {
+      "time": 160.25,
+      "rudder": -0.11,
+      "thruster": 0.22
+    },
+    {
+      "time": 160.5,
+      "rudder": -0.1,
+      "thruster": 0.24
+    },
+    {
+      "time": 160.75,
+      "rudder": -0.09,
+      "thruster": 0.26
+    },
+    {
+      "time": 161,
+      "rudder": -0.08,
+      "thruster": 0.27
+    },
+    {
+      "time": 161.25,
+      "thruster": 0.28
+    },
+    {
+      "time": 161.5,
+      "rudder": -0.07
+    },
+    {
+      "time": 161.75,
+      "thruster": 0.29
+    },
+    {
+      "time": 162,
+      "rudder": -0.06
+    },
+    {
+      "time": 162.25,
+      "thruster": 0.3
+    },
+    {
+      "time": 162.75,
+      "rudder": -0.05,
+      "thruster": 0.31
+    },
+    {
+      "time": 164.75,
+      "thruster": 0.32
+    },
+    {
+      "time": 165.5,
+      "thruster": 0.34
+    },
+    {
+      "time": 165.75,
+      "thruster": 0.36
+    },
+    {
+      "time": 166,
+      "thruster": 0.37
+    },
+    {
+      "time": 166.25,
+      "rudder": -0.06,
+      "thruster": 0.41
+    },
+    {
+      "time": 166.5,
+      "rudder": -0.07,
+      "thruster": 0.47
+    },
+    {
+      "time": 166.75,
+      "thruster": 0.52
+    },
+    {
+      "time": 167,
+      "rudder": -0.08,
+      "thruster": 0.57
+    },
+    {
+      "time": 167.25,
+      "rudder": -0.09,
+      "thruster": 0.62
+    },
+    {
+      "time": 167.5,
+      "rudder": -0.1,
+      "thruster": 0.66
+    },
+    {
+      "time": 167.75,
+      "thruster": 0.7
+    },
+    {
+      "time": 168,
+      "thruster": 0.73
+    },
+    {
+      "time": 168.25,
+      "rudder": -0.11,
+      "thruster": 0.75
+    },
+    {
+      "time": 168.5,
+      "thruster": 0.77
+    },
+    {
+      "time": 168.75,
+      "thruster": 0.79
+    },
+    {
+      "time": 169,
+      "rudder": -0.12,
+      "thruster": 0.8
+    },
+    {
+      "time": 169.25,
+      "thruster": 0.81
+    },
+    {
+      "time": 169.5,
+      "thruster": 0.82
+    },
+    {
+      "time": 170,
+      "thruster": 0.83
+    },
+    {
+      "time": 170.5,
+      "thruster": 0.84
+    },
+    {
+      "time": 172,
+      "thruster": 0.85
+    },
+    {
+      "time": 172.75,
+      "thruster": 0.84
+    },
+    {
+      "time": 173,
+      "thruster": 0.85
+    },
+    {
+      "time": 173.75,
+      "rudder": -0.13
+    },
+    {
+      "time": 174,
+      "rudder": -0.12,
+      "thruster": 0.84
+    },
+    {
+      "time": 174.25,
+      "thruster": 0.85
+    },
+    {
+      "time": 174.5,
+      "rudder": -0.13
+    },
+    {
+      "time": 174.75,
+      "rudder": -0.12
+    },
+    {
+      "time": 175,
+      "rudder": -0.13,
+      "thruster": 0.84
+    },
+    {
+      "time": 175.25,
+      "rudder": -0.12,
+      "thruster": 0.85
+    },
+    {
+      "time": 175.75,
+      "rudder": -0.13
+    },
+    {
+      "time": 176,
+      "rudder": -0.12,
+      "thruster": 0.84
+    },
+    {
+      "time": 176.25,
+      "rudder": -0.13,
+      "thruster": 0.85
+    },
+    {
+      "time": 176.5,
+      "rudder": -0.12
+    },
+    {
+      "time": 176.75,
+      "thruster": 0.84
+    },
+    {
+      "time": 177,
+      "rudder": -0.13,
+      "thruster": 0.85
+    },
+    {
+      "time": 177.25,
+      "rudder": -0.12
+    },
+    {
+      "time": 177.5,
+      "rudder": -0.13,
+      "thruster": 0.84
+    },
+    {
+      "time": 177.75,
+      "rudder": -0.09,
+      "thruster": 0.63
+    },
+    {
+      "time": 178,
+      "rudder": -0.03,
+      "thruster": 0.16
+    },
+    {
+      "time": 178.25,
+      "rudder": 0.03,
+      "thruster": -0.23
+    },
+    {
+      "time": 178.5,
+      "rudder": 0.07,
+      "thruster": -0.54
+    },
+    {
+      "time": 178.75,
+      "rudder": 0.11,
+      "thruster": -0.78
+    },
+    {
+      "time": 179,
+      "rudder": 0.13,
+      "thruster": -0.96
+    },
+    {
+      "time": 179.25,
+      "rudder": 0.14,
+      "thruster": -0.99
+    },
+    {
+      "time": 183.75,
+      "rudder": 0.13,
+      "thruster": -0.91
+    },
+    {
+      "time": 184,
+      "rudder": 0.11,
+      "thruster": -0.8
+    },
+    {
+      "time": 184.25,
+      "rudder": 0.09,
+      "thruster": -0.69
+    },
+    {
+      "time": 184.5,
+      "rudder": 0.08,
+      "thruster": -0.6
+    },
+    {
+      "time": 184.75,
+      "rudder": 0.07,
+      "thruster": -0.51
+    },
+    {
+      "time": 185,
+      "rudder": 0.06,
+      "thruster": -0.44
+    },
+    {
+      "time": 185.25,
+      "rudder": 0.05,
+      "thruster": -0.37
+    },
+    {
+      "time": 185.5,
+      "rudder": 0,
+      "thruster": 0
+    }
+  ],
+  "duration": 191,
+  "expectedTime": 187.50833333333333
+}

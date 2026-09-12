@@ -558,7 +558,7 @@
     const spaceLevels = typeof module !== 'undefined' && module.exports ? require('./space-levels.js') : root.HarborSpaceLevels;
     const islandLevels = typeof module !== 'undefined' && module.exports ? require('./archipelago.js') : root.HarborArchipelago;
     const rampageLevels = typeof module !== 'undefined' && module.exports ? require('./rampage.js').levels : root.GerboRampage.levels;
-    worlds.push({ id: 'gerbozilla', number: 5, name: 'Gerbozilla’s Rampage', subtitle: 'GIANT PET · SIX FIELD COURSES', theme: 'rampage', preview: true, description: 'Six standalone orienteering courses: Seedhaven, mountain fortresses, island moats, a summit descent, a reservoir hairpin and Fort Pillow. Irregular contours, a colossal hamster ball, evacuated cities and timed shields. Outside the existing Grand Tour.' });
+    worlds.push({ id: 'gerbozilla', number: 5, name: 'Gerbozilla’s Rampage', subtitle: 'GIANT PET · NINE FIELD COURSES', theme: 'rampage', preview: true, description: 'Nine standalone field courses: momentum trials, forest orienteering, mountain fortresses, giant-pet duels, fire breathing and Lady Whiskerdoom’s rescue. Green woodland slows rolling; black boulders are impassable. Outside the existing Grand Tour.' });
     levels.push(...night, ...islandLevels, ...spaceLevels, ...rampageLevels);
     levels.forEach((l, i) => {
         const w = l.rampage ? worlds[4] : worlds[Math.min(3, Math.floor(i / 12))];

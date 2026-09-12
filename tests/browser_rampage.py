@@ -19,7 +19,7 @@ with sync_playwright() as pw:
         if args.screenshots:
             args.screenshots.mkdir(parents=True,exist_ok=True);page.screenshot(path=str(args.screenshots/name))
     page.evaluate('DeadSlowTest.courses(5)')
-    check('World 5 selector has six real courses, not twelve placeholders',page.locator('.level-card').count()==6 and '0 / 6 COURSES COMPLETE' in page.locator('#dialog').inner_text())
+    check('World 5 selector has nine real courses, not twelve placeholders',page.locator('.level-card').count()==9 and '0 / 9 COURSES COMPLETE' in page.locator('#dialog').inner_text())
     check('Grand Tour remains 48 stages','all 48' in page.locator('#dialog').inner_text())
     page.locator('.level-card').first.click();check('Ball introduction explains map controls and shields','W A S D' in page.locator('#dialog').inner_text() and 'shield' in page.locator('#dialog').inner_text())
     shot('gerbo-intro.png');page.click('[data-action="begin"]');page.evaluate('DeadSlow.speed(0)')
@@ -56,7 +56,7 @@ with sync_playwright() as pw:
     check('Regression setup really hides the tow manifest',page.locator('#manifest').evaluate('(e)=>e.hidden'))
     page.evaluate('DeadSlow.level(5,1);DeadSlow.speed(0);DeadSlowTest.hud()')
     check('Switching from tow duty restores visible rolling and shield counters',page.locator('#manifest').is_visible() and 'ROLLED' in page.locator('#manifest').inner_text() and 'HITS BLOCKED' in page.locator('#manifest').inner_text())
-    for id,number in [('gerbo-banking',2),('gerbo-lake-skipping',3),('gerbo-downhill',4),('gerbo-hairpin',5),('gerbo-fort-pillow',6)]:
+    for id,number in [('gerbo-banking',2),('gerbo-lake-skipping',3),('gerbo-downhill',4),('gerbo-forest-slalom',5),('gerbo-fort-pillow',6)]:
         seconds=json.loads((ROOT/'tests/fixtures'/f'{id}-controls.json').read_text())['duration']
         page.evaluate('(id)=>{DeadSlow.watch(id,0);DeadSlow.step(40)}',id)
         page.wait_for_timeout(100);shot(f'gerbo-course-{number}.png')
@@ -78,7 +78,7 @@ with sync_playwright() as pw:
     check('A demolished city actually starts the long-range warning display',
           page.evaluate('DeadSlowTest.state.run.rampage.stats.salvos>0 && DeadSlowTest.state.run.rampage.strikes.some(s=>s.x!==null)')
           and 'RETALIATION' in page.locator('#work-readout').inner_text())
-    for id in ['gerbo-downhill','gerbo-hairpin','gerbo-fort-pillow']:
+    for id in ['gerbo-downhill','gerbo-forest-slalom','gerbo-fort-pillow']:
         page.evaluate('(id)=>{DeadSlow.level(id);DeadSlow.speed(0)}',id)
         page.wait_for_timeout(80);shot(id+'.png')
     # The integration touches mode switching, not any earlier mission layouts.

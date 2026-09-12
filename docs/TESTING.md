@@ -141,3 +141,26 @@ older developer installation replaced. CI installs the pinned version in its
 fresh environment; consult the PR's actual check result for that verification.
 Pages actions are updated to `upload-pages-artifact@v5` and `deploy-pages@v5`;
 deployment stays manual/opt-in and is not run by the test suite.
+
+
+## Rampage: forests, pets, fire and escort
+
+The nine-course pass adds `tests/rampage-wilds.test.cjs` and the standalone
+`tests/browser_wilds.py` check. Use the three-file Node command in
+[the field guide](GERBOZILLA.md#records-and-focused-checks) for the mechanics,
+audio mocks and existing siege interactions. The browser check verifies the four
+replacement/new recordings through the production console; keyboard and touch
+fire, cancelled holds, tow-to-Rampage counters, portrait/landscape controls,
+results, map rendering and a fixed-reference offline audio comparison are covered.
+
+Isolation tests seed positions or records only to exercise individual rules;
+they are not author-time claims. The four published input timelines separately
+prove clean, full completions without pose or objective shortcuts. The existing
+five Rampage recordings are unchanged; broad sea/space suites are left to CI.
+
+This pass ran 40 mechanics/audio/fortress Node tests plus the one world-count
+regression: **41 passing targeted Node tests**. The focused Chromium runner
+passed **39 checks**, including all four affected full input recordings. The
+accepted water reference rendered identically; the dry/fire mix retained
+headroom and mute/release silence. These local checks used Playwright 1.57.0
+with system Chromium and do not claim remote CI or the full regression suite.
