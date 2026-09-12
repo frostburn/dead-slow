@@ -43,6 +43,7 @@ function create() {
     ctx.window = ctx;
     vm.createContext(ctx);
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/game.js'), 'utf8'), ctx);
+    ctx.DeadSlowTest.html = id => node(id).innerHTML;
     return ctx.DeadSlowTest;
 }
 module.exports = { create };

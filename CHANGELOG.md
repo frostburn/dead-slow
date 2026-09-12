@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — Space contact and campaign progress fixes
+
+- Pass actual velocity vectors to asteroid, target-vessel and docked-tender
+  contacts. Gentle collisions no longer turn world coordinates into impact speed.
+- Count only the twelve campaign sectors in Meridian progress. Show the Century
+  Ship's bonus completion separately, keeping it selectable and outside circuits.
+- Add collision-response and campaign/bonus regression tests. No level layouts,
+  author recordings, record formats, dependencies or audio are changed.
+
 ## 4.0.0 — The Black Meridian
 
 - Add twelve spacecraft missions and the independent Century Ship bonus: 49
