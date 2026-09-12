@@ -284,7 +284,12 @@
         if (st.friendly && !st.rescued) free.push(st.friendly);
         if (st.mother && st.phase < 2) free.push(st.mother);
         if (st.second && st.phase === 0) free.push(st.second);
-        const attached = st.phase < 2 && st.mother ? st.tenders.map(b => ({ ...b, ...P.localPoint(st.mother, 0, b.offset), a: st.mother.a })) : [];
+        const attached = st.phase < 2 && st.mother ? st.tenders.map(b => {
+            const p = P.localPoint(st.mother, 0, b.offset);
+            return { ...b, ...p, a: st.mother.a,
+                vx: st.mother.vx - st.mother.r * (p.y - st.mother.y),
+                vy: st.mother.vy + st.mother.r * (p.x - st.mother.x), r: st.mother.r };
+        }) : [];
         for (const b of attached) if (outside(level, b)) {
             fail(run, 'out-of-sector', 'A docked tender left the navigation sector.'); return;
         }
@@ -295,7 +300,7 @@
             // P.contact expects velocity components under x/y, never a body's position.
             for (const b of st.rocks) contact(run, s, { id: b.id, poly: b.poly, velocity: { x: b.vx, y: b.vy } });
             if (st.target && !st.targetHit) contact(run, s, { id: 'target-vessel', poly: P.hull(st.target), velocity: { x: st.target.vx, y: st.target.vy } });
-            if (s !== st.mother) for (const b of attached) contact(run, s, { id: 'docked-' + b.id, poly: P.hull(b), velocity: { x: st.mother.vx, y: st.mother.vy } });
+            if (s !== st.mother) for (const b of attached) contact(run, s, { id: 'docked-' + b.id, poly: P.hull(b), velocity: { x: b.vx, y: b.vy } });
             if (st.rescued && s !== st.friendly) contact(run, s, { id: 'secured-friendly', poly: P.hull(st.friendly) });
         }
         for (let i = 0; i < free.length; i++) for (let j = i + 1; j < free.length; j++) {
