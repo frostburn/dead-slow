@@ -65,83 +65,117 @@
         };
     }
     function create() {
-        let ctx = null, engine = null, gain = null, enabled = true, horn = null;
+        const flightAudio = typeof module !== 'undefined' && module.exports ? require('./space-audio.js') : root.HarborSpaceAudio;
+        let ctx = null, engine = null, gain = null, master = null, enabled = true;
+        let space = false, drive = null, horn = null;
+        const cues = new Map(), tones = new Set();
+        function stopTransient() {
+            horn?.stop(); horn = null;
+            for (const cue of cues.values()) cue.stop();
+            cues.clear();
+            for (const tone of tones) tone.stop();
+            tones.clear();
+        }
         function init() {
             try {
                 if (!ctx) {
                     const AC = root.AudioContext || root.webkitAudioContext;
-                    if (!AC)
-                        return;
+                    if (!AC) return;
                     ctx = new AC();
+                    master = ctx.createGain(); master.gain.value = enabled ? 1 : 0;
+                    master.connect(ctx.destination);
                     const re = new Float32Array(9), im = new Float32Array([0, 1, .4, .18, .075, .03, .018, .01, .008]);
                     engine = ctx.createOscillator();
                     engine.setPeriodicWave(ctx.createPeriodicWave(re, im));
                     const filter = ctx.createBiquadFilter();
-                    filter.type = 'lowpass';
-                    filter.frequency.value = 145;
-                    filter.Q.value = .45;
-                    gain = ctx.createGain();
-                    gain.gain.value = 0;
-                    engine.connect(filter);
-                    filter.connect(gain);
-                    gain.connect(ctx.destination);
-                    engine.start();
+                    filter.type = 'lowpass'; filter.frequency.value = 145; filter.Q.value = .45;
+                    gain = ctx.createGain(); gain.gain.value = 0;
+                    engine.connect(filter); filter.connect(gain); gain.connect(master); engine.start();
                 }
-                if (ctx.state === 'suspended')
-                    ctx.resume().catch(() => {
-                    });
-            }
-            catch (e) {
-                ctx = null;
+                if (space && !drive) drive = flightAudio.createDrive(ctx, master);
+                if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+            } catch (_) {
+                // Audio failure never interrupts navigation. A later gesture may retry.
+                if (ctx) ctx.close?.()?.catch?.(() => {});
+                ctx = engine = gain = master = drive = null;
+                cues.clear(); tones.clear(); horn = null;
             }
         }
-        function tone(frequency = 440, duration = .2, volume = .035) {
-            if (!ctx || !enabled)
-                return;
-            const now = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
-            o.type = 'sine';
-            o.frequency.value = frequency;
-            f.type = 'lowpass';
-            f.frequency.value = 700;
-            g.gain.setValueAtTime(0, now);
-            g.gain.linearRampToValueAtTime(volume, now + .018);
-            g.gain.exponentialRampToValueAtTime(.0001, now + duration);
-            o.connect(f);
-            f.connect(g);
-            g.connect(ctx.destination);
-            o.start(now);
-            o.stop(now + duration + .03);
+        function tone(frequency = 440, duration = .2, volume = .035, delay = 0) {
+            if (!ctx || !enabled) return;
+            const start = ctx.currentTime + delay, o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+            o.type = 'sine'; o.frequency.value = frequency;
+            f.type = 'lowpass'; f.frequency.value = 700;
+            g.gain.value = 0; g.gain.setValueAtTime(0, start);
+            g.gain.linearRampToValueAtTime(volume, start + .018);
+            g.gain.exponentialRampToValueAtTime(.0001, start + duration);
+            o.connect(f); f.connect(g); g.connect(master);
+            o.start(start); o.stop(start + duration + .03);
+            let stopped = false;
+            const voice = { stop() {
+                if (stopped) return;
+                stopped = true;
+                const time = ctx.currentTime, age = time - start;
+                const held = age <= 0 || age >= duration ? 0 : age < .018 ? volume * age / .018
+                    : volume * Math.pow(.0001 / volume, (age - .018) / (duration - .018));
+                g.gain.cancelScheduledValues(time); g.gain.setValueAtTime(held, time);
+                g.gain.linearRampToValueAtTime(0, time + .012);
+                try { o.stop(time + .02); } catch (_) { /* Already ended. */ }
+            } };
+            // Accelerated replays and rapid commands must not accumulate an
+            // unbounded cue mix. Normal marine cues retain their sound and timing.
+            if (tones.size >= 8) { const oldest = tones.values().next().value; oldest.stop(); tones.delete(oldest); }
+            tones.add(voice);
+            o.onended = () => { o.disconnect(); f.disconnect(); g.disconnect(); tones.delete(voice); };
+        }
+        function cue(kind) {
+            if (!ctx || !enabled) return false;
+            if (cues.get(kind)?.until > ctx.currentTime) return false;
+            cues.set(kind, flightAudio.soundCue(ctx, kind, master));
+            return true;
+        }
+        function radar() {
+            if (!space || !enabled) return false;
+            init(); return cue('radar');
         }
         return {
-            init, set enabled(v) {
+            init,
+            // Called for every departure, even within the same world: no stale cues.
+            setSpace(value) {
+                stopTransient(); space = !!value;
+                if (gain) gain.gain.setTargetAtTime(0, ctx.currentTime, .02);
+                drive?.tick({}, false);
+            },
+            set enabled(v) {
                 enabled = !!v;
-                if (!enabled) horn?.stop();
-            }, get enabled() {
-                return enabled;
+                if (!enabled) { stopTransient(); drive?.tick({}, false); }
+                if (master) master.gain.setTargetAtTime(enabled ? 1 : 0, ctx.currentTime, .008);
             },
-            tick(s, active) {
-                if (!ctx || !gain)
-                    return;
+            get enabled() { return enabled; },
+            tick(s, active, flight = null) {
+                if (!ctx || !gain) return;
                 const now = ctx.currentTime;
-                gain.gain.setTargetAtTime(active && enabled ? .011 + Math.abs(s.engine) * .024 : 0, now, .13);
-                engine.frequency.setTargetAtTime(35 + Math.abs(s.engine) * 27, now, .2);
+                gain.gain.setTargetAtTime(active && enabled && !space ? .011 + Math.abs(s.engine) * .024 : 0, now, .13);
+                if (!space) engine.frequency.setTargetAtTime(35 + Math.abs(s.engine) * 27, now, .2);
+                drive?.tick({ ...flight?.firingJets, beam: flight?.beamForce }, active && enabled && space);
             },
-            order() {
-                tone(310, .15, .025);
-            }, checkpoint() {
-                tone(520, .22, .025);
-                setTimeout(() => tone(650, .28, .022), 110);
-            }, impact() {
-                tone(73, .35, .06);
-            }, success() {
-                tone(330, .35, .025);
-                setTimeout(() => tone(440, .4, .026), 140);
-                setTimeout(() => tone(550, .65, .025), 280);
-            }, horn() {
-                if (!enabled) return;
+            order() { if (space) cue('order'); else tone(310, .15, .025); },
+            checkpoint() {
+                if (space) cue('checkpoint');
+                else { tone(520, .22, .025); tone(650, .28, .022, .11); }
+            },
+            impact() { if (space) cue('impact'); else tone(73, .35, .06); },
+            success() {
+                if (space) cue('success');
+                else { tone(330, .35, .025); tone(440, .4, .026, .14); tone(550, .65, .025, .28); }
+            },
+            radar,
+            horn() {
+                if (space) return radar();
+                if (!enabled) return false;
                 init();
-                // Holding H or tapping repeatedly cannot stack dangerously loud horns.
-                if (ctx && (!horn || ctx.currentTime >= horn.until)) horn = soundHorn(ctx);
+                if (!ctx || horn && ctx.currentTime < horn.until) return false;
+                horn = soundHorn(ctx, master); return true;
             }
         };
     }

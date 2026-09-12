@@ -4,6 +4,27 @@ World 4 has twelve circuit sectors and a thirteenth, optional Century Ship.
 All are available immediately. There are 49 selectable stages in the game;
 the Grand Tour includes 48 and the Meridian circuit includes twelve.
 
+## Flight audio and radar
+
+The spacecraft has its own onboard sound palette: a rounded ion-drive tone and
+filtered exhaust, quieter attitude/lateral-jet hiss, and beam resonance. Sound
+follows **actual firing**, not requested thrust or ship speed. There is no diesel
+idle while coasting; an empty tank, a blackout, full shadow on a solar craft,
+pause or frozen simulation cannot leave a thrust loop sounding indefinitely.
+Order confirmations, mission events, impacts and captures use electronic cues.
+
+**H** sends a visual radar pulse with an electronic chirp, not a horn. The same
+operation is on the flight-deck RADAR PULSE button and the chart's **◎** touch
+button. The scan expands from the transmission position, briefly highlights
+charted contacts and fades on presentation time; it does not change the physics,
+consume propellant, pause the run or affect leaderboard eligibility. The shared
+1.1-second cooldown prevents stacked signals. **M** mutes audio, not the visual
+scan. Stage changes clear the pulse and fade/cancel queued audio.
+
+Sea worlds retain their marine engine, horn and terminology. The audio is
+avionics feedback, not sound propagating through vacuum. See
+[flight-audio test notes](FLIGHT_AUDIO.md) for implementation and limitations.
+
 ## Flying something that will not stop by itself
 
 W/S select persistent fore/aft engine notches. Full reverse thrust is as strong
@@ -20,9 +41,9 @@ reference-mass impulse reserve (displayed as delta-v), not a calibrated fuel
 mass or rocket-equation simulation. Mass is held constant during burns. All
 jets and rescue beams consume that reserve. An empty tank cannot produce thrust.
 
-The white arrow shows the bow; the blue vector shows actual velocity. The
-coast guide is the position twelve seconds ahead with no further thrust. The
-HUD separates signed bow-relative speed, sideways drift, spin, range and
+The white arrow shows the nose; the blue vector shows actual velocity. The
+drift vector is the position twelve seconds ahead with no further thrust. The
+HUD separates signed nose-relative speed, sideways drift, spin, range and
 **relative speed against the active target**. Space uses m/s rather than knots.
 
 To dock, fit the entire hull inside a capture cradle, face its arrow, match its

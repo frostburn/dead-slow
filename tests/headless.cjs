@@ -36,7 +36,7 @@ function create() {
     const ctx = {
         HarborSpace: require('../src/space.js'), HarborSpaceUI: { prepare: noop, update: noop },
         HarborConsole: require('../src/console.js'), HarborPhysics: P, HarborNavigation: require('../src/navigation.js'), HarborJobs: require('../src/jobs.js'), HarborLevels: L, HarborWorlds: L.worlds, HarborStorage: S, HarborRenderer: { create: () => ({ scale: 1, render: noop }) }, HarborAudio: { create: () => ({
-                init: noop, tick: noop, order: noop, impact: noop, checkpoint: noop, success: noop, horn: noop
+                setSpace: noop, radar: noop, init: noop, tick: noop, order: noop, impact: noop, checkpoint: noop, success: noop, horn: noop
             }) }, document,
         localStorage: { getItem: () => null, setItem: noop }, requestAnimationFrame: noop, performance: { now: () => 0 }, location: { search: '?test' }, URLSearchParams, console, addEventListener: noop, setTimeout: noop
     };
