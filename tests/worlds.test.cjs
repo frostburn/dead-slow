@@ -4,14 +4,15 @@ const P = require('../src/physics.js'), L = require('../src/levels.js'), S = req
 const { create } = require('./headless.cjs');
 const near = (a, b, eps = 1e-8) => assert.ok(Math.abs(a - b) < eps, `${a} != ${b}`);
 const level = id => L.find(l => l.id === id);
-test('four complete worlds retain twelve circuit stages; World 5 has three standalone courses', () => {
+test('four complete worlds retain twelve circuit stages; World 5 has six standalone courses', () => {
     assert.equal(L.worlds.length, 5);
-    assert.equal(new Set(L.map(l => l.id)).size, 52);
+    assert.equal(new Set(L.map(l => l.id)).size, 55);
     for (const w of L.worlds.filter(w => !w.preview)) {
         const stages = L.filter(l => l.campaign === w.id && !l.bonus);
         assert.equal(stages.length, 12);
         assert.deepEqual(stages.map(l => l.stageNumber), Array.from({ length: 12 }, (_, i) => i + 1));
     }
+    assert.equal(L.filter(l => l.campaign === 'gerbozilla').length, 6);
     assert.ok(L.slice(0, 12).every(l => l.theme === 'coast'));
     assert.ok(L.slice(12, 24).every(l => l.theme === 'night'));
 });
