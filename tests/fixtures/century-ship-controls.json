@@ -1,0 +1,11 @@
+{
+  "level": "century-ship",
+  "description": "Three timed engine orders, no interventions. The acceleration-and-distance bound forces a voyage longer than thirty minutes even before considering fuel or control imperfections.",
+  "events": [
+    {"time": 0, "throttle": 4},
+    {"time": 959.8333333333334, "throttle": -3},
+    {"time": 1920, "throttle": 0}
+  ],
+  "duration": 1930,
+  "expectedTime": 1922.3333333333333
+}

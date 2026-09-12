@@ -1,14 +1,14 @@
 (function (root) {
     'use strict';
     // Keep the original key so same-origin upgrades discover the v1 logbook.
-    const KEY = 'dead-slow.records.v1', VERSION = 4;
+    const KEY = 'dead-slow.records.v1', VERSION = 5;
     // These routes now include an approach leg. Keep their earlier PBs/ghosts,
     // but never compare a dock-side departure against a midwater departure.
     const RESTARTED = ['milk-run', 'floating-sauna', 'market-day', 'granite-needle', 'last-bus', 'slackwater-salvage', 'island-exchange', 'two-calls', 'cars-and-casualty', 'midsummer-dispatch'];
-    const ARCHIVES = ['grand-tour-24', 'archipelago-dock-starts', 'grand-tour-dock-starts'];
-    const RACES = ['coast', 'northwatch', 'archipelago', 'grand-tour'];
+    const ARCHIVES = ['grand-tour-36', 'grand-tour-24', 'archipelago-dock-starts', 'grand-tour-dock-starts'];
+    const RACES = ['coast', 'northwatch', 'archipelago', 'meridian', 'grand-tour'];
     const fresh = () => ({
-        version: VERSION, stages: {}, marathon: [], races: { coast: [], northwatch: [], archipelago: [], 'grand-tour': [] }, archivedStages: {}, archivedRaces: { 'grand-tour-24': [], 'archipelago-dock-starts': [], 'grand-tour-dock-starts': [] }, settings: { ghost: true, sound: true, guide: true }, attempts: 0
+        version: VERSION, stages: {}, marathon: [], races: { coast: [], northwatch: [], archipelago: [], meridian: [], 'grand-tour': [] }, archivedStages: {}, archivedRaces: { 'grand-tour-36': [], 'grand-tour-24': [], 'archipelago-dock-starts': [], 'grand-tour-dock-starts': [] }, settings: { ghost: true, sound: true, guide: true }, attempts: 0
     });
     function validRun(r) {
         return r && Number.isFinite(r.time) && r.time >= 0 && r.time < 86400 && Number.isInteger(r.contacts) && r.contacts >= 0 && typeof r.clean === 'boolean';
@@ -34,12 +34,12 @@
     }
     function sanitize(data) {
         const result = fresh();
-        if (!data || ![1, 2, 3, VERSION].includes(data.version))
+        if (!data || ![1, 2, 3, 4, VERSION].includes(data.version))
             return result;
         result.attempts = Math.max(0, Math.floor(Number(data.attempts) || 0));
         result.stages = sanitizeStages(data.stages);
         result.archivedStages = sanitizeStages(data.archivedStages);
-        if (data.version < VERSION) {
+        if (data.version < 4) {
             for (const id of RESTARTED) {
                 if (!result.stages[id]) continue;
                 result.archivedStages[id] = result.stages[id];
@@ -59,12 +59,16 @@
         if (data.version >= 3) {
             for (const id of ARCHIVES)
                 result.archivedRaces[id] = retain((Array.isArray(data.archivedRaces?.[id]) ? data.archivedRaces[id] : []).filter(validRun).slice(0, 100));
-            if (data.version < VERSION) {
+            if (data.version < 4) {
                 for (const id of ['archipelago', 'grand-tour']) {
                     result.archivedRaces[id + '-dock-starts'] = result.races[id];
                     result.races[id] = [];
                 }
             }
+        }
+        if (data.version < 5 && result.races['grand-tour'].length) {
+            result.archivedRaces['grand-tour-36'] = retain([...result.archivedRaces['grand-tour-36'], ...result.races['grand-tour']]);
+            result.races['grand-tour'] = [];
         }
         for (const k of ['ghost', 'sound', 'guide'])
             if (typeof data.settings?.[k] === 'boolean')
@@ -136,7 +140,7 @@
             }, save, stage, best, attempt, record, recordRace, bestRace,
             import(text) {
                 const d = JSON.parse(text);
-                if (!d || ![1, 2, 3, VERSION].includes(d.version))
+                if (!d || ![1, 2, 3, 4, VERSION].includes(d.version))
                     throw Error('This is not a compatible Dead Slow logbook.');
                 data = sanitize(d);
                 save();

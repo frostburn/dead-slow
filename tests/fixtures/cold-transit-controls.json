@@ -1,0 +1,27 @@
+{
+  "level": "cold-transit",
+  "description": "Ordinary timed helm and beam inputs through the actual game. No test repositioning, objective overrides or altered physics.",
+  "events": [
+    {"time": 0, "throttle": 4, "rudder": 0, "thruster": 0, "winch": 0},
+    {"time": 15.5, "throttle": 3},
+    {"time": 16, "throttle": 2},
+    {"time": 16.75, "throttle": 1},
+    {"time": 18.25, "throttle": 0},
+    {"time": 135, "throttle": -1},
+    {"time": 136.5, "throttle": -2},
+    {"time": 138, "throttle": -1},
+    {"time": 138.25, "throttle": -2},
+    {"time": 140.75, "throttle": -1},
+    {"time": 141, "throttle": -2},
+    {"time": 144, "throttle": -1},
+    {"time": 144.25, "throttle": -2},
+    {"time": 152.25, "throttle": -3},
+    {"time": 155, "throttle": -2},
+    {"time": 157.75, "throttle": -1},
+    {"time": 160.25, "throttle": 0},
+    {"time": 160.75, "throttle": -1},
+    {"time": 161, "throttle": 0}
+  ],
+  "duration": 167,
+  "expectedTime": 163.10833333333332
+}

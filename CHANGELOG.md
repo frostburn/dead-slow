@@ -1,5 +1,25 @@
 # Changelog
 
+## 4.0.0 — The Black Meridian
+
+- Add twelve spacecraft missions and the independent Century Ship bonus: 49
+  selectable stages, 48 in the Grand Tour. Every space mission has a clean,
+  watchable fixed-control completion; 25 recordings are now published in all.
+- Use separate vacuum dynamics: persistent velocity/spin, opposite burns,
+  finite shared propellant, relative docking and analytic moving targets.
+- Add asteroid landing, required refuelling, two-tender mothership assembly,
+  recoil gunnery, moving-target interception, attractive/repulsive rescue,
+  lethal sunlight, solar-only jets, an unpowered corridor and actual past-self
+  collisions. Finish with a combined dispatch assignment.
+- Enforce the Century Ship's 30+ minute duration through distance and maximum
+  acceleration, not a completion timer; exclude it from every circuit.
+- Add flight instruments, star charts, geometric shadows, jet plumes, lead
+  markers, control-transfer visuals and responsive keyboard/touch labels.
+- Preserve existing marine simulation and records. Schema 5 archives the
+  36-stage Grand Tour separately from the longer route.
+- Refresh README screenshots with current space and borderless island charts.
+- Update requested Pages actions to v5 and Python Playwright pin to 1.62.0.
+
 ## 3.1.1 — A Quieter Horn, More Watchkeeping
 
 - Lower the horn's final envelope by approximately 6 dB while preserving the

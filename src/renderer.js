@@ -11,6 +11,8 @@
         water: '#487f85', grid: '#79a5a3', land: '#858f78', edge: '#d6d8b9', green: '#d7edac', amber: '#ffe2a0', muted: '#d6e4d4', white: '#f6f1dc', red: '#ffc0a3'
     };
     function create(canvas) {
+        const spaceRenderer = root.HarborSpaceRenderer.create(canvas);
+        let inSpace = false;
         const ctx = canvas.getContext('2d', { alpha: false });
         let C = DAY, night = false, islands = false;
         let width = 1, height = 1, dpr = 1, scale = 1, ox = 0, oy = 0;
@@ -551,6 +553,8 @@
             return { x: P.lerp(a[1], b[1], k), y: P.lerp(a[2], b[2], k), a: a[3] + P.wrap(b[3] - a[3]) * k };
         }
         function render(view) {
+            inSpace = !!view.level.space;
+            if (inSpace) return spaceRenderer.render(view);
             resize();
             const { level: l, run: r, zoom, settings, ghost, index } = view;
             const W = l.world[0], H = l.world[1];
@@ -896,7 +900,7 @@
             ctx.fillRect(0, 0, width, height);
         }
         return { render, get scale() {
-                return scale;
+                return inSpace ? spaceRenderer.scale : scale;
             }, ghostAt };
     }
     root.HarborRenderer = { create };

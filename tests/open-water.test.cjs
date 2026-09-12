@@ -5,9 +5,9 @@ const L = require('../src/levels.js'), S = require('../src/storage.js');
 const { create } = require('./headless.cjs');
 for (const l of L) {
     test(`${l.id}: open approach and collision-free departure`, () => {
-        assert.deepEqual(l.openSides, l.worldNumber === 3 ? ['n', 'e', 's', 'w'] : ['w']);
+        assert.deepEqual(l.openSides, l.worldNumber >= 3 ? ['n', 'e', 's', 'w'] : ['w']);
         const t = create(); t.load(L.indexOf(l));
-        assert.equal(t.state.run.static.filter(o => o.id.startsWith('coast-')).length, l.worldNumber === 3 ? 0 : 3);
+        assert.equal(t.state.run.static.filter(o => o.id.startsWith('coast-')).length, l.worldNumber >= 3 ? 0 : 3);
         for (const body of [t.state.run.ship, ...t.state.run.jobs.bodies]) {
             assert.equal(N.exit(l, body), null);
             assert.equal(t.state.run.static.some(o => P.sat(P.hull(body), o.poly)), false, body.name);
@@ -70,7 +70,7 @@ test('only changed departure routes are archived; tutorials and other worlds ret
     const run = { time: 200, contacts: 0, clean: true }, stage = { runs: [run], ghost: [[0, 88, 274, 0]], bestSplits: [80], clears: 1, attempts: 2 };
     const stages = Object.fromEntries(L.map(l => [l.id, stage]));
     const s = S.sanitize({ version: 3, stages, races: { coast: [run], northwatch: [run], archipelago: [run], 'grand-tour': [run] }, archivedRaces: { 'grand-tour-24': [run] } });
-    assert.equal(s.version, 4); assert.equal(Object.keys(s.archivedStages).length, 10);
+    assert.equal(s.version, S.VERSION); assert.equal(Object.keys(s.archivedStages).length, 10);
     for (const l of L) assert.equal(!!s.stages[l.id], !S.RESTARTED.includes(l.id), l.id);
     assert.deepEqual(s.archivedStages['milk-run'].ghost, stage.ghost);
     assert.deepEqual(s.archivedStages['milk-run'].bestSplits, [80]);

@@ -1,6 +1,6 @@
 (function () {
     'use strict';
-    const P = HarborPhysics, N = HarborNavigation, J = HarborJobs, LEVELS = HarborLevels, WORLDS = HarborWorlds, $ = id => document.getElementById(id);
+    const P = HarborPhysics, N = HarborNavigation, J = HarborJobs, X = HarborSpace, LEVELS = HarborLevels, WORLDS = HarborWorlds, $ = id => document.getElementById(id);
     const store = HarborStorage.create({ getItem: k => localStorage.getItem(k), setItem: (k, v) => localStorage.setItem(k, v) });
     const audio = HarborAudio.create(), renderer = HarborRenderer.create($('sea'));
     let developer = null;
@@ -30,7 +30,7 @@
         $('world-label').textContent = `WORLD ${level.worldNumber} · ${level.theme === 'night' ? 'NIGHT SHIFT' : level.theme === 'archipelago' ? 'SUMMER SERVICE' : 'DAY WATCH'}`;
     }
     function hasNext() {
-        return marathon ? marathon.position + 1 < marathon.route.length : LEVELS[index + 1]?.campaign === level.campaign;
+        return marathon ? marathon.position + 1 < marathon.route.length : LEVELS[index + 1]?.campaign === level.campaign && !LEVELS[index + 1]?.bonus;
     }
     function raceLabel() {
         return marathon?.name || 'World run';
@@ -39,6 +39,7 @@
         return run.contacts === 0 && run.wakes === 0 && run.groundings === 0 && run.jobs.stats.lineBreaks === 0;
     }
     function objectiveReady() {
+        if (run.space) return X.ready(run.space, level.space);
         return run.buoyIndex === level.buoys.length && (!level.lock || run.lock.phase === 'exit') && J.ready(level, run.jobs);
     }
     function clearInput() {
@@ -96,12 +97,18 @@
         run = {
             ship: s, jobs: J.create(level, s), env: P.environmentAt(level, s, 0), time: 0, contacts: 0, wakes: 0, groundings: 0, grounded: false, dockHold: 0, buoyIndex: 0, buoyHold: 0, splits: [], sampleAt: 0, trailAt: 0, ghost: [[0, s.x, s.y, s.a]], trail: [], effects: [], gateStates: {}, lock: { phase: 'entry', hold: 0, clock: 0 }, wakeTimers: {}, wakeActive: {}, lastHits: {}, pausedUsed: false, practiceReason: '', loaded: false, throttleOrders: 0, thrusterTime: 0, distance: 0, maxSpeed: 0, dock: P.docking(s, level.berth, false), static: staticObstacles(), pb: false, result: null
         };
+        if (level.space) {
+            run.space = X.create(level, s);
+            run.space.activeDock = X.activeTarget(level, run);
+            run.dock = X.dock(s, run.space.port, false);
+        }
+        HarborSpaceUI.prepare(level);
         developer?.onLoad();
         toastUntil = 0;
         $('toast').classList.remove('visible');
-        document.body.dataset.work = level.jobs.length ? 'true' : 'false';
+        document.body.dataset.work = level.jobs.length || level.space ? 'true' : 'false';
         $('ship-name').textContent = s.name || 'MV PATIENCE';
-        $('work-panel').hidden = !level.jobs.length;
+        $('work-panel').hidden = !level.jobs.length && !level.space;
         status = 'ready';
         $('stage-tag').textContent = level.tag;
         $('chart-title').textContent = level.name;
@@ -226,6 +233,10 @@
     function lineAction() {
         if (status !== 'running')
             return;
+        if (run.space) {
+            const result = X.toggleBeam(level, run);
+            toast(result.message, !result.ok, 4500); updateHud(); return;
+        }
         const obstacles = [...run.static, ...level.gates.filter(g => !run.gateStates[g.id].open).map(g => ({ ...g, poly: P.rect(g) }))];
         const result = J.toggleLine(level, run.jobs, run.ship, obstacles);
         toast(result.message, !result.ok, 4500);
@@ -240,6 +251,7 @@
     function advance(dt) {
         if (status !== 'running')
             return;
+        if (run.space) return advanceSpace(dt);
         run.time += dt;
         const s = run.ship, oldX = s.x, oldY = s.y;
         let grounded = false;
@@ -374,12 +386,27 @@
             finish();
         }
     }
+    function advanceSpace(dt) {
+        run.time += dt;
+        const events = X.update(level, run, input, dt) || [];
+        for (const name of events) addSplit(name);
+        run.effects = run.effects.filter(e => run.time - e.t < 1);
+        if (run.failure) {
+            status = 'failed'; clearInput(); showFailure(); updateHud(); return;
+        }
+        const s = run.ship;
+        if (run.time >= run.sampleAt) {
+            run.sampleAt += level.space.century ? 1 : .2;
+            if (run.ghost.length < 12000) run.ghost.push([Math.round(run.time * 1000) / 1000, s.x, s.y, s.a]);
+        }
+        if (run.dockHold >= 2) finish();
+    }
     function finish() {
         status = 'complete';
         clearInput();
         run.dockHold = 2;
         const result = {
-            time: Math.round(run.time * 120) / 120, contacts: run.contacts, wakes: run.wakes, groundings: run.groundings, clean: clean(), hull: Math.round(run.ship.hull), commands: run.throttleOrders, thruster: Math.round(run.thrusterTime * 10) / 10, distance: Math.round(run.distance), work: { ...run.jobs.stats }, lineBreaks: run.jobs.stats.lineBreaks, date: new Date().toISOString()
+            time: Math.round(run.time * 120) / 120, contacts: run.contacts, wakes: run.wakes, groundings: run.groundings, clean: clean(), hull: Math.round(run.ship.hull), commands: run.throttleOrders, thruster: Math.round(run.thrusterTime * 10) / 10, distance: Math.round(run.distance), work: { ...run.jobs.stats }, space: run.space ? { ...run.space.stats } : undefined, lineBreaks: run.jobs.stats.lineBreaks, date: new Date().toISOString()
         };
         run.result = result;
         if (!run.pausedUsed)
@@ -442,6 +469,10 @@
         return `<div class="modal-top"><div><div class="eyebrow">${eyebrow}</div><h2>${title}</h2></div><button data-action="back" aria-label="Close dialog">×</button></div>`;
     }
     function showIntro() {
+        if (level.space) {
+            openDialog('intro', `<div class="eyebrow">WORLD 4 · THE BLACK MERIDIAN · ${level.bonus ? 'BONUS / OUTSIDE MARATHONS' : level.stageNumber + ' / 12'}</div><h1>${level.name}</h1><p>${level.brief}</p><div class="intro-details"><div><strong>${run.ship.length} m</strong><span>${esc(run.ship.name)}</span></div><div><strong>${level.space.fuel} Δv</strong><span>INITIAL PROPELLANT</span></div><div><strong>02 sec</strong><span>RELATIVE CAPTURE HOLD</span></div></div><p class="subtle">${level.tip}</p><div class="control-summary"><kbd>W</kbd><kbd>S</kbd> fore/aft thrust · <kbd>Space</kbd> cut thrust<br><kbd>A</kbd><kbd>D</kbd> rotational jets · <kbd>Q</kbd><kbd>E</kbd> sideways jets<br>${level.space.friendly ? '<kbd>F</kbd> lock / release beam · hold <kbd>J</kbd> attract / <kbd>K</kbd> repel<br>' : ''}Counterfire to stop rotation. Neutral does not brake. Touch controls support simultaneous holds.</div><p class="subtle">Keep every free spacecraft inside the navigation sector. Space is open; the assignment is not infinite.</p><div class="dialog-actions"><button class="primary" data-action="begin" autofocus>Release clamps →</button><button data-action="courses">Choose sector</button><button data-action="help">Flight manual</button></div>`);
+            return;
+        }
         const first = index === 0;
         openDialog('intro', `
  <div class="eyebrow">WORLD ${level.worldNumber} · ${worldOf().name.toUpperCase()} · ${String(level.stageNumber).padStart(2, '0')} / 12</div><h1>${first ? 'Good ships.<br>Bad stopping distances.' : level.name}</h1>
@@ -465,10 +496,11 @@
         const rank = r.time <= level.pace[0] ? 'GOLD PACE' : r.time <= level.pace[1] ? 'SILVER PACE' : r.time <= level.pace[2] ? 'BRONZE PACE' : 'SAFELY MOORED';
         const marathonDone = marathon && !hasNext();
         openDialog('result', `<div class="eyebrow">${run.pausedUsed ? 'PRACTICE COMPLETE' : run.pb ? 'NEW PERSONAL BEST' : 'LINES ASHORE'} · ${level.name.toUpperCase()}</div>
- <h1>${marathonDone ? (marathon.id === 'grand-tour' ? 'Three worlds. One captain.' : 'One world. All fast.') : 'All fast. At last.'}</h1><div class="result-badge">${run.pausedUsed ? 'UNRANKED PRACTICE' : rank}${r.clean ? ' · CLEAN' : ''}</div><div class="result-time">${format(r.time)}</div>
+ <h1>${marathonDone ? (marathon.id === 'grand-tour' ? 'Four worlds. One captain.' : 'One world. All fast.') : run.space ? 'Capture confirmed.' : 'All fast. At last.'}</h1><div class="result-badge">${run.pausedUsed ? 'UNRANKED PRACTICE' : rank}${r.clean ? ' · CLEAN' : ''}</div><div class="result-time">${format(r.time)}</div>
  <p class="subtle">${run.pausedUsed ? esc(run.practiceReason || 'Practice attempt') + '. This time was not saved to the leaderboards.' : run.pb ? 'Your new best line is saved as the ghost for this harbor.' : 'A harbor conquered. A braking point learned.'}</p>
  <div class="result-grid"><div><strong>${r.contacts}</strong><span>HULL CONTACTS</span></div><div><strong>${r.hull}%</strong><span>HULL REMAINING</span></div><div><strong>${r.commands}</strong><span>ENGINE ORDERS</span></div></div>
- <p class="subtle">${r.distance} m traveled · ${r.thruster.toFixed(1)} s bow thrust · ${r.wakes} wake violations · ${r.groundings} groundings<br>Clean = no contacts, wake violations, grounding or parted towlines. No hidden time penalties.</p>
+ <p class="subtle">${r.space ? `${r.distance} m traveled · ${r.space.fuelUsed.toFixed(2)} Δv propellant used · ${r.space.shots} shots · ${r.space.captures} captures<br>Clean = no hull contacts. Moving cradles require relative rest, not absolute rest.` : `${r.distance} m traveled · ${r.thruster.toFixed(1)} s bow thrust · ${r.wakes} wake violations · ${r.groundings} groundings<br>Clean = no contacts, wake violations, grounding or parted towlines.`} No hidden time penalties.</p>
+ ${run.space ? `<div class="work-summary">${r.space.fuelUsed.toFixed(2)} Δv propellant expended · ${r.space.burnTime.toFixed(1)} s burning<br>${r.space.shots} shots · ${r.space.hits} hits · ${r.space.captures} captures · ${r.space.jumps} temporal insertions</div>` : ''}
  ${level.jobs.length ? `<div class="work-summary">${r.work.vehiclesDelivered} vehicles delivered · ${r.work.vesselsDelivered} vessels secured · ${r.work.lineBreaks} lines parted<br>${Math.round(r.work.towDistance)} m towed · ${r.work.lineChanges} line operations · ${r.work.winchTime.toFixed(1)} s winch</div>` : ''}
  ${marathon ? `<div class="race-banner">${esc(raceLabel().toUpperCase())} ${marathon.stages}/${marathon.route.length} · ${format(marathon.total)} · ${marathon.retries} retries${marathon.practice ? ' · PRACTICE' : ''}</div>` : ''}
  <div class="dialog-actions"><button class="primary" data-action="${hasNext() ? 'next' : 'courses'}" autofocus>${hasNext() ? 'Next harbor →' : 'World chart'}</button><button data-action="retry">Retry · R</button><button class="secondary small" data-action="log">Logbook</button></div>
@@ -476,6 +508,9 @@
     }
     function showFailure() {
         audio.tick(run.ship, false);
+        if (run.space) {
+            openDialog('failed', `<div class="eyebrow">${esc((run.failure?.type || 'FLIGHT LOST').toUpperCase())}</div><h1>${run.failure?.type === 'paradox' ? 'Two captains.<br>One contradiction.' : 'Flight terminated.'}</h1><p>${esc(run.failure?.message || 'The spacecraft was lost.')}</p><div class="result-time">${format(run.time)}</div><p class="subtle">Failed attempts do not enter the leaderboard. Retry resets every ephemeris and timeline.</p><div class="dialog-actions"><button class="primary" data-action="retry" autofocus>Retry · R</button><button data-action="courses">Choose sector</button></div>`); return;
+        }
         if (run.failure?.type === 'out-of-bounds') {
             const f = run.failure;
             openDialog('failed', `<div class="eyebrow">OUT OF BOUNDS · ${N.NAMES[f.side].toUpperCase()} EDGE</div><h1>Beyond the chart.</h1><p>${esc(f.vessel)} crossed the ${N.NAMES[f.side]} limit of the assignment. The sea is open, but this watch is over. Keep the whole hull—and any tow—inside the chart.</p><div class="result-time">${format(run.time)}</div><p class="subtle">No invisible wall, no bounce. Failed attempts never enter the leaderboard.</p><div class="dialog-actions"><button class="primary" data-action="retry" autofocus>Retry · R</button><button data-action="courses">Choose harbor</button></div>`);
@@ -491,14 +526,14 @@
         const w = WORLDS[selectedWorld - 1], stages = LEVELS.filter(l => l.campaign === w.id), arrivals = stages.filter(l => store.best(l.id)).length;
         openDialog('courses', `${topModal(w.name, `WORLD ${w.number} · ${w.subtitle}`)}
  <div class="world-tabs" role="tablist" aria-label="Select world">${WORLDS.map(v => `<button role="tab" aria-selected="${v.number === selectedWorld}" class="world-tab ${v.number === selectedWorld ? 'active' : ''}" data-world="${v.number}"><span>WORLD ${v.number}</span><strong>${v.name}</strong><small>${v.subtitle}</small></button>`).join('')}</div>
- <p>${w.description}</p><div class="world-progress"><span>${arrivals} / 12 HARBORS MOORED</span><span>ALL STAGES AVAILABLE</span></div>
+ <p>${w.description}</p><div class="world-progress"><span>${arrivals} / ${stages.length} ${w.number === 4 ? 'SECTORS CLEARED · 1 BONUS' : 'HARBORS MOORED'}</span><span>ALL STAGES AVAILABLE</span></div>
  ${marathon ? '<p class="subtle">Selecting a harbor starts an individual trial and ends your current circuit.</p>' : ''}
  <div class="level-grid">${stages.map(l => {
             const i = LEVELS.indexOf(l), b = store.best(l.id);
-            return `<button class="level-card ${i === index ? 'selected' : ''}" data-stage="${i}"><span class="number">W${l.worldNumber} · HARBOR ${String(l.stageNumber).padStart(2, '0')}${store.best(l.id, true) ? ' · CLEAN' : ''}</span><span class="name">${l.name}</span><span class="kind">${l.kind}</span><span class="pb">${b ? 'PB ' + format(b.time) : 'NO TIME ON FILE'}</span></button>`;
+            return `<button class="level-card ${i === index ? 'selected' : ''}" data-stage="${i}"><span class="number">W${l.worldNumber} · ${l.bonus ? 'BONUS' : (l.space ? 'SECTOR ' : 'HARBOR ') + String(l.stageNumber).padStart(2, '0')}${store.best(l.id, true) ? ' · CLEAN' : ''}</span><span class="name">${l.name}</span><span class="kind">${l.kind}</span><span class="pb">${b ? 'PB ' + format(b.time) : 'NO TIME ON FILE'}</span></button>`;
         }).join('')}</div>
- <div class="dialog-actions"><button class="primary" data-action="marathon">World ${w.number} run · 12 harbors →</button><button data-action="grand-tour">Grand Tour · all ${LEVELS.length}</button><button class="secondary small" data-action="back">Back</button><button class="secondary small" data-action="log">Logbook</button></div>
- <p class="subtle" style="margin-top:13px">Each world and the Grand Tour have separate overall and clean records. Circuit clocks include failed attempts and retries, but exclude between-stage menus. Pausing makes the circuit practice.</p>`, true);
+ <div class="dialog-actions"><button class="primary" data-action="marathon">World ${w.number} run · 12 ${w.number === 4 ? 'sectors' : 'harbors'} →</button><button data-action="grand-tour">Grand Tour · all ${LEVELS.filter(l => !l.bonus).length}</button><button class="secondary small" data-action="back">Back</button><button class="secondary small" data-action="log">Logbook</button></div>
+ <p class="subtle" style="margin-top:13px">The Century Ship bonus is excluded from every circuit. Each world and the 48-stage Grand Tour have separate overall and clean records. Circuit clocks include failed attempts and retries, but exclude between-stage menus. Pausing makes the circuit practice.</p>`, true);
         $('dialog').dataset.theme = w.theme;
     }
     function showLog(filter = 'overall') {
@@ -508,7 +543,7 @@
  <p>World ${level.worldNumber} / ${level.stageNumber} · ${level.name} · ${s.attempts} departures · ${s.clears} ranked arrivals</p>
  <div class="dialog-actions" style="margin-top:8px"><button class="${filter === 'overall' ? 'primary' : 'secondary'} small" data-filter="overall">Overall</button><button class="${filter === 'clean' ? 'primary' : 'secondary'} small" data-filter="clean">Clean only</button></div>
  <table class="log-table"><thead><tr><th>#</th><th>TIME / IGT</th><th>CONTACTS</th><th>CLASS</th></tr></thead><tbody>${runs.length ? runs.map((r, i) => `<tr><td>${String(i + 1).padStart(2, '0')}</td><td>${format(r.time)}</td><td>${r.contacts}</td><td class="${r.clean ? 'clean' : ''}">${r.clean ? 'CLEAN' : 'OPEN'}</td></tr>`).join('') : '<tr><td colspan="4">No ranked arrival yet. The harbor is waiting.</td></tr>'}</tbody></table>
- <h3 class="circuit-heading">Circuit records</h3><table class="log-table"><thead><tr><th>ROUTE</th><th>OVERALL</th><th>CLEAN</th></tr></thead><tbody>${[...WORLDS.map(w => [w.id, `World ${w.number} · ${w.name}`]), ['grand-tour', `Grand Tour · ${LEVELS.length}`]].map(([id, name]) => `<tr><td>${name}</td><td>${format(store.bestRace(id)?.time)}</td><td class="clean">${format(store.bestRace(id, true)?.time)}</td></tr>`).join('')}</tbody></table><p class="subtle">${store.data.archivedRaces?.['grand-tour-24']?.length ? '24-harbor Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-24'][0].time) + '<br>' : ''}${store.data.marathon.length ? '12-harbor circuit (archived): ' + format(store.data.marathon[0].time) + '<br>' : ''}Times use a fixed 120 Hz simulation clock. Paused runs are unranked. Gold / silver / bronze are course pace targets, not online rankings.</p>
+ <h3 class="circuit-heading">Circuit records</h3><table class="log-table"><thead><tr><th>ROUTE</th><th>OVERALL</th><th>CLEAN</th></tr></thead><tbody>${[...WORLDS.map(w => [w.id, `World ${w.number} · ${w.name}`]), ['grand-tour', `Grand Tour · ${LEVELS.filter(l => !l.bonus).length}`]].map(([id, name]) => `<tr><td>${name}</td><td>${format(store.bestRace(id)?.time)}</td><td class="clean">${format(store.bestRace(id, true)?.time)}</td></tr>`).join('')}</tbody></table><p class="subtle">${store.data.archivedRaces?.['grand-tour-24']?.length ? '24-harbor Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-24'][0].time) + '<br>' : ''}${store.data.archivedRaces?.['grand-tour-36']?.length ? '36-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-36'][0].time) + '<br>' : ''}${store.data.marathon.length ? '12-harbor circuit (archived): ' + format(store.data.marathon[0].time) + '<br>' : ''}Times use a fixed 120 Hz simulation clock. Paused runs are unranked. Gold / silver / bronze are course pace targets, not online rankings.</p>
  ${store.data.archivedStages[level.id]?.runs.length ? `<details><summary>Archived dock-side departure records</summary><p class="subtle">These runs use a different starting position. Their ghosts and splits are preserved in exports, not compared with this approach route.</p><table class="log-table"><thead><tr><th>TIME / IGT</th><th>CONTACTS</th><th>CLASS</th></tr></thead><tbody>${store.data.archivedStages[level.id].runs.map(r => `<tr><td>${format(r.time)}</td><td>${r.contacts}</td><td>${r.clean ? 'CLEAN' : 'OPEN'}</td></tr>`).join('')}</tbody></table></details>` : ''}
  ${['archipelago', 'grand-tour'].some(id => store.data.archivedRaces[id + '-dock-starts']?.length) ? `<details><summary>Archived dock-side island circuits</summary><p class="subtle">Approach legs change these routes. Earlier records are retained separately.</p>${['archipelago', 'grand-tour'].map(id => { const rows = store.data.archivedRaces[id + '-dock-starts']; return rows.length ? `<p>${id === 'archipelago' ? 'World 3' : 'Grand Tour'} · ${format(rows[0].time)}</p>` : ''; }).join('')}</details>` : ''}
  <div class="dialog-actions"><button data-action="toggle-ghost" class="small">Ghost: ${settings.ghost ? 'ON' : 'OFF'}</button><button data-action="toggle-guide" class="small">Coast guide: ${settings.guide ? 'ON' : 'OFF'}</button><button data-action="toggle-sound" class="small">Sound: ${settings.sound ? 'ON' : 'OFF'}</button></div>
@@ -516,6 +551,10 @@
  <p class="subtle" style="margin-top:13px">Records are local, not tamper-proof. File copies and browsers can have separate storage. Export before moving the game. Earlier logbooks are accepted. Existing stage records stay with their courses; circuits of different lengths are kept separate.</p>${!store.available ? '<div class="storage-warning">Persistent storage is unavailable. Export to preserve this session’s records.</div>' : ''}`);
     }
     function showHelp() {
+        if (level.space) {
+            pauseForMenu();
+            openDialog('help', `${topModal('Flight manual.', 'MERIDIAN FLIGHT AUTHORITY')}<div class="help-grid"><div><h3>No free brakes</h3><p>W/S select persistent fore/aft thrust, from full retro to full forward. Space cuts main thrust. Velocity persists when engines stop. A/D fire rotational jets: rotation also persists after release, so counterfire. Q/E translate sideways without turning. The controls and touch buttons work simultaneously.</p><h3>Capture is relative</h3><p>Fit the whole hull in the cradle, match its bow arrow and velocity, reduce relative spin below 0.69°/s, cut every jet, and hold for two seconds. Fuel and assembly collars show their own progress. Moving cradles do not stop while you dock.</p><h3>Propellant</h3><p>Fuel is a reference-mass impulse budget (Δv in m/s), shared by main, lateral, attitude and beam systems. Heavier spacecraft gain less velocity from each unit. Rotation consumes fuel too. Solar craft cannot fire jets in full shadow; scanners also inhibit power. No hidden drag makes up for an empty tank.</p></div><div><h3>Special assignments</h3><p>F acquires/releases a rescue beam within 170 m and with clear line of sight. J attracts; K repels. Forces are equal and opposite. Friendly craft must settle in their own capture cradle; then dock the tug.</p><p>For gunnery, move into the firing box, face the lead diamond and hold still with all jets off for three seconds. Firing and projectile flight are automatic; recoil is a physical impulse. A confirmed hit unlocks the home berth.</p><p>Flares heat exposed hulls. Actual asteroid silhouettes cast shadows; partial cover is only partial protection. The solar assignment reverses that rule: darkness removes thrust, not momentum.</p><p>The chronogate records your first flight, sends you to the return lane and plays that exact history as a solid craft. Your clock never rewinds. The Century Ship is a separate 30+ minute bonus, excluded from the 48-stage Grand Tour.</p><h3>Local-frame simulation</h3><p>These are planar, non-orbital navigation puzzles. There is no gravity or relativity. The Century Ship uses a compressed distance scale. Onboard audio is instrument feedback, not sound propagating through vacuum.</p></div></div><div class="dialog-actions"><button class="primary" data-action="back" autofocus>Back to flight</button></div>`, true); return;
+        }
         pauseForMenu();
         openDialog('help', `${topModal('It handles like a ship.')}
  <div class="help-grid"><div><h3>The helm</h3><div class="key-row"><kbd>W</kbd> / <kbd>↑</kbd> one notch ahead<br><kbd>S</kbd> / <kbd>↓</kbd> one notch astern<br><kbd>A</kbd><kbd>D</kbd> / <kbd>←</kbd><kbd>→</kbd> hold rudder<br><kbd>Q</kbd><kbd>E</kbd> hold bow thruster<br><kbd>Space</kbd> neutral, not a brake<br><kbd>R</kbd> instant retry · <kbd>Esc</kbd> pause<br><kbd>G</kbd> ghost · <kbd>V</kbd> coast guide<br><kbd>Z</kbd> zoom · <kbd>M</kbd> audio · <kbd>H</kbd> horn<br><kbd>F</kbd> make / release towline<br><kbd>J</kbd><kbd>K</kbd> reel in / pay out (hold)</div><p style="margin-top:12px">The touch helm supports simultaneous fingers. Rudder and thruster return to center on release; throttle stays at its selected notch. Use the chart’s zoom button to follow the ship more closely.</p></div>
@@ -546,13 +585,13 @@
     function startMarathon(id = WORLDS[selectedWorld - 1].id) {
         if (![...WORLDS.map(w => w.id), 'grand-tour'].includes(id))
             id = 'coast';
-        const route = LEVELS.map((l, i) => i).filter(i => id === 'grand-tour' || LEVELS[i].campaign === id);
+        const route = LEVELS.map((l, i) => i).filter(i => !LEVELS[i].bonus && (id === 'grand-tour' || LEVELS[i].campaign === id));
         const name = id === 'grand-tour' ? 'Grand Tour' : `World ${WORLDS.find(w => w.id === id).number}`;
         marathon = {
             id, name, route, position: 0, total: 0, sectorTime: 0, contacts: 0, wakes: 0, groundings: 0, lineBreaks: 0, retries: 0, stages: 0, splits: [], practice: false
         };
         loadStage(route[0], true);
-        toast(`${name} started · ${route.length} harbors, one clock.`);
+        toast(`${name} started · ${route.length} stages, one clock.`);
     }
     function toggleSetting(key) {
         settings[key] = !settings[key];
@@ -580,10 +619,11 @@
         $('zoom-btn').textContent = zoom === 1 ? '1×' : zoom === 1.65 ? '1.7×' : '2.3×';
     }
     function missionText() {
+        if (run.space && status === 'running') return X.message(level, run);
         if (status === 'ready')
             return 'Awaiting departure. The clock starts when you cast off.';
         if (status === 'complete')
-            return 'Mooring complete. All lines secured.';
+            return run.space ? 'Capture complete. All thrusters secured.' : 'Mooring complete. All lines secured.';
         if (status === 'failed')
             return 'Hull lost. Press R to retry.';
         if (status === 'paused')
@@ -635,7 +675,7 @@
     function updateHud() {
         if (!run)
             return;
-        const s = run.ship, motion = P.groundMotion(s), speed = motion.speed * KNOTS, heading = (s.a * 180 / Math.PI + 450) % 360;
+        const s = run.ship, motion = P.groundMotion(s), units = run.space ? 1 : KNOTS, speed = motion.speed * units, heading = (s.a * 180 / Math.PI + 450) % 360;
         const direction = motion.direction, sign = direction === 'ahead' ? '+' : direction === 'astern' ? '−' : '';
         const speedText = direction === 'stopped' ? '0.0' : sign + speed.toFixed(1), color = direction === 'astern' ? 'var(--amber)' : direction === 'abeam' ? 'var(--ice, var(--muted))' : 'var(--green)';
         $('speed').textContent = speedText;
@@ -646,7 +686,7 @@
         $('speed-direction').style.color = color;
         $('mobile-direction').textContent = { ahead: 'AHD', astern: 'AST', abeam: 'BEAM', stopped: 'STOP' }[direction];
         $('mobile-direction').style.color = color;
-        $('drift').textContent = Math.abs(motion.sway) < .025 ? 'NO SIDEWAYS DRIFT' : `${motion.sway < 0 ? '← PORT' : 'STBD →'} DRIFT ${(Math.abs(motion.sway) * KNOTS).toFixed(1)} kn`;
+        $('drift').textContent = Math.abs(motion.sway) < .025 ? 'NO SIDEWAYS DRIFT' : `${motion.sway < 0 ? '← PORT' : 'STBD →'} DRIFT ${(Math.abs(motion.sway) * units).toFixed(1)} ${run.space ? 'm/s' : 'kn'}`;
         const env = P.environmentAt(level, s, run.time), set = Math.hypot(env.current.x, env.current.y), lee = env.shelter > .8;
         $('shelter-status').textContent = lee ? 'IN THE LEE' : env.shelter > .08 ? 'ENTERING / LEAVING LEE' : 'OPEN WATER';
         $('shelter-status').classList.toggle('sheltered', lee);
@@ -676,7 +716,7 @@
         if (level.lock)
             names.push('Chamber secured', 'Lock equalized');
         names.push(...level.jobs.map(j => j.name));
-        names.push('Lines ashore');
+        names.push(run.space ? 'Final capture' : 'Lines ashore');
         // Jobs and pilot clearances may interleave. Completed split labels follow the actual order.
         const pending = names.filter(n => !run.splits.some(sp => sp.name === n || (n === 'Cargo aboard' && sp.name.startsWith('Cargo aboard'))));
         names.splice(0, names.length, ...run.splits.map(sp => sp.name), ...pending);
@@ -696,6 +736,7 @@
         const guideScale = 25 * renderer.scale;
         $('scale-label').style.setProperty('--scale-width', guideScale + 'px');
         $('scale-label').textContent = '25 METRES';
+        HarborSpaceUI.update(level, run, status);
     }
     function updateWorkHud() {
         if (!level.jobs.length)
@@ -972,7 +1013,7 @@
         renderer.render({
             level, run, index, status, input, zoom, settings, ghost: store.stage(level.id).ghost, visualTime: now / 1000
         });
-        audio.tick(run.ship, status === 'running');
+        audio.tick(run.space ? { engine: run.space.firingJets.main } : run.ship, status === 'running');
         requestAnimationFrame(frame);
     }
     updateSettings();
@@ -993,7 +1034,7 @@
             Object.assign(run.ship, { x, y, a: P.wrap(a), vx: 0, vy: 0, r: 0, engine: 0, throttle: 0, rudder: 0 });
             run.dockHold = 0; run.buoyHold = 0;
         },
-        repair() { for (const body of [run.ship, ...run.jobs.bodies]) body.hull = 100; }
+        repair() { for (const body of [run.ship, ...run.jobs.bodies, run.space?.friendly, run.space?.mother, run.space?.second].filter(Boolean)) body.hull = 100; }
     });
     window.DeadSlow = developer.menu;
     requestAnimationFrame(frame);

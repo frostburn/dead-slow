@@ -60,13 +60,14 @@ still fails on the next tick. Repair cannot resurrect a failed attempt.
 
 `state()` is a detached JSON snapshot, not a reference to the live game. Editing
 it does not move the ship. It includes ship motion, local water, job/line state,
-splits and counters. Invalid arguments throw before any partial command runs.
+splits and counters. Space snapshots additionally include fuel, local sunlight,
+heat, beam state, docked tenders, cannon shots and the recorded timeline. Invalid arguments throw before any partial command runs.
 
 ## Watch the actual verification runs
 
 ```js
 DeadSlow.runs()                  // Available recordings, measured times, source files.
-DeadSlow.times()                 // All 36: verified author times OR null; medal targets separately.
+DeadSlow.times()                 // All 49: verified author times OR null; medal targets separately.
 DeadSlow.timeline("bigger-boat")  // Timestamped helm and line actions.
 DeadSlow.watch("bigger-boat", 8)  // Animate those inputs in the normal game at 8×.
 DeadSlow.speed(0)                // Freeze the recording.
@@ -92,9 +93,14 @@ DeadSlow.verify("first-crossing")
 | `granite-needle` | World 3 · The Granite Needle | 289.925000 s |
 | `island-exchange` | World 3 · Island Exchange | 396.283333 s |
 
+World 4 adds thirteen more recordings, including the Century Ship bonus: see
+the [space mission table](SPACE.md#verified-flight-library). Every spacecraft
+mission can be watched. `runs()`, `levels()` and `times()` flag bonus stages;
+`report().space` exposes measured fuel, burn, capture, shot and jump counters.
+
 These are full clean completions, not optimal times. They use the actual live
-state machine and ordinary throttle, rudder, thruster and line commands. They
-never assign coordinates, complete objectives directly or relax physics.
+state machine and ordinary throttle, rudder, thruster and line commands. Their input streams
+never assign coordinates, complete objectives directly or relax physics. The chronogate itself deliberately changes the player's position as part of the time-travel mission; the recording does not bypass it.
 A report is verified only when the run finishes cleanly within one simulation
 tick of its checked-in time. Divergence is reported, not silently accepted;
 a recording still running at its declared end freezes for inspection.
@@ -103,7 +109,7 @@ Leave the helm alone while watching a reference run.
 `verify` intentionally replaces the current attempt with each recording. It
 finishes on the last result, at frozen practice speed. `normal()` returns to a
 fresh ranked attempt. Reading a timeline or report alone does not replace a run.
-There are **twelve published author recordings**. The other twenty-four
+There are **twenty-five published author recordings**. The other twenty-four sea
 stages do not yet have published control-only completions. A `null` author time is
 honest missing coverage, not an impossible stage. Gold/silver/bronze targets are
 level-design goals; their existence is not proof of a successful control run.

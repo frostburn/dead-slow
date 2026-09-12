@@ -14,7 +14,7 @@ test('inspection is safe and clearly separates verified author times from pace t
     const events = d.timeline('bigger-boat'); events[0].line = false;
     assert.ok(d.timeline('bigger-boat')[0].line); assert.notEqual(t.state.run.ship.x, -900);
     assert.equal(d.times().filter(l => l.verifiedAuthorTime !== null).length, V.runs.length);
-    assert.equal(d.runs().length, V.runs.length); assert.equal(d.levels().length, 36);
+    assert.equal(d.runs().length, V.runs.length); assert.equal(d.levels().length, 49);
     d.help(); d.report(); assert.equal(d.speed(), 1);
     assert.equal(t.state.run.pausedUsed, false); assert.equal(JSON.stringify(t.state.storage), before);
 });
