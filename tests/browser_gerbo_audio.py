@@ -1,4 +1,4 @@
-"""Focused rendering of the actual wheel graph: separate vowels and futile water squeaks."""
+"""Focused rendering of the actual wheel graph: discrete bearing creaks and futile water squeaks."""
 def check_gerbo_audio(page, check):
     rows=page.evaluate('''async()=>{
         const rows=[];
@@ -45,7 +45,7 @@ def check_gerbo_audio(page, check):
     }''')
     slow,fast,wet,silent,frozen=rows
     check('Faster rolling produces more separate syllables',fast['starts']>slow['starts']>=2)
-    check('Dry vowels have genuinely silent gaps instead of a continuous whine',
+    check('Dry bearing creaks have genuinely silent gaps instead of a continuous whine',
           slow['silentFraction']>.65 and fast['silentFraction']>.5)
     check('Wet wheelspin is quieter and spectrally higher than dry rolling',
           wet['rms']<fast['rms'] and wet['brightness']>fast['brightness']*1.2)

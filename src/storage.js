@@ -1,7 +1,7 @@
 (function (root) {
     'use strict';
     // Keep the original key so same-origin upgrades discover the v1 logbook.
-    const KEY = 'dead-slow.records.v1', VERSION = 7;
+    const KEY = 'dead-slow.records.v1', VERSION = 8;
     // These routes now include an approach leg. Keep their earlier PBs/ghosts,
     // but never compare a dock-side departure against a midwater departure.
     const RESTARTED = ['milk-run', 'floating-sauna', 'market-day', 'granite-needle', 'last-bus', 'slackwater-salvage', 'island-exchange', 'two-calls', 'cars-and-casualty', 'midsummer-dispatch'];
@@ -35,7 +35,7 @@
     }
     function sanitize(data) {
         const result = fresh();
-        if (!data || ![1, 2, 3, 4, 5, 6, VERSION].includes(data.version))
+        if (!data || ![1, 2, 3, 4, 5, 6, 7, VERSION].includes(data.version))
             return result;
         result.attempts = Math.max(0, Math.floor(Number(data.attempts) || 0));
         result.stages = sanitizeStages(data.stages);
@@ -93,6 +93,13 @@
         if (data.version === 6 && result.stages['gerbo-first-outing']) {
             result.archivedStages['gerbo-first-outing'] = result.stages['gerbo-first-outing'];
             delete result.stages['gerbo-first-outing'];
+        }
+        // Schema 7 introduced these routes; their mountain/moat defenses and
+        // retaliation now change times. Keep the introduction and all circuits.
+        if (data.version === 7) for (const id of ['gerbo-banking','gerbo-lake-skipping']) {
+            if (!result.stages[id]) continue;
+            result.archivedStages[id]=result.stages[id];
+            delete result.stages[id];
         }
         for (const k of ['ghost', 'sound', 'guide'])
             if (typeof data.settings?.[k] === 'boolean')
@@ -164,7 +171,7 @@
             }, save, stage, best, attempt, record, recordRace, bestRace,
             import(text) {
                 const d = JSON.parse(text);
-                if (!d || ![1, 2, 3, 4, 5, 6, VERSION].includes(d.version))
+                if (!d || ![1, 2, 3, 4, 5, 6, 7, VERSION].includes(d.version))
                     throw Error('This is not a compatible Dead Slow logbook.');
                 data = sanitize(d);
                 save();

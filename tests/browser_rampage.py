@@ -19,7 +19,7 @@ with sync_playwright() as pw:
         if args.screenshots:
             args.screenshots.mkdir(parents=True,exist_ok=True);page.screenshot(path=str(args.screenshots/name))
     page.evaluate('DeadSlowTest.courses(5)')
-    check('World 5 selector has three real courses, not twelve placeholders',page.locator('.level-card').count()==3 and '0 / 3 COURSES COMPLETE' in page.locator('#dialog').inner_text())
+    check('World 5 selector has six real courses, not twelve placeholders',page.locator('.level-card').count()==6 and '0 / 6 COURSES COMPLETE' in page.locator('#dialog').inner_text())
     check('Grand Tour remains 48 stages','all 48' in page.locator('#dialog').inner_text())
     page.locator('.level-card').first.click();check('Ball introduction explains map controls and shields','W A S D' in page.locator('#dialog').inner_text() and 'shield' in page.locator('#dialog').inner_text())
     shot('gerbo-intro.png');page.click('[data-action="begin"]');page.evaluate('DeadSlow.speed(0)')
@@ -56,13 +56,15 @@ with sync_playwright() as pw:
     check('Regression setup really hides the tow manifest',page.locator('#manifest').evaluate('(e)=>e.hidden'))
     page.evaluate('DeadSlow.level(5,1);DeadSlow.speed(0);DeadSlowTest.hud()')
     check('Switching from tow duty restores visible rolling and shield counters',page.locator('#manifest').is_visible() and 'ROLLED' in page.locator('#manifest').inner_text() and 'HITS BLOCKED' in page.locator('#manifest').inner_text())
-    for id,number,seconds in [('gerbo-banking',2,104),('gerbo-lake-skipping',3,127)]:
+    for id,number in [('gerbo-banking',2),('gerbo-lake-skipping',3),('gerbo-downhill',4),('gerbo-hairpin',5),('gerbo-fort-pillow',6)]:
+        seconds=json.loads((ROOT/'tests/fixtures'/f'{id}-controls.json').read_text())['duration']
         page.evaluate('(id)=>{DeadSlow.watch(id,0);DeadSlow.step(40)}',id)
         page.wait_for_timeout(100);shot(f'gerbo-course-{number}.png')
         page.evaluate('(seconds)=>DeadSlow.step(seconds)',seconds-40)
         check(f'Course {number} completes its own clean production replay',page.evaluate('DeadSlow.report().verified && DeadSlow.report().clean'))
         check(f'Course {number} has no leaderboard pollution',page.evaluate('(id)=>DeadSlowTest.state.storage.stages[id].runs.length===0',id))
-    check('Third course result counts all three districts','3 / 3' in page.locator('#dialog').inner_text())
+    check('Sixth course has no nonexistent seventh-stage button',not page.locator('[data-action=next]').count())
+    check('Sixth course result counts its two districts','2 / 2' in page.locator('#dialog').inner_text())
     page.evaluate('DeadSlow.watch("gerbo-first-outing",0);DeadSlow.step(20)')
     page.click('#zoom-btn');page.wait_for_timeout(100);shot('gerbo-hind-paws.png')
     phase=page.evaluate('DeadSlowTest.state.run.rampage.pawPhase')
@@ -70,6 +72,15 @@ with sync_playwright() as pw:
     check('Rendered running paws use a changing physical gait phase',page.evaluate('DeadSlowTest.state.run.rampage.pawPhase')>phase)
     page.evaluate('DeadSlow.watch("gerbo-lake-skipping",0);DeadSlow.step(25)')
     page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(100);shot('gerbo-lakes-mobile.png')
+    page.set_viewport_size({'width':1440,'height':1000})
+    page.evaluate('DeadSlow.watch("gerbo-lake-skipping",0);DeadSlow.step(36)')
+    page.wait_for_timeout(100);shot('retaliation-warning.png')
+    check('A demolished city actually starts the long-range warning display',
+          page.evaluate('DeadSlowTest.state.run.rampage.stats.salvos>0 && DeadSlowTest.state.run.rampage.strikes.some(s=>s.x!==null)')
+          and 'RETALIATION' in page.locator('#work-readout').inner_text())
+    for id in ['gerbo-downhill','gerbo-hairpin','gerbo-fort-pillow']:
+        page.evaluate('(id)=>{DeadSlow.level(id);DeadSlow.speed(0)}',id)
+        page.wait_for_timeout(80);shot(id+'.png')
     # The integration touches mode switching, not any earlier mission layouts.
     page.evaluate('DeadSlow.level(4,1);DeadSlow.speed(0)')
     check('Returning to space restores the flight helm',not page.locator('.rampage-helm').is_visible() and page.locator('#helm-rudder-label').inner_text()=='ROTATIONAL JETS')
