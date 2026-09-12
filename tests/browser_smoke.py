@@ -215,9 +215,9 @@ with sync_playwright() as p:
     check('All twelve archipelago cards remain selectable on a phone',mobile.locator('.level-card').count()==12)
     check('Mobile world menu has no horizontal overflow',mobile.evaluate('document.documentElement.scrollWidth<=innerWidth'))
     # Render every stage; simulation tests alone cannot detect canvas exceptions.
-    for i in range(50):
+    for i in range(page.evaluate('HarborLevels.length')):
         page.evaluate('i=>DeadSlowTest.load(i)',i);page.wait_for_timeout(35)
-    check('All 50 stage charts render without an exception',not errors)
+    check('All stage charts render without an exception',not errors)
     check('Production build is self-contained', '<script src=' not in html and '<link rel="stylesheet"' not in html)
     production=browser.new_page();production_errors=[];requests=[]
     production.on('pageerror',lambda e:production_errors.append(str(e)))

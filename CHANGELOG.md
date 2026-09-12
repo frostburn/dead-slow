@@ -1,5 +1,24 @@
 # Changelog
 
+
+## 5.0.0-preview.2 — Little Feet, Big Detours
+
+- Replace the continuous wheel whine with alternating, separately enveloped
+  eeh/ooh strokes; speed affects cadence and gently affects volume. Water uses
+  quieter, higher cartoon chirps; mute/pause/mode changes silence them.
+- Animate two pink hind paws against the shell, with alternating planted and
+  reaching legs. Running in water drives the futile paddling gait.
+- Give hills blended, rotated shoulders and lakes smooth, irregular bays and
+  headlands. Rendering and traction share a shoreline definition.
+- Fix wet gravity: water grip scales player drive only, never terrain gravity.
+- Restore the shared manifest after tow duty so Rampage counters remain visible.
+- Add Banks for the Memories and No Grip, No Problem; generalize course controls,
+  district counts and field sheets. Three courses remain outside all circuits.
+- Publish three clean recorded runs. Schema 7 archives only the obsolete
+  Seedhaven layout from schema 6; keep sea, space and circuit records intact.
+- Focus verification on rolling physics, migration, new recordings, audio gaps,
+  tow-to-Rampage UI transitions and responsive field sheets.
+
 ## 5.0.0-preview.1 — Gerbozilla’s first outing
 
 - Add World 5’s orienteering-paper theme and one standalone rolling-ball course.

@@ -1,88 +1,94 @@
-# Gerbozilla’s Rampage — opening preview
+# Gerbozilla’s Rampage — three field courses
 
-This release introduces the World 5 theme and **one** assignment, `gerbo-first-outing`.
-It is not a twelve-stage campaign. It is selectable as World 5 / course 1 and has
-normal local stage records and a PB ghost, but is excluded from every marathon.
+World 5 is a standalone, topographic hamster-ball playground. It is not a
+finished twelve-course campaign: the 48-stage Grand Tour and its records are
+unchanged. The giant pet is 48 metres across including its exercise ball.
 
-## The course
+## Controls and course rules
 
-A run-up carries the 48-metre ball over the west ridge. Visit control 1, coast
-across Blue Lake, and visit control 2. Smash Seedworks, redirect toward North
-Ward, then counter-push to stop in the recovery meadow. Both districts must be
-flattened, both controls visited in order, and the entire ball inside the meadow
-below 0.8 m/s with all pushes released for two seconds.
+Hold WASD or the arrows to apply a push in map directions. Diagonal pushes have
+the same total strength. Releasing the controls leaves momentum; counter-push to
+brake. Space or F starts a three-second shield, with six further seconds before
+another activation. Mobile supports simultaneous directional holds and shielding.
 
-The striped city cores are the solid targets. Nearby houses are decorative.
-Enemy pets and fire-breathing systems are deliberately left for later work.
+Visit the numbered magenta controls in order, flatten all district cores, and
+settle the entire ball inside the double-ring recovery meadow below 0.8 m/s for
+two seconds with paws off. A clean run means no shell damage. Districts lose
+health according to impact speed. Ramming deals mutual damage; shields prevent
+only the shell's share. Surviving cores deflect the ball, and destruction costs
+momentum. Defensive guns show their aim before firing real projectiles. Towns
+are evacuated; small surrounding buildings are scenery, not extra targets.
 
-## Controls and physics
+## The courses
 
-WASD/arrows apply cardinal map-direction pushes, not heading commands. Touch
-buttons permit simultaneous directions. Diagonal input is normalized so it does
-not provide a stronger motor. Releasing a key leaves momentum; counter-pushing
-is required for timely braking. There is no instant brake or velocity cap.
+**A Small Problem in Seedhaven.** The opening run-up clears a ridge and Blue
+Lake. Redirect from Seedworks to North Ward, then brake into the meadow.
 
-A smooth sum of Gaussian hills defines elevation. The brown 5 m contours and the
-physics sample this same field. Downhill acceleration uses `-(5/7) g grad(h)`;
-linear rolling resistance provides a slow loss of speed. This is a tuned planar
-rolling approximation, not a full rigid sphere/airborne simulation. There is no
-ballistic jump, monster AI or building-by-building structural simulation.
+**Banks for the Memories.** Descend toward Cushion Ridge and use its sloping
+flank to bend the ball south into Sunflower Valley. The hill is a real gravity
+field, not a scripted deflector. Clear the two controls and the Sunflower and
+Hayloft cores. The southern bank also turns overshoots back toward the valley.
 
-Five footprint probes determine lake immersion. Fully wet ground has no useful
-player traction: running spins the shell and makes wheel noise without applying
-translational force. Existing momentum still carries the ball through water
-resistance. A failed run-up can leave the ball stranded; retry is intentionally
-available rather than an automatic rescue or free water steering.
+**No Grip, No Problem.** Cross Eeh Lake, rebuild speed on the dry isthmus, then
+coast over Ooh Lake. Three controls lead to Reedworks, Oatbridge and Pipsqueak
+Point. Time three separate shields, then brake before the southern meadow.
 
-Ramming damage scales with closing speed squared. The district and shell both
-take damage; a destroyed core removes some forward momentum. Defensive guns
-have a 1.2 s marked aiming interval and fire finite-speed rounds. Destroying a
-district stops new shots; previously fired rounds continue.
+## Terrain, sound and paws
 
-Space / F activates a 3 s shield, then requires a further 6 s recharge. Protection
-blocks damage, not collision dynamics. Clean means **zero shell damage**; the
-separate impact/district/shield counters still describe the destruction.
+The height field is a sum of rotated Gaussian hills and offset shoulder lobes;
+its analytical gradient accelerates the ball. The contour renderer samples
+that exact field once per map. Low-frequency radial waves make rounded lake
+bays and headlands. Both visible shores and footprint probes use the same
+parametric boundary; trees and roads are decorative.
 
-## Presentation and audio
+Acceleration is `grip * playerDrive - 7.007 * terrainGradient - drag * velocity`.
+Water reduces paw traction to zero, but **never removes gravity**. Existing
+momentum faces water resistance. A wet, stationary ball on a slope can still
+slide downhill; on flat deep water, pushing only spins the shell.
 
-The renderer caches the terrain/contour map once per level and draws the ball,
-active city cores, rounds and shield on top. Its transparent shell ribs rotate
-by travelled distance divided by radius, plus slipping rotation while running
-in water. The wheel audio uses that same angular phase for its alternating
-formants; it is not a free-running sound loop. Idle, pause, mute and leaving the
-world silence it. Existing marine and spacecraft sound modes are unchanged.
+The shell's rotation crosses four sound-stroke boundaries per revolution.
+Each crossing starts a finite, alternately voiced eeh/ooh sound with an attack,
+release and a real silent gap. Volume increases gently with rolling speed.
+Wet wheelspin selects short, quieter, high-pitched cartoon chirps. Accelerated
+play drops missed strokes rather than accumulating audio or playing a burst.
+There is no continuously sounding wheel oscillator. Stop, mute and disposal
+silence pending voices; wet controls still animate the futile spinning shell.
 
-## Integration and reference
+The hind-paw gait uses a separate effort-driven phase derived from the shell's
+travel and wet slip. Left and right paws alternate contact and reach. They rest
+while coasting; they paddle in water. The ball's ribs still use actual roll.
 
-- `src/rampage.js`: level data and DOM-free deterministic mechanics.
-- `src/rampage-view.js`: cached chart renderer, ball UI and dialogs.
-- `src/rampage-audio.js`: bounded wheel-bearing audio graph.
-- `standalone: true` keeps the course outside existing circuits, without a save
-  migration or reset. Codex’s schema-specific World 4 migration remains intact.
-- Shared game dispatch, input, audio and rendering route to these modules only
-  for a rampage level. All earlier level configurations are unchanged.
+## Records and authoring
 
-`DeadSlow.watch("gerbo-first-outing", 8)` replays the 89.508333-second clean
-reference. It uses 212 recorded events containing fractional directional pushes
-(the existing console supports [-1, 1]) and two timed shield activations. The
-published fixture has no position/velocity assignments, automatic objectives or
-physics overrides. Keyboard players obtain fractional average effort by tapping
-or alternating directions; this reference is not presented as a keyboard-recorded
-human speedrun. Paused/accelerated playback remains unranked.
+All three live-game recordings are clean and input-only:
 
-## Focused checks
+| Console ID | Time (seconds) | Shields | Blocked hits |
+| --- | ---: | ---: | ---: |
+| `gerbo-first-outing` | 100.258333 | 2 | 4 |
+| `gerbo-banking` | 101.258333 | 2 | 4 |
+| `gerbo-lake-skipping` | 123.258333 | 3 | 6 |
+
+Use `DeadSlow.watch(id, 8)` or `DeadSlow.timeline(id)`. No poses, velocities or
+objectives are assigned in the published recordings. They are reference
+completions, not optimal routes. The offline `tools/record-rampage.cjs` helper
+composes these inputs through the actual state machine. It is not part of the
+browser bundle and does not add an autopilot to ranked play.
+
+Schema 7 archives only the first course's obsolete schema-6 terrain record,
+ghost and splits. The field log displays those archived times. Other missions,
+circuits and Codex's schema-specific older migrations are preserved.
+
+## Focused verification
 
 ```sh
 npm run build
-node --test tests/rampage.test.cjs
-python tests/browser_rampage.py --screenshots screenshots/rampage
+node --test tests/rampage.test.cjs tests/rampage-audio.test.cjs
+python tests/browser_rampage.py --screenshots reports/gerbozilla
 ```
 
-The mechanics checks cover the single-course catalog, unchanged Grand Tour,
-normalized pushes, counter-pushing, slope derivatives, lake coasting/wheelspin,
-shield duration/recharge, mutual damage, rounds, boundaries, objective guards,
-record preservation and the new reference. Browser checks cover the control pad,
-keyboard, multitouch, UI, viewport sizes, production playback, muted/active audio
-and transitions back to the existing sound/control worlds. The regular CI also
-runs this focused browser entrypoint. Unrelated long navigation recordings were
-not rerun locally for this change.
+The tests include wet gravity at partial/full immersion, analytical gradients,
+shoreline consistency, shield and collision rules, all three recorded runs,
+state migration, per-stroke audio scheduling, actual offline waveform gaps and
+levels, visible counters after tow duty, and keyboard/touch mode changes.
+Unrelated sea/space recordings and the full browser suite need not be run while
+iterating on these field courses. Rival pets and fire breath remain future work.

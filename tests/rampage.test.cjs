@@ -7,8 +7,8 @@ function isolated(){const l=JSON.parse(JSON.stringify(L.find(l=>l.rampage)));l.r
  const s={x:200,y:200,vx:0,vy:0,a:0,r:0,hull:100};
  return {level:l,run:{ship:s,rampage:R.create(l,s),time:0,contacts:0,distance:0,maxSpeed:0,dockHold:0}};}
 function step(a,input={},duration=1){for(let i=0;i<Math.round(duration*120);i++){a.run.time+=1/120;R.update(a.level,a.run,input,1/120);}}
-test('World 5 contains exactly one explicitly standalone course',()=>{
- const rows=L.filter(l=>l.worldNumber===5);assert.equal(rows.length,1);assert.ok(rows[0].standalone);assert.ok(L.worlds[4].preview);
+test('World 5 contains three explicitly standalone courses',()=>{
+ const rows=L.filter(l=>l.worldNumber===5);assert.equal(rows.length,3);assert.ok(rows.every(l=>l.standalone));assert.ok(L.worlds[4].preview);
  const t=start();t.marathon('grand-tour');assert.equal(t.state.marathon.route.length,48);assert.ok(t.state.marathon.route.every(i=>!L[i].rampage));
  t.marathon('gerbozilla');assert.equal(t.state.marathon,null);assert.ok(t.state.run.rampage);
 });
@@ -49,14 +49,70 @@ test('the whole ball leaving the paper ends the attempt',()=>{
 test('recovery meadow does not bypass the two controls and city objectives',()=>{
  const t=start(),f=t.state.level.rampage.finish;t.setShip({x:f.x,y:f.y});t.advance(3);assert.equal(t.state.status,'running');assert.ok(!t.state.run.dock.ready);
 });
-test('one published reference completes through controls only with two shields',()=>{
- const t=replay(require('./fixtures/gerbo-first-outing-controls.json'));
- assert.equal(t.state.status,'complete');assert.equal(t.state.run.result.clean,true);assert.equal(t.state.run.rampage.stats.shields,2);
- assert.equal(t.state.run.rampage.stats.districts,2);assert.equal(t.state.run.rampage.control,2);
- assert.ok(Math.abs(t.state.run.time-89.50833333333334)<1/120);
+for (const l of L.filter(l=>l.rampage)) test(l.name+' has a clean input-only reference',()=>{
+ const f=require('./fixtures/'+l.id+'-controls.json'),t=replay(f);
+ assert.equal(t.state.status,'complete');assert.equal(t.state.run.result.clean,true);
+ assert.equal(t.state.run.rampage.stats.districts,l.rampage.districts.length);
+ assert.equal(t.state.run.rampage.control,l.rampage.controls.length);
+ assert.ok(Math.abs(t.state.run.time-f.expectedTime)<1/120);
 });
 test('adding a standalone stage keeps the Codex migration and old circuits intact',()=>{
  const d=S.fresh?S.fresh():S.create({getItem:()=>null,setItem(){}}).data;
  d.races['grand-tour']=[{time:9000,contacts:0,clean:true}];d.stages['gerbo-first-outing']={runs:[{time:100,contacts:0,clean:true}],ghost:[],bestSplits:[]};
  const s=S.create({getItem:()=>JSON.stringify(d),setItem(){}});assert.equal(s.data.races['grand-tour'].length,1);assert.equal(s.best('gerbo-first-outing').time,100);
+});
+
+test('wet gravity survives at full and partial immersion while paw drive loses grip',()=>{
+ for(const offset of [0,75]){
+  const a=isolated(),b=isolated();
+  for(const z of [a,b]){z.level.rampage.hills=[{x:500,y:515,rx:130,ry:100,height:20}];Object.assign(z.run.ship,{x:600+offset,y:515});}
+  const wet=R.water(a.level.rampage,a.run.ship),slope=R.terrain(a.level.rampage,a.run.ship.x,515);
+  assert.ok(wet>0, 'test hull must actually be wet');
+  step(a,{},1/120);step(b,{rudder:1},1/120);
+  assert.ok(Math.abs(a.run.ship.vx-(-7.007*slope.dx)/120)<1e-10);
+  assert.ok(Math.abs(b.run.ship.vx-a.run.ship.vx-(1-wet)*a.level.rampage.drive/120)<1e-10);
+ }
+});
+test('irregular shoreline drawing samples agree with water classification',()=>{
+ for(const l of L.filter(l=>l.rampage)) for(const lake of l.rampage.lakes) {
+  const rs=[];
+  for(let i=0;i<120;i++){
+   const angle=i*Math.PI/60,p=R.lakePoint(lake,angle,.998),q=R.lakePoint(lake,angle,1.002);
+   assert.ok(R.inLake(lake,p.x,p.y));assert.ok(!R.inLake(lake,q.x,q.y));rs.push(R.shoreRadius(lake,angle));
+  }
+  assert.ok(Math.max(...rs)-Math.min(...rs)>.2);
+ }
+});
+test('rotated irregular hills keep analytical gravity consistent with the contour field',()=>{
+ for(const l of L.filter(l=>l.rampage)) for(const h of l.rampage.hills){
+  const x=h.x+23,y=h.y-31,e=.001,t=R.terrain(l.rampage,x,y);
+  for(const [axis,dx,dy] of [['dx',e,0],['dy',0,e]]) {
+   const fd=(R.terrain(l.rampage,x+dx,y+dy).height-R.terrain(l.rampage,x-dx,y-dy).height)/(2*e);
+   assert.ok(Math.abs(t[axis]-fd)<1e-7);
+  }
+ }
+});
+test('hind-paw phase walks under effort, paddles on water and rests while coasting',()=>{
+ const a=isolated();step(a,{rudder:1},2);assert.ok(a.run.rampage.pawPhase>0);
+ const phase=a.run.rampage.pawPhase;step(a,{},1);assert.equal(a.run.rampage.pawPhase,phase);
+ Object.assign(a.run.ship,{x:600,y:515,vx:0,vy:0});step(a,{rudder:1},1);
+ assert.ok(a.run.rampage.pawPhase>phase+3);assert.equal(a.run.ship.vx,0);
+});
+test('only obsolete Seedhaven records are archived, idempotently',()=>{
+ const d=S.create({getItem:()=>null,setItem(){}}).data;d.version=6;
+ const old={runs:[{time:89.5,contacts:0,clean:true}],ghost:[[0,130,530,0]],bestSplits:[12,22]};
+ d.stages['gerbo-first-outing']=old;d.stages.vacuum=old;
+ d.races['grand-tour']=[{time:9000,contacts:0,clean:true}];
+ const v=S.sanitize(d);assert.equal(v.version,7);assert.equal(v.stages['gerbo-first-outing'],undefined);
+ assert.equal(v.archivedStages['gerbo-first-outing'].runs[0].time,89.5);
+ assert.deepEqual(v.archivedStages['gerbo-first-outing'].ghost,old.ghost);assert.deepEqual(v.archivedStages['gerbo-first-outing'].bestSplits,old.bestSplits);
+ assert.equal(v.stages.vacuum.runs[0].time,89.5);assert.equal(v.races['grand-tour'].length,1);
+ v.stages['gerbo-first-outing']=old;assert.equal(S.sanitize(v).stages['gerbo-first-outing'].runs.length,1);
+});
+test('Cushion Ridge bends a coasting ball south without player steering',()=>{
+ const l=L.find(l=>l.id==='gerbo-banking'),t=R.terrain(l.rampage,575,418);
+ assert.ok(t.dy<-.05,'the named bank must exert a meaningful southward force');
+ const s={x:575,y:418,vx:15,vy:0,a:0,r:0,hull:100};
+ const run={ship:s,rampage:R.create(l,s),time:0,contacts:0,distance:0,maxSpeed:0,dockHold:0};
+ R.update(l,run,{},1/120);assert.ok(s.vy>0);assert.equal(run.rampage.effort,0);
 });
