@@ -72,7 +72,7 @@
     }
     function dialog(kind,level,run,format,records=[],settings={},archived=null) {
         const c=level.rampage, count=c.districts.length;
-        const taskCount=count+(c.monsters?.length||0)+(c.rescue?1:0)+(count?0:c.controls.length);
+        const taskCount=count+(c.monsters?.length||0)+(c.rescue?1:0)+c.controls.length;
         const resultTitle=c.rescue?'Two hamsters.<br>Home at last.':c.monsters?.length?'Nap time.<br>Territory reclaimed.':count?`${['Zero','One','Two','Three'][count] || count} ${count===1?'district':'districts'}.<br>One tired hamster.`:'All controls.<br>One tired hamster.';
         const intro=`<div class="eyebrow">WORLD 5 · GERBOZILLA’S RAMPAGE · COURSE ${level.stageNumber} / ${R.levels.length}</div>`;
         const actions=`<div class="dialog-actions"><button class="primary" data-action="retry" autofocus>Roll again · R</button>${level.stageNumber<R.levels.length?'<button data-action="next">Next course →</button>':''}<button data-action="courses">World map</button><button data-action="log">Field log</button></div>`;
