@@ -84,3 +84,26 @@ for (const closingSpeed of [0, .2]) {
         assert.ok(state.run.ship.hull > 99);
     });
 }
+
+test('docked-tender contact includes the mothership rotational velocity', () => {
+    const t = load('family-reunion'), run = t.state.run, st = run.space;
+    const berth = X.activeTarget(t.state.level, run);
+    t.setShip({ x: berth.x, y: berth.y, a: berth.a });
+    t.advance(2.01);
+    assert.equal(st.phase, 1, 'the first tender must be captured through the normal docking hold');
+    st.mother.vx = .7; st.mother.vy = -.4; st.mother.r = .03;
+    const tender = st.tenders[0], nextMother = {
+        ...st.mother,
+        x: st.mother.x + st.mother.vx * DT,
+        y: st.mother.y + st.mother.vy * DT,
+        a: P.wrap(st.mother.a + st.mother.r * DT)
+    };
+    const p = P.localPoint(nextMother, 0, tender.offset);
+    const attached = { ...tender, ...p, a: nextMother.a,
+        vx: nextMother.vx - nextMother.r * (p.y - nextMother.y),
+        vy: nextMother.vy + nextMother.r * (p.x - nextMother.x) };
+    const state = touch(t, attached);
+    assert.equal(state.status, 'running');
+    assert.equal(state.run.ship.hull, 100);
+    assert.equal(state.run.contacts, 0);
+});
