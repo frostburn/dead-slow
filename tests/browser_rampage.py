@@ -19,9 +19,9 @@ with sync_playwright() as pw:
         if args.screenshots:
             args.screenshots.mkdir(parents=True,exist_ok=True);page.screenshot(path=str(args.screenshots/name))
     page.evaluate('DeadSlowTest.courses(5)')
-    check('World 5 selector has one course, not twelve placeholders',page.locator('.level-card').count()==1 and '0 / 1 COURSES COMPLETE' in page.locator('#dialog').inner_text())
+    check('World 5 selector has three real courses, not twelve placeholders',page.locator('.level-card').count()==3 and '0 / 3 COURSES COMPLETE' in page.locator('#dialog').inner_text())
     check('Grand Tour remains 48 stages','all 48' in page.locator('#dialog').inner_text())
-    page.click('.level-card');check('Ball introduction explains map controls and shields','W A S D' in page.locator('#dialog').inner_text() and 'shield' in page.locator('#dialog').inner_text())
+    page.locator('.level-card').first.click();check('Ball introduction explains map controls and shields','W A S D' in page.locator('#dialog').inner_text() and 'shield' in page.locator('#dialog').inner_text())
     shot('gerbo-intro.png');page.click('[data-action="begin"]');page.evaluate('DeadSlow.speed(0)')
     check('Rolling UI is visible with a separate directional pad',page.locator('.rampage-helm').is_visible() and not page.locator('#throttle-up').is_visible())
     page.keyboard.down('d');page.keyboard.down('w');page.evaluate('DeadSlow.step(1)')
@@ -31,7 +31,7 @@ with sync_playwright() as pw:
     page.click('#gerbo-shield');check('Touch shield button activates a finite shield',page.evaluate('DeadSlowTest.state.run.rampage.shieldUntil>DeadSlowTest.state.run.time'))
     page.evaluate('DeadSlow.step(3.1)');check('Shield expires instead of becoming permanent',page.evaluate('!GerboRampage.protectedAt(DeadSlowTest.state.run)'))
     page.evaluate('DeadSlow.watch("gerbo-first-outing",0);DeadSlow.step(48)');page.wait_for_timeout(120);shot('gerbo-course.png')
-    page.evaluate('DeadSlow.step(50)')
+    page.evaluate('DeadSlow.step(60)')
     check('Production watch completes the same clean reference',page.evaluate('DeadSlow.report().verified && DeadSlow.report().clean && DeadSlow.report().rampage.shields===2'))
     check('Replay does not create ranked records',page.evaluate('DeadSlowTest.state.storage.stages["gerbo-first-outing"].runs.length===0'))
     check('Completion screen uses rampage language','Two districts.' in page.locator('#dialog').inner_text() and 'harbor' not in page.locator('#dialog').inner_text().lower())
@@ -48,19 +48,28 @@ with sync_playwright() as pw:
     check('Multitouch supports simultaneous directional pushes',page.evaluate('DeadSlowTest.state.input.rudder===1 && DeadSlowTest.state.input.thruster===-1'))
     page.evaluate("""for(const [id,key] of [[81,'rollnorth'],[82,'rolleast']])document.querySelector(`[data-hold=${key}]`).dispatchEvent(new PointerEvent('pointercancel',{pointerId:id,bubbles:true}));""")
     check('Touch cancellation releases all pushes',page.evaluate('DeadSlowTest.state.input.rudder===0 && DeadSlowTest.state.input.thruster===0'))
-    audio=page.evaluate('''async()=>{
-        const rows=[];
-        for(const [phase,active] of [[Math.PI/2,true],[3*Math.PI/2,true],[0,false]]){
-            const c=new OfflineAudioContext(1,22050,44100),wheel=GerboAudio.createWheel(c);
-            wheel.tick({roll:phase,audioSpeed:15,slip:0},active);
-            const data=(await c.startRendering()).getChannelData(0);let peak=0,sum=0;
-            for(const v of data){peak=Math.max(peak,Math.abs(v));sum+=v*v;}
-            rows.push({phase,active,peak,rms:Math.sqrt(sum/data.length)});
-        }
-        return rows;
-    }''')
-    check('Both wheel vowels are audible with safe digital headroom',all(.00005<row['rms']<.05 and row['peak']<.15 for row in audio[:2]))
-    check('Wheel audio is silent while inactive',audio[2]['peak']==0)
+    from browser_gerbo_audio import check_gerbo_audio
+    audio=check_gerbo_audio(page,check)
+    # Start from an actual tow assignment; updateWorkHud hides #manifest there.
+    page.set_viewport_size({'width':1440,'height':1000})
+    page.evaluate('DeadSlow.level("floating-sauna");DeadSlow.speed(0);DeadSlowTest.hud()')
+    check('Regression setup really hides the tow manifest',page.locator('#manifest').evaluate('(e)=>e.hidden'))
+    page.evaluate('DeadSlow.level(5,1);DeadSlow.speed(0);DeadSlowTest.hud()')
+    check('Switching from tow duty restores visible rolling and shield counters',page.locator('#manifest').is_visible() and 'ROLLED' in page.locator('#manifest').inner_text() and 'HITS BLOCKED' in page.locator('#manifest').inner_text())
+    for id,number,seconds in [('gerbo-banking',2,104),('gerbo-lake-skipping',3,127)]:
+        page.evaluate('(id)=>{DeadSlow.watch(id,0);DeadSlow.step(40)}',id)
+        page.wait_for_timeout(100);shot(f'gerbo-course-{number}.png')
+        page.evaluate('(seconds)=>DeadSlow.step(seconds)',seconds-40)
+        check(f'Course {number} completes its own clean production replay',page.evaluate('DeadSlow.report().verified && DeadSlow.report().clean'))
+        check(f'Course {number} has no leaderboard pollution',page.evaluate('(id)=>DeadSlowTest.state.storage.stages[id].runs.length===0',id))
+    check('Third course result counts all three districts','3 / 3' in page.locator('#dialog').inner_text())
+    page.evaluate('DeadSlow.watch("gerbo-first-outing",0);DeadSlow.step(20)')
+    page.click('#zoom-btn');page.wait_for_timeout(100);shot('gerbo-hind-paws.png')
+    phase=page.evaluate('DeadSlowTest.state.run.rampage.pawPhase')
+    page.evaluate('DeadSlow.step(.7)');page.wait_for_timeout(50)
+    check('Rendered running paws use a changing physical gait phase',page.evaluate('DeadSlowTest.state.run.rampage.pawPhase')>phase)
+    page.evaluate('DeadSlow.watch("gerbo-lake-skipping",0);DeadSlow.step(25)')
+    page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(100);shot('gerbo-lakes-mobile.png')
     # The integration touches mode switching, not any earlier mission layouts.
     page.evaluate('DeadSlow.level(4,1);DeadSlow.speed(0)')
     check('Returning to space restores the flight helm',not page.locator('.rampage-helm').is_visible() and page.locator('#helm-rudder-label').inner_text()=='ROTATIONAL JETS')

@@ -578,12 +578,12 @@
             const i = LEVELS.indexOf(l), b = store.best(l.id);
             return `<button class="level-card ${i === index ? 'selected' : ''}" data-stage="${i}"><span class="number">W${l.worldNumber} · ${l.bonus ? 'BONUS' : (l.rampage ? 'COURSE ' : l.space ? 'SECTOR ' : 'HARBOR ') + String(l.stageNumber).padStart(2, '0')}${store.best(l.id, true) ? ' · CLEAN' : ''}</span><span class="name">${l.name}</span><span class="kind">${l.kind}</span><span class="pb">${b ? 'PB ' + format(b.time) : 'NO TIME ON FILE'}</span></button>`;
         }).join('')}</div>
- <div class="dialog-actions"><button class="primary" data-action="marathon">${w.preview ? 'Opening course · standalone →' : `World ${w.number} run · 12 ${w.number === 4 ? 'sectors' : 'harbors'} →`}</button><button data-action="grand-tour">Grand Tour · all ${LEVELS.filter(l => !l.bonus && !l.standalone).length}</button><button class="secondary small" data-action="back">Back</button><button class="secondary small" data-action="log">Logbook</button></div>
+ <div class="dialog-actions"><button class="primary" data-action="marathon">${w.preview ? 'Start course 1 · standalone →' : `World ${w.number} run · 12 ${w.number === 4 ? 'sectors' : 'harbors'} →`}</button><button data-action="grand-tour">Grand Tour · all ${LEVELS.filter(l => !l.bonus && !l.standalone).length}</button><button class="secondary small" data-action="back">Back</button><button class="secondary small" data-action="log">Logbook</button></div>
  <p class="subtle" style="margin-top:13px">The Century Ship bonus and World 5 preview are excluded from every circuit. Each complete world and the 48-stage Grand Tour have separate overall and clean records. Circuit clocks include failed attempts and retries, but exclude between-stage menus. Pausing makes the circuit practice.</p>`, true);
         $('dialog').dataset.theme = w.theme;
     }
     function showLog(filter = 'overall') {
-        if (level.rampage) { pauseForMenu(); return openDialog('log', G.dialog('log', level, run, format, store.stage(level.id).runs, settings)); }
+        if (level.rampage) { pauseForMenu(); return openDialog('log', G.dialog('log', level, run, format, store.stage(level.id).runs, settings, store.data.archivedStages[level.id])); }
         pauseForMenu();
         const s = store.stage(level.id), runs = s.runs.filter(r => filter !== 'clean' || r.clean).slice(0, 10);
         openDialog('log', `${topModal(wording('The captain’s logbook.', 'The flight logbook.'))}

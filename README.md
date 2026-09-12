@@ -9,37 +9,47 @@ records, personal-best ghosts, keyboard controls and a multitouch helm.
 
 ## World 5 preview — Gerbozilla’s Rampage
 
-**One course, no placeholders.** In *A Small Problem in Seedhaven*, steer a
-48-metre hamster ball over a ridge and across a lake, flatten two evacuated
-city districts, and stop in the recovery meadow. Brown 5-metre contours use the
-same elevation field that accelerates the ball downhill. Blue water removes
-traction, so a crossing needs momentum. Magenta circles mark the two course
-controls; the double circle is the finish.
+**Three standalone courses.** Gerbozilla treads a 48-metre exercise ball across
+orienteering-style maps. Hold **WASD / arrows** to push in map directions, and
+counter-push early to brake. **Space / F** supplies three seconds of protection,
+followed by six seconds recharging. Shields block defensive rounds and ramming
+damage, but never restore momentum.
 
-![Gerbozilla’s opening course, with timed shield active](docs/images/gerbozilla.webp)
+| Course | Challenge | Clean reference |
+| --- | --- | ---: |
+| A Small Problem in Seedhaven | Ridge, crooked lake, two evacuated districts | 100.258 s |
+| Banks for the Memories | Ride a mountain flank through Sunflower Valley; flatten two towns | 101.258 s |
+| No Grip, No Problem | Two lake crossings, a dry run-up between them, three defended districts | 123.258 s |
 
-Hold **WASD / arrows** to push in map directions; push opposite your velocity to
-brake. **Space / F** activates a three-second shield, followed by six seconds
-recharging. It protects against city defence rounds and ramming damage, but
-never gives back momentum. Each city’s striped core is its collision target;
-the surrounding small buildings are scenery. Mobile has a separate multitouch
-pad and shield button. The squeaky ee-oo wheel follows the shell’s rotation,
-including futile wheelspin in the lake.
+![Gerbozilla treading the ball beside an irregular shoreline](docs/images/gerbozilla.webp)
+
+Brown contours use the same analytical elevation field as gravity. Mountains
+blend rounded shoulders and summits; the irregular blue shorelines match the
+traction model. Water removes **paw grip**, not downhill gravity. Existing
+momentum crosses the lake while the hamster's pink hind paws paddle helplessly.
+
+The wheel makes separate **eeh / ooh** syllables with silent gaps, synchronized
+to shell rotation. Faster rolling makes them more frequent and slightly louder.
+Water changes them to quieter, higher cartoon squeaks. Coasting paws rest;
+muting, pausing or switching worlds silences the wheel.
 
 ```js
-DeadSlow.level(5, 1)
 DeadSlow.watch("gerbo-first-outing", 8)
+DeadSlow.watch("gerbo-banking", 8)
+DeadSlow.watch("gerbo-lake-skipping", 8)
 ```
 
-The clean reference takes **89.508333 simulated seconds**, with two shield
-activations and four blocked hits. It uses recorded directional push values and
-shield commands, with no state edits or relaxed physics; it is not claimed
-optimal. There are now 26 recordings and 50 selectable assignments. This
-standalone preview is **outside every circuit**: the established Grand Tour
-remains 48 stages, and existing records/migrations are untouched.
+Run one at a time. All three recordings use ordinary directional pushes and
+shield commands through the game. The first two use two shields and block four
+hits each; the third uses three and blocks six. They are not optimal-time claims.
+There are **28 recordings and 52 selectable assignments**. World 5 remains
+**outside every circuit**; the Grand Tour is still 48 stages.
 
-See [the World 5 guide](docs/GERBOZILLA.md). Further courses, rival pets and fire
-breath are not implemented in this preview.
+Schema 7 archives the earlier Seedhaven record, ghost and splits because its
+terrain and wet-slope physics changed. Other active records and circuits stay
+intact. Archived Seedhaven times are visible in the field log and retained in
+exports. See [the World 5 guide](docs/GERBOZILLA.md). Rival pets and fire breath
+are not included yet.
 
 ## Play
 
@@ -256,7 +266,7 @@ leaderboard. Export the logbook before moving between files, browsers or hosts;
 then import it through **Logbook**. Import replaces the current local logbook.
 Storage denial or quota failure leaves the session playable and exportable.
 
-Logbooks using schemas 1–6 are accepted. Schema 6 archives old records, ghosts and
+Logbooks using schemas 1–7 are accepted. Schema 6 archives old records, ghosts and
 splits for the five redesigned missions (`vacuum`, `umbra`, `perihelion-dispatch`,
 `yesterday`, `century-ship`), plus their affected Meridian and Grand Tour circuits.
 These are not comparable routes. Every unchanged stage and the three sea-world
