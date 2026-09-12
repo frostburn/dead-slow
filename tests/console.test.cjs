@@ -2,7 +2,13 @@
 const test = require('node:test'), assert = require('node:assert/strict');
 const fs = require('node:fs');
 const { create } = require('./headless.cjs');
+const HarborConsole = require('../src/console.js');
 const V = require('../src/verification.js');
+test('production console greeting keeps the documented discovery phrase', () => {
+    const messages = [];
+    HarborConsole.create({ quiet: false }, { info: message => messages.push(message) });
+    assert.ok(messages.some(message => message.includes('AHOY, CAPTAIN')));
+});
 test('shipped replay data is exactly reproducible from the JSON fixtures', () => {
     assert.equal(fs.readFileSync(require.resolve('../src/verification.js'), 'utf8'), require('../tools/sync-replays.cjs').source());
     assert.ok(Object.isFrozen(V.runs)); assert.ok(Object.isFrozen(V.runs[0].events[0]));
