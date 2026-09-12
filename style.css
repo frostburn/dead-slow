@@ -2238,3 +2238,84 @@ body[data-theme="space"] .held { background: #4c3c69; border-color: #b9a2df; }
   body[data-theme="space"] .top-actions .icon { width:25px; }
   body[data-theme="space"] .work-readout { font-size:8px; white-space:normal; }
 }
+
+/* World 5: warm field paper, contour ink, and magenta course overprint. */
+.rampage-helm { display:none; }
+body[data-theme="rampage"], .dialog[data-theme="rampage"] {
+  color-scheme:light; --ink:#263c33; --muted:#5f7464; --dim:#7a876e;
+  --bg:#e6e4ce; --panel:#f5f0dc; --line:#c5c7ad; --green:#356c50;
+  --amber:#93602f; --red:#b14648;
+  color:var(--ink);
+}
+body[data-theme="rampage"] .topbar { background:#f6f1dc; border-color:#c5c7ad; }
+body[data-theme="rampage"] .brand-symbol { border-color:#a03780; border-radius:50%; background:#cedabd; }
+body[data-theme="rampage"] .brand-sub { color:#8e3173; }
+body[data-theme="rampage"] .clock-block { border-color:#c5c7ad; }
+body[data-theme="rampage"] .sea-section { background:#eae8d5; }
+body[data-theme="rampage"] .chart-title { color:#263c33; font-weight:800; }
+body[data-theme="rampage"] .chart-heading { background:#f6f1dbea; padding:10px 15px; border-left:3px solid #a03780; border-radius:0; top:16px; }
+body[data-theme="rampage"] .chart-heading .eyebrow { color:#93427a; }
+body[data-theme="rampage"] .chart-meta { color:#426150; top:20px; }
+body[data-theme="rampage"] .work-panel { background:#f6f1dbe8; border:1px solid #c2c6ac; color:#31483b; top:87px; max-width:460px; padding:9px 14px; }
+body[data-theme="rampage"] .work-order { color:#93427a; }
+body[data-theme="rampage"] .work-readout { color:#526a58; }
+body[data-theme="rampage"] .manifest { color:#687b64; gap:15px; font-size:9px; min-height:0; }
+body[data-theme="rampage"] .mission-strip,body[data-theme="rampage"] .mobile-instruments { background:#f6f1dcf0; border-color:#b5bda1; color:#31483b; }
+body[data-theme="rampage"] .chart-scale { color:#637d62; }
+body[data-theme="rampage"] button,.dialog[data-theme="rampage"] button { background:#ebe8d0; border-color:#b3bba2; color:#2c443a; }
+body[data-theme="rampage"] button:hover,.dialog[data-theme="rampage"] button:hover { background:#dce3c8; border-color:#687c63; }
+body[data-theme="rampage"] button.primary,.dialog[data-theme="rampage"] button.primary { background:#356c50; border-color:#356c50; color:#fff7df; }
+body[data-theme="rampage"] button.held { background:#b8d1b5; border-color:#356c50; }
+body[data-theme="rampage"] .bar { background:#d7dcc2; }
+body[data-theme="rampage"] .helm { display:block; background:#f6f1dc; border-color:#b5bda1; padding:16px 22px; }
+body[data-theme="rampage"] .helm>.helm-group,body[data-theme="rampage"] .helm>.utility { display:none; }
+body[data-theme="rampage"] .rampage-helm { display:flex; align-items:center; justify-content:space-between; gap:20px; }
+.gerbo-pad { display:grid; grid-template-columns:repeat(4,minmax(50px,80px)); gap:8px; margin-top:8px; }
+.gerbo-pad button { touch-action:none; user-select:none; font-size:23px; min-height:49px; }
+.gerbo-pad kbd { font-size:10px; background:transparent; color:inherit; border:0; }
+.gerbo-shield-group { display:grid; gap:9px; text-align:center; }
+.gerbo-shield-group>span,.gerbo-legend { font:10px/1.8 var(--mono); color:#5e735c; }
+#gerbo-shield { min-width:200px; min-height:53px; font-weight:750; }
+#gerbo-shield.shield-on { background:#a03780; color:#fff3e1; }
+.dialog[data-theme="rampage"] { background:#f6f1dc; border-color:#a2ac8d; }
+.dialog[data-theme="rampage"] h1,.dialog[data-theme="rampage"] h2 { color:#2c443a; }
+.dialog[data-theme="rampage"] p { color:#536753; }
+.dialog[data-theme="rampage"] .eyebrow { color:#a03780; }
+.dialog[data-theme="rampage"] .level-card { background:#efecd7; border-color:#bdc4a8; }
+.dialog[data-theme="rampage"] .level-card.selected,.dialog[data-theme="rampage"] .world-tab.active { background:#e6dfd0; border-color:#a03780; }
+.dialog[data-theme="rampage"] .control-summary { background:#e8ead3; border-color:#c5c7ad; }
+.dialog[data-theme="rampage"] kbd { color:#2c443a; background:#f9f3de; border-color:#b4bba1; }
+.dialog[data-theme="rampage"] .result-badge { color:#93427a; background:#e8dfdf; }
+body[data-theme="rampage"] .toast { background:#e4ead5; color:#2c443a; border-color:#789577; }
+.world-tabs { grid-template-columns:repeat(5,minmax(0,1fr)); }
+@media(max-width:1000px) { .world-tabs {grid-template-columns:repeat(3,minmax(0,1fr));} .gerbo-legend{display:none;} }
+@media(max-width:650px) {
+  body[data-theme="rampage"] .chart-meta { display:none; }
+  body[data-theme="rampage"] .chart-heading { top:10px; padding:6px 10px; }
+  body[data-theme="rampage"] .work-panel { left:12px; right:12px; top:67px; max-width:none; padding:6px 10px; }
+  body[data-theme="rampage"] .work-order { font-size:9px; }
+  body[data-theme="rampage"] .work-readout { font-size:8px; white-space:normal; }
+  body[data-theme="rampage"] .manifest { display:none; }
+  body[data-theme="rampage"] .helm { padding:10px; }
+  body[data-theme="rampage"] .rampage-helm { gap:10px; }
+  .gerbo-pad { grid-template-columns:repeat(4,minmax(36px,1fr)); gap:4px; }
+  .gerbo-pad button { padding:6px; min-height:46px; }
+  .gerbo-push .section-label { font-size:7px; }
+  .gerbo-shield-group>span { font-size:7px; }
+  #gerbo-shield { min-width:118px; min-height:46px; font-size:9px; padding:5px; }
+  .world-tabs { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:370px) {
+  body[data-theme="rampage"] .brand-symbol { display:none; }
+  body[data-theme="rampage"] .brand { min-width:65px; }
+  body[data-theme="rampage"] .brand-sub { font-size:5px; letter-spacing:0; }
+  body[data-theme="rampage"] .brand-name { font-size:10px; }
+  body[data-theme="rampage"] .topbar { padding:0 6px; gap:3px; }
+  body[data-theme="rampage"] .main-clock { font-size:20px; }
+  body[data-theme="rampage"] .clock-block { min-width:95px; padding-left:5px; }
+  body[data-theme="rampage"] .top-actions .icon { width:25px; }
+  body[data-theme="rampage"] .top-actions button { padding:6px 4px; }
+}
+body[data-theme="rampage"] .brief { color:#546951; }
+body[data-theme="rampage"] .chart-title { text-shadow:none; }
+body[data-theme="rampage"] #gerbo-shield.shield-on:disabled { opacity:1; }

@@ -24,7 +24,7 @@
         function findLevel(worldOrId, stage) {
             const i = typeof worldOrId === 'string' ? bridge.levels.findIndex(l => l.id === worldOrId) :
                 bridge.levels.findIndex(l => l.worldNumber === worldOrId && l.stageNumber === stage);
-            if (i < 0) throw new RangeError('Unknown assignment. Use its id or (world 1–4, stage 1–12; World 4 stage 13 is the bonus); DeadSlow.levels() lists them.');
+            if (i < 0) throw new RangeError('Unknown assignment. Use its id or (world 1–4, stage 1–12; World 4 stage 13 is the bonus; World 5 has one preview course); DeadSlow.levels() lists them.');
             return i;
         }
         function fixture(id) {
@@ -84,14 +84,14 @@
                 level: p.fixture.level, status: s.status, clean, time: s.run.time,
                 expectedTime: p.fixture.expectedTime, difference: error,
                 verified: s.status === 'complete' && clean && Math.abs(error) <= V.step + 1e-6,
-                contacts: s.run.contacts, lineBreaks: s.run.jobs.stats.lineBreaks, space: s.run.space ? copy(s.run.space.stats) : null,
+                contacts: s.run.contacts, lineBreaks: s.run.jobs.stats.lineBreaks, space: s.run.space ? copy(s.run.space.stats) : null, rampage: s.run.rampage ? copy(s.run.rampage.stats) : null,
                 steps: p.tick, eventsApplied: p.event, ranked: false,
                 method: 'Fixed control inputs through the live game; no repositioning or objective shortcuts.'
             };
             playback = null;
             bridge.clearInput();
             if (s.status === 'running') rate = 0; // Stop a divergent recording at its declared end.
-            log(lastReport.verified ? 'info' : 'warn', lastReport.verified ? (s.run.space ? 'Capture confirmed! Flight recording verified.' : 'All fast! Control recording verified.') : 'Recording diverged; this is not a verified completion.');
+            log(lastReport.verified ? 'info' : 'warn', lastReport.verified ? (s.run.rampage ? 'Course complete! Rolling recording verified.' : s.run.space ? 'Capture confirmed! Flight recording verified.' : 'All fast! Control recording verified.') : 'Recording diverged; this is not a verified completion.');
             log('table', [copy(lastReport)]);
             return false; // Stop the caller's batch exactly here, including a divergent recording.
         }
@@ -102,8 +102,8 @@
                     ['DeadSlow.level(3, 4)', 'Start The Floating Sauna as unranked practice (or supply an id).'],
                     ['DeadSlow.speed(8)', '0–32× wall-time rate. Physics always uses 1/120 second steps. 0 freezes.'],
                     ['DeadSlow.step(30)', 'Advance up to 600 simulated seconds, including replay controls.'],
-                    ['DeadSlow.controls({throttle: 4})', 'Persistent controls: throttle −3…4; rudder/thruster/winch −1…1.'],
-                    ['DeadSlow.line()', 'Make fast / cast off at sea; lock / release the rescue beam in space.'],
+                    ['DeadSlow.controls({throttle: 4})', 'Persistent controls: throttle −3…4; rudder/thruster/winch −1…1. World 5: rudder = east, thruster = south.'],
+                    ['DeadSlow.line()', 'Make fast / cast off at sea; lock / release the rescue beam in space; activate Gerbozilla’s shield.'],
                     ['DeadSlow.warp(150, 200, 0)', 'Reposition the player only, stop motion; heading in degrees.'],
                     ['DeadSlow.repair()', 'Restore the hulls; does not erase contacts or failure.'],
                     ['DeadSlow.state()', 'A detached snapshot; inspecting it never taints a normal run.'],

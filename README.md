@@ -7,6 +7,40 @@ records, personal-best ghosts, keyboard controls and a multitouch helm.
 
 ![The Black Meridian: navigating between asteroid shadows](docs/images/black-meridian.webp)
 
+## World 5 preview — Gerbozilla’s Rampage
+
+**One course, no placeholders.** In *A Small Problem in Seedhaven*, steer a
+48-metre hamster ball over a ridge and across a lake, flatten two evacuated
+city districts, and stop in the recovery meadow. Brown 5-metre contours use the
+same elevation field that accelerates the ball downhill. Blue water removes
+traction, so a crossing needs momentum. Magenta circles mark the two course
+controls; the double circle is the finish.
+
+![Gerbozilla’s opening course, with timed shield active](docs/images/gerbozilla.webp)
+
+Hold **WASD / arrows** to push in map directions; push opposite your velocity to
+brake. **Space / F** activates a three-second shield, followed by six seconds
+recharging. It protects against city defence rounds and ramming damage, but
+never gives back momentum. Each city’s striped core is its collision target;
+the surrounding small buildings are scenery. Mobile has a separate multitouch
+pad and shield button. The squeaky ee-oo wheel follows the shell’s rotation,
+including futile wheelspin in the lake.
+
+```js
+DeadSlow.level(5, 1)
+DeadSlow.watch("gerbo-first-outing", 8)
+```
+
+The clean reference takes **89.508333 simulated seconds**, with two shield
+activations and four blocked hits. It uses recorded directional push values and
+shield commands, with no state edits or relaxed physics; it is not claimed
+optimal. There are now 26 recordings and 50 selectable assignments. This
+standalone preview is **outside every circuit**: the established Grand Tour
+remains 48 stages, and existing records/migrations are untouched.
+
+See [the World 5 guide](docs/GERBOZILLA.md). Further courses, rival pets and fire
+breath are not implemented in this preview.
+
 ## Play
 
 Open **`dist/index.html`** from the release archive in a browser. The game is one

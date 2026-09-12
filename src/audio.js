@@ -67,7 +67,8 @@
     function create() {
         const flightAudio = typeof module !== 'undefined' && module.exports ? require('./space-audio.js') : root.HarborSpaceAudio;
         let ctx = null, engine = null, gain = null, master = null, enabled = true;
-        let space = false, drive = null, horn = null;
+        let space = false, drive = null, horn = null, rampage = false, wheel = null;
+        const wheelAudio = typeof module !== 'undefined' && module.exports ? require('./rampage-audio.js') : root.GerboAudio;
         const cues = new Map(), tones = new Set();
         function stopTransient() {
             horn?.stop(); horn = null;
@@ -93,11 +94,12 @@
                     engine.connect(filter); filter.connect(gain); gain.connect(master); engine.start();
                 }
                 if (space && !drive) drive = flightAudio.createDrive(ctx, master);
+                if (rampage && !wheel) wheel = wheelAudio.createWheel(ctx, master);
                 if (ctx.state === 'suspended') ctx.resume().catch(() => {});
             } catch (_) {
                 // Audio failure never interrupts navigation. A later gesture may retry.
                 if (ctx) ctx.close?.()?.catch?.(() => {});
-                ctx = engine = gain = master = drive = null;
+                ctx = engine = gain = master = drive = wheel = null;
                 cues.clear(); tones.clear(); horn = null;
             }
         }
@@ -141,6 +143,10 @@
         return {
             init,
             // Called for every departure, even within the same world: no stale cues.
+            setRampage(value) {
+                stopTransient(); rampage = !!value; wheel?.stop();
+                if (gain) gain.gain.setTargetAtTime(0, ctx.currentTime, .02);
+            },
             setSpace(value) {
                 stopTransient(); space = !!value;
                 if (gain) gain.gain.setTargetAtTime(0, ctx.currentTime, .02);
@@ -148,16 +154,17 @@
             },
             set enabled(v) {
                 enabled = !!v;
-                if (!enabled) { stopTransient(); drive?.tick({}, false); }
+                if (!enabled) { stopTransient(); drive?.tick({}, false); wheel?.stop(); }
                 if (master) master.gain.setTargetAtTime(enabled ? 1 : 0, ctx.currentTime, .008);
             },
             get enabled() { return enabled; },
-            tick(s, active, flight = null) {
+            tick(s, active, flight = null, rolling = null) {
                 if (!ctx || !gain) return;
                 const now = ctx.currentTime;
-                gain.gain.setTargetAtTime(active && enabled && !space ? .011 + Math.abs(s.engine) * .024 : 0, now, .13);
+                gain.gain.setTargetAtTime(active && enabled && !space && !rampage ? .011 + Math.abs(s.engine) * .024 : 0, now, .13);
                 if (!space) engine.frequency.setTargetAtTime(35 + Math.abs(s.engine) * 27, now, .2);
                 drive?.tick({ ...flight?.firingJets, beam: flight?.beamForce }, active && enabled && space);
+                wheel?.tick(rolling ? { ...rolling, audioSpeed: Math.hypot(s.vx, s.vy) } : null, active && enabled && rampage);
             },
             order() { if (space) cue('order'); else tone(310, .15, .025); },
             checkpoint() {
@@ -172,6 +179,7 @@
             radar,
             horn() {
                 if (space) return radar();
+                if (rampage) return false;
                 if (!enabled) return false;
                 init();
                 if (!ctx || horn && ctx.currentTime < horn.until) return false;
