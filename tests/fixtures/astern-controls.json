@@ -1,0 +1,20 @@
+{
+  "level": "astern",
+  "description": "Fixed-time helm inputs only; no repositioning, altered physics or objective shortcuts. Reverse between the finger piers, use ahead thrust to brake, and settle stern-first in neutral.",
+  "events": [
+    {
+      "time": 0,
+      "throttle": -3
+    },
+    {
+      "time": 57.041666666666664,
+      "throttle": 4
+    },
+    {
+      "time": 71.99166666666666,
+      "throttle": 0
+    }
+  ],
+  "duration": 84,
+  "expectedTime": 80.24166666666666
+}

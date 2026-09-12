@@ -1,0 +1,32 @@
+{
+  "level": "lock",
+  "description": "Fixed-time helm and line inputs only; no repositioning, altered physics or objective shortcuts. Stop in neutral inside the interlocked chamber, wait for equalization, then finish the upper-reach approach.",
+  "events": [
+    {
+      "time": 0,
+      "throttle": 4
+    },
+    {
+      "time": 29.766666666666666,
+      "throttle": -3
+    },
+    {
+      "time": 48.333333333333336,
+      "throttle": 0
+    },
+    {
+      "time": 72.33333333333333,
+      "throttle": 4
+    },
+    {
+      "time": 101.94166666666666,
+      "throttle": -3
+    },
+    {
+      "time": 120.50833333333334,
+      "throttle": 0
+    }
+  ],
+  "duration": 132,
+  "expectedTime": 128.76666666666668
+}

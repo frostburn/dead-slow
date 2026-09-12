@@ -36,22 +36,26 @@ The following complete trajectories use actual timed player controls and the
 same fixed-step state machine as the game. They do not alter positions,
 velocities, physics constants or objective progress:
 
-| Stage | Clean control-only completion | Fixture |
-| --- | --- | --- |
-| World 2: No Lee Shore | About 78.64 s | `tests/exposed-crosscurrent-controls.json` |
-| World 3: The First Crossing | 123.95 s | `tests/fixtures/first-crossing-controls.json` |
-| World 3: A Bigger Boat | 187.90 s | `tests/fixtures/bigger-boat-controls.json` |
+The twelve published recordings and their measured times are listed in the
+[console guide](CONSOLE.md#watch-the-actual-verification-runs). Every fixture is
+replayed through both the Node game harness and the production Chromium console,
+and checked against its recorded completion time within one 120 Hz tick.
 
-All three fixtures are replayed in both Node and Chromium and checked
-against their recorded completion times to within one 120 Hz simulation tick.
-The ferry boards, sails, brakes, unloads and moors. The tug makes fast, tows,
-casts off, brakes and moors while the yacht settles into its own rescue berth.
-The browser suite also completes World 1's first harbor through real thrust
-and braking. It does not claim optimal times or complete control-only coverage
-of all thirty-six levels. Later island spawn checks verify clearance and a
-required positioning leg, not complete new medal routes. Console playback is
-always unranked so it cannot seed player records. `DeadSlow.runs()` and
-`DeadSlow.times()` explicitly separate these recordings from design targets.
+Coverage now includes early reverse-thrust braking, a turning approach around a
+breakwater, timed booms, lock cycling, stern-first parking, a tidal crossing,
+an exposed cross-current, loading/unloading, a late-stage return ferry service,
+and approaching and towing the heavy work barge. The two later island recordings
+start at their normal fairway/remote-tug departures, not alongside the job target.
+The ferry exchange returns with the new manifest; the barge must settle in its
+own berth even after the tug is parked. All twelve finish cleanly: no contacts,
+wake violations, groundings or parted lines. They are not claimed optimal.
+
+The other twenty-four levels still lack published control-only completions.
+Objective-isolation and spawn-clearance tests must not be mistaken for complete
+playthroughs. Console playback is always unranked, so it cannot seed player
+records. `DeadSlow.runs()` and `DeadSlow.times()` separate measured runs from
+unverified design targets. New fixture tests reject unknown input fields,
+non-finite values, invalid controls, unsorted timestamps and duplicate level IDs.
 After changing fixture JSON, run `npm run replays:sync` before rebuilding.
 
 ## Browser checks
@@ -86,10 +90,17 @@ world selection, job instruments, ferry transfer, winch operations, retry,
 all-stage chart rendering, objective guards, clean records and normal launches
 without a test harness. `browser_open_water.py` is called by the main browser
 suite and exercises the production console without `?test`: discovery,
-animated acceleration, freeze/resume, all three replays and out-of-bounds UI.
+animated acceleration, freeze/resume, all published replays and out-of-bounds UI.
 It renders the actual WebAudio horn offline and checks signal level, sustained
 harmonics, attack/release, voice limiting and mute before/during a blast. This
 checks the signal, not a claim of measured real-world acoustic fidelity.
+`browser_audio_mix.py` additionally renders the production full-ahead/full-astern
+engine with a horn, repeated horn presses, engine-order bell and impact cue at
+44.1, 48 and 96 kHz. It checks a peak ceiling of 0.15 full scale, finite/unclipped
+samples, a genuinely audible engine and exactly one horn. A separate lower
+horn ceiling catches accidentally restoring the old envelope. Offline scheduling
+is held until the synchronous batch is installed so the renderer cannot race
+through seconds between JS calls. This is not a calibrated physical-speaker test.
 
 The standalone build is checked for external assets
 and for making no network requests. The page-error listeners must stay empty.

@@ -3,7 +3,9 @@
     // Four beating reeds, including a semitone, rather than two decaying sine bells.
     // Exported separately so the real graph can be rendered in an OfflineAudioContext.
     function soundHorn(ctx, destination = ctx.destination) {
-        const now = ctx.currentTime, duration = 1.75;
+        // Keep the abrasive reed drive, but leave room for the running engine and cues.
+        // Halving only the final envelope lowers the horn by approximately 6 dB.
+        const now = ctx.currentTime, duration = 1.75, attackLevel = .0425, sustainLevel = .036;
         const envelope = ctx.createGain(), lowpass = ctx.createBiquadFilter();
         const highpass = ctx.createBiquadFilter(), drive = ctx.createWaveShaper();
         const mix = ctx.createGain(), sources = [], nodes = [envelope, lowpass, highpass, drive, mix];
@@ -21,8 +23,8 @@
         lowpass.Q.value = .7;
         mix.gain.value = .32;
         envelope.gain.setValueAtTime(0, now);
-        envelope.gain.linearRampToValueAtTime(.085, now + .09);
-        envelope.gain.linearRampToValueAtTime(.072, now + 1.18);
+        envelope.gain.linearRampToValueAtTime(attackLevel, now + .09);
+        envelope.gain.linearRampToValueAtTime(sustainLevel, now + 1.18);
         envelope.gain.exponentialRampToValueAtTime(.0001, now + duration);
         mix.connect(drive); drive.connect(highpass); highpass.connect(lowpass);
         lowpass.connect(envelope); envelope.connect(destination);
@@ -53,9 +55,9 @@
                 // AudioParam.value is not necessarily the value of its scheduled
                 // ramp (notably before offline rendering). Hold the envelope's
                 // actual level, then fade; muting before attack stays silent.
-                const held = age < .09 ? .085 * age / .09
-                    : age < 1.18 ? .085 + (.072 - .085) * (age - .09) / 1.09
-                    : .072 * Math.pow(.0001 / .072, Math.min(1, (age - 1.18) / (duration - 1.18)));
+                const held = age < .09 ? attackLevel * age / .09
+                    : age < 1.18 ? attackLevel + (sustainLevel - attackLevel) * (age - .09) / 1.09
+                    : sustainLevel * Math.pow(.0001 / sustainLevel, Math.min(1, (age - 1.18) / (duration - 1.18)));
                 envelope.gain.cancelScheduledValues(time);
                 envelope.gain.setValueAtTime(held, time);
                 envelope.gain.linearRampToValueAtTime(0, time + .012);

@@ -101,11 +101,11 @@
                     ['DeadSlow.warp(150, 200, 0)', 'Reposition the player only, stop motion; heading in degrees.'],
                     ['DeadSlow.repair()', 'Restore the hulls; does not erase contacts or failure.'],
                     ['DeadSlow.state()', 'A detached snapshot; inspecting it never taints a normal run.'],
-                    ['DeadSlow.runs()', 'List the three real control recordings and their author times.'],
+                    ['DeadSlow.runs()', 'List the available control recordings and their author times.'],
                     ['DeadSlow.times()', 'All harbors: verified times or null, separately from medal targets.'],
                     ['DeadSlow.timeline("bigger-boat")', 'Inspect the fixed-time input events.'],
                     ['DeadSlow.watch("bigger-boat", 8)', 'Watch the actual verification run with the normal renderer.'],
-                    ['DeadSlow.verify("all")', 'Execute all three recordings now; return measured verification reports.'],
+                    ['DeadSlow.verify("all")', 'Execute all published recordings now; return measured verification reports.'],
                     ['DeadSlow.report()', 'Inspect the last replay result.'],
                     ['DeadSlow.normal()', 'Restore 1× time and start a fresh, ranked individual attempt.']
                 ];
@@ -144,7 +144,11 @@
                 return copy({ level: s.level.id, status: s.status, timeScale: rate, replay: playback?.fixture.level || null, input: s.input, run: s.run });
             },
             runs() {
-                const rows = V.runs.map(f => ({ id: f.level, authorTime: f.expectedTime, method: 'control-only', source: f.source }));
+                const rows = V.runs.map(f => {
+                    const l = bridge.levels.find(l => l.id === f.level);
+                    return { id: f.level, world: l.worldNumber, harbor: l.stageNumber, name: l.name,
+                        authorTime: f.expectedTime, method: 'control-only', source: f.source };
+                });
                 log('table', rows); return rows;
             },
             times() {

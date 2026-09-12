@@ -196,7 +196,7 @@ bundle is ignored by git and rebuilt by the deployment workflow.
 npm run check              # Parse every JS module and check reproducible bundling
 npm run build
 npm test                   # Physics, jobs, records, control replays and local server
-npm run verify:runs        # All three published author runs, using timed inputs only
+npm run verify:runs        # All published author runs, using timed inputs only
 ```
 
 Browser checks are optional development dependencies, separate from playing:
@@ -219,8 +219,11 @@ for coverage, limitations and reproducible trajectory details.
 
 The browser console welcomes curious captains. Type `DeadSlow.help()` for
 level jumps, 0–32× time, frozen stepping, helm overrides, warping and the actual
-verification recordings. `DeadSlow.watch("bigger-boat", 8)` plays a real
-control-only rescue; `DeadSlow.verify("all")` measures the three reference runs.
+verification recordings. `DeadSlow.runs()` lists twelve clean,
+control-only recordings. Try `DeadSlow.watch("dogleg", 8)` for a turning approach,
+`DeadSlow.watch("granite-needle", 16)` for the heavy barge, or
+`DeadSlow.watch("island-exchange", 16)` for the ferry return service.
+`DeadSlow.verify("all")` measures every published reference run.
 `DeadSlow.times()` keeps their author times separate from unverified medal
 pace targets. Assisted runs cannot replace normal records; `DeadSlow.normal()`
 starts fresh at normal speed. See the [console guide](docs/CONSOLE.md).

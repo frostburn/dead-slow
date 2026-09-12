@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.1.1 — A Quieter Horn, More Watchkeeping
+
+- Lower the horn's final envelope by approximately 6 dB while preserving the
+  beating reed chord, saturation, attack/release and engine volume.
+- Test the actual full-power engine, horn, engine-order bell and impact cue
+  together at 44.1, 48 and 96 kHz, with no stacked horn voices or clipped samples.
+- Add nine clean, fixed-control recordings: basic docking, the dogleg,
+  timed boom, lock, stern-first parking, tidal crossing, double booms,
+  the heavy barge and the island ferry exchange. Twelve runs are now watchable.
+- Include harbor names/worlds in the console run list. Discover additional
+  fixture files automatically and validate their input-only format in tests.
+- Keep all playback unranked and all existing physics, levels and records intact.
+
 ## 3.1.0 — Open Water
 
 - Remove all archipelago perimeter coasts; open the west side of every Coast

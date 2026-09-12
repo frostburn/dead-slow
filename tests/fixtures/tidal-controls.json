@@ -1,0 +1,20 @@
+{
+  "level": "tidal",
+  "description": "Fixed-time helm inputs only; no repositioning, altered physics or objective shortcuts. Cross the sandbar while the rising tide provides clearance, then brake and settle at the tidal quay.",
+  "events": [
+    {
+      "time": 0,
+      "throttle": 4
+    },
+    {
+      "time": 52.575,
+      "throttle": -3
+    },
+    {
+      "time": 72.95833333333333,
+      "throttle": 0
+    }
+  ],
+  "duration": 85,
+  "expectedTime": 81.225
+}

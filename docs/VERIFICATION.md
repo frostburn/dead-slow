@@ -1,36 +1,47 @@
-# Release verification — 3.1.0
+# Release verification — 3.1.1
+
+Prepared against `frostburn/dead-slow` main at
+`cdb5998c95145fb893c903adc0fe532c2a793f23`. Physics, level layouts and saved-record
+formats are unchanged by this update.
 
 | Check | Local result |
 | --- | --- |
-| JavaScript parse / deterministic offline bundle | 26 files, passed |
-| Node tests | 164 passed, 0 failed |
-| Chromium browser checks | 158 passed, 0 page errors |
-| No Lee Shore control-only replay | Clean, 78.641667 seconds |
-| The First Crossing control-only replay | Clean, 123.950000 seconds |
-| A Bigger Boat control-only replay | Clean, 187.900000 seconds |
-| All 36 charts / starting hulls | Rendered; open approaches and collision-free starts checked |
-| Ten later island starts | Required positioning legs checked; no automatic pickup/boarding |
-| All 12 island job sequences | Prerequisites and completion checked in isolation |
-| Console acceleration | Same 120 Hz physics; freeze/resume and bounded frame batches checked |
-| Reference playback | All three execute in production console; assisted results never rank |
-| Divergent playback | Reported unverified and halted at the declared end |
-| Open-edge failure | Whole-hull exits, casualty exits, stopped clocks and retries checked |
-| Horn graph | Actual offline render: sustained harmonics, bounded level, no stacking, safe mute |
-| Logbook schema 4 | Old-route records/ghosts archived; re-import and reload checked |
+| JavaScript parse / deterministic offline bundle | 27 files, passed |
+| Node tests | 185 passed, 0 failed |
+| Chromium browser checks | 173 passed, 0 page errors |
+| Published control-only completions | 12 clean; all reproduced in Node and the production browser console |
+| Animated playback | First Crossing and Granite Needle reproduce their times at 32×; freeze/resume checked |
+| Replay input validation | Unique known levels, finite ordered timestamps, valid helm/line fields, no state-mutation fields |
+| Replay availability | Every checked-in control fixture is included in the offline bundle |
+| Leaderboards | Assisted/replayed results never overwrite PBs, ghosts or circuit records |
+| Mixed audio | Full ahead/astern + horn + order bell + impact cue, at 44.1/48/96 kHz |
+| Mixed output peak | At most 0.1197 full scale in these renders; regression ceiling 0.15 |
+| Digital clipping / non-finite samples | None in any mixed render |
+| Horn-only body RMS / peak | Approximately 0.02372 / 0.07189 at 44.1 kHz |
+| Horn behavior | Four beating reeds retained; no stacked blasts; safe attack/release and mute |
 
-These are local results, not remote GitHub Actions results. The changes were
-prepared against `main` at `5ca23997516d6f8a201b80f5b2d39f8ed829d437`.
+The twelve measured author times are listed in [CONSOLE.md](CONSOLE.md). Nine
+new recordings cover Dead Slow, The Long Way Round, Catch the Green,
+The Lockkeeper, Stern First, Water Under the Keel, Between Two Greens,
+The Granite Needle and Island Exchange. The three established recordings also
+still verify. Every published route uses fixed helm/line inputs through the
+actual game; no repositioning, objective shortcuts or relaxed physics. These
+are successful reference runs, not claimed optimal speedruns. The other
+twenty-four stages do not yet have published full control-only completions.
 
-Browser results use inline mounting because this execution environment blocks
-page navigation. The HTTP server is separately exercised by the Node suite.
-Touch checks use Chromium emulation, not a physical phone. State-machine tests
-position hulls explicitly; the three named trajectory replays do not. Later
-island departure geometry checks are not complete control-only playthroughs of
-those courses, and medal targets remain unverified design goals. Audio tests
-check the actual signal, not calibrated fidelity to a real vessel's horn.
-See `TESTING.md` and `CONSOLE.md` for methods and commands.
+Audio retains the reed waveshaper deliberately: its rough chord is intentional,
+but its final envelope is halved (approximately −6 dB) so it sits lower against
+the engine. Offline signal tests are not calibrated speaker/headphone tests and
+cannot exclude distortion elsewhere in a user's audio chain.
 
-Release archives include `reports/unit-tests.txt`, `reports/browser.json` and
-`reports/control-runs.json` as local evidence. `reports/` is gitignored, so
-these artifacts need not become repository history. Re-run checks after
-modifying source, recorded inputs or stage layouts.
+These are local results, separate from GitHub Actions. Browser tests use inline
+mounting with a storage shim; HTTP serving is separately tested by the Node
+suite. Touch checks use Chromium emulation, not physical devices. Existing
+objective-isolation tests do reposition hulls; published trajectory replays do
+not. See [TESTING.md](TESTING.md) for methods, reproduction and limitations.
+
+Re-run `npm run check`, `npm run build`, `npm test`, `npm run verify:runs`, and
+`python tests/browser_smoke.py --inline --report reports/browser.json` after
+changing source, recorded inputs or stage layouts. After adding/editing fixture
+JSON, run `npm run replays:sync` first. Reports and diagnostic captures belong in
+the gitignored `reports/` directory rather than source history.
