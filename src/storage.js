@@ -71,7 +71,11 @@
             result.archivedRaces['grand-tour-36'] = retain([...result.archivedRaces['grand-tour-36'], ...result.races['grand-tour']]);
             result.races['grand-tour'] = [];
         }
-        if (data.version < 6) {
+        // World 4 first appeared in schema 5, so only that schema can contain
+        // records for the layouts replaced by schema 6. Older schemas still
+        // need their own migrations above, but must not have unrelated stage
+        // IDs swept into this archive when imported.
+        if (data.version === 5) {
             for (const id of REDESIGNED) {
                 if (!result.stages[id]) continue;
                 result.archivedStages[id] = result.stages[id];
