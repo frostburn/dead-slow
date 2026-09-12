@@ -168,11 +168,11 @@ test('moving target uses a future interception point, not its current hull centr
 });
 test('time insertion records real history, preserves velocity/fuel, and keeps the run clock',()=>{
     const t=load('yesterday'),r=t.state.run,st=r.space;near(st.loop[0][1],r.ship.x);
-    park(r.ship,{...t.state.level.space.chrono,vx:.1});const reserve=st.fuel;
+    park(r.ship,{...X.gates(t.state.level.space)[0],vx:.1});const reserve=st.fuel;
     t.advance(2.01);assert.equal(st.phase,1);assert.ok(r.time>2);assert.ok(st.loopDuration>1.99);near(r.ship.vx,.1);near(st.fuel,reserve);
-    near(st.loop[st.loop.length-1][0],st.loopDuration);assert.ok(r.distance<.21,'temporal relocation is not distance travelled');
-    const recorded=X.echoAt(st,0);near(recorded.x,t.state.level.start[0]);
-    park(r.ship,X.echoAt(st,r.time-st.loopStart+1/120));t.advance(1/120);
+    near(st.histories[0].loop.at(-1)[0],st.loopDuration);assert.ok(r.distance<.21,'temporal relocation is not distance travelled');
+    const history=st.histories[0], recorded=X.echoAt(history,0);near(recorded.x,t.state.level.start[0]);
+    park(r.ship,X.echoAt(history,(r.time+1/120-history.start+history.lead)%history.loopDuration));t.advance(1/120);
     assert.equal(t.state.status,'failed');assert.equal(r.failure.type,'paradox');
     t.retry();assert.equal(t.state.run.space.phase,0);assert.equal(t.state.run.space.loop.length,1);
 });
@@ -192,19 +192,19 @@ test('the Century Ship is selectable but excluded from both relevant marathons',
     t.load(47);t.finish();t.next();assert.equal(t.state.modal,'courses');assert.equal(t.state.index,47);
 });
 test('century 30-minute lower bound follows distance and maximum acceleration, with docking tolerance',()=>{
-    const l=L.find(l=>l.id==='century-ship'),a=l.space.acceleration/l.spec.mass,T=1800,v=l.berth.speed;
+    const l=L.find(l=>l.id==='century-ship'),a=Math.hypot(l.space.acceleration,l.space.lateral)/l.spec.mass,T=1800,v=l.berth.speed;
     const closest=l.berth.x-l.start[0]-l.berth.l/2;
     const maxAt30Min=a*T*T/4+v*T/2-v*v/(4*a);
-    near(closest,110550);near(maxAt30Min,97415.88);
-    assert.ok(closest>maxAt30Min);assert.equal(l.space.lateral,0);assert.equal(l.space.asteroids.length,0);
+    near(closest,110550);assert.ok(maxAt30Min < 103000);
+    assert.ok(closest>maxAt30Min);assert.equal(l.space.lateral,.04);assert.ok(l.space.asteroids.every(b=>b.planet && !b.motion));
     assert.equal(l.space.friendly,undefined);assert.equal(l.space.mother,undefined);
-    const f=require('./fixtures/century-ship-controls.json');assert.ok(f.expectedTime>1800);assert.equal(f.events.length,3);
+    const f=require('./fixtures/century-ship-controls.json');assert.ok(f.expectedTime>1800);assert.equal(f.events.length,8);
 });
 test('v4 logbooks preserve all stages and sea circuits while archiving the 36-stage Grand Tour',()=>{
     const d=S.fresh(),run={time:123,contacts:0,clean:true};d.version=4;
     d.stages['granite-needle']={runs:[run],ghost:[[0,1,2,0]],bestSplits:[99],clears:2,attempts:3};
     for(const id of ['coast','northwatch','archipelago','grand-tour'])d.races[id]=[run];
-    const n=S.sanitize(d);assert.equal(n.version,5);assert.equal(n.stages['granite-needle'].runs[0].time,123);
+    const n=S.sanitize(d);assert.equal(n.version,S.VERSION);assert.equal(n.stages['granite-needle'].runs[0].time,123);
     assert.deepEqual(n.stages['granite-needle'].ghost,[[0,1,2,0]]);assert.deepEqual(n.stages['granite-needle'].bestSplits,[99]);
     for(const id of ['coast','northwatch','archipelago'])assert.equal(n.races[id].length,1);
     assert.equal(n.races['grand-tour'].length,0);assert.equal(n.archivedRaces['grand-tour-36'].length,1);

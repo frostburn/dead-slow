@@ -106,7 +106,7 @@ or create impulse after fuel exhaustion. Release leaves both velocities intact.
 The friendly must settle in its own cradle after the beam has actually been
 used. The capture crew secures it and releases the beam. You must still dock
 the tug. A secured friendly remains a collision obstacle. Perihelion Dispatch
-requires fuel before accepting the beam lock, then combines rescue and flares.
+requires fuel before accepting the beam lock, then combines rescue and drifting radiation cover.
 
 ## Light is geometry
 
@@ -114,11 +114,19 @@ Light travels horizontally from the left. Convex asteroid silhouettes cast
 shadows; exposed hull vertices and the centre determine illuminated fraction.
 Partial cover is partial protection, not an all-or-nothing centre-point test.
 
-During a flare, a fully exposed hull heats at 34 percentage points per second;
-full cover cools at 22 points per second. Reaching 100% heat is fatal. Quiet
-intervals also cool. Schedule lateral transfers for the quiet period and brake
-before drifting out of cover. The dispatch tender is radiation-hardened; the
-tug is not. Retry resets all phases deterministically.
+The two shelter missions now use **continuous radiation**. A fully exposed hull
+heats at 34 percentage points per second; full cover cools at 22 points per second.
+Reaching 100% heat is fatal. The shields drift steadily rather than waiting for a
+short flare-free sprint. Haven migrates north at 0.30 m/s. Its shadow reaches the
+station’s centred capture hull around **05:25**, and leaves around **13:30**. Take
+the eight-second survey reading, then use that broad arrival window.
+
+The flight computer samples future full-hull cover every five seconds and labels
+its estimate with ≈. The forecast is guidance, not an objective lock or finish
+timer. Position, hull geometry and the actual shadows determine exposure on every
+tick. Perihelion Dispatch’s slowly opposing shadow lanes overlap during the rescue;
+the station’s centred capture hull loses full cover at approximately **08:25**.
+The dispatch tender is radiation-hardened; the tug is not. Retry resets all motion.
 
 **Borrowed Sunlight** reverses the incentive. Every jet draws directly from
 solar cells, with no battery; full shadow gives zero thrust and zero propellant
@@ -129,49 +137,72 @@ field; its moving maintenance drones demand a stable, correctly timed coast.
 
 ## Yesterday Has Right of Way
 
-The first flight records actual trajectory samples at 30 Hz, with explicit
-initial and endpoint poses. Dock at the chronogate and it inserts you into the
-return lane with your arrival velocity, orientation and fuel. The score clock
-never rewinds. Your recorded first flight now plays as a solid violet craft.
-It follows your own path, not a supplied generic obstacle animation. Its final
-pose remains occupied after playback ends. A hull overlap causes a paradox and
-ends the run; the ordinary PB ghost remains harmless.
+**Janus Station** is a physical concourse, not painted scenery. Two large freight
+stacks force a winding path between its bays. The west entrance stays open; the
+station plates and equipment blocks share their drawing and collision geometry.
 
-The first-leg recording window is fifteen simulated minutes. Retry clears the
-history. The gate's intentional in-game relocation is not counted as travel
-and is not a test or console positioning shortcut.
+Capture chronogate **A**, then **B**, then the experimental terminal. Each gate has
+an explicitly marked **A′ / B′ arrival site**. Both require two seconds of relative
+rest with jets cut. An insertion preserves velocity, orientation and remaining
+fuel; the score clock never rewinds and the jump is not counted as travel.
+
+Each leg records your actual trajectory at 30 Hz, with initial and endpoint poses.
+The jump itself is never interpolated into a diagonal ghost path. Gate A starts
+its history 18 recorded seconds ahead; B starts its own 32 seconds ahead. Each
+history repeats its recorded leg, resetting to its own starting point on each
+cycle. The first history keeps its clock when the second is introduced. They do
+not disappear when you wait and do not push each other. Only your overlap with a
+solid history causes a paradox. Your optional personal-best ghost remains harmless.
+
+The final leg therefore shares the concourse with **two** past selves. The three
+marked passing bays and different lines through the central aisle let you yield
+or pass, rather than retracing your previous line blindly. A deliberately cautious
+reference flight stops at its turns and takes **20:50.01**; this is not an optimal
+speedrun. Each recorded leg has a fifteen-minute limit; retry clears both histories.
 
 ## The Century Ship: why thirty minutes cannot suffice
 
-The nearest-system capture centre is 110,592 metres from the departure centre
-on this **compressed** interstellar chart. Maximum acceleration magnitude is
-0.12 m/s². This craft has no lateral thrusters, beam, cannon, nearby collision
-body or other source of momentum. Rotating can redirect the main burn, not
-increase its magnitude. The final cradle permits at most 0.24 m/s relative
-speed and is stationary.
+The nearest-system capture centre is 110,592 metres from departure on this
+**compressed** interstellar chart. Main acceleration is 0.12 m/s² and lateral
+acceleration 0.04 m/s². Even simultaneous full main and lateral burns have magnitude
+at most `hypot(0.12, 0.04) = 0.126491106 m/s²`. Rotational jets do not add translation.
 
-Give an hypothetical optimal pilot even more freedom: instant engine changes,
-unlimited propellant, continuous maximum acceleration in any direction, and a
-point-sized craft that may finish anywhere inside the cradle. The closest such
-capture point is still **110,550 metres** ahead. For a flight lasting T with
-initial x-velocity zero and final x-velocity at most v, its velocity envelope is
-bounded by `min(a*t, v + a*(T-t))`. Integrating this best-case envelope gives
+**Erebus**, a 3,800-metre-radius rogue planet, blocks the straight route. The chart
+is now 18 km tall, leaving real space to pass above or below its limb. The normal
+camera tracks locally; the overview and route strip mark the planet. There is no
+gravity assist. Any planetary surface overlap ends the mission, rather than giving
+a collision impulse that could be exploited as free braking or steering.
+
+Grant a hypothetical optimal pilot instant engine response, unlimited fuel,
+maximum combined acceleration in any direction, no planet, and a point-sized craft
+that can finish anywhere in the cradle. The closest capture point is still
+**110,550 metres** ahead; the stationary cradle allows final speed 0.24 m/s. The
+best possible x-velocity envelope is `min(a*t, v + a*(T-t))`, so
 
 ```text
 maximum distance = a*T²/4 + v*T/2 - v²/(4*a)
-with a = 0.12, T = 1800 seconds, v = 0.24:
-maximum distance = 97,415.88 metres < 110,550 metres.
+a = hypot(0.12, 0.04), T = 1800 seconds, v = 0.24:
+maximum distance = 102,673.68 metres < 110,550 metres.
 ```
 
-Even that over-generous ship cannot arrive in thirty minutes. The actual hull,
-alignment, finite engine response and two-second capture hold cannot improve
-its bound. There is no `time >= 1800` completion gate. The checked-in clean
-flight uses just three commands and completes in **1922.333333 seconds**:
+Successful voyages cannot use surface contacts, beams, cannons or moving obstacles
+to gain an extra impulse. The real hull, finite actuator response, planet detour
+and two-second capture hold cannot improve the relaxed bound. There is no
+`time >= 1800` completion gate.
+
+The clean reference uses **eight commands** and completes in **1922.333333 seconds**.
+It keeps the main-burn schedule while independently shifting north by 4,649.9161 m,
+clearing the planet, then reversing that lateral transfer:
 
 ```text
-   0.000000 s  Full forward
- 959.833333 s  Full reverse
-1920.000000 s  Neutral
+   0.000000 s  Full forward + left lateral jets
+ 340.950000 s  Right lateral jets
+ 681.900000 s  Cut lateral jets
+ 959.833333 s  Full reverse main thrust
+1200.000000 s  Right lateral jets
+1540.950000 s  Left lateral jets
+1881.900000 s  Cut lateral jets
+1920.000000 s  Cut main thrust
 ```
 
 `DeadSlow.watch("century-ship", 32)` is roughly a one-minute real-time viewing
@@ -188,16 +219,16 @@ No fixture sets coordinates, edits fuel, bypasses objectives or relaxes physics.
 
 | ID for `DeadSlow.watch(id, speed)` | Mission | Measured clean seconds |
 | --- | --- | ---: |
-| `vacuum` | Nothing to Push Against | 130.608333 |
+| `vacuum` | Nothing to Push Against | 148.358333 |
 | `wandering-stone` | A Stone with a Schedule | 128.858333 |
 | `last-fill` | The Last Fill Before Dark | 358.358333 |
 | `family-reunion` | Some Assembly Required | 367.466667 |
 | `newtons-broadside` | Newton’s Broadside | 233.833333 |
 | `moving-argument` | A Moving Argument | 242.833333 |
 | `equal-and-opposite` | Equal and Opposite | 228.358333 |
-| `umbra` | The Safe Side of a Stone | 193.858333 |
+| `umbra` | The Safe Side of a Stone | 398.508333 |
 | `borrowed-sun` | Borrowed Sunlight | 410.783333 |
-| `yesterday` | Yesterday Has Right of Way | 286.608333 |
+| `yesterday` | Yesterday Has Right of Way | 1250.008333 |
 | `cold-transit` | Cold Transit | 163.108333 |
 | `perihelion-dispatch` | Perihelion Dispatch | 393.258333 |
 | `century-ship` | The Century Ship (bonus) | 1922.333333 |

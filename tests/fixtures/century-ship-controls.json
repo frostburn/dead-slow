@@ -1,11 +1,16 @@
 {
   "level": "century-ship",
-  "description": "Three timed engine orders, no interventions. The acceleration-and-distance bound forces a voyage longer than thirty minutes even before considering fuel or control imperfections.",
-  "events": [
-    {"time": 0, "throttle": 4},
-    {"time": 959.8333333333334, "throttle": -3},
-    {"time": 1920, "throttle": 0}
-  ],
+  "description": "Eight ordinary main/lateral jet commands. Build a northern clearance offset, pass Erebus, return to the destination line and remove both velocity components. No pose writes or altered physics.",
   "duration": 1930,
-  "expectedTime": 1922.3333333333333
+  "expectedTime": 1922.3333333333333,
+  "events": [
+    {"time": 0, "throttle": 4, "thruster": -1},
+    {"time": 340.95, "thruster": 1},
+    {"time": 681.9, "thruster": 0},
+    {"time": 959.8333333333334, "throttle": -3},
+    {"time": 1200, "thruster": 1},
+    {"time": 1540.95, "thruster": -1},
+    {"time": 1881.9, "thruster": 0},
+    {"time": 1920, "throttle": 0}
+  ]
 }
