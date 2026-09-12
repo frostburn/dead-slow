@@ -18,7 +18,7 @@
         function findLevel(worldOrId, stage) {
             const i = typeof worldOrId === 'string' ? bridge.levels.findIndex(l => l.id === worldOrId) :
                 bridge.levels.findIndex(l => l.worldNumber === worldOrId && l.stageNumber === stage);
-            if (i < 0) throw new RangeError('Unknown harbor. Use its id or (world 1–3, harbor 1–12); DeadSlow.levels() lists them.');
+            if (i < 0) throw new RangeError('Unknown harbor. Use its id or (world 1–4, stage 1–12; World 4 stage 13 is the bonus); DeadSlow.levels() lists them.');
             return i;
         }
         function fixture(id) {
@@ -78,7 +78,7 @@
                 level: p.fixture.level, status: s.status, clean, time: s.run.time,
                 expectedTime: p.fixture.expectedTime, difference: error,
                 verified: s.status === 'complete' && clean && Math.abs(error) <= V.step + 1e-6,
-                contacts: s.run.contacts, lineBreaks: s.run.jobs.stats.lineBreaks,
+                contacts: s.run.contacts, lineBreaks: s.run.jobs.stats.lineBreaks, space: s.run.space ? copy(s.run.space.stats) : null,
                 steps: p.tick, eventsApplied: p.event, ranked: false,
                 method: 'Fixed control inputs through the live game; no repositioning or objective shortcuts.'
             };
@@ -97,7 +97,7 @@
                     ['DeadSlow.speed(8)', '0–32× wall-time rate. Physics always uses 1/120 second steps. 0 freezes.'],
                     ['DeadSlow.step(30)', 'Advance up to 600 simulated seconds, including replay controls.'],
                     ['DeadSlow.controls({throttle: 4})', 'Persistent helm: throttle −3…4; rudder/thruster/winch −1…1.'],
-                    ['DeadSlow.line()', 'Make fast / cast off using the real range and speed checks.'],
+                    ['DeadSlow.line()', 'Make fast / cast off at sea; lock / release the rescue beam in space.'],
                     ['DeadSlow.warp(150, 200, 0)', 'Reposition the player only, stop motion; heading in degrees.'],
                     ['DeadSlow.repair()', 'Restore the hulls; does not erase contacts or failure.'],
                     ['DeadSlow.state()', 'A detached snapshot; inspecting it never taints a normal run.'],
@@ -114,7 +114,7 @@
                 return commands;
             },
             levels() {
-                const rows = bridge.levels.map(l => ({ world: l.worldNumber, harbor: l.stageNumber, id: l.id, name: l.name }));
+                const rows = bridge.levels.map(l => ({ world: l.worldNumber, harbor: l.stageNumber, id: l.id, name: l.name, bonus: !!l.bonus }));
                 log('table', rows); return rows;
             },
             level(worldOrId, stage) { load(findLevel(worldOrId, stage)); return menu.state(); },
@@ -146,14 +146,14 @@
             runs() {
                 const rows = V.runs.map(f => {
                     const l = bridge.levels.find(l => l.id === f.level);
-                    return { id: f.level, world: l.worldNumber, harbor: l.stageNumber, name: l.name,
+                    return { id: f.level, world: l.worldNumber, harbor: l.stageNumber, name: l.name, bonus: !!l.bonus,
                         authorTime: f.expectedTime, method: 'control-only', source: f.source };
                 });
                 log('table', rows); return rows;
             },
             times() {
                 const rows = bridge.levels.map(l => ({
-                    world: l.worldNumber, harbor: l.stageNumber, id: l.id,
+                    world: l.worldNumber, harbor: l.stageNumber, id: l.id, bonus: !!l.bonus,
                     verifiedAuthorTime: V.runs.find(f => f.level === l.id)?.expectedTime ?? null,
                     goldTarget: l.pace[0], silverTarget: l.pace[1], bronzeTarget: l.pace[2]
                 }));

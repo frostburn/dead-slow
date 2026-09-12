@@ -4,11 +4,11 @@ const P = require('../src/physics.js'), L = require('../src/levels.js'), S = req
 const { create } = require('./headless.cjs');
 const near = (a, b, eps = 1e-8) => assert.ok(Math.abs(a - b) < eps, `${a} != ${b}`);
 const level = id => L.find(l => l.id === id);
-test('three worlds each contain twelve distinct, selectable stages', () => {
-    assert.equal(L.worlds.length, 3);
-    assert.equal(new Set(L.map(l => l.id)).size, 36);
+test('four worlds each contain twelve circuit stages, plus one selectable bonus', () => {
+    assert.equal(L.worlds.length, 4);
+    assert.equal(new Set(L.map(l => l.id)).size, 49);
     for (const w of L.worlds) {
-        const stages = L.filter(l => l.campaign === w.id);
+        const stages = L.filter(l => l.campaign === w.id && !l.bonus);
         assert.equal(stages.length, 12);
         assert.deepEqual(stages.map(l => l.stageNumber), Array.from({ length: 12 }, (_, i) => i + 1));
     }
@@ -101,7 +101,7 @@ test('v1 import preserves exposed PBs and archives the incompatible old circuit'
         ] };
     const s = S.create({ getItem: () => JSON.stringify(data), setItem() {
         } });
-    assert.equal(s.data.version, 4);
+    assert.equal(s.data.version, S.VERSION);
     assert.equal(s.best('crosscurrent').time, 123);
     assert.equal(s.best('crosscurrent-sheltered'), null);
     assert.equal(s.data.marathon[0].time, 2222);
@@ -150,19 +150,26 @@ test('new project load applies its explicit mass and keeps the longer hull', () 
     assert.equal(t.state.run.ship.mass, 2.25);
     assert.equal(t.state.run.ship.length, 34);
 });
-for (const id of ['coast', 'northwatch', 'archipelago', 'grand-tour'])
+for (const id of ['coast', 'northwatch', 'archipelago', 'meridian', 'grand-tour'])
     test(`${id}: circuit route, transitions, retry time and final record`, () => {
         const t = create();
         t.marathon(id);
-        const r = t.state.marathon, expected = id === 'grand-tour' ? 36 : 12;
+        const r = t.state.marathon, expected = id === 'grand-tour' ? 48 : 12;
         assert.equal(r.route.length, expected);
-        assert.equal(t.state.index, id === 'northwatch' ? 12 : id === 'archipelago' ? 24 : 0);
+        assert.equal(t.state.index, id === 'northwatch' ? 12 : id === 'archipelago' ? 24 : id === 'meridian' ? 36 : 0);
         t.advance(3);
         t.retry();
         assert.ok(r.total > 2.99);
         assert.equal(r.retries, 1);
         for (let j = 0; j < expected; j++) {
             const l = t.state.level;
+            // Circuit progression test only: spacecraft objective state machines
+            // and complete control recordings are checked in space.test.cjs.
+            if (l.space) {
+                t.advance(2); t.finish();
+                if (j < expected - 1) t.next();
+                continue;
+            }
             t.state.run.buoyIndex = l.buoys.length;
             t.state.run.lock.phase = 'exit';
             t.state.run.jobs.index = l.jobs.length;
@@ -178,7 +185,7 @@ for (const id of ['coast', 'northwatch', 'archipelago', 'grand-tour'])
         }
         assert.equal(r.stages, expected);
         assert.equal(t.state.storage.races[id].length, 1);
-        assert.ok(t.state.storage.races[id][0].time >= 3 + 2 * expected);
+        assert.ok(t.state.storage.races[id][0].time >= 3 + 2 * expected - 1e-8);
         t.next();
         assert.equal(t.state.marathon, null);
         assert.equal(t.state.modal, 'courses');

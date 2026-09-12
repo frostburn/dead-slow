@@ -554,18 +554,20 @@
             id: 'archipelago', number: 3, name: 'The Archipelago', subtitle: 'SUMMER SERVICE · EVERY ISLAND COUNTS', theme: 'archipelago', description: 'A long-light island service. Carry cars between village ramps, tow stranded vessels past granite skerries, relocate a floating sauna and keep the islanders moving.'
         }
     ];
+    worlds.push({ id: 'meridian', number: 4, name: 'The Black Meridian', subtitle: 'DEEP SPACE · NO FREE BRAKES', theme: 'space', description: 'Twelve spacecraft assignments: moving cradles, fuel rendezvous, assembly, recoil, beam rescue, stellar shadows and a collision with your own history. The Century Ship is a separate long-haul bonus, outside every marathon.' });
+    const spaceLevels = typeof module !== 'undefined' && module.exports ? require('./space-levels.js') : root.HarborSpaceLevels;
     const islandLevels = typeof module !== 'undefined' && module.exports ? require('./archipelago.js') : root.HarborArchipelago;
-    levels.push(...night, ...islandLevels);
+    levels.push(...night, ...islandLevels, ...spaceLevels);
     levels.forEach((l, i) => {
-        const w = worlds[Math.floor(i / 12)];
+        const w = worlds[Math.min(3, Math.floor(i / 12))];
         l.campaign = w.id;
         l.worldNumber = w.number;
-        l.stageNumber = i % 12 + 1;
+        l.stageNumber = i >= 36 ? i - 35 : i % 12 + 1;
         l.theme = w.theme;
         // Working harbors open west onto the fairway; the skerries have no perimeter coast.
-        l.openSides = l.openSides || (w.number === 3 ? ['n', 'e', 's', 'w'] : ['w']);
+        l.openSides = l.openSides || (w.number >= 3 ? ['n', 'e', 's', 'w'] : ['w']);
         const oldTag = l.tag?.split(' / ')[1] || l.kind.toUpperCase();
-        l.tag = `W${w.number} · ${String(l.stageNumber).padStart(2, '0')} / ${oldTag}`;
+        l.tag = `W${w.number} · ${l.bonus ? "BONUS" : String(l.stageNumber).padStart(2, '0')} / ${oldTag}`;
         l.current = l.current || [0, 0];
         l.wind = l.wind || [0, 0];
         for (const key of ['obstacles', 'buoys', 'gates', 'traffic', 'speedZones', 'shelters', 'currentZones', 'islands', 'jobs', 'towables'])

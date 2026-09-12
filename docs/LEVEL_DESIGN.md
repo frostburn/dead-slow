@@ -7,7 +7,7 @@ Heading zero points east; positive angles turn clockwise. Level headings are in
 radians; the UI converts them to compass bearings. Give each course a stable,
 unique kebab-case ID. IDs are record keys, not display names.
 
-`levels.js` owns the three-world catalog and the first two sets of twelve.
+`levels.js` owns the four-world catalog and the first two sets of twelve.
 `archipelago.js` supplies the third set. Common arrays are defaulted to empty in
 `levels.js`. World/stage numbering currently groups the catalog in sets of
 twelve; adding a differently sized world also requires changing that assignment
@@ -129,3 +129,17 @@ use observed human routes to tune later medals. Current puzzles should preserve
 room for correction and clearly mark their sheltered arrival water. Avoid
 project-history language such as “the original level” or “moved from World 1”
 in the player's brief, kind and tip: describe the situation and the task.
+
+## Space sectors
+
+`space-levels.js` supplies twelve circuit stages plus `bonus: true` on the
+Century Ship. See [SPACE.md](SPACE.md) for configuration and invariants.
+The catalog exposes 49 selectable stages, but circuit builders explicitly filter
+out bonus levels; individual progression also stops before the bonus.
+
+Space objects use analytic `motion` fields (`vx`, `vy`, sinusoidal `ax`/`ay`,
+`period`, `phase`, `spin`) with matching velocity derivatives. In space, `ax`
+and `ay` are oscillation amplitudes in metres, not acceleration. Docking
+cradles, visible asteroids, collisions and shadows use the same state.
+Keep space authoring out of `physics.integrate`: that function remains the
+marine model and its existing control recordings must not drift.

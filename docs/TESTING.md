@@ -36,7 +36,7 @@ The following complete trajectories use actual timed player controls and the
 same fixed-step state machine as the game. They do not alter positions,
 velocities, physics constants or objective progress:
 
-The twelve published recordings and their measured times are listed in the
+The twenty-five published recordings and their measured times are listed in the
 [console guide](CONSOLE.md#watch-the-actual-verification-runs). Every fixture is
 replayed through both the Node game harness and the production Chromium console,
 and checked against its recorded completion time within one 120 Hz tick.
@@ -47,7 +47,7 @@ an exposed cross-current, loading/unloading, a late-stage return ferry service,
 and approaching and towing the heavy work barge. The two later island recordings
 start at their normal fairway/remote-tug departures, not alongside the job target.
 The ferry exchange returns with the new manifest; the barge must settle in its
-own berth even after the tug is parked. All twelve finish cleanly: no contacts,
+own berth even after the tug is parked. All published recordings finish cleanly: no contacts,
 wake violations, groundings or parted lines. They are not claimed optimal.
 
 The other twenty-four levels still lack published control-only completions.
@@ -116,3 +116,28 @@ Local multiplayer, online records, physical hydrodynamic calibration, arbitrary
 rope wrapping, all browser engines and every human-played medal route are not
 covered. Re-run control fixtures when changing physics. A geometry fit or
 state-machine test must never be reported as a complete navigational playthrough.
+
+## Space regression coverage
+
+`space.test.cjs` checks all starts and final-cradle sizes, no-drag coast and
+rotation, opposite burns, mass, propellant accounting, moving-frame captures,
+shadow geometry, fractional solar power, scanner blackout, radiation failure,
+equal/opposite beams, refuelling guards, assembly handover and collision
+envelope, cannon charge/flight/recoil, time history and paradox failure,
+whole-hull sector exits, bonus exclusion and schema-4 record migration.
+
+Every space mission also has a checked-in input-only fixture executed through
+the actual game in both Node and the production browser console. The Century
+Ship fixture executes its whole 32-minute simulation, not an accelerated
+position assignment. Its acceleration/distance lower bound is checked
+independently, with an intentionally generous point-sized docking allowance.
+`browser_space.py` adds mission UI, keyboard/cancelled-multitouch controls,
+an animated 32× flight, mobile layout and return-to-sea label restoration.
+
+The requested development pin is `playwright==1.62.0`. This sandbox's package
+index could not supply that version, so local browser checks used the existing
+Playwright 1.57.0 with system Chromium. No runtime dependency was added or
+older developer installation replaced. CI installs the pinned version in its
+fresh environment; consult the PR's actual check result for that verification.
+Pages actions are updated to `upload-pages-artifact@v5` and `deploy-pages@v5`;
+deployment stays manual/opt-in and is not run by the test suite.

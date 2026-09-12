@@ -1,0 +1,25 @@
+{
+  "level": "vacuum",
+  "description": "Ordinary timed helm and beam inputs through the actual game. No test repositioning, objective overrides or altered physics.",
+  "events": [
+    {"time": 0, "throttle": 4, "rudder": 0, "thruster": 0, "winch": 0},
+    {"time": 15.5, "throttle": 3},
+    {"time": 16, "throttle": 2},
+    {"time": 16.75, "throttle": 1},
+    {"time": 18.25, "throttle": 0},
+    {"time": 103, "throttle": -1},
+    {"time": 104.5, "throttle": -2},
+    {"time": 105.75, "throttle": -1},
+    {"time": 106, "throttle": -2},
+    {"time": 108.25, "throttle": -1},
+    {"time": 108.5, "throttle": -2},
+    {"time": 111.5, "throttle": -1},
+    {"time": 111.75, "throttle": -2},
+    {"time": 120.5, "throttle": -3},
+    {"time": 123.25, "throttle": -2},
+    {"time": 125.75, "throttle": -1},
+    {"time": 128.5, "throttle": 0}
+  ],
+  "duration": 134,
+  "expectedTime": 130.60833333333332
+}

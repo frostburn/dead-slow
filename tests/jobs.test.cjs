@@ -28,7 +28,7 @@ test('stage and world descriptions contain no development-history references', (
         assert.ok(!phrases.test(w.description), w.id);
 });
 test('all island polygons are convex and all starting/final hulls have room', () => {
-    for (const l of L.slice(24)) {
+    for (const l of L.filter(l => l.worldNumber === 3)) {
         const { s, w } = setup(l.id), obstacles = [...l.obstacles.map(P.rect), ...l.islands.map(i => i.poly)];
         for (const i of l.islands) {
             let sign = 0;
@@ -54,7 +54,7 @@ test('all island polygons are convex and all starting/final hulls have room', ()
     }
 });
 test('every ferry manifest balances, respects capacity, and ends empty', () => {
-    for (const l of L.slice(24)) {
+    for (const l of L.filter(l => l.worldNumber === 3)) {
         let count = 0;
         for (const j of l.jobs) {
             if (j.type === 'load') {
@@ -69,7 +69,7 @@ test('every ferry manifest balances, respects capacity, and ends empty', () => {
     }
 });
 test('every rescue target exists and is assigned exactly once', () => {
-    for (const l of L.slice(24)) {
+    for (const l of L.filter(l => l.worldNumber === 3)) {
         const ids = l.jobs.filter(j => j.type === 'tow').map(j => j.target);
         assert.equal(new Set(ids).size, ids.length, l.id);
         assert.deepEqual(ids.slice().sort(), l.towables.map(t => t.id).sort(), l.id);
@@ -391,12 +391,12 @@ test('gate safety also holds for the straight towline between two clear hulls', 
         l.gates.pop();
     }
 });
-test('v2 Grand Tour records are archived, not compared to the 36-stage route', () => {
+test('v2 Grand Tour records are archived, not compared to the 48-stage route', () => {
     const run = { time: 2700, contacts: 0, clean: true }, data = { version: 2, races: { coast: [run], northwatch: [run], 'grand-tour': [run] }, stages: { 'dead-slow': { runs: [
                     { ...run, time: 71 }
                 ], ghost: [[0, 53, 121, 0]], bestSplits: [] } } };
     const out = S.sanitize(data);
-    assert.equal(out.version, 4);
+    assert.equal(out.version, S.VERSION);
     assert.equal(out.races['grand-tour'].length, 0);
     assert.equal(out.archivedRaces['grand-tour-24'][0].time, 2700);
     assert.equal(out.races.coast[0].time, 2700);
@@ -418,7 +418,7 @@ test('current export/import preserves island records, ghosts and archived route 
     assert.equal(b.data.archivedRaces['grand-tour-24'][0].time, 3000);
     assert.equal(b.stage('bigger-boat').ghost.length, 2);
 });
-for (const l of L.slice(24))
+for (const l of L.filter(l => l.worldNumber === 3))
     test(`${l.id}: ordered service jobs gate the final arrival`, () => {
         const t = create();
         t.load(L.indexOf(l));

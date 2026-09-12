@@ -103,7 +103,7 @@ with sync_playwright() as p:
     page.evaluate('DeadSlowTest.load(12)')
     check('World 2 switches the bridge palette',page.locator('body').get_attribute('data-theme')=='night')
     page.click('#courses-btn')
-    check('World selector displays three campaign tabs',page.locator('[data-world]').count()==3)
+    check('World selector displays four campaign tabs',page.locator('[data-world]').count()==4)
     page.click('[data-world="1"]')
     check('World 1 contains twelve cards and sheltered approaches',page.locator('.level-card').count()==12 and page.locator('[data-stage="2"]').count()==1)
     page.click('[data-world="2"]')
@@ -172,7 +172,7 @@ with sync_playwright() as p:
     page.evaluate('DeadSlowTest.marathon("archipelago");DeadSlowTest.advance(3);DeadSlowTest.retry()')
     check('World 3 circuit starts at its own first island and retains retry time',page.evaluate('DeadSlowTest.state.index===24 && DeadSlowTest.state.marathon.total>=2.99 && DeadSlowTest.state.marathon.route.length===12'))
     page.evaluate('DeadSlowTest.marathon("grand-tour")')
-    check('Grand Tour uses the complete 36-stage route',page.evaluate('DeadSlowTest.state.marathon.route.length===36'))
+    check('Grand Tour uses the complete 48-stage route',page.evaluate('DeadSlowTest.state.marathon.route.length===48'))
     page.evaluate('DeadSlowTest.load(27);DeadSlowTest.lineAction()')
     shot(page,'sauna-desktop.png')
     page.evaluate('DeadSlowTest.load(24);DeadSlowTest.advance(8);DeadSlowTest.throttle(2);DeadSlowTest.advance(30)')
@@ -215,9 +215,9 @@ with sync_playwright() as p:
     check('All twelve archipelago cards remain selectable on a phone',mobile.locator('.level-card').count()==12)
     check('Mobile world menu has no horizontal overflow',mobile.evaluate('document.documentElement.scrollWidth<=innerWidth'))
     # Render every stage; simulation tests alone cannot detect canvas exceptions.
-    for i in range(36):
+    for i in range(49):
         page.evaluate('i=>DeadSlowTest.load(i)',i);page.wait_for_timeout(35)
-    check('All 36 stage charts render without an exception',not errors)
+    check('All 49 stage charts render without an exception',not errors)
     check('Production build is self-contained', '<script src=' not in html and '<link rel="stylesheet"' not in html)
     production=browser.new_page();production_errors=[];requests=[]
     production.on('pageerror',lambda e:production_errors.append(str(e)))
@@ -231,6 +231,8 @@ with sync_playwright() as p:
     check('No mobile JavaScript errors',not mobile_errors)
     from browser_open_water import check_open_water
     check_open_water(browser, check, html)
+    from browser_space import check_space
+    check_space(browser, check, html, args.screenshots)
     report={'passed':len(checks),'checks':checks,'first_harbor_time':actual['result']['time'],'errors':errors+mobile_errors}
     if args.report:
         args.report.parent.mkdir(parents=True,exist_ok=True)

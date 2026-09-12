@@ -1,10 +1,11 @@
 # DEAD SLOW — Harbor Trials
 
 **Neutral is not a brake.** A top-down ship-handling game about arriving slowly,
-with enough room left to stop. Thirty-six stages, three worlds, local speedrun
+with enough room left to stop—at sea or in vacuum. Forty-eight circuit stages
+across four worlds, a separate Century Ship bonus, local speedrun
 records, personal-best ghosts, keyboard controls and a multitouch helm.
 
-![The First Crossing, in the Nordic-inspired archipelago](docs/images/archipelago.png)
+![The Black Meridian: navigating between asteroid shadows](docs/images/black-meridian.webp)
 
 ## Play
 
@@ -26,7 +27,7 @@ for the game, build, server or Node tests. `npm ci` is optional and uses the
 included dependency-free lockfile. Set `PORT` to change the local port; set
 `HOST=0.0.0.0` only when intentionally exposing the server to your local network.
 
-## Three worlds
+## Four worlds
 
 **World 1 — The Sheltered Coast.** Twelve daylight harbor trials teach braking,
 berth alignment, gates, crossing traffic, locks, reverse parking, loading,
@@ -68,7 +69,47 @@ reach their first ramp; tugs start outside line-passing range and must approach
 the casualty. The positioning leg is part of the clock, not skipped setup.
 
 Every stage is selectable immediately. World circuits each cover twelve stages;
-the **Grand Tour** visits all thirty-six. Each route has its own record table.
+the **Grand Tour** visits all forty-eight non-bonus stages. Each route has its own record table.
+
+![Borderless archipelago chart, with the tug departing away from its tow](docs/images/open-archipelago.webp)
+
+## World 4 — The Black Meridian
+
+**Cutting thrust is not braking.** Spacecraft use a separate, drag-free simulation.
+Main engines, lateral jets and rotational jets share a finite propellant budget.
+Releasing the rotational jets leaves you spinning; opposite jets must remove the
+spin. Match the **relative velocity** of moving capture cradles, then cut every
+jet for the two-second docking hold.
+
+The twelve assignments include a moving asteroid's survey platform, a compulsory
+rendezvous with a fuel tanker, docking two tenders to a mothership and flying the
+heavier assembly, stationary and moving-target gunnery with real projectile flight
+and recoil, equal-and-opposite rescue beams, deadly solar flares, solar-only
+propulsion, and a collision with your own recorded past. **Cold Transit** adds an
+unpowered scanner corridor with moving drones; **Perihelion Dispatch** combines
+fuel, rescue and flare shelter.
+
+**The Century Ship** is a thirteenth, optional sector, outside every marathon.
+Its 110.592-km compressed interstellar route and 0.12 m/s² thrust limit impose a
+physical flight-time bound longer than thirty simulated minutes. There is no
+waiting timer. A clean, three-command reference flight takes **32:02.33**.
+These are planar local-frame puzzles, not an orbital or relativistic simulator;
+star-system distances are deliberately compressed.
+
+All **thirteen** space missions have clean, fixed-input author recordings. Try:
+
+```js
+DeadSlow.watch("family-reunion", 16)
+DeadSlow.watch("moving-argument", 8)
+DeadSlow.watch("equal-and-opposite", 16)
+DeadSlow.watch("yesterday", 16)
+DeadSlow.watch("century-ship", 32)
+```
+
+Run one at a time. `DeadSlow.speed(0)` freezes a replay; `DeadSlow.step(30)` advances
+it without changing the 120 Hz physics. Assisted flights stay out of normal
+records. See the [flight and mission guide](docs/SPACE.md) for mechanics, controls,
+verified times and the Century Ship's lower-bound argument.
 
 ## At the helm
 
@@ -93,6 +134,15 @@ The speedometer reports signed **ground motion**, not engine direction. AHEAD
 can remain positive while the propeller is reversing. ASTERN is negative;
 ABEAM identifies almost purely sideways motion. The drift instrument separates
 port and starboard motion. LOCAL SET reports the current along your own hull.
+
+### Space controls
+
+W/S change persistent fore/aft thrust. Space cuts main thrust. Hold A/D to apply
+rotation and Q/E for pure sideways translation. Counterfire to stop each motion.
+For rescue jobs, F locks/releases the beam, J attracts and K repels. Both craft
+feel the opposite force. Space HUD speeds are **m/s**, not knots; fuel is a
+reference-mass impulse budget, shared across jets and beams. Keyboard and touch
+controls can be held simultaneously.
 
 ### Ferry calls
 
@@ -131,7 +181,10 @@ rescue countdown. Delivered boats remain solid obstacles.
 
 Complete all clearance and service jobs. Fit your own hull inside the final
 **green** berth, face the arrow, slow below its stage-specific limit, reduce yaw,
-order neutral, let engine output drop below 15%, and hold for two seconds.
+order neutral, let engine output drop below 15%, and hold for two seconds. In
+space, match the cradle's velocity, keep relative spin below 0.012 rad/s and
+cut all jets (main output below 2%). Each world has a twelve-stage circuit; the
+Grand Tour has 48 stages. The Century Ship never enters either route.
 
 The clock is fixed-step **in-game time (120 Hz)**. Gates, traffic, tides and
 current pulses reset to identical phases on retry. Circuit clocks retain failed
@@ -153,13 +206,14 @@ leaderboard. Export the logbook before moving between files, browsers or hosts;
 then import it through **Logbook**. Import replaces the current local logbook.
 Storage denial or quota failure leaves the session playable and exportable.
 
-Logbooks using schemas 1, 2 and 3 are accepted. Schema 4 preserves the ten
-repositioned island stages' previous records, ghosts and splits in an archive,
-not on the new departure routes' boards. Earlier World 3 and 36-stage Grand Tour
-circuits are also archived because their positioning legs differ. The two
-island tutorials and World 1/2 records stay active. A previous 24-stage Grand
-Tour remains **archived**, never compared to a 36-stage route. Archived times
-are visible in the logbook, and their complete data remains in exports.
+Logbooks using schemas 1–5 are accepted. Schema 5 preserves individual stage
+records, ghosts, splits and all three sea-world circuits from version 3.1.1.
+The earlier **36-stage Grand Tour is archived**, not compared against the longer
+48-stage route. New World 4 and Century Ship records start separately.
+
+Older schema migrations still preserve dock-side island departure records and
+24-stage circuits in their existing archives; none are deleted. The logbook
+shows archived circuit times, and full archived data remains in exports.
 The same storage key is retained for same-origin upgrades. Renaming a local HTML file may create a separate storage origin in
 some browsers, so export/import is the reliable transfer path.
 
@@ -167,12 +221,16 @@ some browsers, so export/import is the reliable transfer path.
 
 ```text
 index.html                 Source page; loads modules directly
-style.css                  Responsive bridge, dialogs and three palettes
+style.css                  Responsive bridge, dialogs and four palettes
 src/
   physics.js               Hulls, forces, collisions, water, tide, tow constraint
   navigation.js            Shared open-edge collision, containment and warnings
   archipelago.js           Twelve island-service level definitions
-  levels.js                World catalog and harbor level definitions
+  levels.js                Four-world catalog and harbor level definitions
+  space-levels.js          Twelve spacecraft assignments and Century Ship bonus
+  space.js                 Vacuum, ephemerides, beams, cannon, solar and time travel
+  space-renderer.js        Star charts, spacecraft, rays, shadows and intercepts
+  space-ui.js              Space instruments, controls and marine-label restoration
   jobs.js                  Manifest, ramp, towline and rescue state machines
   storage.js               Records, ghosts, validation and migrations
   renderer.js              Procedural Canvas chart and vessels
@@ -180,11 +238,11 @@ src/
   verification.js          Generated, checked-in control recordings for offline replay
   console.js               Secret chart room, time controls and verification playback
   game.js                  Fixed-step orchestration, rules, input and UI
-tools/                    Offline builder, local server and trajectory verifier
-tests/                    Node tests, browser checks, fixed-input fixtures
-docs/                     Architecture, level design and testing notes
-.github/                  CI, optional Pages deployment and contribution forms
-dist/index.html           Generated offline game (included in release archives)
+ tools/                    Offline builder, local server and trajectory verifier
+ tests/                    Node tests, browser checks, fixed-input fixtures
+ docs/                     Architecture, level design and testing notes
+ .github/                  CI, optional Pages deployment and contribution forms
+ dist/index.html           Generated offline game (included in release archives)
 ```
 
 Edit `src`, `index.html` and `style.css`, not `dist/index.html`. The generated
@@ -219,14 +277,15 @@ for coverage, limitations and reproducible trajectory details.
 
 The browser console welcomes curious captains. Type `DeadSlow.help()` for
 level jumps, 0–32× time, frozen stepping, helm overrides, warping and the actual
-verification recordings. `DeadSlow.runs()` lists twelve clean,
+verification recordings. `DeadSlow.runs()` lists twenty-five clean,
 control-only recordings. Try `DeadSlow.watch("dogleg", 8)` for a turning approach,
 `DeadSlow.watch("granite-needle", 16)` for the heavy barge, or
 `DeadSlow.watch("island-exchange", 16)` for the ferry return service.
 `DeadSlow.verify("all")` measures every published reference run.
 `DeadSlow.times()` keeps their author times separate from unverified medal
 pace targets. Assisted runs cannot replace normal records; `DeadSlow.normal()`
-starts fresh at normal speed. See the [console guide](docs/CONSOLE.md).
+starts fresh at normal speed. Every space stage, including the bonus, is covered.
+See the [console guide](docs/CONSOLE.md).
 
 ## Push and publish
 

@@ -1,8 +1,8 @@
 {
   "name": "dead-slow-harbor-trials",
-  "version": "3.1.1",
+  "version": "4.0.0",
   "private": true,
-  "description": "Thirty-six inertial docking, towing and car-ferry trials across three worlds. A dependency-free offline browser game.",
+  "description": "Forty-eight inertial harbor and spacecraft trials across four worlds, plus the Century Ship. A dependency-free offline browser game.",
   "license": "MIT",
   "engines": { "node": ">=22" },
   "scripts": {

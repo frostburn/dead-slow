@@ -4,7 +4,7 @@
 
 The physics, navigation, jobs, level, storage, console and verification modules
 expose CommonJS exports for Node and named globals for the browser. `archipelago.js` supplies level data to
-`levels.js`. The source page loads eleven scripts in a fixed order; `build.cjs`
+`levels.js`. The source page loads fifteen scripts in a fixed order; `build.cjs`
 inlines the same files, without transforming the mechanics or fetching assets.
 
 `game.js` owns the current level, run, inputs, modal state and optional circuit.
@@ -119,7 +119,7 @@ repeated H presses; completed nodes disconnect. Mute fades the current envelope
 to zero. The browser suite renders the actual graph in an OfflineAudioContext.
 
 `storage.js` contains all local record filtering and migrations. The unchanged
-storage key is `dead-slow.records.v1`, even though the schema is version 4.
+storage key is `dead-slow.records.v1`, even though the schema is version 5.
 Version-2 Grand Tours move to `archivedRaces['grand-tour-24']`. Ten changed island
 departures move into `archivedStages`, preserving their ghosts and splits.
 Pre-schema-4 World 3/Grand Tour records move to the `archipelago-dock-starts`
@@ -136,3 +136,27 @@ Change loading/rope behavior in `jobs.js`, not in drawing code. Changes to globa
 physics can invalidate old times even when geometry remains the same; treat
 that as a record-compatibility decision. The fixed-input fixtures detect
 unintentional handling drift in both an exposed berth and the island tutorials.
+
+## World 4 separation
+
+`space-levels.js` defines thirteen data-only assignments. `space.js` owns pure
+spacecraft physics and mission state; it shares hull/SAT/contact helpers, not
+water integration or rudder forces. `space-renderer.js` consumes simulation
+state without changing it. `space-ui.js` maps the shared helm to flight labels
+and restores marine labels on return. The offline builder now inlines fifteen
+modules in explicit source-page order.
+
+The game dispatches each fixed tick to `advanceSpace` for space sectors, keeping
+clocks, console playback, result/ranking rules, keyboard and touch input common.
+No accumulator fast-forward changes physics step size. Propellant is a scalar
+reference-mass impulse reserve; spacecraft mass is held constant rather than
+implementing a rocket-equation mass-flow model. Beams conserve pair momentum.
+Terminal captures dissipate only the permitted small relative motion.
+
+Time travel records the actual first leg at 30 Hz plus explicit start/end
+samples, interpolates its solid echo, and never rewinds the score clock.
+Control transfers and the chronogate jump are excluded from travelled distance.
+The Century Ship reduces ghost sampling to one second; all simulation still
+runs at 120 Hz. `bonus` is data, not an assumed last-array index. Schema 5 adds
+Meridian records and archives incompatible 36-stage Grand Tour times while
+retaining all established sea-world records.
