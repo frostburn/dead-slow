@@ -12,11 +12,12 @@ function record(id, write=false) {
     const t=create();t.load(index);
     const c=t.state.level.rampage, events=[], trace=[];
     let prev={rudder:0,thruster:0}, ended=false;
-    for(let n=0;n<1600 && t.state.status==='running';n++) {
+    for(let n=0;n<2400 && t.state.status==='running';n++) {
         const time=n/4, run=t.state.run,s=run.ship,st=run.rampage;
-        const target=c.controls[st.control] || st.districts.find(d=>d.health>0) || c.finish;
+        const target=(R.controlAvailable(c,st) ? c.controls[st.control] : null) || st.districts.find(d=>d.health>0) || c.finish;
         const final=target===c.finish, dx=target.x-s.x,dy=target.y-s.y,d=Math.hypot(dx,dy);
-        const speed=final?Math.min(19,d*.3):21;
+        const escaping=(c.rims || []).some(r=>Math.hypot(s.x-r.x,s.y-r.y)<r.r+r.width*2.5) || st.wet>0;
+        const speed=final&&!escaping?Math.min(19,d*.3):(c.authorSpeed || 21);
         const slope=R.terrain(c,s.x,s.y),drag=c.resistance;
         let ax=(speed*dx/(d||1)-s.vx)*.75+drag*s.vx+7.007*slope.dx;
         let ay=(speed*dy/(d||1)-s.vy)*.75+drag*s.vy+7.007*slope.dy;
@@ -35,6 +36,10 @@ function record(id, write=false) {
             const x=b.x-s.x,y=b.y-s.y,vx=b.vx-s.vx,vy=b.vy-s.vy;
             const tt=-(x*vx+y*vy)/(vx*vx+vy*vy);
             if(tt>=0&&tt<.6&&Math.hypot(x+vx*tt,y+vy*tt)<c.radius+5)danger=true;
+        }
+        for(const strike of st.strikes) if(strike.x!==null) {
+            const dt=strike.impactAt-run.time;
+            if(dt>0&&dt<.65&&Math.hypot(s.x+s.vx*dt-strike.x,s.y+s.vy*dt-strike.y)<strike.r+c.radius+3) danger=true;
         }
         if(danger && time+1e-7>=st.shieldReady){t.lineAction();e.line=true;}
         if(Object.keys(e).length>1)events.push(e);

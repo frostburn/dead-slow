@@ -1,4 +1,4 @@
-/* Separated wheel syllables. No continuously sounding oscillator or wall-time loop. */
+/* Discrete rubber-bearing creaks on land; unchanged tiny wheelspin chirps in water. */
 (function (root) {
     'use strict';
     const STROKE = Math.PI / 2; // Four alternating ee / oo strokes per shell revolution.
@@ -10,14 +10,11 @@
             // At high speed preserve a gap: more syllables, not one long whine.
             duration: Math.min(wet ? .13 : ee ? .29 : .34, STROKE / Math.max(.01, rate) * .48),
             gain: (wet ? .017 : .042) * (.78 + .22 * energy),
-            pitch: wet ? (ee ? 1120 : 880) : (ee ? 158 : 128) + 16 * energy
+            pitch: wet ? (ee ? 1120 : 880) : (ee ? 285 : 220) + 16 * energy
         };
     }
     function createWheel(ctx, destination = ctx.destination) {
         const bus = ctx.createGain(); bus.gain.value = 1; bus.connect(destination);
-        const real = new Float32Array(33), imag = new Float32Array(33);
-        for (let i = 1; i < imag.length; i++) imag[i] = 1 / Math.pow(i, 1.12);
-        const wave = ctx.createPeriodicWave(real, imag);
         const voices = new Set();
         let stroke = null, lastRoll = -1, next = 0, sequence = 0, disposed = false;
         function hush() {
@@ -31,19 +28,34 @@
             const p = syllableParameters(st, sequence++), now = ctx.currentTime;
             const source = ctx.createOscillator(), env = ctx.createGain();
             const f1 = ctx.createBiquadFilter(), f2 = ctx.createBiquadFilter();
-            if (p.wet) source.type = 'triangle'; else source.setPeriodicWave(wave);
-            source.frequency.setValueAtTime(p.pitch * (p.wet ? 1.35 : .85), now);
-            source.frequency.exponentialRampToValueAtTime(p.pitch * 1.06, now + p.duration * .24);
-            source.frequency.exponentialRampToValueAtTime(p.pitch * (p.wet ? .74 : .92), now + p.duration);
-            f1.type = f2.type = 'bandpass';
-            f1.frequency.value = p.wet ? p.pitch : p.ee ? 380 : 330;
-            f2.frequency.value = p.wet ? p.pitch * 2.7 : p.ee ? 2300 : 680;
-            f1.Q.value = p.wet ? .7 : 2.4; f2.Q.value = p.wet ? .7 : 3.6;
+            source.type = 'triangle';
+            if (p.wet) {
+                // Preserve the accepted water sound, including both filters and bends.
+                source.frequency.setValueAtTime(p.pitch * 1.35, now);
+                source.frequency.exponentialRampToValueAtTime(p.pitch * 1.06, now + p.duration * .24);
+                source.frequency.exponentialRampToValueAtTime(p.pitch * .74, now + p.duration);
+                f1.type = f2.type = 'bandpass';
+                f1.frequency.value = p.pitch; f2.frequency.value = p.pitch * 2.7;
+                f1.Q.value = f2.Q.value = .7;
+            } else {
+                // Stick/slip bends of a rubber bearing, not a glottal source or
+                // a pair of vocal formants. Alternating shapes suggest ee/oo
+                // mechanically without synthesizing a little human voice.
+                source.frequency.setValueAtTime(p.pitch * (p.ee ? .87 : 1.16), now);
+                for (const [u, factor] of (p.ee
+                    ? [[.18,1.16],[.37,1.05],[.49,1.12],[.72,.98],[1,.82]]
+                    : [[.20,1.03],[.41,.93],[.55,1.01],[.76,.86],[1,.77]]))
+                    source.frequency.exponentialRampToValueAtTime(p.pitch * factor, now + p.duration * u);
+                f1.type = 'highpass'; f1.frequency.value = 100; f1.Q.value = .5;
+                f2.type = 'lowpass'; f2.frequency.value = 1350; f2.Q.value = .65;
+            }
             env.gain.setValueAtTime(0, now);
             env.gain.linearRampToValueAtTime(p.gain, now + p.duration * .14);
             env.gain.linearRampToValueAtTime(p.gain * .8, now + p.duration * .55);
             env.gain.linearRampToValueAtTime(0, now + p.duration);
-            source.connect(f1); source.connect(f2); f1.connect(env); f2.connect(env); env.connect(bus);
+            if (p.wet) { source.connect(f1); source.connect(f2); f1.connect(env); f2.connect(env); }
+            else { source.connect(f1); f1.connect(f2); f2.connect(env); }
+            env.connect(bus);
             const voice = { source }; voices.add(voice);
             source.onended = () => {
                 source.disconnect(); f1.disconnect(); f2.disconnect(); env.disconnect(); voices.delete(voice);

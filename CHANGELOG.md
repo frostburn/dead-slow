@@ -1,6 +1,23 @@
 # Changelog
 
 
+## 5.0.0-preview.3 — Fortified Cities
+
+- Replace phonetic dry wheel formants with discrete rubber-bearing creaks;
+  retain the accepted water chirp graph and parameters.
+- Paint treading hind paws behind the belly.
+- Enclose the two later courses' towns in steep terrain rims and continuous
+  water moats, with correct dry island holes and shared physics/contour geometry.
+- Add fixed-reticle, long-range retaliation after demolition in course 3 and
+  Fort Pillow; shields and evasion work, local gun destruction cannot cancel it.
+- Add three courses: It All Goes Downhill, The Reservoir Hairpin, Fort Pillow.
+  Six World 5 courses remain standalone; 31 recordings and 55 assignments total.
+- Publish five new/revised clean recordings; leave Seedhaven's run untouched.
+- Archive only schema-7 Banking/Lake District records in schema 8, retaining
+  Seedhaven, earlier archives, all other missions and circuit records.
+- Add focused physics, audio, migration and rendering regressions.
+
+
 ## 5.0.0-preview.2 — Little Feet, Big Detours
 
 - Replace the continuous wheel whine with alternating, separately enveloped

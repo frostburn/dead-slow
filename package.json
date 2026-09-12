@@ -1,8 +1,8 @@
 {
   "name": "dead-slow-harbor-trials",
-  "version": "5.0.0-preview.2",
+  "version": "5.0.0-preview.3",
   "private": true,
-  "description": "Four complete inertial navigation worlds, the Century Ship, and three Gerbozilla field courses. A dependency-free offline browser game.",
+  "description": "Four complete inertial navigation worlds, the Century Ship, and six Gerbozilla field courses. A dependency-free offline browser game.",
   "license": "MIT",
   "engines": { "node": ">=22" },
   "scripts": {

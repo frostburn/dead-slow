@@ -9,47 +9,59 @@ records, personal-best ghosts, keyboard controls and a multitouch helm.
 
 ## World 5 preview — Gerbozilla’s Rampage
 
-**Three standalone courses.** Gerbozilla treads a 48-metre exercise ball across
-orienteering-style maps. Hold **WASD / arrows** to push in map directions, and
-counter-push early to brake. **Space / F** supplies three seconds of protection,
-followed by six seconds recharging. Shields block defensive rounds and ramming
-damage, but never restore momentum.
+**Six standalone courses.** Gerbozilla treads a 48-metre exercise ball across
+orienteering-style maps. Hold **WASD / arrows** to push in map directions;
+counter-push early to brake. **Space / F** gives three seconds of shielding,
+then six seconds recharging. Shields prevent damage, never supply momentum.
 
 | Course | Challenge | Clean reference |
 | --- | --- | ---: |
-| A Small Problem in Seedhaven | Ridge, crooked lake, two evacuated districts | 100.258 s |
-| Banks for the Memories | Ride a mountain flank through Sunflower Valley; flatten two towns | 101.258 s |
-| No Grip, No Problem | Two lake crossings, a dry run-up between them, three defended districts | 123.258 s |
+| A Small Problem in Seedhaven | Ridge, crooked lake and a small redirection: the unchanged introduction. | 100.258 s |
+| Banks for the Memories | Closed mountain-ring citadels. Carry speed both into and out of the bowls. | 95.008 s |
+| No Grip, No Problem | Three water-moat islands. Each demolition launches three long-range strikes. | 172.758 s |
+| It All Goes Downhill | A summit descent into a flooded caldera with one heavily armored core. | 71.758 s |
+| The Reservoir Hairpin | Breach Pump House, use the northern saddle to reverse approach, then cross the reservoir. | 189.258 s |
+| Fort Pillow | A double moat with a steep ring between them, followed by a northern satellite fort. | 169.508 s |
 
-![Gerbozilla treading the ball beside an irregular shoreline](docs/images/gerbozilla.webp)
+![Fort Pillow: two closed water moats and a steep mountain ring](docs/images/gerbo-fortress.webp)
 
-Brown contours use the same analytical elevation field as gravity. Mountains
-blend rounded shoulders and summits; the irregular blue shorelines match the
-traction model. Water removes **paw grip**, not downhill gravity. Existing
-momentum crosses the lake while the hamster's pink hind paws paddle helplessly.
+Brown contours show the exact elevation field that drives rolling gravity.
+The later cities sit inside steep mountain bowls and/or continuous water moats,
+not beside decorative obstacles. Closed blue rings have dry islands, not bridges.
+A standing push stalls at a steep wall; back away and build a run-up. Water
+removes paw traction, not gravity or existing momentum.
 
-The wheel makes separate **eeh / ooh** syllables with silent gaps, synchronized
-to shell rotation. Faster rolling makes them more frequent and slightly louder.
-Water changes them to quieter, higher cartoon squeaks. Coasting paws rest;
-muting, pausing or switching worlds silences the wheel.
+After a city falls in course 3 (and Fort Pillow), the off-map battery launches
+three retaliatory strikes. Each red circle locks to a map location **7.5 seconds
+before impact**. It does not home. Keep moving, redirect after lock, or shield
+at impact. Destroying the local guns does not stop this response. Recovery must
+wait until every queued strike has resolved.
+
+The land wheel now makes **discrete rubber-bearing creaks** with broad filters
+and pitch bends, not vocal formants. Their cadence follows rotation, with real
+silent gaps and a gentle increase in volume at speed. The accepted higher,
+quieter water chirps are unchanged. Little hind paws tread **behind** the belly,
+with just the reaching toes showing; they rest when Gerbozilla stops pushing.
 
 ```js
-DeadSlow.watch("gerbo-first-outing", 8)
-DeadSlow.watch("gerbo-banking", 8)
 DeadSlow.watch("gerbo-lake-skipping", 8)
+DeadSlow.watch("gerbo-downhill", 8)
+DeadSlow.watch("gerbo-hairpin", 8)
+DeadSlow.watch("gerbo-fort-pillow", 8)
 ```
 
-Run one at a time. All three recordings use ordinary directional pushes and
-shield commands through the game. The first two use two shields and block four
-hits each; the third uses three and blocks six. They are not optimal-time claims.
-There are **28 recordings and 52 selectable assignments**. World 5 remains
-**outside every circuit**; the Grand Tour is still 48 stages.
+Run one at a time. All six courses have clean, input-only reference replays;
+course 3's reference evades all nine retaliation strikes. The offline authoring
+controller generates directional/shield inputs, not coordinate assignments or
+objective shortcuts. These are not human-recorded or optimal speedruns.
+There are **31 recordings and 55 selectable assignments**. World 5 remains
+**outside every circuit**; the Grand Tour still has 48 stages.
 
-Schema 7 archives the earlier Seedhaven record, ghost and splits because its
-terrain and wet-slope physics changed. Other active records and circuits stay
-intact. Archived Seedhaven times are visible in the field log and retained in
-exports. See [the World 5 guide](docs/GERBOZILLA.md). Rival pets and fire breath
-are not included yet.
+Schema 8 archives only the superseded schema-7 Banking/Lake District records,
+ghosts and splits. Seedhaven's active course and records stay unchanged, as do
+all sea/space and circuit records. Existing older archives are retained.
+See [the World 5 guide](docs/GERBOZILLA.md). Rival pets and fire breath remain
+future work.
 
 ## Play
 

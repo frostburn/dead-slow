@@ -7,8 +7,8 @@ function isolated(){const l=JSON.parse(JSON.stringify(L.find(l=>l.rampage)));l.r
  const s={x:200,y:200,vx:0,vy:0,a:0,r:0,hull:100};
  return {level:l,run:{ship:s,rampage:R.create(l,s),time:0,contacts:0,distance:0,maxSpeed:0,dockHold:0}};}
 function step(a,input={},duration=1){for(let i=0;i<Math.round(duration*120);i++){a.run.time+=1/120;R.update(a.level,a.run,input,1/120);}}
-test('World 5 contains three explicitly standalone courses',()=>{
- const rows=L.filter(l=>l.worldNumber===5);assert.equal(rows.length,3);assert.ok(rows.every(l=>l.standalone));assert.ok(L.worlds[4].preview);
+test('World 5 contains six explicitly standalone courses',()=>{
+ const rows=L.filter(l=>l.worldNumber===5);assert.equal(rows.length,6);assert.ok(rows.every(l=>l.standalone));assert.ok(L.worlds[4].preview);
  const t=start();t.marathon('grand-tour');assert.equal(t.state.marathon.route.length,48);assert.ok(t.state.marathon.route.every(i=>!L[i].rampage));
  t.marathon('gerbozilla');assert.equal(t.state.marathon,null);assert.ok(t.state.run.rampage);
 });
@@ -80,7 +80,7 @@ test('irregular shoreline drawing samples agree with water classification',()=>{
    const angle=i*Math.PI/60,p=R.lakePoint(lake,angle,.998),q=R.lakePoint(lake,angle,1.002);
    assert.ok(R.inLake(lake,p.x,p.y));assert.ok(!R.inLake(lake,q.x,q.y));rs.push(R.shoreRadius(lake,angle));
   }
-  assert.ok(Math.max(...rs)-Math.min(...rs)>.2);
+  assert.ok(Math.max(...rs)-Math.min(...rs)>(lake.inner?.1:.2));
  }
 });
 test('rotated irregular hills keep analytical gravity consistent with the contour field',()=>{
@@ -103,7 +103,7 @@ test('only obsolete Seedhaven records are archived, idempotently',()=>{
  const old={runs:[{time:89.5,contacts:0,clean:true}],ghost:[[0,130,530,0]],bestSplits:[12,22]};
  d.stages['gerbo-first-outing']=old;d.stages.vacuum=old;
  d.races['grand-tour']=[{time:9000,contacts:0,clean:true}];
- const v=S.sanitize(d);assert.equal(v.version,7);assert.equal(v.stages['gerbo-first-outing'],undefined);
+ const v=S.sanitize(d);assert.equal(v.version,S.VERSION);assert.equal(v.stages['gerbo-first-outing'],undefined);
  assert.equal(v.archivedStages['gerbo-first-outing'].runs[0].time,89.5);
  assert.deepEqual(v.archivedStages['gerbo-first-outing'].ghost,old.ghost);assert.deepEqual(v.archivedStages['gerbo-first-outing'].bestSplits,old.bestSplits);
  assert.equal(v.stages.vacuum.runs[0].time,89.5);assert.equal(v.races['grand-tour'].length,1);

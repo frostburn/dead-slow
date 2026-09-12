@@ -1,4 +1,4 @@
-/* Orienteering-paper chart and a three-course World 5 interface. */
+/* Orienteering-paper chart and a six-course World 5 interface. */
 (function(root) {
     'use strict';
     const R = root.GerboRampage, TAU = Math.PI*2;
@@ -46,10 +46,11 @@
         $('work-panel').hidden=false;
         set('work-order',`${st.stats.districts} / ${c.districts.length} DISTRICTS · ${shield}`);
         set('work-readout',`CONTROL ${st.control}/${c.controls.length} · ELEVATION ${st.elevation.toFixed(0)} m · ${st.wet>.5?'WATER: NO TRACTION':'DRY: PUSH TO STEER'}`);
+        if(st.strikes.length) { const next=st.strikes[0]; set('work-readout',`RETALIATION · ${st.strikes.length} INBOUND · IMPACT ${Math.max(0,next.impactAt-run.time).toFixed(1)} s · AVOID RED CIRCLES`); }
         $('work-progress').style.width=(up?100:100*Math.max(0,1-wait/6))+'%';
         $('work-progress').style.background=up?'#9a3b7f':'var(--green)';
         $('manifest').hidden=false;
-        $('manifest').innerHTML=`<span>${Math.round(run.distance)} m ROLLED</span><span>${st.stats.blocked} HITS BLOCKED</span>`;
+        $('manifest').innerHTML=`<span>${Math.round(run.distance)} m ROLLED</span><span>${st.stats.blocked} HITS BLOCKED${st.stats.salvos ? ` · ${st.stats.strikeDodges} STRIKES EVADED` : ''}</span>`;
         set('mobile-extra',shield); set('gerbo-shield',shield+' · SPACE');
         $('gerbo-shield').classList.toggle('shield-on',up);
         $('gerbo-shield').disabled=wait>0;
@@ -67,14 +68,14 @@
     }
     function dialog(kind,level,run,format,records=[],settings={},archived=null) {
         const c=level.rampage, count=c.districts.length;
-        const intro=`<div class="eyebrow">WORLD 5 · GERBOZILLA’S RAMPAGE · COURSE ${level.stageNumber} / 3</div>`;
-        const actions=`<div class="dialog-actions"><button class="primary" data-action="retry" autofocus>Roll again · R</button>${level.stageNumber<3?'<button data-action="next">Next course →</button>':''}<button data-action="courses">World map</button><button data-action="log">Field log</button></div>`;
-        if(kind==='intro') return `${intro}<h1>${level.stageNumber===1?'A small pet.<br>A very large problem.':esc(level.name)}</h1><p>${level.brief}</p><div class="intro-details"><div><strong>48 m</strong><span>EXERCISE BALL</span></div><div><strong>${String(count).padStart(2,'0')}</strong><span>DISTRICTS TO FLATTEN</span></div><div><strong>03 s</strong><span>SHIELD DURATION</span></div></div><p class="subtle">${level.tip}</p><div class="control-summary"><kbd>W A S D</kbd> / arrows: hold a push in map directions. Release to coast.<br><kbd>Space</kbd> / <kbd>F</kbd>: shield · <kbd>R</kbd>: retry · <kbd>Z</kbd>: zoom<br>Brown contours show hills. Blue means no traction. Magenta circles mark course controls.</div><p class="subtle">Three standalone field courses. They do not change the existing 48-stage Grand Tour.</p><div class="dialog-actions"><button class="primary" data-action="begin" autofocus>Let the hamster out →</button><button data-action="help">Field guide</button><button data-action="courses">World map</button></div>`;
-        if(kind==='help') return `${intro}<h1>Weight wins.<br>Until it doesn’t.</h1><p><b>Push, don’t point.</b> WASD / arrows accelerate north, west, south and east on the map. Diagonal pushes have the same total strength. Counter-push early to brake; releasing a key does not remove momentum.</p><p><b>Read the contours.</b> Brown 5-metre contours use the same elevation field as the rolling physics. Downhill builds speed; the first ridge needs a run-up. Cross every numbered magenta control in order. Their count varies by course.</p><p><b>The lake removes traction.</b> Running spins the ball and squeaks its bearings, but applies no useful push in deep water. Existing motion coasts through with water resistance. Gravity still pulls downhill even when your paws cannot grip. Retry rather than waiting forever after a poor run-up.</p><p><b>Ram the city cores.</b> Speed deals damage to both structures and your shell. Slow nudging cannot flatten a district. Space or F gives 3 seconds of protection followed by 6 seconds recharging. Shielded rams still lose momentum. A dashed red line warns of a defensive shot; defences stop when their district falls.</p><p><b>Finish in the meadow.</b> Flatten all evacuated districts, return to the double-ring finish, and stay below 0.8 m/s with no push for two seconds. A clean run means zero shell damage—not zero destruction.</p><p class="subtle">Three courses are playable. Other giant pets and fire breath are not included yet.</p><div class="dialog-actions"><button class="primary" data-action="back" autofocus>Back to the ball</button></div>`;
+        const intro=`<div class="eyebrow">WORLD 5 · GERBOZILLA’S RAMPAGE · COURSE ${level.stageNumber} / ${R.levels.length}</div>`;
+        const actions=`<div class="dialog-actions"><button class="primary" data-action="retry" autofocus>Roll again · R</button>${level.stageNumber<R.levels.length?'<button data-action="next">Next course →</button>':''}<button data-action="courses">World map</button><button data-action="log">Field log</button></div>`;
+        if(kind==='intro') return `${intro}<h1>${level.stageNumber===1?'A small pet.<br>A very large problem.':esc(level.name)}</h1><p>${level.brief}</p><div class="intro-details"><div><strong>48 m</strong><span>EXERCISE BALL</span></div><div><strong>${String(count).padStart(2,'0')}</strong><span>DISTRICTS TO FLATTEN</span></div><div><strong>03 s</strong><span>SHIELD DURATION</span></div></div><p class="subtle">${level.tip}</p><div class="control-summary"><kbd>W A S D</kbd> / arrows: hold a push in map directions. Release to coast.<br><kbd>Space</kbd> / <kbd>F</kbd>: shield · <kbd>R</kbd>: retry · <kbd>Z</kbd>: zoom<br>Brown contours show hills. Blue means no traction. Magenta circles mark course controls.</div><p class="subtle">Six standalone field courses. They do not change the existing 48-stage Grand Tour.</p><div class="dialog-actions"><button class="primary" data-action="begin" autofocus>Let the hamster out →</button><button data-action="help">Field guide</button><button data-action="courses">World map</button></div>`;
+        if(kind==='help') return `${intro}<h1>Weight wins.<br>Until it doesn’t.</h1><p><b>Push, don’t point.</b> WASD / arrows accelerate north, west, south and east on the map. Diagonal pushes have the same total strength. Counter-push early to brake; releasing a key does not remove momentum.</p><p><b>Read the contours.</b> Brown 5-metre contours use the same elevation field as the rolling physics. Closed mountain rings enclose fortified towns: a standing push cannot overcome the steep rim, so back away and build a run-up. Annular blue moats contain dry islands, not bridges. Downhill builds speed; the first ridge needs a run-up. Cross every numbered magenta control in order. Their count varies by course.</p><p><b>The lake removes traction.</b> Running spins the ball and squeaks its bearings, but applies no useful push in deep water. Existing motion coasts through with water resistance. Gravity still pulls downhill even when your paws cannot grip. Retry rather than waiting forever after a poor run-up.</p><p><b>Ram the city cores.</b> Speed deals damage to both structures and your shell. Slow nudging cannot flatten a district. Space or F gives 3 seconds of protection followed by 6 seconds recharging. Shielded rams still lose momentum. A dashed red line warns of a local defensive shot; local guns stop when their district falls. On retaliation courses, off-map batteries keep firing after demolition. Red circles mark fixed impact points with a countdown. Steer away after they lock, or shield at impact. Recovery cannot finish while a salvo remains inbound.</p><p><b>Finish in the meadow.</b> Flatten all evacuated districts, return to the double-ring finish, and stay below 0.8 m/s with no push for two seconds. A clean run means zero shell damage—not zero destruction.</p><p class="subtle">Six courses are playable. Other giant pets and fire breath are not included yet.</p><div class="dialog-actions"><button class="primary" data-action="back" autofocus>Back to the ball</button></div>`;
         if(kind==='pause') return `${intro}<h1>The hamster is<br>on a snack break.</h1><p>The ball and course clock are frozen. This attempt is now unranked practice; a fresh retry is record-eligible.</p><div class="result-time">${format(run.time)}</div><div class="dialog-actions"><button class="primary" data-action="resume" autofocus>Resume practice</button><button data-action="retry">Fresh run · R</button><button data-action="courses">World map</button></div>`;
         if(kind==='failed') return `${intro}<h1>${run.failure?.type==='off-map'?'Beyond the paper.':'Exercise ball recalled.'}</h1><p>${esc(run.failure?.message||'The shell could not take another hit.')}</p><div class="result-time">${format(run.time)}</div>${actions}`;
-        if(kind==='result') return `${intro}<h1>${count===2?'Two':'Three'} districts.<br>One tired hamster.</h1><div class="result-badge">${run.pausedUsed?'UNRANKED PRACTICE':run.pb?'NEW PERSONAL BEST':'COURSE COMPLETE'}${run.result.clean?' · CLEAN':''}</div><div class="result-time">${format(run.time)}</div><div class="result-grid"><div><strong>${count} / ${count}</strong><span>DISTRICTS FLATTENED</span></div><div><strong>${Math.ceil(run.ship.hull)}%</strong><span>BALL INTEGRITY</span></div><div><strong>${run.rampage.stats.blocked}</strong><span>HITS BLOCKED</span></div></div><p>${run.pausedUsed?'Practice never replaces records or ghosts.':'Your field log keeps overall and zero-damage times separately.'} The giant wheel squeak was entirely necessary.</p>${actions}`;
-        if(kind==='log') return `${intro}<h1>Gerbozilla’s field log.</h1><table class="log-table"><thead><tr><th>TIME / IGT</th><th>DAMAGE EVENTS</th><th>CLASS</th></tr></thead><tbody>${records.length?records.map(r=>`<tr><td>${format(r.time)}</td><td>${r.contacts}</td><td>${r.clean?'CLEAN':'OPEN'}</td></tr>`).join(''):'<tr><td colspan="3">No completed course yet.</td></tr>'}</tbody></table><p class="subtle">Clean means zero shell damage. Records and ghosts are local; these field courses are outside all circuits.</p>${archived?.runs?.length?`<details><summary>Earlier terrain records (archived)</summary><p class="subtle">The shoreline and wet-slope physics have changed. Earlier ghosts and splits remain in exports, separate from the new route.</p>${archived.runs.map(r=>`<p>${format(r.time)} · ${r.clean?'CLEAN':'OPEN'}</p>`).join('')}</details>`:''}<div class="dialog-actions"><button data-action="toggle-sound">Sound: ${settings.sound?'ON':'OFF'}</button><button data-action="toggle-ghost">Ghost: ${settings.ghost?'ON':'OFF'}</button><button data-action="export">Export</button><button data-action="import">Import</button><button class="primary" data-action="back" autofocus>Back to the ball</button></div>`;
+        if(kind==='result') return `${intro}<h1>${['Zero','One','Two','Three'][count] || count} ${count===1?'district':'districts'}.<br>One tired hamster.</h1><div class="result-badge">${run.pausedUsed?'UNRANKED PRACTICE':run.pb?'NEW PERSONAL BEST':'COURSE COMPLETE'}${run.result.clean?' · CLEAN':''}</div><div class="result-time">${format(run.time)}</div><div class="result-grid"><div><strong>${count} / ${count}</strong><span>DISTRICTS FLATTENED</span></div><div><strong>${Math.ceil(run.ship.hull)}%</strong><span>BALL INTEGRITY</span></div><div><strong>${run.rampage.stats.blocked}</strong><span>HITS BLOCKED</span></div></div><p>${run.pausedUsed?'Practice never replaces records or ghosts.':'Your field log keeps overall and zero-damage times separately.'} The giant wheel squeak was entirely necessary.</p>${actions}`;
+        if(kind==='log') return `${intro}<h1>Gerbozilla’s field log.</h1><table class="log-table"><thead><tr><th>TIME / IGT</th><th>DAMAGE EVENTS</th><th>CLASS</th></tr></thead><tbody>${records.length?records.map(r=>`<tr><td>${format(r.time)}</td><td>${r.contacts}</td><td>${r.clean?'CLEAN':'OPEN'}</td></tr>`).join(''):'<tr><td colspan="3">No completed course yet.</td></tr>'}</tbody></table><p class="subtle">Clean means zero shell damage. Records and ghosts are local; these field courses are outside all circuits.</p>${archived?.runs?.length?`<details><summary>Earlier terrain records (archived)</summary><p class="subtle">Earlier terrain or defenses differ from the active course. Earlier ghosts and splits remain in exports, separate from the new route.</p>${archived.runs.map(r=>`<p>${format(r.time)} · ${r.clean?'CLEAN':'OPEN'}</p>`).join('')}</details>`:''}<div class="dialog-actions"><button data-action="toggle-sound">Sound: ${settings.sound?'ON':'OFF'}</button><button data-action="toggle-ghost">Ghost: ${settings.ghost?'ON':'OFF'}</button><button data-action="export">Export</button><button data-action="import">Import</button><button class="primary" data-action="back" autofocus>Back to the ball</button></div>`;
     }
     function createRenderer(canvas) {
         const ctx=canvas.getContext('2d'); let scale=1, cache=null, cachedLevel=null;
@@ -88,6 +89,13 @@
                 if(i===0)g.moveTo(p.x,p.y);else g.lineTo(p.x,p.y);
             }
             g.closePath();
+            if(l.inner) {
+                for(let i=120;i>=0;i--) {
+                    const p=R.lakePoint(l,i*TAU/120,scale*l.inner);
+                    if(i===120)g.moveTo(p.x,p.y);else g.lineTo(p.x,p.y);
+                }
+                g.closePath();
+            }
         }
         function map(level) {
             const [w,h]=level.world,c=level.rampage;
@@ -100,24 +108,31 @@
             // Cache real elevation contours once; no repeated per-frame terrain meshing.
             const step=14,nx=Math.ceil(w/step),ny=Math.ceil(h/step),zs=[];
             for(let j=0;j<=ny;j++){zs[j]=[];for(let i=0;i<=nx;i++)zs[j][i]=R.terrain(c,i*step,j*step).height;}
-            for(let z=5;z<=100;z+=5){g.beginPath();for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){
+            for(let z=5,max=Math.ceil(Math.max(...zs.map(row=>Math.max(...row)))/5)*5;z<=max;z+=5){g.beginPath();for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){
                 const v=[zs[j][i],zs[j][i+1],zs[j+1][i+1],zs[j+1][i]],p=[[i*step,j*step],[(i+1)*step,j*step],[(i+1)*step,(j+1)*step],[i*step,(j+1)*step]],cross=[];
                 for(let k=0;k<4;k++){const n=(k+1)%4;if((v[k]<z)!==(v[n]<z)){const u=(z-v[k])/(v[n]-v[k]);cross.push([p[k][0]+u*(p[n][0]-p[k][0]),p[k][1]+u*(p[n][1]-p[k][1])]);}}
                 for(let k=0;k+1<cross.length;k+=2){g.moveTo(...cross[k]);g.lineTo(...cross[k+1]);}
             }g.strokeStyle=brown;g.lineWidth=z%25===0?1.8:.8;g.stroke();}
             for(const hill of c.hills){text(g,Math.round(R.terrain(c,hill.x,hill.y).height)+' m',hill.x,hill.y,12,brown);circle(g,hill.x,hill.y+9,2,brown);}
+            for(const rim of c.rims || []) {
+                text(g,rim.name,rim.x,rim.y-rim.r-52,12,brown);
+                text(g,'RUN-UP REQUIRED',rim.x,rim.y-rim.r-34,9,brown);
+            }
             for(const l of c.lakes){
-                shoreline(g,l);g.fillStyle='#b7dce3';g.strokeStyle='#6195ac';g.lineWidth=2;g.fill();g.stroke();
-                g.save();g.clip();
+                shoreline(g,l);g.fillStyle='#b7dce3';g.strokeStyle='#6195ac';g.lineWidth=2;g.fill('evenodd');g.stroke();
+                g.save();g.clip('evenodd');
                 for(let yy=l.y-l.ry*1.4;yy<l.y+l.ry*1.4;yy+=23){
                     g.beginPath();g.moveTo(l.x-l.rx*1.5,yy);g.lineTo(l.x+l.rx*1.5,yy);g.strokeStyle='#8abcc9';g.lineWidth=.6;g.stroke();
-                }g.restore();text(g,l.name,l.x,l.y-4,12,'#416f86');text(g,'NO TRACTION',l.x,l.y+14,9,'#416f86');
+                }g.restore();const ly=l.inner?l.y+l.ry*(1+l.inner)/2:l.y; text(g,l.name,l.x,ly-4,12,'#416f86');text(g,'NO TRACTION',l.x,ly+14,9,'#416f86');
             }
             // Roads are cosmetic; the ball still crosses real slopes and water.
+            // Never draw a cosmetic bridge across a functional moat.
+            if(!(c.rims?.length || c.lakes.some(l=>l.inner))) {
             g.strokeStyle='#d9c9a7';g.lineWidth=10;g.beginPath();
             for(const [i,d] of c.districts.entries()){if(i===0)g.moveTo(d.x-85,d.y+45);g.lineTo(d.x,d.y);}
             g.lineTo(c.finish.x,c.finish.y);g.stroke();g.strokeStyle='#fdf9e8';g.lineWidth=5;g.stroke();
-            for(const [i,p] of c.controls.entries()){circle(g,p.x,p.y,p.r,null,magenta,2.2);text(g,String(i+1).padStart(2,'0'),p.x-p.r-11,p.y-16,17,magenta);}
+            }
+            for(const [i,p] of c.controls.entries()){circle(g,p.x,p.y,p.r,null,magenta,2.2);text(g,String(p.number || i+1).padStart(2,'0'),p.x-p.r-11,p.y-16,17,magenta);if(p.after)text(g,'AFTER CORE',p.x,p.y+p.r+18,9,magenta);}
             g.strokeStyle=magenta;g.lineWidth=2.5;g.beginPath();g.moveTo(level.start[0]-20,level.start[1]-30);g.lineTo(level.start[0]-20,level.start[1]+30);g.lineTo(level.start[0]+24,level.start[1]);g.closePath();g.stroke();
             const f=c.finish;circle(g,f.x,f.y,f.r,null,magenta,2);circle(g,f.x,f.y,f.r-9,null,magenta,2);text(g,'RECOVERY',f.x,f.y+f.r+24,11,magenta);
             text(g,c.sheet,w*.62,h-112,23,ink);text(g,'EVACUATION COMPLETE · DEFENCES AUTOMATED',w*.62,h-89,10,ink);
@@ -134,7 +149,6 @@
             circle(g,0,0,r,'#d4ebd87a','#375d59',1.8);
             g.save();g.rotate(heading*.12);circle(g,-r*.29,-r*.3,r*.23,'#b78052','#765a40',.8);circle(g,r*.29,-r*.3,r*.23,'#b78052','#765a40',.8);
             circle(g,-r*.29,-r*.3,r*.13,'#e3b5a0');circle(g,r*.29,-r*.3,r*.13,'#e3b5a0');
-            g.fillStyle='#c89765';g.beginPath();g.ellipse(0,r*.12,r*.59,r*.64,0,0,TAU);g.fill();g.fillStyle='#f4dfb4';g.beginPath();g.ellipse(0,r*.27,r*.4,r*.43,0,0,TAU);g.fill();
             // Two plush hind legs, out of phase. The planted paw presses the
             // inside of the shell while the other lifts and reaches forward.
             for(const side of [-1,1]){
@@ -150,6 +164,8 @@
                 for(const toe of [-1,0,1]){g.beginPath();g.moveTo(toe*r*.065,r*.04);g.lineTo(toe*r*.065,r*.085);g.stroke();}
                 g.restore();
             }
+            // The plush belly occludes the hips; only reaching feet peek out.
+            g.fillStyle='#c89765';g.beginPath();g.ellipse(0,r*.12,r*.59,r*.64,0,0,TAU);g.fill();g.fillStyle='#f4dfb4';g.beginPath();g.ellipse(0,r*.27,r*.4,r*.43,0,0,TAU);g.fill();
             circle(g,-r*.21,-r*.03,r*.065,'#262f2a');circle(g,r*.21,-r*.03,r*.065,'#262f2a');circle(g,0,r*.17,r*.07,'#805455');
             g.strokeStyle='#775e46';g.lineWidth=.65;for(const sy of [-1,1]){g.beginPath();g.moveTo(sy*r*.1,r*.19);g.lineTo(sy*r*.52,r*.13);g.moveTo(sy*r*.1,r*.24);g.lineTo(sy*r*.51,r*.29);g.stroke();}g.restore();
             // Projected great-circle ribs track travelled distance / ball radius.
@@ -179,14 +195,30 @@
                 // Small architectural clusters are cosmetic; the striped central core is solid.
                 for(let j=0;j<8;j++){const a=j*TAU/8,xx=d.x+Math.cos(a)*64,yy=d.y+Math.sin(a)*61;ctx.save();ctx.translate(xx,yy);ctx.rotate(j*.35);ctx.fillStyle=d.health>0?'#b6b7a6':'#cbbfa3';ctx.fillRect(-8,-5,16,10);ctx.strokeStyle='#535e4e';ctx.lineWidth=.8;ctx.strokeRect(-8,-5,16,10);ctx.restore();}
                 if(d.health>0){circle(ctx,d.x,d.y,d.r,'#c58c78',ink,2);ctx.fillStyle='#4d544c';ctx.fillRect(d.x-16,d.y-17,32,34);ctx.fillStyle='#f2d3a1';ctx.fillRect(d.x-10,d.y-11,20,22);
-                    text(ctx,String(i+c.controls.length+1).padStart(2,'0'),d.x,d.y+5,15,ink);text(ctx,d.name.toUpperCase(),d.x,d.y-89,14);text(ctx,Math.ceil(100*d.health/d.maxHealth)+'% · RAM CORE',d.x,d.y+92,11,'#984d46');
+                    text(ctx,String(d.number || i+c.controls.length+1).padStart(2,'0'),d.x,d.y+5,15,ink);text(ctx,d.name.toUpperCase(),d.x,d.y-89,14);text(ctx,Math.ceil(100*d.health/d.maxHealth)+'% · RAM CORE',d.x,d.y+92,11,'#984d46');
                     if(d.aim){ctx.setLineDash([9,6]);ctx.strokeStyle='#b04342';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(d.x,d.y);ctx.lineTo(d.aim.x,d.aim.y);ctx.stroke();ctx.setLineDash([]);circle(ctx,d.aim.x,d.aim.y,15,null,'#b04342',1.5);text(ctx,'FIRE '+Math.max(0,d.shotAt-run.time).toFixed(1)+' s',d.x,d.y-65,11,'#b04342');}
                 }else{circle(ctx,d.x,d.y,d.r+10,'#8d77622b');for(let j=0;j<7;j++){ctx.fillStyle=j%2?'#8d8473':'#b69d7e';ctx.fillRect(d.x+Math.sin(j*3)*25-8,d.y+Math.cos(j*3)*26-4,16,8);}text(ctx,d.name.toUpperCase()+' ✓',d.x,d.y-84,13,magenta);}
+            }
+            for(const b of st.strikes || []) if(b.x!==null) {
+                const countdown=Math.max(0,b.impactAt-run.time), red='#b33642';
+                circle(ctx,b.x,b.y,b.r,'#cc334420',red,2.5);
+                circle(ctx,b.x,b.y,b.r*Math.min(1,countdown/(b.impactAt-b.launchAt)),null,red,1);
+                ctx.strokeStyle=red;ctx.lineWidth=2;ctx.beginPath();
+                ctx.moveTo(b.x-b.r-12,b.y);ctx.lineTo(b.x+b.r+12,b.y);
+                ctx.moveTo(b.x,b.y-b.r-12);ctx.lineTo(b.x,b.y+b.r+12);ctx.stroke();
+                text(ctx,'LONG-RANGE '+countdown.toFixed(1)+' s',b.x,b.y-b.r-20,12,red);
+                if(countdown<1.2) {
+                    // Descending shell is above the ground until the timed blast.
+                    const q=countdown/1.2, x=b.x+160*q,y=b.y-320*q;
+                    ctx.strokeStyle='#cf6b33';ctx.lineWidth=3;
+                    ctx.beginPath();ctx.moveTo(x+13,y-26);ctx.lineTo(x,y);ctx.stroke();
+                    circle(ctx,x,y,4,'#a63037','#f9d296',1.5);
+                }
             }
             for(const b of st.shots){circle(ctx,b.x,b.y,5,'#b44538','#f8d4a2',2);}
             if(settings.guide&&Math.hypot(s.vx,s.vy)>.3){ctx.setLineDash([8,5]);ctx.strokeStyle='#45685088';ctx.lineWidth=1.6;ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(s.x+s.vx*4,s.y+s.vy*4);ctx.stroke();ctx.setLineDash([]);}
             if(settings.ghost&&ghost?.length){let a=ghost[0];for(const b of ghost){if(b[0]>run.time)break;a=b;}ball(ctx,a[1],a[2],c.radius,run.time,a[3],.18);}
-            for(const f of st.flashes){const u=(run.time-f.t)/1.5;ctx.globalAlpha=1-u;circle(ctx,f.x,f.y,15+u*65,null,magenta,2);ctx.globalAlpha=1;}
+            for(const f of st.flashes){const u=(run.time-f.t)/1.5;ctx.globalAlpha=1-u;circle(ctx,f.x,f.y,f.strike?f.r*(.7+u*.4):15+u*65,null,f.strike?'#b33642':magenta,f.strike?5:2);ctx.globalAlpha=1;}
             ball(ctx,s.x,s.y,c.radius,st.roll,s.a,1,R.protectedAt(run),st.pawPhase,st.effort);
             if(st.wet>.5){text(ctx,'SPIN ≠ TRACTION',s.x,s.y-c.radius-19,10,'#416f86');}
             ctx.setTransform(dpr,0,0,dpr,0,0);

@@ -1,4 +1,4 @@
-/* Gerbozilla: rolling terrain, water traction and three standalone field courses. */
+/* Gerbozilla: rolling terrain, water traction and six standalone field courses. */
 (function (root) {
     'use strict';
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -31,52 +31,98 @@
             finish: { x: 1340, y: 365, r: 78 }
         }
     };
-    // Two new assignments stay outside circuits until World 5 is complete.
     const course = (id, name, kind, start, world, brief, tip, config) => ({
         id, name, kind, start, world, brief, tip, standalone: true, pace: [160, 220, 320],
         spec: { ...level.spec },
         berth: { x: config.finish.x, y: config.finish.y, a: 0, l: 156, w: 156, speed: .8 },
         rampage: { radius: 24, drive: 1.9, resistance: .032, waterResistance: .05, ...config }
     });
-    const bank = course('gerbo-banking', 'Banks for the Memories', 'Banked valley / two districts / shield timing',
-        [160, 365, 0], [1760, 1120],
-        'Take the downhill run into Cushion Ridge. Its sloping flank bends the ball south into Sunflower Valley; use the bank instead of fighting it. Flatten the two evacuated towns, then settle in the eastern meadow.',
-        'Brown contours are steering surfaces, not walls. Roll partway up a bank and let gravity redirect you. Save shields for each town: a shield cannot cancel your momentum.', {
-            sheet: 'SUNFLOWER VALLEY', subtitle: 'BANKS FOR THE MEMORIES',
-            hills: [
-                { x: 145, y: 320, rx: 125, ry: 170, height: 24, lobes: [{x:-60,y:55,rx:67,ry:76,height:12}] },
-                { x: 755, y: 265, rx: 107, ry: 280, height: 103, angle: -.53, lobes: [{x:110,y:100,rx:96,ry:123,height:36}] },
-                { x: 1120, y: 951, rx: 267, ry: 113, height: 86, angle: -.23, lobes: [{x:165,y:-20,rx:98,ry:76,height:29}] },
-                { x: 1510, y: 180, rx: 143, ry: 92, height: 62, lobes: [{x:-80,y:20,rx:80,ry:43,height:24}] }
+    // Closed contours are climbable terrain, never a binary speed gate. The
+    // walls oppose a standing push strongly enough that a real run-up matters.
+    const bank = course('gerbo-banking', 'Banks for the Memories', 'Mountain-ring fortresses / run-ups / banked exits',
+        [150, 650, 0], [2540, 1350],
+        'Sunflower and Hayloft have retreated inside mountain bowls. The enclosing ridgelines cannot be crept over from their foot: gather speed on the western flats, crest the rim and shield the ram. Keep enough momentum to climb out again.',
+        'A closed brown rim is a real hill. Its steep face can overpower your push. Back away for a longer run-up; do not grind against it. Shield protects the shell, not your momentum.', {
+            sheet:'SUNFLOWER CITADELS', subtitle:'BANKS FOR THE MEMORIES',
+            hills:[
+                {x:755,y:265,rx:107,ry:280,height:103,angle:-.53,lobes:[{x:110,y:100,rx:96,ry:123,height:36}]},
+                {x:1360,y:1070,rx:240,ry:80,height:72,angle:-.2,lobes:[{x:-130,y:15,rx:98,ry:50,height:30}]}
             ],
-            lakes: [{x:360,y:845,rx:165,ry:86,angle:-.35,shore:[.16,.08,2.1],name:'CLOVER MERE'}],
-            controls: [{x:575,y:418,r:73,name:'Enter the bank'}, {x:890,y:652,r:70,name:'Ride the valley'}],
-            districts: [
-                {id:'sunflower',name:'Sunflower',x:1120,y:645,r:34,health:90,defence:true},
-                {id:'hayloft',name:'Hayloft',x:1390,y:490,r:34,health:80,defence:true}
-            ], finish:{x:1560,y:570,r:82}
-        });
-    const lakes = course('gerbo-lake-skipping', 'No Grip, No Problem', 'Two lake crossings / three districts / dry run-ups',
-        [130, 530, 0], [1880, 1060],
-        'The Lake District has withdrawn its welcome mat. Carry momentum across two crooked lakes, rebuild speed on the dry isthmus, and flatten three evacuated districts. The recovery meadow lies south of Pipsqueak Point.',
-        'There are no brakes or steering in deep water. Line up on dry ground and enter each lake fast. Tiny frantic squeaks mean slipping paws, not useful thrust. Counter-push before the final meadow.', {
-            sheet: 'THE LAKE DISTRICT', subtitle: 'NO GRIP, NO PROBLEM',
-            hills: [
-                {x:285,y:420,rx:92,ry:133,height:23,lobes:[{x:45,y:-65,rx:63,ry:54,height:13}]},
-                {x:710,y:135,rx:153,ry:78,height:56,angle:.25,lobes:[{x:105,y:32,rx:75,ry:69,height:23}]},
-                {x:925,y:860,rx:210,ry:79,height:67,angle:-.12,lobes:[{x:-125,y:6,rx:93,ry:54,height:30}]},
-                {x:1650,y:120,rx:143,ry:70,height:61,lobes:[{x:68,y:35,rx:80,ry:47,height:22}]}
+            rims:[
+                {x:1060,y:650,r:170,width:28,height:47,shore:[.07,.035,.5],name:'CUSHION WALL'},
+                {x:1640,y:530,r:150,width:27,height:44,shore:[.06,.04,1.7],name:'HAYLOFT RIM'}
             ],
-            lakes:[
-                {x:557,y:523,rx:82,ry:160,shore:[.17,.07,1.3],name:'EEH LAKE'},
-                {x:925,y:489,rx:90,ry:167,angle:.15,shore:[.15,.10,3.0],name:'OOH LAKE'}
-            ],
-            controls:[{x:415,y:535,r:58,name:'First run-up'}, {x:737,y:510,r:60,name:'Dry isthmus'}, {x:1080,y:490,r:57,name:'Both lakes cleared'}],
+            lakes:[{x:350,y:1080,rx:160,ry:80,shore:[.16,.08,2.1],name:'CLOVER MERE'}],
+            controls:[{x:640,y:650,r:68,name:'Western run-up'}],
             districts:[
-                {id:'reedworks',name:'Reedworks',x:1210,y:485,r:33,health:78,defence:true},
-                {id:'oatbridge',name:'Oatbridge',x:1460,y:350,r:33,health:86,defence:true},
-                {id:'pipsqueak',name:'Pipsqueak Point',x:1670,y:580,r:33,health:78,defence:true}
-            ],finish:{x:1665,y:850,r:86}
+                {id:'sunflower',name:'Sunflower',x:1060,y:650,r:34,health:105,defence:true},
+                {id:'hayloft',name:'Hayloft',x:1640,y:530,r:34,health:95,defence:true}
+            ],finish:{x:2250,y:540,r:87}, authorSpeed:34
+        });
+    const lakes = course('gerbo-lake-skipping', 'No Grip, No Problem', 'Island cities / closed moats / long-range retaliation',
+        [150,420,0],[2250,1820],
+        'Reedworks, Oatbridge and Pipsqueak Point are island citadels. Each complete water moat removes your paw traction. Every demolition alerts an off-map battery: three marked long-range strikes follow, even after the local guns are rubble.',
+        'Build speed before entering each moat. Retaliation marks lock onto the map, not onto you: change course after the red circles appear, or shield at impact. Keep rolling after a demolition.',{
+            sheet:'THE RETALIATING LAKE DISTRICT',subtitle:'NO GRIP, NO PROBLEM',
+            hills:[{x:300,y:125,rx:160,ry:60,height:45,lobes:[{x:80,y:30,rx:70,ry:45,height:22}]}],
+            lakes:[
+                {x:900,y:420,rx:235,ry:225,inner:.46,shore:[.08,.04,1.3],name:'REED MOAT'},
+                {x:1640,y:780,rx:235,ry:230,inner:.47,shore:[.07,.045,3],name:'OAT MOAT'},
+                {x:1150,y:1370,rx:230,ry:230,inner:.46,shore:[.09,.035,2],name:'PIPSQUEAK MOAT'}
+            ],
+            controls:[{x:430,y:420,r:62,name:'Build crossing speed'},
+                {x:2010,y:1030,r:65,name:'Dry turning ground',after:'oatbridge',number:4}],
+            districts:[
+                {number:2,id:'reedworks',name:'Reedworks',x:900,y:420,r:33,health:85,defence:true},
+                {number:3,id:'oatbridge',name:'Oatbridge',x:1640,y:780,r:33,health:90,defence:true},
+                {number:5,id:'pipsqueak',name:'Pipsqueak Point',x:1150,y:1370,r:33,health:85,defence:true}
+            ],retaliation:{delays:[10,18,26],warning:7.5,lead:0,radius:66,damage:24},
+            finish:{x:520,y:1420,r:90},authorSpeed:35
+        });
+    const downhill = course('gerbo-downhill', 'It All Goes Downhill', 'Summit launch / flooded caldera / single heavy ram',
+        [225,225,0],[2350,1500],
+        'Start high on Mount Muesli. The single fortified caldera town lies behind a broad flooded rim. Trade height for speed on the descent, cross the moat and break the armored core in one shielded impact; then roll out to the eastern meadow.',
+        'Gravity supplies the run-up. Aim before the long descent; frantic steering in the flooded rim only makes tiny squeaks. The armored town needs a harder hit than Seedhaven.',{
+            sheet:'MOUNT MUESLI',subtitle:'IT ALL GOES DOWNHILL',
+            hills:[{x:155,y:135,rx:235,ry:225,height:140,angle:.35,lobes:[{x:-80,y:60,rx:115,ry:140,height:30}]},
+                {x:1550,y:1230,rx:260,ry:75,height:74,lobes:[{x:135,y:-20,rx:110,ry:65,height:23}]}],
+            rims:[{x:1540,y:860,r:155,width:25,height:38,shore:[.06,.03,.9],name:'CALDERA RIM'}],
+            lakes:[{x:1540,y:860,rx:290,ry:275,inner:.68,shore:[.075,.035,2.4],name:'FLOODED CALDERA'}],
+            controls:[{x:755,y:610,r:85,name:'Downhill commitment'}],
+            districts:[{id:'caldera',name:'Caldera Vault',x:1540,y:860,r:41,health:185,defence:true}],
+            finish:{x:2070,y:970,r:92},authorSpeed:40
+        });
+    const hairpin = course('gerbo-hairpin', 'The Reservoir Hairpin', 'Climb-in basin / reverse approach / reservoir crossing',
+        [230,1410,0],[2060,1780],
+        'The valley route ends at a mountain-walled pumping town. Crest its bowl and flatten Pump House, then take the northern saddle west. Use that dry bank as the run-up for the reservoir island; the second town must be approached from the other direction.',
+        'This is not a straight demolition line. The numbered northern saddle unlocks after Pump House falls. Slow on dry ground, turn, and rebuild momentum before committing west across the reservoir.',{
+            sheet:'THE OATWATER RESERVOIR',subtitle:'THE RESERVOIR HAIRPIN',
+            hills:[{x:820,y:1050,rx:120,ry:290,height:95,angle:.3,lobes:[{x:95,y:100,rx:84,ry:135,height:40}]},
+                {x:1580,y:1070,rx:125,ry:320,height:76,angle:-.2,lobes:[{x:-70,y:150,rx:90,ry:135,height:31}]}],
+            rims:[{x:1310,y:560,r:160,width:27,height:43,shore:[.07,.03,1.2],name:'PUMP HOUSE WALL'}],
+            lakes:[{x:520,y:470,rx:245,ry:235,inner:.43,shore:[.08,.035,2.1],name:'OATWATER'}],
+            controls:[{x:1190,y:1190,r:75,name:'Enter the valley'},
+                {x:1270,y:230,r:75,name:'Northern saddle',after:'pump-house',number:3}],
+            districts:[{number:2,id:'pump-house',name:'Pump House',x:1310,y:560,r:35,health:105,defence:true},
+                {id:'island-mill',name:'Island Mill',x:520,y:470,r:34,health:95,defence:true}],
+            finish:{x:350,y:1020,r:90},authorSpeed:35
+        });
+    const fortress = course('gerbo-fort-pillow', 'Fort Pillow', 'Double moat / mountain wall / siege and extraction',
+        [150,1110,0],[3100,1930],
+        'Fort Pillow has two water moats with a steep mountain ring between them. One long run-up must pay for the outer crossing, the uphill crest and the inner crossing. Destroy the command core, escape its retaliatory strike pattern, then take the northern satellite fort before extraction.',
+        'Spend momentum, not patience. A shield will not pull you out of a moat. Preserve speed through the nested defenses; after the command core falls, the eastern muster point provides room to turn north.',{
+            sheet:'FORT PILLOW DEFENSE RESERVE',subtitle:'ONE VERY LARGE PILLOW FIGHT',
+            hills:[{x:510,y:1710,rx:210,ry:75,height:66,lobes:[{x:120,y:-25,rx:90,ry:63,height:31}]}],
+            rims:[{x:1560,y:1110,r:244,width:28,height:37,shore:[.045,.025,.8],name:'PILLOW WALL'},
+                {x:2170,y:370,r:155,width:26,height:44,shore:[.06,.035,1.8],name:'SATELLITE RIM'}],
+            lakes:[{x:1560,y:1110,rx:420,ry:410,inner:.76,shore:[.045,.03,2],name:'OUTER MOAT'},
+                {x:1560,y:1110,rx:191,ry:190,inner:.52,shore:[.07,.035,.5],name:'INNER MOAT'}],
+            controls:[{x:700,y:1110,r:70,name:'Siege run-up'},
+                {x:2240,y:1090,r:82,name:'Eastern muster',after:'pillow-command',number:3}],
+            districts:[{number:2,id:'pillow-command',name:'Pillow Command',x:1560,y:1110,r:38,health:140,defence:true},
+                {id:'satellite-fort',name:'Satellite Fort',x:2170,y:370,r:36,health:110,defence:true}],
+            retaliation:{delays:[10,18,26],warning:7.5,lead:0,radius:74,damage:26},
+            finish:{x:2810,y:355,r:90},authorSpeed:42
         });
     // Gaussian shoulders make asymmetrical summits and saddles, while keeping
     // an exact analytical gradient shared by the physics and contour renderer.
@@ -94,6 +140,15 @@
             add(h, h.x, h.y, h.angle || 0);
             for (const l of h.lobes || []) add(l, h.x + l.x, h.y + l.y, (h.angle || 0) + (l.angle || 0));
         }
+        for (const rim of c.rims || []) {
+            const ex=x-rim.x, ey=y-rim.y, d=Math.hypot(ex,ey);
+            if (d < 1e-6) continue; // Interior center is flat to numerical precision.
+            const a=Math.atan2(ey,ex), [u,v,phase]=rim.shore || [0,0,0];
+            const radius=rim.r*(1+u*Math.cos(3*a+phase)+v*Math.sin(5*a-phase));
+            const derivative=rim.r*(-3*u*Math.sin(3*a+phase)+5*v*Math.cos(5*a-phase));
+            const q=(d-radius)/rim.width, z=rim.height*Math.exp(-.5*q*q), slope=-z*q/rim.width;
+            height+=z; dx+=slope*(ex/d+derivative*ey/(d*d)); dy+=slope*(ey/d-derivative*ex/(d*d));
+        }
         return { height, dx, dy };
     }
     // One shoreline definition for the visible coast and the traction probes.
@@ -110,7 +165,8 @@
     function inLake(l, x, y) {
         const cs = Math.cos(l.angle || 0), sn = Math.sin(l.angle || 0), dx = x - l.x, dy = y - l.y;
         const u = (cs * dx + sn * dy) / l.rx, v = (-sn * dx + cs * dy) / l.ry;
-        return Math.hypot(u, v) < shoreRadius(l, Math.atan2(v, u));
+        const radius=shoreRadius(l, Math.atan2(v,u)), distance=Math.hypot(u,v);
+        return distance < radius && (!l.inner || distance > radius*l.inner);
     }
     function water(c, s) {
         // Sample the footprint: traction fades across the shoreline, rather than flickering.
@@ -124,9 +180,9 @@
     function create(level, ship) {
         ship.vessel = 'ball'; ship.radius = level.rampage.radius;
         return { roll: 0, pawPhase: 0, radius: level.rampage.radius, slip: 0, wet: 0, effort: 0, elevation: 0, control: 0, controlCount: level.rampage.controls.length,
-            shieldUntil: 0, shieldReady: 0, shots: [], flashes: [], hold: 0,
+            shieldUntil: 0, shieldReady: 0, shots: [], strikes: [], flashes: [], hold: 0,
             districts: level.rampage.districts.map(d => ({ ...d, maxHealth: d.health, nextShot: 0, aim: null, shotAt: null, hitAt: -100 })),
-            stats: { districts: 0, damage: 0, blocked: 0, shields: 0, impacts: 0, waterTime: 0 }
+            stats: { districts: 0, damage: 0, blocked: 0, shields: 0, impacts: 0, waterTime: 0, salvos: 0, strikeHits: 0, strikeDodges: 0, strikeBlocks: 0 }
         };
     }
     function shield(run) {
@@ -144,6 +200,39 @@
     }
     function ready(run) {
         return run.rampage.control === run.rampage.controlCount && run.rampage.districts.every(d => d.health <= 0);
+    }
+    function controlAvailable(c, st) {
+        const cp=c.controls[st.control];
+        return cp && (!cp.after || st.districts.some(d=>d.id===cp.after && d.health<=0));
+    }
+    function retaliation(level, run, district) {
+        const c=level.rampage.retaliation, st=run.rampage;
+        if (!c) return;
+        st.stats.salvos++;
+        for (const delay of c.delays) st.strikes.push({
+            source:district.id, launchAt:run.time+delay-c.warning, impactAt:run.time+delay,
+            x:null,y:null,r:c.radius,damage:c.damage,lead:c.lead || 0
+        });
+        st.strikes.sort((a,b)=>a.impactAt-b.impactAt);
+    }
+    function strikeUpdate(level,run) {
+        const st=run.rampage,s=run.ship;
+        st.strikes=st.strikes.filter(b=>{
+            if (b.x===null && run.time>=b.launchAt) {
+                // The reticle locks ONCE. Flight is long enough to steer away;
+                // the off-map battery never performs invisible homing hitscan.
+                b.x=clamp(s.x+s.vx*b.lead,b.r,level.world[0]-b.r);
+                b.y=clamp(s.y+s.vy*b.lead,b.r,level.world[1]-b.r);
+            }
+            if (run.time<b.impactAt) return true;
+            const hit=Math.hypot(s.x-b.x,s.y-b.y)<b.r+level.rampage.radius;
+            if (hit) {
+                if (protectedAt(run)) st.stats.strikeBlocks++; else st.stats.strikeHits++;
+                hurt(run,b.damage);
+            } else st.stats.strikeDodges++;
+            st.flashes.push({x:b.x,y:b.y,t:run.time,strike:true,r:b.r});
+            return false;
+        });
     }
     function update(level, run, input, dt) {
         const c = level.rampage, st = run.rampage, s = run.ship, events = [];
@@ -172,7 +261,7 @@
         if (s.x-c.radius < 0 || s.y-c.radius < 0 || s.x+c.radius > level.world[0] || s.y+c.radius > level.world[1])
             run.failure = { type: 'off-map', message: 'Gerbozilla rolled off the survey map. Retry for a fresh run-up.' };
         const cp = c.controls[st.control];
-        if (cp && Math.hypot(s.x-cp.x, s.y-cp.y) < cp.r) { st.control++; events.push(cp.name); }
+        if (controlAvailable(c,st) && Math.hypot(s.x-cp.x, s.y-cp.y) < cp.r) { st.control++; events.push(cp.name); }
         for (const d of st.districts) {
             if (d.health <= 0) continue;
             const dx = s.x-d.x, dy = s.y-d.y, dist = Math.hypot(dx, dy);
@@ -187,6 +276,7 @@
                     if (d.health === 0) {
                         st.stats.districts++; s.vx *= .84; s.vy *= .84;
                         events.push(d.name + ' flattened'); d.aim = null; d.shotAt = null;
+                        retaliation(level,run,d);
                     } else {
                         // Surviving structures deflect the ball; shield never supplies a free impulse.
                         s.vx += nx*impact*1.12; s.vy += ny*impact*1.12;
@@ -213,26 +303,30 @@
             }
             return b.life > 0;
         });
+        strikeUpdate(level,run);
         st.flashes = st.flashes.filter(f => run.time-f.t < 1.5);
         if (s.hull <= 0) run.failure = { type:'shell-broken',message:'The exercise ball cracked. Use the shield for defensive fire and high-speed impacts.' };
         const inside = Math.hypot(s.x-c.finish.x,s.y-c.finish.y) <= c.finish.r-c.radius;
         const slow = Math.hypot(s.vx,s.vy) < .8 && st.effort === 0;
-        run.dock = { inside, aligned:true, slow, ready:ready(run) && inside && slow };
+        run.dock = { inside, aligned:true, slow, ready:ready(run) && inside && slow && st.strikes.length===0 };
         run.dockHold = run.dock.ready ? run.dockHold+dt : 0;
         return events;
     }
     function message(level, run) {
         const st = run.rampage;
         if (run.failure) return run.failure.message;
+        const strike=st.strikes.find(b=>b.x!==null);
+        if (strike) return 'RETALIATION · '+Math.max(0,strike.impactAt-run.time).toFixed(1)+' s · LEAVE RED TARGET CIRCLES OR SHIELD';
         if (st.wet > .5) return 'NO TRACTION · keep coasting; running only spins the ball';
         if (run.dockHold > 0) return 'RECOVERY MEADOW · paws off · settling ' + Math.max(0,2-run.dockHold).toFixed(1)+' s';
         const cp = level.rampage.controls[st.control];
-        if (cp) return `${String(st.control + 1).padStart(2, '0')} · ${cp.name.toUpperCase()} · keep your momentum`;
+        if (controlAvailable(level.rampage,st)) return `${String(st.control + 1).padStart(2, '0')} · ${cp.name.toUpperCase()} · keep your momentum`;
         const d = st.districts.find(d=>d.health>0);
         if (d) return `${d.name.toUpperCase()} · RAM WITH MOMENTUM · SPACE / F TO SHIELD`;
+        if (st.strikes.length) return 'RETALIATION INBOUND · clear the marked strikes before recovery';
         return 'RECOVERY MEADOW · push against motion to brake, then release all directions';
     }
-    const api = { levels:[level, bank, lakes], terrain, shoreRadius, lakePoint, inLake, water, create, shield, protectedAt, ready, update, message };
+    const api = { levels:[level, bank, lakes, downhill, hairpin, fortress], terrain, shoreRadius, lakePoint, inLake, water, create, shield, protectedAt, ready, controlAvailable, update, message };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     root.GerboRampage = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
