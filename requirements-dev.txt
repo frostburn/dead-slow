@@ -1,2 +1,2 @@
 # Browser tests only. Not needed to build or play.
-playwright==1.57.0
+playwright==1.62.0
