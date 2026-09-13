@@ -7,10 +7,10 @@ function isolated(){const l=JSON.parse(JSON.stringify(L.find(l=>l.rampage)));l.r
  const s={x:200,y:200,vx:0,vy:0,a:0,r:0,hull:100};
  return {level:l,run:{ship:s,rampage:R.create(l,s),time:0,contacts:0,distance:0,maxSpeed:0,dockHold:0}};}
 function step(a,input={},duration=1){for(let i=0;i<Math.round(duration*120);i++){a.run.time+=1/120;R.update(a.level,a.run,input,1/120);}}
-test('World 5 contains nine explicitly standalone courses',()=>{
- const rows=L.filter(l=>l.worldNumber===5);assert.equal(rows.length,12);assert.ok(rows.every(l=>l.standalone));assert.ok(L.worlds[4].preview);
- const t=start();t.marathon('grand-tour');assert.equal(t.state.marathon.route.length,48);assert.ok(t.state.marathon.route.every(i=>!L[i].rampage));
- t.marathon('gerbozilla');assert.equal(t.state.marathon,null);assert.ok(t.state.run.rampage);
+test('World 5 supplies twelve championship courses',()=>{
+ const rows=L.filter(l=>l.worldNumber===5);assert.equal(rows.length,12);assert.ok(rows.every(l=>!l.standalone));assert.ok(!L.worlds[4].preview);
+ const t=start();t.marathon('grand-tour');assert.equal(t.state.marathon.route.length,60);assert.equal(t.state.marathon.route.filter(i=>L[i].rampage).length,12);
+ t.marathon('gerbozilla');assert.equal(t.state.marathon.route.length,12);assert.ok(t.state.run.rampage);
 });
 test('diagonal running is normalized; releasing preserves momentum',()=>{
  const a=isolated(),b=isolated();step(a,{rudder:1},5);step(b,{rudder:1,thruster:1},5);
@@ -56,7 +56,7 @@ for (const l of L.filter(l=>l.rampage)) test(l.name+' has a clean input-only ref
  assert.equal(t.state.run.rampage.control,l.rampage.controls.length);
  assert.ok(Math.abs(t.state.run.time-f.expectedTime)<1/120);
 });
-test('adding a standalone stage keeps the Codex migration and old circuits intact',()=>{
+test('current-schema saves keep current circuits and unchanged Seedhaven records',()=>{
  const d=S.fresh?S.fresh():S.create({getItem:()=>null,setItem(){}}).data;
  d.races['grand-tour']=[{time:9000,contacts:0,clean:true}];d.stages['gerbo-first-outing']={runs:[{time:100,contacts:0,clean:true}],ghost:[],bestSplits:[]};
  const s=S.create({getItem:()=>JSON.stringify(d),setItem(){}});assert.equal(s.data.races['grand-tour'].length,1);assert.equal(s.best('gerbo-first-outing').time,100);
@@ -74,7 +74,7 @@ test('wet gravity survives at full and partial immersion while paw drive loses g
  }
 });
 test('irregular shoreline drawing samples agree with water classification',()=>{
- for(const l of L.filter(l=>l.rampage)) for(const lake of l.rampage.lakes) {
+ for(const l of L.filter(l=>l.rampage)) for(const lake of l.rampage.lakes.filter(lake=>!lake.poly)) {
   const rs=[];
   for(let i=0;i<120;i++){
    const angle=i*Math.PI/60,p=R.lakePoint(lake,angle,.998),q=R.lakePoint(lake,angle,1.002);

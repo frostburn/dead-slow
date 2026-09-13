@@ -1,7 +1,48 @@
+# Version 5 field atlas
+
+The twelve-course World 5 circuit is now enabled, with its own overall/clean
+leaderboards and the same retry-inclusive circuit clock as the sea/space worlds.
+The Grand Tour contains sixty stages, ending with both hamsters home. This is a
+full release, not a preview. The Century Ship is excluded from both circuits.
+
+## Field map revisions
+
+Courses 2–9 gain off-route woods and ponds, rolling terrain or broken ridges.
+Bramble Tarn is inside the forest. Mount Muesli is a set of oblique spurs and a
+saddle rather than a smooth elliptical dome. Fort Pillow's rim has asymmetric
+low-order bends, evaluated with an analytical gradient in the same field as its
+contour lines. These are physical terrain, not decorative collision mismatches.
+Seedhaven and The Long Way Home retain their exact course data and recordings.
+
+Bristle Brook is one continuous bank polygon extending beyond the northern and
+southern chart edges. The ball cannot route around either end inside the field.
+All three survey controls are east of it; the start and finish are west. Shore
+rendering and the five water-traction probes use the same polygon. New river
+code does not change the existing rounded-lake functions.
+
+Needlesworth now prowls up to 42 m/s toward the player, winds up only within
+450 m, and charges with 13 m/s² nominal drive. His warning remains 1.8 seconds,
+followed by 3.8 seconds charging, six seconds recovering and two seconds of
+prowling cooldown. Terrain and collisions still apply; invulnerability does not
+remove either. On this course, spine impacts above 4 m/s closing speed are fatal
+unshielded, so tanking hits cannot tie the fast shielded time. Other Needlesworth
+courses are unchanged. Shields last three seconds with another six to recharge. The
+aggressive clean reference blocks three hits in 89.508 seconds. This is evidence
+for the intended fast route, not a proof of global speedrun optimality. No hidden
+shield tally, timer or scripted impact is required to complete the course.
+
+Schema 10 archives each revised map under `archivedStages[id + '-preview']`,
+leaving earlier `archivedStages[id]` and retired Hairpin archives separate. The
+previous 48-stage Grand Tour goes to `archivedRaces['grand-tour-48']`; new World 5
+and sixty-stage Grand Tour boards start empty. Current-schema imports do not
+repeat migration. See `tests/v5-release.test.cjs` for focused regression cases.
+
+---
+
 # Gerbozilla’s field guide
 
-World 5 has **twelve standalone courses**, outside the existing 48-stage Grand
-Tour. Every course is immediately selectable. There are no placeholder levels.
+World 5 has **twelve championship courses**, included in the 60-stage Grand
+Tour. The Century Ship remains a separate bonus. Every course is immediately selectable. There are no placeholder levels.
 The ball is 48 metres across; momentum, rolling resistance and slope—not an
 instant direction change—decide where it goes.
 

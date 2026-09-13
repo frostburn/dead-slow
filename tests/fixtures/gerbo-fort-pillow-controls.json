@@ -7,345 +7,473 @@
       "rudder": 1
     },
     {
-      "time": 37.25,
-      "rudder": 0.95
-    },
-    {
-      "time": 37.5,
-      "rudder": 0.91
-    },
-    {
-      "time": 37.75,
-      "rudder": 0.87
-    },
-    {
-      "time": 38,
-      "rudder": 0.84
-    },
-    {
-      "time": 38.25,
-      "rudder": 0.85
-    },
-    {
-      "time": 38.5,
-      "rudder": 0.88
-    },
-    {
-      "time": 38.75,
-      "rudder": 1
-    },
-    {
-      "time": 42.75,
+      "time": 34.25,
       "thruster": -0.01
     },
     {
-      "time": 43.75,
-      "thruster": 0
+      "time": 35.5,
+      "thruster": -0.02
+    },
+    {
+      "time": 36,
+      "thruster": -0.03
+    },
+    {
+      "time": 36.5,
+      "thruster": -0.04
+    },
+    {
+      "time": 36.75,
+      "thruster": -0.05
+    },
+    {
+      "time": 37,
+      "thruster": -0.06
+    },
+    {
+      "time": 37.25,
+      "thruster": -0.07
+    },
+    {
+      "time": 37.5,
+      "rudder": 0.99,
+      "thruster": -0.08
+    },
+    {
+      "time": 37.75,
+      "rudder": 0.94,
+      "thruster": -0.09
+    },
+    {
+      "time": 38,
+      "rudder": 0.9
+    },
+    {
+      "time": 38.25,
+      "rudder": 0.89,
+      "thruster": -0.1
+    },
+    {
+      "time": 38.5,
+      "rudder": 0.91,
+      "thruster": -0.11
+    },
+    {
+      "time": 38.75,
+      "rudder": 0.99,
+      "thruster": -0.12
+    },
+    {
+      "time": 40,
+      "thruster": -0.11
+    },
+    {
+      "time": 41,
+      "thruster": -0.1
+    },
+    {
+      "time": 41.75,
+      "rudder": 1
+    },
+    {
+      "time": 42,
+      "thruster": -0.09
+    },
+    {
+      "time": 42.25,
+      "thruster": -0.07
+    },
+    {
+      "time": 42.5,
+      "thruster": -0.06
+    },
+    {
+      "time": 42.75,
+      "thruster": -0.04
+    },
+    {
+      "time": 43,
+      "thruster": -0.03
+    },
+    {
+      "time": 43.25,
+      "thruster": -0.02
+    },
+    {
+      "time": 44.25,
+      "thruster": -0.03
     },
     {
       "time": 44.5,
-      "thruster": 0.01
+      "thruster": -0.06
     },
     {
       "time": 44.75,
-      "rudder": 0.41,
-      "thruster": 0.02
+      "rudder": 0.99,
+      "thruster": -0.13
     },
     {
       "time": 45,
-      "rudder": 0.24
+      "rudder": 0.71,
+      "thruster": -0.26
     },
     {
       "time": 45.25,
-      "rudder": 0.54
+      "rudder": 0.16,
+      "thruster": -0.25
     },
     {
       "time": 45.5,
-      "rudder": 1,
-      "thruster": 0.01
+      "rudder": 0.25,
+      "thruster": -0.22
     },
     {
       "time": 45.75,
-      "thruster": 0
+      "rudder": 0.71,
+      "thruster": -0.21
+    },
+    {
+      "time": 46,
+      "rudder": 0.99,
+      "thruster": -0.15
+    },
+    {
+      "time": 46.25,
+      "thruster": -0.11
+    },
+    {
+      "time": 46.5,
+      "rudder": 1,
+      "thruster": -0.09
+    },
+    {
+      "time": 46.75,
+      "thruster": -0.08
+    },
+    {
+      "time": 48,
+      "thruster": -0.09
     },
     {
       "time": 48.25,
       "line": true
     },
     {
+      "time": 48.5,
+      "rudder": 0.99,
+      "thruster": -0.1
+    },
+    {
+      "time": 48.75,
+      "thruster": -0.11
+    },
+    {
       "time": 49,
+      "rudder": 1,
       "thruster": -0.08
     },
     {
-      "time": 52.5,
+      "time": 49.75,
       "thruster": -0.07
     },
     {
-      "time": 55.5,
+      "time": 52.75,
       "thruster": -0.06
+    },
+    {
+      "time": 55.75,
+      "thruster": -0.05
     },
     {
       "time": 56.5,
-      "thruster": -0.05
+      "thruster": -0.04
     },
     {
       "time": 57,
-      "thruster": -0.04
-    },
-    {
-      "time": 57.75,
       "thruster": -0.03
     },
     {
-      "time": 59,
-      "thruster": -0.04
+      "time": 57.25,
+      "thruster": -0.01
+    },
+    {
+      "time": 57.5,
+      "thruster": 0
+    },
+    {
+      "time": 57.75,
+      "thruster": 0.02
+    },
+    {
+      "time": 58,
+      "thruster": 0.03
+    },
+    {
+      "time": 58.25,
+      "thruster": 0.04
     },
     {
       "time": 59.5,
-      "thruster": -0.05
+      "thruster": 0.03
     },
     {
       "time": 60,
-      "thruster": -0.06
+      "thruster": 0.01
     },
     {
       "time": 60.25,
-      "thruster": -0.07
+      "thruster": 0
     },
     {
       "time": 60.5,
-      "thruster": -0.08
+      "thruster": -0.02
     },
     {
-      "time": 61.25,
-      "thruster": -0.07
+      "time": 60.75,
+      "thruster": -0.05
     },
     {
-      "time": 61.75,
+      "time": 61,
       "thruster": -0.06
     },
     {
-      "time": 69,
-      "thruster": -0.07
+      "time": 61.5,
+      "thruster": -0.05
+    },
+    {
+      "time": 61.75,
+      "thruster": -0.03
+    },
+    {
+      "time": 62,
+      "thruster": -0.02
+    },
+    {
+      "time": 62.5,
+      "thruster": -0.01
+    },
+    {
+      "time": 65,
+      "thruster": 0
+    },
+    {
+      "time": 68.75,
+      "thruster": 0.01
+    },
+    {
+      "time": 70.5,
+      "thruster": 0.02
     },
     {
       "time": 70.75,
-      "thruster": -0.08
+      "rudder": -0.62,
+      "thruster": -0.79
     },
     {
-      "time": 71,
-      "rudder": -0.62,
+      "time": 71.25,
       "thruster": -0.78
     },
     {
-      "time": 71.5,
+      "time": 71.75,
       "rudder": -0.63
     },
     {
-      "time": 72,
+      "time": 72.25,
       "thruster": -0.77
     },
     {
-      "time": 72.25,
+      "time": 72.75,
       "rudder": -0.64
     },
     {
-      "time": 73.25,
-      "rudder": -0.65,
+      "time": 73.5,
       "thruster": -0.76
     },
     {
-      "time": 74.25,
-      "rudder": -0.66
+      "time": 73.75,
+      "rudder": -0.65
     },
     {
-      "time": 74.5,
+      "time": 74.75,
+      "rudder": -0.66,
       "thruster": -0.75
     },
     {
-      "time": 75.5,
+      "time": 75.75,
       "rudder": -0.67
     },
     {
-      "time": 75.75,
+      "time": 76,
       "thruster": -0.74
     },
     {
-      "time": 76.5,
+      "time": 76.75,
       "rudder": -0.68
     },
     {
-      "time": 77,
+      "time": 77.25,
       "thruster": -0.73
     },
     {
-      "time": 77.75,
+      "time": 78,
       "rudder": -0.69
     },
     {
-      "time": 78.25,
+      "time": 78.5,
       "thruster": -0.72
     },
     {
-      "time": 79,
+      "time": 79.25,
       "rudder": -0.7
     },
     {
-      "time": 79.5,
+      "time": 80,
       "thruster": -0.71
     },
     {
-      "time": 80.25,
+      "time": 80.75,
       "rudder": -0.71
     },
     {
-      "time": 81,
+      "time": 81.25,
       "thruster": -0.7
     },
     {
-      "time": 81.75,
+      "time": 82.25,
       "rudder": -0.72
     },
     {
-      "time": 82.5,
+      "time": 82.75,
       "thruster": -0.69
     },
     {
-      "time": 83.25,
+      "time": 83.75,
       "rudder": -0.73
     },
     {
-      "time": 84,
+      "time": 84.25,
       "thruster": -0.68
     },
     {
-      "time": 85,
+      "time": 85.5,
       "rudder": -0.74
     },
     {
-      "time": 85.5,
+      "time": 86,
       "thruster": -0.67
     },
     {
-      "time": 86.75,
+      "time": 87.25,
       "rudder": -0.75
     },
     {
-      "time": 87.25,
+      "time": 87.75,
       "thruster": -0.66
     },
     {
-      "time": 88.75,
-      "rudder": -0.76,
+      "time": 89.25,
+      "rudder": -0.76
+    },
+    {
+      "time": 89.5,
       "thruster": -0.65
     },
     {
-      "time": 90.5,
+      "time": 91.25,
       "thruster": -0.64
     },
     {
-      "time": 90.75,
+      "time": 91.5,
       "rudder": -0.77
     },
     {
-      "time": 92.5,
+      "time": 93,
       "thruster": -0.63
     },
     {
-      "time": 93,
+      "time": 93.75,
       "rudder": -0.78
     },
     {
-      "time": 94.25,
+      "time": 95,
       "thruster": -0.62
     },
     {
-      "time": 95,
+      "time": 95.75,
       "rudder": -0.79
     },
     {
-      "time": 95.75,
+      "time": 96.5,
       "thruster": -0.61
     },
     {
-      "time": 97.25,
+      "time": 97.75,
       "rudder": -0.8
     },
     {
-      "time": 97.5,
+      "time": 98,
       "thruster": -0.6
     },
     {
-      "time": 98.75,
-      "thruster": -0.59
-    },
-    {
-      "time": 99,
-      "rudder": -0.81
-    },
-    {
-      "time": 100,
-      "thruster": -0.58
-    },
-    {
-      "time": 100.75,
-      "rudder": -0.82
-    },
-    {
-      "time": 101,
-      "thruster": -0.57
-    },
-    {
-      "time": 102,
-      "rudder": -0.83,
-      "thruster": -0.56
-    },
-    {
-      "time": 102.75,
-      "thruster": -0.55
-    },
-    {
-      "time": 103.25,
-      "rudder": -0.84
-    },
-    {
-      "time": 103.5,
-      "thruster": -0.54
-    },
-    {
-      "time": 104.25,
-      "thruster": -0.55
-    },
-    {
-      "time": 104.5,
-      "rudder": -0.83,
-      "thruster": -0.56
-    },
-    {
-      "time": 104.75,
-      "rudder": -0.82,
-      "thruster": -0.57
-    },
-    {
-      "time": 105,
+      "time": 99.5,
       "rudder": -0.81,
       "thruster": -0.59
     },
     {
-      "time": 105.25,
+      "time": 100.5,
+      "thruster": -0.58
+    },
+    {
+      "time": 101.25,
+      "rudder": -0.82
+    },
+    {
+      "time": 101.5,
+      "thruster": -0.57
+    },
+    {
+      "time": 102.5,
+      "rudder": -0.83,
+      "thruster": -0.56
+    },
+    {
+      "time": 103.25,
+      "thruster": -0.55
+    },
+    {
+      "time": 103.5,
+      "rudder": -0.84
+    },
+    {
+      "time": 104,
+      "rudder": -0.83
+    },
+    {
+      "time": 104.25,
+      "thruster": -0.56
+    },
+    {
+      "time": 104.5,
+      "rudder": -0.82,
+      "thruster": -0.57
+    },
+    {
+      "time": 104.75,
+      "rudder": -0.81,
+      "thruster": -0.58
+    },
+    {
+      "time": 105,
       "rudder": -0.8,
       "thruster": -0.6
     },
     {
-      "time": 105.5,
+      "time": 105.25,
+      "rudder": -0.79,
       "thruster": -0.61
     },
     {
-      "time": 105.75,
-      "rudder": -0.79
-    },
-    {
-      "time": 106,
+      "time": 106.25,
       "rudder": -0.8,
       "thruster": -0.6
     },
@@ -362,7 +490,7 @@
     {
       "time": 107,
       "rudder": -0.84,
-      "thruster": -0.55
+      "thruster": -0.54
     },
     {
       "time": 107.25,
@@ -372,49 +500,45 @@
     {
       "time": 107.5,
       "rudder": -0.89,
-      "thruster": -0.46
+      "thruster": -0.45
     },
     {
       "time": 107.75,
-      "rudder": -0.92,
-      "thruster": -0.39
+      "rudder": -0.93,
+      "thruster": -0.37
     },
     {
       "time": 108,
-      "rudder": -0.95,
-      "thruster": -0.3
+      "rudder": -0.96,
+      "thruster": -0.27
     },
     {
       "time": 108.25,
       "rudder": -0.98,
-      "thruster": -0.21
-    },
-    {
-      "time": 108.5,
       "thruster": -0.2
     },
     {
+      "time": 108.5,
+      "thruster": -0.22
+    },
+    {
       "time": 108.75,
-      "rudder": -0.97,
-      "thruster": -0.25
+      "rudder": -0.96,
+      "thruster": -0.27
     },
     {
       "time": 109,
-      "rudder": -0.96,
-      "thruster": -0.29,
+      "rudder": -0.95,
+      "thruster": -0.31,
       "line": true
     },
     {
-      "time": 109.25,
-      "rudder": -0.95,
+      "time": 109.5,
       "thruster": -0.3
     },
     {
-      "time": 109.5,
-      "rudder": -0.96
-    },
-    {
       "time": 109.75,
+      "rudder": -0.96,
       "thruster": -0.27
     },
     {
@@ -428,35 +552,35 @@
       "thruster": 0.26
     },
     {
-      "time": 110.75,
+      "time": 110.5,
       "rudder": 0.96
     },
     {
-      "time": 111,
+      "time": 110.75,
       "thruster": 0.27
     },
     {
-      "time": 111.75,
+      "time": 111.5,
       "thruster": 0.28
     },
     {
-      "time": 112.5,
+      "time": 112.25,
       "thruster": 0.29
     },
     {
-      "time": 113.25,
+      "time": 113,
       "thruster": 0.3
     },
     {
-      "time": 113.5,
+      "time": 113.25,
       "rudder": 0.95
     },
     {
-      "time": 114.25,
+      "time": 114,
       "thruster": 0.31
     },
     {
-      "time": 115.5,
+      "time": 115,
       "thruster": 0.32
     },
     {
@@ -469,7 +593,8 @@
     },
     {
       "time": 117,
-      "rudder": 0.96
+      "rudder": 0.96,
+      "thruster": 0.29
     },
     {
       "time": 117.25,
@@ -477,158 +602,147 @@
     },
     {
       "time": 117.5,
-      "thruster": 0.27
+      "rudder": 0.97,
+      "thruster": 0.26
     },
     {
       "time": 117.75,
-      "rudder": 0.97,
-      "thruster": 0.25
+      "thruster": 0.24
     },
     {
       "time": 118,
-      "thruster": 0.23
+      "rudder": 0.98,
+      "thruster": 0.22
     },
     {
       "time": 118.25,
-      "rudder": 0.98,
-      "thruster": 0.21
+      "thruster": 0.19
     },
     {
       "time": 118.5,
-      "thruster": 0.18
+      "rudder": 0.99,
+      "thruster": 0.16
     },
     {
       "time": 118.75,
-      "rudder": 0.99,
-      "thruster": 0.15
+      "thruster": 0.13
     },
     {
       "time": 119,
-      "thruster": 0.13
+      "thruster": 0.1
     },
     {
       "time": 119.25,
       "rudder": 1,
-      "thruster": 0.09
+      "thruster": 0.07
     },
     {
       "time": 119.5,
-      "thruster": 0.06
+      "thruster": 0.04
     },
     {
       "time": 119.75,
-      "thruster": 0.03,
-      "line": true
-    },
-    {
-      "time": 120,
       "thruster": 0
     },
     {
-      "time": 120.25,
-      "thruster": -0.03
+      "time": 120,
+      "thruster": -0.03,
+      "line": true
     },
     {
-      "time": 120.5,
+      "time": 120.25,
       "thruster": -0.06
     },
     {
-      "time": 120.75,
+      "time": 120.5,
       "thruster": -0.08
     },
     {
-      "time": 121,
+      "time": 120.75,
       "rudder": 0.99,
       "thruster": -0.11
     },
     {
-      "time": 121.25,
-      "thruster": -0.12
+      "time": 121,
+      "thruster": -0.13
     },
     {
-      "time": 121.5,
+      "time": 121.25,
       "thruster": -0.14
     },
     {
-      "time": 121.75,
-      "thruster": -0.15
-    },
-    {
-      "time": 122,
+      "time": 121.5,
       "thruster": -0.16
     },
     {
-      "time": 122.25,
+      "time": 122,
       "thruster": -0.17
     },
     {
-      "time": 122.75,
-      "rudder": 0.98
-    },
-    {
-      "time": 123,
+      "time": 122.25,
+      "rudder": 0.98,
       "thruster": -0.18
     },
     {
-      "time": 124.25,
+      "time": 123.5,
       "thruster": -0.19
     },
     {
-      "time": 125.25,
+      "time": 124.75,
       "thruster": -0.2
     },
     {
-      "time": 127.75,
+      "time": 127,
       "thruster": -0.21
     },
     {
-      "time": 129.5,
+      "time": 129.25,
       "thruster": -0.2
     },
     {
-      "time": 129.75,
+      "time": 129.5,
       "thruster": -0.19
+    },
+    {
+      "time": 129.75,
+      "thruster": -0.17
     },
     {
       "time": 130,
       "rudder": 0.99,
-      "thruster": -0.17
-    },
-    {
-      "time": 130.25,
       "thruster": -0.15
     },
     {
+      "time": 130.25,
+      "thruster": -0.13
+    },
+    {
       "time": 130.5,
-      "thruster": -0.12
+      "rudder": 1,
+      "thruster": -0.1
     },
     {
       "time": 130.75,
-      "rudder": 1,
-      "thruster": -0.09
-    },
-    {
-      "time": 131,
       "thruster": -0.07
     },
     {
-      "time": 131.25,
+      "time": 131,
       "thruster": -0.05
     },
     {
-      "time": 131.5,
+      "time": 131.25,
       "thruster": -0.04
     },
     {
-      "time": 131.75,
+      "time": 131.5,
       "thruster": -0.03
     },
     {
-      "time": 132,
+      "time": 131.75,
       "thruster": -0.02
     },
     {
-      "time": 132.25,
+      "time": 132,
       "thruster": -0.01
     },
     {
@@ -636,349 +750,298 @@
       "thruster": 0
     },
     {
-      "time": 135.75,
-      "line": true
-    },
-    {
-      "time": 136.5,
+      "time": 134.5,
       "thruster": -0.01
     },
     {
-      "time": 137,
-      "thruster": -0.02
+      "time": 135.5,
+      "thruster": -0.02,
+      "line": true
     },
     {
-      "time": 137.25,
+      "time": 135.75,
       "thruster": -0.03
     },
     {
-      "time": 137.5,
+      "time": 136,
       "thruster": -0.04
     },
     {
-      "time": 137.75,
+      "time": 136.25,
+      "thruster": -0.05
+    },
+    {
+      "time": 136.5,
       "thruster": -0.06
     },
     {
-      "time": 138,
+      "time": 136.75,
       "thruster": -0.08
     },
     {
-      "time": 138.25,
+      "time": 137,
       "rudder": 0.99,
-      "thruster": -0.1
+      "thruster": -0.11
     },
     {
-      "time": 138.5,
-      "thruster": -0.14
+      "time": 137.25,
+      "thruster": -0.15
+    },
+    {
+      "time": 137.5,
+      "rudder": 0.98,
+      "thruster": -0.19
+    },
+    {
+      "time": 137.75,
+      "rudder": 0.97,
+      "thruster": -0.23
+    },
+    {
+      "time": 138,
+      "rudder": 0.96,
+      "thruster": -0.27
+    },
+    {
+      "time": 138.25,
+      "thruster": -0.29
     },
     {
       "time": 138.75,
-      "rudder": 0.98,
-      "thruster": -0.18
-    },
-    {
-      "time": 139,
-      "thruster": -0.22
-    },
-    {
-      "time": 139.25,
-      "rudder": 0.97,
-      "thruster": -0.25
-    },
-    {
-      "time": 139.5,
-      "rudder": 0.96,
       "thruster": -0.26
     },
     {
-      "time": 139.75,
+      "time": 139,
       "rudder": 0.97,
-      "thruster": -0.25
-    },
-    {
-      "time": 140,
-      "thruster": -0.23
-    },
-    {
-      "time": 140.25,
-      "rudder": 0.98,
-      "thruster": -0.2
-    },
-    {
-      "time": 140.5,
-      "thruster": -0.18
-    },
-    {
-      "time": 140.75,
-      "rudder": 0.99,
-      "thruster": -0.17
-    },
-    {
-      "time": 141,
-      "rudder": -0.97,
-      "thruster": -0.23
-    },
-    {
-      "time": 141.25,
       "thruster": -0.24
     },
     {
-      "time": 141.5,
-      "thruster": -0.25
+      "time": 139.25,
+      "rudder": 0.98,
+      "thruster": -0.21
     },
     {
-      "time": 141.75,
+      "time": 139.5,
+      "thruster": -0.2
+    },
+    {
+      "time": 139.75,
+      "rudder": -0.97,
+      "thruster": -0.26
+    },
+    {
+      "time": 140,
       "rudder": -0.96,
       "thruster": -0.27
     },
     {
-      "time": 142,
+      "time": 140.25,
       "thruster": -0.28
     },
     {
-      "time": 142.25,
-      "thruster": -0.29
-    },
-    {
-      "time": 142.5,
+      "time": 140.5,
       "rudder": -0.95,
       "thruster": -0.3
     },
     {
-      "time": 142.75,
+      "time": 140.75,
+      "thruster": -0.31
+    },
+    {
+      "time": 141,
       "thruster": -0.32
     },
     {
-      "time": 143,
+      "time": 141.25,
       "rudder": -0.94,
       "thruster": -0.34
     },
     {
-      "time": 143.25,
+      "time": 141.5,
       "rudder": -0.93,
       "thruster": -0.36
     },
     {
+      "time": 141.75,
+      "thruster": -0.38
+    },
+    {
+      "time": 142,
+      "rudder": -0.92,
+      "thruster": -0.4
+    },
+    {
+      "time": 142.25,
+      "rudder": -0.78,
+      "thruster": -0.37
+    },
+    {
+      "time": 142.5,
+      "rudder": -0.57,
+      "thruster": -0.31
+    },
+    {
+      "time": 142.75,
+      "rudder": -0.41,
+      "thruster": -0.26
+    },
+    {
+      "time": 143,
+      "rudder": -0.27,
+      "thruster": -0.21
+    },
+    {
+      "time": 143.25,
+      "rudder": -0.16,
+      "thruster": -0.18
+    },
+    {
       "time": 143.5,
-      "rudder": -0.76,
-      "thruster": -0.32
+      "rudder": -0.07,
+      "thruster": -0.15
     },
     {
       "time": 143.75,
-      "rudder": -0.56,
-      "thruster": -0.27
-    },
-    {
-      "time": 144,
-      "rudder": -0.4,
-      "thruster": -0.22
-    },
-    {
-      "time": 144.25,
-      "rudder": -0.26,
-      "thruster": -0.19
-    },
-    {
-      "time": 144.5,
-      "rudder": -0.16,
-      "thruster": -0.16
-    },
-    {
-      "time": 144.75,
-      "rudder": -0.07,
+      "rudder": 0,
       "thruster": -0.13
     },
     {
-      "time": 145,
-      "rudder": 0.01,
+      "time": 144,
+      "rudder": 0.06,
       "thruster": -0.11
     },
     {
-      "time": 145.25,
-      "rudder": 0.07,
+      "time": 144.25,
+      "rudder": 0.11,
       "thruster": -0.09
     },
     {
-      "time": 145.5,
-      "rudder": 0.11,
+      "time": 144.5,
+      "rudder": 0.15,
       "thruster": -0.08
     },
     {
-      "time": 145.75,
-      "rudder": 0.15,
-      "thruster": -0.07
-    },
-    {
-      "time": 146,
+      "time": 144.75,
       "rudder": 0.18,
       "thruster": -0.06
     },
     {
-      "time": 146.25,
+      "time": 145,
       "rudder": 0.21,
       "thruster": -0.05
     },
     {
-      "time": 146.5,
-      "rudder": 0.23,
+      "time": 145.25,
+      "rudder": 0.23
+    },
+    {
+      "time": 145.5,
+      "rudder": 0.25,
       "thruster": -0.04
     },
     {
-      "time": 146.75,
-      "rudder": 0.25,
-      "thruster": -0.03
-    },
-    {
-      "time": 147,
+      "time": 145.75,
       "rudder": 0.26
     },
     {
-      "time": 147.25,
-      "rudder": 0.27
+      "time": 146,
+      "rudder": 0.27,
+      "thruster": -0.03
     },
     {
-      "time": 147.5,
-      "rudder": 0.28,
+      "time": 146.25,
+      "rudder": 0.28
+    },
+    {
+      "time": 146.5,
+      "rudder": 0.29,
       "thruster": -0.02
     },
     {
-      "time": 147.75,
-      "rudder": 0.29
-    },
-    {
-      "time": 148.25,
+      "time": 147,
       "rudder": 0.3
     },
     {
-      "time": 148.5,
-      "thruster": -0.01
-    },
-    {
-      "time": 148.75,
+      "time": 147.5,
       "rudder": 0.31
     },
     {
-      "time": 150.25,
+      "time": 148,
+      "thruster": -0.01
+    },
+    {
+      "time": 149,
       "rudder": 0.32
     },
     {
-      "time": 158.25,
+      "time": 151.25,
+      "thruster": -0.02
+    },
+    {
+      "time": 151.5,
+      "thruster": -0.01
+    },
+    {
+      "time": 154.5,
+      "thruster": -0.02
+    },
+    {
+      "time": 154.75,
+      "thruster": -0.01
+    },
+    {
+      "time": 156.75,
+      "thruster": -0.02
+    },
+    {
+      "time": 157,
+      "thruster": -0.01
+    },
+    {
+      "time": 157.5,
+      "rudder": -0.06,
       "thruster": 0
     },
     {
-      "time": 158.5,
-      "rudder": 0.25
-    },
-    {
-      "time": 158.75,
-      "rudder": -0.3,
+      "time": 157.75,
+      "rudder": -0.55,
       "thruster": 0.01
     },
     {
-      "time": 159,
-      "rudder": -0.75,
-      "thruster": 0.02
-    },
-    {
-      "time": 159.25,
-      "rudder": -1,
+      "time": 158,
+      "rudder": -0.95,
       "thruster": 0.03
     },
     {
-      "time": 161,
-      "thruster": 0.02
-    },
-    {
-      "time": 161.25,
-      "thruster": 0.03
-    },
-    {
-      "time": 161.75,
-      "thruster": 0.02
-    },
-    {
-      "time": 162,
-      "thruster": 0.03
-    },
-    {
-      "time": 162.25,
-      "thruster": 0.02
-    },
-    {
-      "time": 162.5,
-      "thruster": 0.03
-    },
-    {
-      "time": 163,
-      "thruster": 0.02
-    },
-    {
-      "time": 163.25,
-      "thruster": 0.03
-    },
-    {
-      "time": 163.5,
-      "thruster": 0.02
-    },
-    {
-      "time": 163.75,
-      "thruster": 0.03
-    },
-    {
-      "time": 164,
-      "thruster": 0.02
-    },
-    {
-      "time": 164.25,
-      "thruster": 0.03
+      "time": 158.25,
+      "rudder": -1
     },
     {
       "time": 164.75,
-      "thruster": 0.02
-    },
-    {
-      "time": 165,
-      "thruster": 0.03
+      "thruster": 0.04
     },
     {
       "time": 165.25,
-      "thruster": 0.02
+      "thruster": 0.03
     },
     {
       "time": 165.5,
-      "thruster": 0.03
+      "thruster": 0.04
     },
     {
       "time": 165.75,
-      "thruster": 0.02
+      "thruster": 0.03
     },
     {
       "time": 166,
-      "thruster": 0.03
-    },
-    {
-      "time": 166.25,
-      "thruster": 0.02
+      "thruster": 0.04
     },
     {
       "time": 166.5,
-      "thruster": 0.03
-    },
-    {
-      "time": 166.75,
-      "thruster": 0.02
-    },
-    {
-      "time": 167,
-      "thruster": 0.03
-    },
-    {
-      "time": 167.5,
       "rudder": 0,
       "thruster": 0
     }
   ],
-  "duration": 173,
-  "expectedTime": 169.50833333333333
+  "duration": 172,
+  "expectedTime": 168.50833333333333
 }

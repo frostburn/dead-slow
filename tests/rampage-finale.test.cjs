@@ -14,7 +14,7 @@ const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-7,`${a} != ${b}`);
 test('twelve real courses end with avoidance, pursuit and a free-start escort',()=>{
  const rows=L.filter(l=>l.rampage);assert.equal(rows.length,12);
  assert.deepEqual(rows.map(l=>l.stageNumber),Array.from({length:12},(_,i)=>i+1));
- assert.equal(L.filter(l=>!l.standalone&&!l.bonus).length,48);
+ assert.equal(L.filter(l=>!l.standalone&&!l.bonus).length,60);
  for(const l of rows.slice(-3)){assert.ok(l.rampage.monsters.some(m=>m.invulnerable));assert.equal(l.rampage.districts.length,0);}
  assert.equal(rows[11].rampage.rescue.free,true);
 });
@@ -109,7 +109,7 @@ for(const id of ['gerbo-prickly-business','gerbo-rolling-threat','gerbo-long-way
  assert.ok(report.verified&&report.clean);assert.equal(t.state.status,'complete');
  assert.equal(t.state.storage.stages[id].runs.length,0);near(t.state.run.time,f.expectedTime);
  assert.equal(t.state.run.rampage.monsters[0].health,100);
- if(id==='gerbo-rolling-threat')assert.ok(t.state.run.rampage.stats.needleBlocks>=2);
+ if(id==='gerbo-rolling-threat')assert.ok(t.state.run.rampage.stats.needleBlocks>=3);
  if(id==='gerbo-long-way-home'){
   assert.equal(t.state.run.rampage.lady.health,100);assert.ok(t.state.run.rampage.rescued);
   assert.equal(t.state.run.rampage.stats.monsters,2);assert.equal(t.state.run.rampage.stats.salvos,2);

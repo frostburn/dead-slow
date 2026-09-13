@@ -20,7 +20,7 @@ with sync_playwright() as pw:
             args.screenshots.mkdir(parents=True,exist_ok=True);page.screenshot(path=str(args.screenshots/name))
     page.evaluate('DeadSlowTest.courses(5)')
     check('World 5 selector has twelve real courses',page.locator('.level-card').count()==12 and '0 / 12 COURSES COMPLETE' in page.locator('#dialog').inner_text())
-    check('Grand Tour remains 48 stages','all 48' in page.locator('#dialog').inner_text())
+    check('Grand Tour now has 60 stages','all 60' in page.locator('#dialog').inner_text())
     page.locator('.level-card').first.click();check('Ball introduction explains map controls and shields','W A S D' in page.locator('#dialog').inner_text() and 'shield' in page.locator('#dialog').inner_text())
     check('Seedhaven introduction counts controls and districts as objectives','04\nMISSION OBJECTIVES' in page.locator('#dialog').inner_text())
     shot('gerbo-intro.png');page.click('[data-action="begin"]');page.evaluate('DeadSlow.speed(0)')

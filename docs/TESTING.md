@@ -164,3 +164,21 @@ passed **39 checks**, including all four affected full input recordings. The
 accepted water reference rendered identically; the dry/fire mix retained
 headroom and mute/release silence. These local checks used Playwright 1.57.0
 with system Chromium and do not claim remote CI or the full regression suite.
+
+
+## Version 5 release pass
+
+Only the changed terrain, ten affected control recordings, circuit integration
+and save migration are exercised locally for this pass:
+
+```sh
+node --test tests/v5-release.test.cjs
+python tests/browser_v5_release.py
+```
+
+The browser check uses the built standalone file and system Chromium. It checks
+all field charts, the river, chase playback, World 5 circuit result/log screens,
+mobile layout and that switching back to marine play restores its UI. Circuit
+completion isolation uses the test harness, not claimed full marathon runs.
+The unchanged audio, other twenty-seven recordings and full regression suite are
+left for CI. Older tests that enumerate route length now expect sixty stages.

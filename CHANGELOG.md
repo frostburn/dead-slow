@@ -1,5 +1,21 @@
 # Changelog
 
+## 5.0.0 — The Complete Field Atlas
+
+- Promote Gerbozilla’s Rampage to a twelve-course championship and expand the
+  Grand Tour to sixty stages. The Century Ship is still a separate bonus.
+- Fill out the field maps with named woods, tarns, ponds, broken mountain spurs
+  and asymmetric ridgelines. Seedhaven and The Long Way Home are unchanged.
+- Add a meandering, chart-spanning Bristle Brook to Strictly No Petting. River
+  rendering and traction use the same bank polygon; both crossings need speed.
+- Strengthen Needlesworth in A Hedge Against Disaster. He closes the distance
+  before winding up. The fast clean reference makes three timed shield blocks.
+- Publish refreshed input-only routes for the ten revised field maps. Preserve
+  all audio, wet-gravity behavior and Codex’s retaliation readout correction.
+- Schema 10 archives the old 48-stage Grand Tour and changed preview field maps,
+  including their ghosts and splits, without replacing earlier terrain archives.
+- Add focused release/circuit/migration/terrain checks and browser coverage.
+
 ## 5.0.0-preview.5 — Needlesworth & the Journey Home
 
 - Add three courses, taking World 5 to twelve standalone assignments: evade
