@@ -159,7 +159,7 @@ with sync_playwright() as p:
     page.keyboard.up('j');page.keyboard.up('k')
     check('Released winch commands cannot stick',page.evaluate('DeadSlowTest.state.input.winch===0'))
     page.keyboard.press('f');check('F casts off without deleting the casualty',page.evaluate('!DeadSlowTest.state.run.jobs.line && DeadSlowTest.state.run.jobs.bodies.length===1 && !DeadSlowTest.state.run.jobs.bodies[0].moored'))
-    page.keyboard.press('r');check('Instant retry resets work and casualty anchor',page.evaluate('DeadSlowTest.state.run.jobs.stats.lineChanges===0 && DeadSlowTest.state.run.jobs.bodies[0].moored'))
+    page.keyboard.press('r');page.click('[data-action=confirm-retry]');check('Confirmed retry resets work and casualty anchor',page.evaluate('DeadSlowTest.state.run.jobs.stats.lineChanges===0 && DeadSlowTest.state.run.jobs.bodies[0].moored'))
     # These tests isolate objective state machines by positioning each hull explicitly.
     for i in range(24,36):
         out=page.evaluate("""i=>{const t=DeadSlowTest;t.load(i);const l=t.state.level,r=t.state.run;

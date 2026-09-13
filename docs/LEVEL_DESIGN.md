@@ -63,7 +63,7 @@ listed in `HarborStorage.RESTARTED`.
     world: [520, 310],
     start: [88, 156, 0],
     spec: { length: 34, beam: 13, mass: 1.15, draft: 2.8,
-        vessel: 'ferry', propulsion: 1.15, capacity: 6, name: 'MS LINNEA' },
+        vessel: 'ferry', propulsion: 1.15, capacity: 6, name: 'MS LINVARA' },
     berth: { x: 432, y: 156, a: 0, l: 48, w: 27, angle: 12, speed: 0.2 },
     jobs: [
         { type: 'load', name: 'Mainland · board 3', x: 88, y: 156, a: 0,

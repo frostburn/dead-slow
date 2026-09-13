@@ -3,10 +3,10 @@
     'use strict';
     const D = Math.PI / 180;
     const FERRY = {
-        length: 34, beam: 13, mass: 1.15, draft: 2.8, vessel: 'ferry', propulsion: 1.15, capacity: 6, name: 'MS LINNEA'
+        length: 34, beam: 13, mass: 1.15, draft: 2.8, vessel: 'ferry', propulsion: 1.15, capacity: 6, name: 'MS LINVARA'
     };
     const TUG = {
-        length: 22, beam: 8, mass: .82, draft: 3.1, vessel: 'tug', propulsion: 1.85, name: 'MT SISU'
+        length: 22, beam: 8, mass: .82, draft: 3.1, vessel: 'tug', propulsion: 1.85, name: 'MT SIVRA'
     };
     function island(x, y, rx, ry, name, seed = 1) {
         const radii = [.93, 1, .92, 1, .9, .98, .91, 1];
@@ -45,15 +45,15 @@
             tip: 'The loading outline works like a berth: whole hull inside, arrow matched, nearly stopped and neutral. Transfer is automatic. The yellow deck fills one vehicle at a time.',
             pace: [155, 215, 300], jobs: [load('Birch · board 4', 88, 156, ['car', 'car', 'van', 'car']), unload('Juniper · unload 4', 432, 156, 4)],
             obstacles: [quay(39, 133, 30, 46, 'BIRCH'), quay(451, 133, 29, 46, 'JUNIPER')],
-            islands: [island(32, 155, 27, 63, 'Birch', 1), island(490, 155, 22, 66, 'Juniper', 2), island(252, 67, 56, 30, 'Kivikari', 3), island(281, 251, 72, 32, '', 4)]
+            islands: [island(32, 155, 27, 63, 'Birch', 1), island(490, 155, 22, 66, 'Juniper', 2), island(252, 67, 56, 30, 'Kivrela', 3), island(281, 251, 72, 32, '', 4)]
         },
         {
             id: 'bigger-boat', name: 'A Bigger Boat', kind: 'Tug initiation · a 56-metre yacht', world: [520, 310], start: [153, 156, 0], spec: TUG, berth: berth(445, 156),
-            brief: 'Elvira has lost her engine. Your stern is already near her bow: make fast with F, take up the slack gently, and tow her into the broad green rescue berth. Then moor Sisu at the service pier.',
+            brief: 'Elvara has lost her engine. Your stern is already near her bow: make fast with F, take up the slack gently, and tow her into the broad green rescue berth. Then moor Sivra at the service pier.',
             tip: 'F makes or releases the line. Hold J to reel in, K to pay out. A rope pulls; it cannot push or brake the yacht for you. Slow early and let her coast into her own berth.',
-            pace: [195, 285, 410], towables: [boat('elvira', 'ELVIRA', 80, 156, 56, 13, 2.4)], jobs: [tow('elvira', 'Elvira · rescue berth', 326, 156, 80, 36)],
+            pace: [195, 285, 410], towables: [boat('elvira', 'ELVARA', 80, 156, 56, 13, 2.4)], jobs: [tow('elvira', 'Elvara · rescue berth', 326, 156, 80, 36)],
             obstacles: [quay(277, 178, 89, 13, 'RESCUE QUAY'), quay(416, 171, 64, 13, 'SERVICE PIER')],
-            islands: [island(248, 66, 64, 33, 'Rönnskär', 6), island(246, 254, 76, 33, '', 7), island(43, 69, 24, 29, '', 8)]
+            islands: [island(248, 66, 64, 33, 'Rönnvikka', 6), island(246, 254, 76, 33, '', 7), island(43, 69, 24, 29, '', 8)]
         },
         {
             id: 'milk-run', name: 'The Milk Run', kind: 'A five-car manifest · two island calls', world: [600, 380], start: [284, 271, 0], spec: FERRY, berth: slip(502, 91),
@@ -61,7 +61,7 @@
             tip: 'Your manifest shows how many vehicles remain aboard. Each call is a separate timed split. Back clear of a ramp before beginning the next turn.',
             pace: [355, 485, 660], jobs: [load('Pine · board 5', 88, 274, ['car', 'van', 'car', 'car', 'car']), unload('Alder · unload 2', 502, 274, 2), unload('Rowan · unload 3', 502, 91, 3)],
             obstacles: [quay(39, 251, 30, 46, 'PINE'), quay(521, 251, 34, 46, 'ALDER'), quay(521, 68, 34, 46, 'ROWAN')],
-            islands: [island(31, 274, 27, 55, 'Pine', 3), island(562, 273, 30, 63, 'Alder', 9), island(561, 90, 30, 55, 'Rowan', 10), island(292, 157, 64, 71, 'Långön', 11), island(197, 326, 49, 24, '', 12)]
+            islands: [island(31, 274, 27, 55, 'Pine', 3), island(562, 273, 30, 63, 'Alder', 9), island(561, 90, 30, 55, 'Rowan', 10), island(292, 157, 64, 71, 'Långsundra', 11), island(197, 326, 49, 24, '', 12)]
         },
         {
             id: 'floating-sauna', name: 'The Floating Sauna', kind: 'An unpowered pontoon · a long corner', world: [600, 380], start: [188, 256, 0], spec: TUG, berth: berth(522, 119),
@@ -71,7 +71,7 @@
             buoys: [
                 { x: 331, y: 261, r: 31, name: 'Round the skerry' }
             ], obstacles: [quay(369, 144, 81, 12, 'BATHING PIER'), quay(497, 135, 76, 12, 'BOAT HOUSE')],
-            islands: [island(258, 132, 60, 79, 'Tallskär', 14), island(166, 337, 74, 24, '', 15), island(466, 56, 55, 23, '', 16)]
+            islands: [island(258, 132, 60, 79, 'Tallervik', 14), island(166, 337, 74, 24, '', 15), island(466, 56, 55, 23, '', 16)]
         },
         {
             id: 'market-day', name: 'Market Day', kind: 'A full ferry · no wake · pleasure traffic', world: [560, 340], start: [281, 173, 0], spec: FERRY, berth: slip(472, 173),
@@ -90,11 +90,11 @@
                     id: 'dinghy', from: [169, 269], to: [169, 76], speed: 1.4, offset: 81, length: 10, beam: 4
                 }
             ],
-            islands: [island(31, 173, 27, 70, '', 17), island(534, 173, 23, 63, 'Market', 18), island(269, 60, 60, 33, 'Björkby', 19), island(292, 284, 68, 31, '', 20)]
+            islands: [island(31, 173, 27, 70, '', 17), island(534, 173, 23, 63, 'Market', 18), island(269, 60, 60, 33, 'Björkava', 19), island(292, 284, 68, 31, '', 20)]
         },
         {
             id: 'granite-needle', name: 'The Granite Needle', kind: 'Broadside pickup · a heavy tow through granite', world: [620, 380], start: [234, 240, 0], spec: TUG, berth: berth(552, 240),
-            brief: 'The work barge lies broadside to the fairway in the western roadstead, bow pointing north. Approach its bow, make fast and swing the 66-metre hull onto an easterly heading before threading the granite heads. Settle it in the repair yard, then moor Sisu.',
+            brief: 'The work barge lies broadside to the fairway in the western roadstead, bow pointing north. Approach its bow, make fast and swing the 66-metre hull onto an easterly heading before threading the granite heads. Settle it in the repair yard, then moor Sivra.',
             tip: 'Pull the bow around in open water before entering the narrows. The stern swings wide and the barge cuts inside turns. Watch the whole tow, leave room north of the yard, and release early enough to let it coast into its berth.',
             pace: [420, 570, 780], towables: [boat('workbarge', 'WORK BARGE', 110, 245, 66, 15, 3.8, 'barge', -90 * D)], jobs: [tow('workbarge', 'Barge · repair yard', 436, 240, 88, 36)],
             obstacles: [quay(390, 263, 94, 13, 'REPAIR YARD'), quay(529, 256, 67, 13, 'TUG BERTH')],
@@ -123,37 +123,37 @@
                 }
             ],
             towables: [boat('packet', 'COASTAL PACKET', 80, 243, 62, 14, 3.2, 'packet')], jobs: [tow('packet', 'Packet · sheltered wharf', 440, 175, 86, 36)], shelters: [lee(365, 130, 224, 105)],
-            obstacles: [quay(391, 198, 96, 13, 'PACKET WHARF'), quay(525, 191, 70, 12, 'SERVICE')], islands: [island(268, 72, 64, 36, 'Strömskär', 29), island(299, 334, 74, 25, '', 30), island(447, 81, 63, 33, '', 31)]
+            obstacles: [quay(391, 198, 96, 13, 'PACKET WHARF'), quay(525, 191, 70, 12, 'SERVICE')], islands: [island(268, 72, 64, 36, 'Strömkava', 29), island(299, 334, 74, 25, '', 30), island(447, 81, 63, 33, '', 31)]
         },
         {
             id: 'island-exchange', name: 'Island Exchange', kind: 'A return service · perpendicular ramps', world: [560, 380], start: [280, 265, 0], spec: FERRY, berth: slip(88, 260),
-            brief: 'Start mid-channel with an empty deck. Collect four vehicles at the mainland ramp, round Long Island to the south, then turn north into Aspö’s landing. Two stay there; two new vans join the ferry. Back clear of the north-facing ramp, round the island again and bring all four vehicles home.',
-            tip: 'The two ramps face at right angles. Use the eastern turning basin, not the rock-strewn gap north of Long Island. The return load is heavier: reuse the route, not the outbound braking point.',
+            brief: 'Start mid-channel with an empty deck. Collect four vehicles at the mainland ramp, round Longfin Isle to the south, then turn north into Asplöna’s landing. Two stay there; two new vans join the ferry. Back clear of the north-facing ramp, round the island again and bring all four vehicles home.',
+            tip: 'The two ramps face at right angles. Use the eastern turning basin, not the rock-strewn gap north of Longfin Isle. The return load is heavier: reuse the route, not the outbound braking point.',
             pace: [610, 800, 1050], jobs: [
-                load('Mainland · board 4', 88, 260, ['car', 'car', 'van', 'car']), unload('Aspö · unload 2', 470, 95, 2, -90 * D), { ...load('Aspö · board 2 vans', 470, 95, ['van', 'van'], -90 * D), rampEnd: 1 }, { ...unload('Mainland · unload 4', 88, 260, 4), rampEnd: -1 }
+                load('Mainland · board 4', 88, 260, ['car', 'car', 'van', 'car']), unload('Asplöna · unload 2', 470, 95, 2, -90 * D), { ...load('Asplöna · board 2 vans', 470, 95, ['van', 'van'], -90 * D), rampEnd: 1 }, { ...unload('Mainland · unload 4', 88, 260, 4), rampEnd: -1 }
             ],
-            obstacles: [quay(39, 237, 30, 46, 'MAINLAND'), quay(447, 45, 46, 31, 'ASPÖ NORTH RAMP')],
-            islands: [island(32, 261, 25, 68, 'Mainland', 32), island(470, 21, 70, 30, 'Aspö', 33), island(285, 180, 80, 71, 'Long Island', 34), island(365, 71, 25, 39, 'North Skerry', 36), island(290, 342, 66, 21, '', 35)]
+            obstacles: [quay(39, 237, 30, 46, 'MAINLAND'), quay(447, 45, 46, 31, 'ASPLÖNA NORTH RAMP')],
+            islands: [island(32, 261, 25, 68, 'Mainland', 32), island(470, 21, 70, 30, 'Asplöna', 33), island(285, 180, 80, 71, 'Longfin Isle', 34), island(365, 71, 25, 39, 'North Skerry', 36), island(290, 342, 66, 21, '', 35)]
         },
         {
             id: 'two-calls', name: 'One Line, Two Calls', kind: 'Two disabled vessels · separate berths', world: [660, 380], start: [229, 261, 0], spec: TUG, berth: berth(588, 98),
             brief: 'Approach the motor yacht west of your position and take it to the southern marina. Then head north, make fast to the fishing boat and bring her home to the net shed. The dispatch order matters.',
             tip: 'Delivered vessels are secured by their shore crews. Your line comes free automatically. The next casualty stays at anchor until you attach; there is no hidden countdown.',
-            pace: [510, 710, 975], towables: [boat('yacht', 'SEA SWALLOW', 80, 262, 52, 12, 2.1), boat('fishing', 'FISHING BOAT', 313, 98, 46, 12, 2.6, 'fishing')],
+            pace: [510, 710, 975], towables: [boat('yacht', 'SEA SORREL', 80, 262, 52, 12, 2.1), boat('fishing', 'FISHING BOAT', 313, 98, 46, 12, 2.6, 'fishing')],
             jobs: [tow('yacht', 'Yacht · south marina', 332, 262, 76, 34), tow('fishing', 'Fishing boat · net shed', 493, 98, 76, 34)],
             obstacles: [quay(291, 284, 84, 12, 'SOUTH MARINA'), quay(449, 120, 91, 13, 'NET SHED'), quay(565, 113, 68, 12, 'SERVICE')],
             islands: [island(237, 149, 49, 39, 'Harbor Island', 36), island(455, 332, 60, 23, '', 37), island(468, 40, 63, 20, '', 38)]
         },
         {
-            id: 'cars-and-casualty', name: 'Cars and a Casualty', kind: 'Ferry duty first · rescue on the way home', world: [620, 380], start: [302, 274, 0], spec: { ...FERRY, propulsion: 1.6, name: 'MS LINNEA' }, berth: berth(554, 101),
+            id: 'cars-and-casualty', name: 'Cars and a Casualty', kind: 'Ferry duty first · rescue on the way home', world: [620, 380], start: [302, 274, 0], spec: { ...FERRY, propulsion: 1.6, name: 'MS LINVARA' }, berth: berth(554, 101),
             brief: 'Return to the mainland ramp from mid-channel and complete the four-vehicle crossing before answering a stranded yacht’s call. With the deck empty, use the ferry’s stern towing point to bring the casualty to the northern guest harbor.',
-            tip: 'The ferry can tow, but it is not as nimble as Sisu. Finish the passenger job before making fast. The work panel changes from manifest to towline instruments when rescue duty begins.',
-            pace: [550, 755, 1035], jobs: [load('Mainland · board 4', 88, 274, ['car', 'car', 'van', 'car']), unload('Island · unload 4', 472, 274, 4), tow('casualty', 'Yacht · guest harbor', 445, 101, 74, 34)], towables: [boat('casualty', 'MORNING STAR', 286, 101, 44, 11, 1.9)],
+            tip: 'The ferry can tow, but it is not as nimble as Sivra. Finish the passenger job before making fast. The work panel changes from manifest to towline instruments when rescue duty begins.',
+            pace: [550, 755, 1035], jobs: [load('Mainland · board 4', 88, 274, ['car', 'car', 'van', 'car']), unload('Island · unload 4', 472, 274, 4), tow('casualty', 'Yacht · guest harbor', 445, 101, 74, 34)], towables: [boat('casualty', 'MORNING MALLOW', 286, 101, 44, 11, 1.9)],
             obstacles: [quay(39, 251, 30, 46, 'MAINLAND'), quay(491, 251, 31, 46, 'ISLAND'), quay(404, 123, 84, 13, 'GUEST HARBOR'), quay(530, 117, 65, 12, 'SERVICE')],
-            islands: [island(31, 274, 26, 62, '', 39), island(540, 275, 31, 58, 'Lillö', 40), island(239, 186, 55, 33, '', 41), island(459, 40, 63, 20, '', 42)]
+            islands: [island(31, 274, 26, 62, '', 39), island(540, 275, 31, 58, 'Lillava', 40), island(239, 186, 55, 33, '', 41), island(459, 40, 63, 20, '', 42)]
         },
         {
-            id: 'midsummer-dispatch', name: 'Midsummer Dispatch', kind: 'Five vehicles · two islands · one rescue', world: [700, 420], start: [264, 331, 0], spec: { ...FERRY, propulsion: 1.6, name: 'MS LINNEA' }, berth: berth(625, 195),
+            id: 'midsummer-dispatch', name: 'Midsummer Dispatch', kind: 'Five vehicles · two islands · one rescue', world: [700, 420], start: [264, 331, 0], spec: { ...FERRY, propulsion: 1.6, name: 'MS LINVARA' }, berth: berth(625, 195),
             brief: 'The long evening is a busy one. Return from the fairway to the mainland ramp, board five vehicles, collect channel clearance, catch the bridge and serve both island ramps. Then recover the disabled launch and finish at the service station.',
             tip: 'This is a whole shift, not a single docking. The manifest and amber markers name the next job. Leave turning room for the launch on the last leg, and protect the clean run through the village water.',
             pace: [735, 995, 1370], current: [.035, -.025], jobs: [load('Mainland · board 5', 91, 321, ['car', 'van', 'car', 'car', 'van']), unload('South village · unload 3', 596, 321, 3), unload('North village · unload 2', 596, 85, 2), tow('launch', 'Launch · rescue landing', 508, 195, 78, 36)],
@@ -181,7 +181,7 @@
                     id: 'summer-post', from: [452, 78], to: [452, 361], speed: 1.1, offset: 59, length: 17, beam: 6
                 }
             ],
-            islands: [island(34, 321, 25, 63, '', 43), island(283, 223, 58, 102, 'Storö', 44), island(659, 321, 30, 62, 'South Village', 45), island(659, 85, 30, 57, 'North Village', 46), island(251, 70, 77, 34, 'Midsummer Skerries', 47)]
+            islands: [island(34, 321, 25, 63, '', 43), island(283, 223, 58, 102, 'Storvella', 44), island(659, 321, 30, 62, 'South Village', 45), island(659, 85, 30, 57, 'North Village', 46), island(251, 70, 77, 34, 'Midsummer Skerries', 47)]
         }
     ];
     if (typeof module !== 'undefined' && module.exports)

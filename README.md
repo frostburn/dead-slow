@@ -1,13 +1,64 @@
 # DEAD SLOW — Harbor Trials
 
+**Play online: [lumipakkanen.com/dead-slow](https://lumipakkanen.com/dead-slow/).**
+Report [bugs and feature requests](https://github.com/frostburn/dead-slow/issues/).
+
 **Neutral is not a brake.** A top-down ship-handling game about arriving slowly,
 with enough room left to stop—at sea, in vacuum, or inside a giant hamster ball.
-Sixty circuit stages across five complete worlds, a separate Century Ship bonus, local speedrun
+Sixty circuit stages across five playable worlds in an eight-world atlas, a separate Century Ship bonus, local speedrun
 records, personal-best ghosts, keyboard controls and a multitouch helm.
 
-![World 5’s field atlas: Bramble Tarn among woods, boulders and contour hills](docs/images/v5-field-atlas.webp)
+## The eight-world atlas
 
-## World 5 — Gerbozilla’s Rampage
+| World | Campaign | Availability |
+| --- | --- | --- |
+| 1 | The Sheltered Coast | 12 playable stages |
+| 2 | Northwatch | 12 playable stages |
+| 3 | The Archipelago | 12 playable stages |
+| 4 | Gerbozilla’s Rampage | 12 playable courses |
+| 5 | The Long Grade | Coming soon — 12 named placeholders |
+| 6 | The Black Meridian | 12 playable sectors + the Century Ship bonus |
+| 7 | Race for the Pale Reach | Coming soon — 12 named placeholders |
+| 8 | Tow the Impossible | Coming soon — 12 named placeholders |
+
+Gray chapters can be inspected but not launched. Their 36 placeholder missions
+are not counted as playable levels or included in circuits. The Grand Tour visits
+**1 → 2 → 3 → 4 → 6**, sixty assignments; the Century Ship remains separate.
+There are still **61 playable assignments and 38 author recordings**.
+
+**Restart is now deliberate.** R and all restart buttons open a confirmation with
+“Keep playing” focused. R does not confirm itself; Escape cancels. The simulation
+freezes. Keeping an in-progress frozen attempt makes it unranked practice, just
+like pausing; confirming restarts only that stage and retains completed circuit
+stages and the attempted-stage time. Saved records are not deleted. A confirmed
+restart does not itself taint a ranked circuit. Test-only/console tools may still
+intentionally start a fresh mission directly.
+
+Campaign place and vessel names are fictional; see [the naming ledger](docs/FICTIONAL_NAMES.md).
+Real software credits, project URLs and license attribution are unchanged.
+
+![The eight-world atlas: five playable campaigns and three coming-soon chapters](docs/images/eight-world-atlas.webp)
+
+### New volcanic crossings and records
+
+Muesli Furnace cuts across the caldera approach in **It All Goes Downhill**.
+**The Black Boulder Wood** has two fissures with independent clocks.
+**Strictly No Petting** adds steam eruptions at Bristle Brook crossings: watch
+the river and the hedgehog, then commit to a crossing with enough momentum.
+
+
+Orange outlines identify geothermal danger zones. A vent cycles through quiet,
+amber warning, then eruption; countdowns use the same fixed simulation clock as
+collisions. Quiet footprints are traversable. Lava and steam burn the whole ball
+footprint while active, and shields protect only for their normal three seconds.
+These hazards do not add gravity, alter water traction or change the rolling model.
+
+Schema 13 archives records/ghosts for the three revised courses separately. The
+previous Gerbozilla championship and earlier Grand Tour order retain overall and
+clean archives. Every other stage and the sea/space circuit records remain active.
+Display renaming does not change mission or vessel IDs used by saved data.
+
+## World 4 — Gerbozilla’s Rampage
 
 **Twelve courses and a complete championship.** Gerbozilla treads a 48-metre exercise ball across
 orienteering-style field maps. Hold **WASD / arrows** to push in map directions;
@@ -21,13 +72,13 @@ then six seconds recharging. Shields stop damage, not momentum or solid rock.
 | A Small Problem in Seedhaven | Ridge, crooked lake and a small redirection: the introduction. | 100.258 s |
 | Banks for the Memories | Closed mountain-ring citadels. Carry speed into and out of the bowls. | 95.008 s |
 | No Grip, No Problem | Three water-moat islands. Each demolition launches three long-range strikes. | 174.258 s |
-| It All Goes Downhill | Summit descent into a flooded caldera with one heavily armored core. | 115.758 s |
-| The Black Boulder Wood | Five ordered orienteering controls. Pick between slow forest and longer open lanes; no city demolition. | 201.758 s |
+| It All Goes Downhill | Time a volcanic lava channel, retain crossing speed, then ram the caldera core. | 115.758 s |
+| The Black Boulder Wood | Five controls through woodland and two independently erupting volcanic fissures. | 201.758 s |
 | Fort Pillow | A double moat, steep mountain ring, retaliation and northern satellite fort. | 168.508 s |
 | A Very Territorial Guinea Pig | Cavyclasm commits to a telegraphed charge, then needs a rest. Time shielded rams. | 151.758 s |
 | Pepperbreath at Marshmallow Keep | Collect a pepper and aim finite bursts over low walls. Armor resists ordinary ramming. | 341.758 s |
 | Nobody Puts Whiskerdoom in a Cage | Defeat a rabbit sentry, smash two locks, greet Lady Whiskerdoom and escort her home. | 456.492 s |
-| Strictly No Petting | Collect three survey stamps while avoiding invulnerable Sir Needlesworth. | 304.258 s |
+| Strictly No Petting | Cross two timed steam vents at the river and avoid invulnerable Sir Needlesworth. | 304.258 s |
 | A Hedge Against Disaster | Time shields during pursuit; escape through a real size-limited rock notch. | 89.508 s |
 | The Long Way Home | Lady starts free. Intercept pursuers and guide her clear of off-map strikes; both must reach home. | 257.975 s |
 
@@ -86,10 +137,10 @@ Run one at a time. All twelve courses have input-only reference recordings; the
 ten revised-map recordings are verified for version 5.0.0. They are not
 claimed optimal. Read the [field guide](docs/GERBOZILLA.md) for mechanics and tests.
 
-There are **38 recordings and 61 selectable assignments**. All five worlds now
+There are **38 recordings and 61 selectable assignments**. All five playable worlds
 have twelve-stage circuits; the **Grand Tour has 60 stages**. The Century Ship
 is the single bonus, excluded from every circuit. Each route has separate
-overall and clean records. The World 5 HUD, result screen and field log show
+overall and clean records. The World 4 HUD, result screen and field log show
 the circuit clock and records, including failed-attempt time and retries.
 
 The field atlas adds Clover Copse and lowland pines to the citadels, alder woods
@@ -141,7 +192,7 @@ for the game, build, server or Node tests. `npm ci` is optional and uses the
 included dependency-free lockfile. Set `PORT` to change the local port; set
 `HOST=0.0.0.0` only when intentionally exposing the server to your local network.
 
-## The other four worlds
+## Other playable campaigns
 
 **World 1 — The Sheltered Coast.** Twelve daylight harbor trials teach braking,
 berth alignment, gates, crossing traffic, locks, reverse parking, loading,
@@ -155,7 +206,7 @@ a heavier hull and a combined harbor examination.
 
 **World 3 — The Archipelago.** A fictional Nordic-inspired island service in a
 long summer evening. Granite skerries, pines, red timber cottages, yellow
-vehicle ferries and a red working tug. You operate **MS Linnea** or **MT Sisu**.
+vehicle ferries and a red working tug. You operate **MS Linvara** or **MT Sivra**.
 
 | Stage | Island work |
 | --- | --- |
@@ -187,7 +238,7 @@ the **Grand Tour** visits all forty-eight non-bonus stages. Each route has its o
 
 ![Borderless archipelago chart, with the tug departing away from its tow](docs/images/open-archipelago.webp)
 
-## World 4 — The Black Meridian
+## World 6 — The Black Meridian
 
 **Cutting thrust is not braking.** Spacecraft use a separate, drag-free simulation.
 Main engines, lateral jets and rotational jets share a finite propellant budget.
@@ -206,7 +257,7 @@ fuel, rescue and migrating shadow cover.
 **The Century Ship** is a thirteenth, optional sector, outside every marathon.
 Its 110.592-km compressed interstellar route still takes more than thirty simulated
 minutes, including the most generous combined main/lateral acceleration bound.
-The rogue planet **Erebus** blocks a straight coast. Build lateral clearance, pass
+The rogue planet **Erebune** blocks a straight coast. Build lateral clearance, pass
 the limb and return to the destination line. An eight-command clean reference
 flight takes **32:02.33**. There is no waiting timer; surface impact ends the flight.
 These are planar local-frame puzzles, not an orbital or relativistic simulator;
@@ -218,7 +269,7 @@ a Stone**, persistent radiation makes early arrival dangerous: ride Haven’s sh
 until it sweeps the survey marker and the station. The flight computer forecasts
 approximate cradle-cover times from actual geometry, not an objective timer.
 
-**Yesterday Has Right of Way** takes place inside **Janus Station**. Navigate the
+**Yesterday Has Right of Way** takes place inside **Janara Station**. Navigate the
 freight stacks, capture gates A and B, and escape while two solid versions of your
 own earlier flights recur in the same concourse. Both insertion destinations are
 marked; passing bays provide space to yield instead of colliding with history.
@@ -248,7 +299,7 @@ verified times and the Century Ship's lower-bound argument.
 | Space | Order neutral. This does not stop the ship. |
 | F | Make fast to the current rescue target, or cast off. |
 | J / K | Hold to reel in / pay out the towline. |
-| R | Instant retry; avoids opening a menu. |
+| R | Open restart confirmation; Escape keeps the attempt. |
 | Escape | Pause / return. Pausing makes the attempt unranked. |
 | Z | Cycle chart zoom. |
 | G / V / M / H | Toggle ghost / coast guide / audio; horn at sea, radar pulse in space. |
@@ -336,12 +387,15 @@ leaderboard. Export the logbook before moving between files, browsers or hosts;
 then import it through **Logbook**. Import replaces the current local logbook.
 Storage denial or quota failure leaves the session playable and exportable.
 
-Logbooks using schemas 1–12 are accepted. Schema 12 separately archives the
+Logbooks using schemas 1–13 are accepted. Schema 13 archives the three pre-volcano
+field routes, the corresponding Gerbozilla circuit, and the earlier Grand Tour
+order. Other individual stages remain comparable after the display renumbering.
+Schema 12 separately archives the
 earlier Backwater and Island Exchange approaches, plus their World 2, World 3
 and Grand Tour circuits. Their clean and overall records remain visible.
 Schema 11 archives the inline Granite
 Needle and the earlier Whiskerdoom lake layout, with their ghosts and splits.
-Their World 3, World 5 and 60-stage Grand Tour records remain separately available
+Their World 3, World 4 and 60-stage Grand Tour records remain separately available
 in the logbooks and exports. Other stage and circuit records remain active.
  Earlier migrations archive the retired Reservoir
 Hairpin; schema 8 retains superseded Banking/Lake District routes separately. Schema 6 archives old records, ghosts and
@@ -360,13 +414,13 @@ some browsers, so export/import is the reliable transfer path.
 
 ```text
 index.html                 Source page; loads modules directly
-style.css                  Responsive controls, dialogs and five palettes
+style.css                  Responsive controls, dialogs, five playable palettes and three gray future chapters
 src/
   space-audio.js           Ion-drive, reaction jets and electronic flight cues
   physics.js               Hulls, forces, collisions, water, tide, tow constraint
   navigation.js            Shared open-edge collision, containment and warnings
   archipelago.js           Twelve island-service level definitions
-  levels.js                Four-world catalog and harbor level definitions
+  levels.js                Eight-world atlas; playable catalog and disabled future plans
   space-levels.js          Twelve spacecraft assignments and Century Ship bonus
   space.js                 Vacuum, ephemerides, beams, cannon, solar and time travel
   space-renderer.js        Star charts, spacecraft, rays, shadows and intercepts
@@ -417,7 +471,7 @@ for coverage, limitations and reproducible trajectory details.
 
 The browser console welcomes curious captains. Type `DeadSlow.help()` for
 level jumps, 0–32× time, frozen stepping, helm overrides, warping and the actual
-verification recordings. `DeadSlow.runs()` lists twenty-five clean,
+verification recordings. `DeadSlow.runs()` lists the available clean,
 control-only recordings. Try `DeadSlow.watch("dogleg", 8)` for a turning approach,
 `DeadSlow.watch("granite-needle", 16)` for the heavy barge, or
 `DeadSlow.watch("island-exchange", 16)` for the ferry return service.

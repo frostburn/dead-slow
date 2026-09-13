@@ -1,6 +1,6 @@
 {
   "level": "granite-needle",
-  "description": "Fixed-time helm and line inputs only; no repositioning, altered physics or objective shortcuts. Approach the north-facing broadside barge, pull its bow round in open water and countersteer the tug as the tow aligns. Clear the granite passage, cast off before the repair yard, and moor Sisu while the barge coasts into its own berth. A conservative reference, not an optimal time.",
+  "description": "Fixed-time helm and line inputs only; no repositioning, altered physics or objective shortcuts. Approach the north-facing broadside barge, pull its bow round in open water and countersteer the tug as the tow aligns. Clear the granite passage, cast off before the repair yard, and moor Sivra while the barge coasts into its own berth. A conservative reference, not an optimal time.",
   "events": [
     {
       "time": 0,

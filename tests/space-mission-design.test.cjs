@@ -26,7 +26,7 @@ for(const id of ['umbra','perihelion-dispatch'])test(`${id}: continuous exposure
  assert.ok(X.illumination(hull,l.space.asteroids.map(b=>X.asteroid(b,w.closes+10)))>0);
  if(id==='umbra'){assert.ok(w.opens>300);assert.ok(X.illumination(hull,l.space.asteroids.map(b=>X.asteroid(b,0)))>0);}
 });
-test('Janus is a physical maze, and both marked insertion destinations are clear',()=>{
+test('Janara is a physical maze, and both marked insertion destinations are clear',()=>{
  const l=level('yesterday'),t=load(l.id),st=t.state.run.space,gates=X.gates(l.space);
  assert.equal(gates.length,2);assert.ok(st.structures.length>=8);
  for(const [i,g] of gates.entries()){
@@ -66,7 +66,7 @@ test('histories recur after their recorded duration and both can cause a paradox
   assert.equal(t.state.status,'failed');assert.equal(r.failure.type,'paradox');
  }
 });
-test('Erebus blocks a straight coast and any surface contact fails without a velocity boost',()=>{
+test('Erebune blocks a straight coast and any surface contact fails without a velocity boost',()=>{
  const t=load('century-ship'),l=t.state.level,r=t.state.run,b=r.space.rocks[0];
  assert.ok(b.planet);assert.ok(P.segmentHitsPoly({x:l.start[0],y:l.start[1]},l.berth,b.poly));
  park(r.ship,{x:b.x-b.radius+10,y:b.y});t.advance(1/120);

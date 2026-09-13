@@ -137,7 +137,7 @@ physics can invalidate old times even when geometry remains the same; treat
 that as a record-compatibility decision. The fixed-input fixtures detect
 unintentional handling drift in both an exposed berth and the island tutorials.
 
-## World 4 separation
+## World 6 separation
 
 `space-levels.js` defines thirteen data-only assignments. `space.js` owns pure
 spacecraft physics and mission state; it shares hull/SAT/contact helpers, not
@@ -160,3 +160,23 @@ The Century Ship reduces ghost sampling to one second; all simulation still
 runs at 120 Hz. `bonus` is data, not an assumed last-array index. Schema 5 adds
 Meridian records and archives incompatible 36-stage Grand Tour times while
 retaining all established sea-world records.
+
+
+## Eight-world atlas (5.1)
+
+`HarborLevels` contains only playable stages, ordered by the visible campaign.
+`HarborLevels.catalog` additionally contains 36 disabled coming-soon cards.
+`HarborWorlds` holds all eight chapters; `comingSoon` gates launching and circuit
+availability. Stable stage and campaign IDs, not numeric world positions, key
+logbooks and author replays. The complete active route is worlds 1–2–3–4–6.
+
+Restart confirmation owns a temporary `confirming` state and a snapshot of the
+previous dialog/status; it does not reset mission data. Only confirmation calls
+the internal reset. Cancelling a running attempt invokes the existing practice
+policy because the simulation was paused. Readouts use the previous terminal
+state when showing a completed circuit stage's clock during confirmation.
+
+Geothermal zones are convex polygons and vent circles shared between field
+rendering and whole-ball damage. Their states use fixed in-game time; no timers,
+randomness, fluid solver or new dependencies are involved. The translucent
+hamster ghost is a single composite of a fully rendered opaque sprite.

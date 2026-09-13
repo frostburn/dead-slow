@@ -1,4 +1,4 @@
-"""Focused World 5 checks only. python tests/browser_rampage.py [--screenshots DIR]"""
+"""Focused World 4 checks only. python tests/browser_rampage.py [--screenshots DIR]"""
 from pathlib import Path
 import argparse,json,shutil
 from playwright.sync_api import sync_playwright
@@ -18,8 +18,8 @@ with sync_playwright() as pw:
     def shot(name):
         if args.screenshots:
             args.screenshots.mkdir(parents=True,exist_ok=True);page.screenshot(path=str(args.screenshots/name))
-    page.evaluate('DeadSlowTest.courses(5)')
-    check('World 5 selector has twelve real courses',page.locator('.level-card').count()==12 and '0 / 12 COURSES COMPLETE' in page.locator('#dialog').inner_text())
+    page.evaluate('DeadSlowTest.courses(4)')
+    check('World 4 selector has twelve real courses',page.locator('.level-card').count()==12 and '0 / 12 COURSES COMPLETE' in page.locator('#dialog').inner_text())
     check('Grand Tour now has 60 stages','all 60' in page.locator('#dialog').inner_text())
     page.locator('.level-card').first.click();check('Ball introduction explains map controls and shields','W A S D' in page.locator('#dialog').inner_text() and 'shield' in page.locator('#dialog').inner_text())
     check('Seedhaven introduction counts controls and districts as objectives','04\nMISSION OBJECTIVES' in page.locator('#dialog').inner_text())
@@ -37,7 +37,7 @@ with sync_playwright() as pw:
     check('Replay does not create ranked records',page.evaluate('DeadSlowTest.state.storage.stages["gerbo-first-outing"].runs.length===0'))
     check('Completion screen uses rampage language','Two districts.' in page.locator('#dialog').inner_text() and 'harbor' not in page.locator('#dialog').inner_text().lower())
     shot('gerbo-result.png')
-    page.evaluate('DeadSlow.level(5,1);DeadSlow.speed(0);DeadSlowTest.pause()')
+    page.evaluate('DeadSlow.level(4,1);DeadSlow.speed(0);DeadSlowTest.pause()')
     check('Unattended/pause theme is a hamster snack break','snack break' in page.locator('#dialog').inner_text())
     page.click('[data-action="resume"]')
     for w,h in [(390,844),(320,740),(844,390)]:
@@ -55,7 +55,7 @@ with sync_playwright() as pw:
     page.set_viewport_size({'width':1440,'height':1000})
     page.evaluate('DeadSlow.level("floating-sauna");DeadSlow.speed(0);DeadSlowTest.hud()')
     check('Regression setup really hides the tow manifest',page.locator('#manifest').evaluate('(e)=>e.hidden'))
-    page.evaluate('DeadSlow.level(5,1);DeadSlow.speed(0);DeadSlowTest.hud()')
+    page.evaluate('DeadSlow.level(4,1);DeadSlow.speed(0);DeadSlowTest.hud()')
     check('Switching from tow duty restores visible rolling and shield counters',page.locator('#manifest').is_visible() and 'ROLLED' in page.locator('#manifest').inner_text() and 'HITS BLOCKED' in page.locator('#manifest').inner_text())
     for id,number in [('gerbo-banking',2),('gerbo-lake-skipping',3),('gerbo-downhill',4),('gerbo-forest-slalom',5),('gerbo-fort-pillow',6),
                       ('gerbo-cavy-clash',7),('gerbo-pepperbreath',8),('gerbo-whiskerdoom',9)]:
@@ -86,7 +86,7 @@ with sync_playwright() as pw:
         page.evaluate('(id)=>{DeadSlow.level(id);DeadSlow.speed(0)}',id)
         page.wait_for_timeout(80);shot(id+'.png')
     # The integration touches mode switching, not any earlier mission layouts.
-    page.evaluate('DeadSlow.level(4,1);DeadSlow.speed(0)')
+    page.evaluate('DeadSlow.level(6,1);DeadSlow.speed(0)')
     check('Returning to space restores the flight helm',not page.locator('.rampage-helm').is_visible() and page.locator('#helm-rudder-label').inner_text()=='ROTATIONAL JETS')
     page.evaluate('DeadSlow.level(1,1);DeadSlow.speed(0)')
     check('Returning to sea restores the marine helm',page.locator('#helm-rudder-label').inner_text()=='RUDDER' and page.locator('#speed-unit').inner_text()=='kn')

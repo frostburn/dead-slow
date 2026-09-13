@@ -44,7 +44,7 @@
         }
         function vessel(s, color = C.white, jets = null, alpha = 1) {
             ctx.globalAlpha = alpha;
-            const isMother = s.name?.includes('WAYFARER');
+            const isMother = s.name?.includes('WAYWARDEN');
             if (isMother && s.beam > 40) path(P.hull(s), null, color + '66', .8 / scale);
             path(P.hull(isMother ? { ...s, beam: 28 } : s), '#171f32', color, 1.1 / scale);
             if (scale < .12) circle(s.x, s.y, 3 / scale, color, null);
@@ -179,7 +179,7 @@
                 if (b.drone) {
                     circle(b.x, b.y, b.radius * .43, '#c9a76d', null);
                     text('MAINT.', b.x, b.y + b.radius + 14 / scale, C.amber, 8 / scale);
-                } else text(b.id.toUpperCase(), b.x, b.y + b.radius + 16 / scale, C.dim, 9 / scale);
+                } else text((b.label || b.id).toUpperCase(), b.x, b.y + b.radius + 16 / scale, C.dim, 9 / scale);
             }
             if (cfg.landing) {
                 const rock = st.rocks.find(b => b.id === cfg.landing.asteroid);
@@ -315,7 +315,7 @@
                 if (planet) {
                     const px=left+(right-left)*(planet.x-l.start[0])/(st.port.x-l.start[0]);
                     circle(px,y,5,'#51546f',C.violet,1);
-                    text('EREBUS',px,y+16,C.violet,8);
+                    text('EREBUNE',px,y+16,C.violet,8);
                 }
                 text(`${(Math.max(0, st.port.x - s.x) / 1000).toFixed(2)} km REMAINING`, left, y - 12, C.dim, 9, 'left');
                 text(cfg.century ? 'CENTURY · BONUS / NOT A MARATHON STAGE' : 'SECTOR TRACK', right, y - 12, C.dim, 9, 'right');

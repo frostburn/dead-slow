@@ -65,7 +65,7 @@ heat, beam state, docked tenders, cannon shots and the recorded timeline. Invali
 
 ### Rampage controls
 
-In World 5, `rudder` is an east/west push and `thruster` a south/north push.
+In World 4, `rudder` is an east/west push and `thruster` a south/north push.
 `DeadSlow.line()` activates the normal temporary shield. On the pepper course,
 `winch: 1` holds fire and `winch: 0` releases it; the actual pepper, breath, range,
 water and cover rules still apply. `throttle` does not drive the ball.
@@ -110,7 +110,7 @@ DeadSlow.verify("first-crossing")
 | `island-exchange` | World 3 · Island Exchange | 850.358333 s |
 | `backwater` | World 2 · Backwater | 330.150000 s |
 
-World 4 adds thirteen more recordings, including the Century Ship bonus: see
+World 6 adds thirteen more recordings, including the Century Ship bonus: see
 the [space mission table](SPACE.md#verified-flight-library). Every spacecraft
 mission can be watched. `runs()`, `levels()` and `times()` flag bonus stages;
 `report().space` exposes measured fuel, burn, capture, shot and jump counters.
@@ -154,8 +154,9 @@ welcome aboard; keep a separate logbook export when experimenting with imports.
 ## Manual circuit playtests
 
 `DeadSlow.tour(8)` starts a fresh, unranked 60-stage Grand Tour.
-`DeadSlow.circuit(3, 8)` starts World 3 (world numbers 1–5 or campaign IDs work).
+`DeadSlow.circuit(3, 8)` starts World 3 (playable world numbers 1, 2, 3, 4 and 6 or campaign IDs work).
+Worlds 5, 7 and 8 are inspectable coming-soon chapters and reject launch commands.
 These do not autoplay or overwrite ranked departures, PBs, ghosts or circuit times.
 `DeadSlow.progress()` returns a compact detached clock/retry/split summary.
 The new speed controls remain available through retries and mode changes, including
-World 5. See [PLAYTEST.md](PLAYTEST.md) for key bindings and limitations.
+World 4. See [PLAYTEST.md](PLAYTEST.md) for key bindings and limitations.

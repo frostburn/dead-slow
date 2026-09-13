@@ -1,3 +1,11 @@
+# Current release verification
+
+The 5.1.0 UX, atlas and volcanic-crossing pass is documented in
+[RELEASE_5_1.md](RELEASE_5_1.md). The following notes are retained historical
+verification of the earlier space-mission redesign, not a new full-suite run.
+
+---
+
 # Verification — Moving cover and recurring histories
 
 Baseline: `frostburn/dead-slow` main at
@@ -15,7 +23,7 @@ No dependencies or workflow configuration changed.
 | Storage regression suite | 9 passed |
 | Focused Chromium layout/instrument checks | 12 passed; no page errors |
 | Build | Self-contained HTML generated successfully |
-| Visual review | Desktop Janus with two histories, moving shadow forecast, Erebus limb and portrait layout |
+| Visual review | Desktop Janara with two histories, moving shadow forecast, Erebune limb and portrait layout |
 
 Only relevant tests were run locally. These counts are **not** a claim that the
 full Node/browser suites, all 25 recordings or remote CI were rerun. The existing
@@ -53,5 +61,5 @@ acceleration bound documented in [SPACE.md](SPACE.md).
 The focused browser checks use system Chromium and available Playwright 1.57.0,
 with inline mounting and a localStorage shim. The repository pin remains 1.62.0;
 CI handles that environment. Portrait checks are emulation, not a physical-device
-test. The Erebus close-up is a geometry inspection at a positioned spacecraft,
+test. The Erebune close-up is a geometry inspection at a positioned spacecraft,
 not a screenshot claimed to prove a recorded voyage.

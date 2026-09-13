@@ -4,10 +4,10 @@ const P = require('../src/physics.js'), L = require('../src/levels.js'), S = req
 const { create } = require('./headless.cjs');
 const near = (a, b, eps = 1e-8) => assert.ok(Math.abs(a - b) < eps, `${a} != ${b}`);
 const level = id => L.find(l => l.id === id);
-test('all five worlds supply twelve circuit stages', () => {
-    assert.equal(L.worlds.length, 5);
+test('all five playable worlds supply twelve circuit stages', () => {
+    assert.equal(L.worlds.length, 8);
     assert.equal(new Set(L.map(l => l.id)).size, 61);
-    for (const w of L.worlds.filter(w => !w.preview)) {
+    for (const w of L.worlds.filter(w => !w.comingSoon)) {
         const stages = L.filter(l => l.campaign === w.id && !l.bonus);
         assert.equal(stages.length, 12);
         assert.deepEqual(stages.map(l => l.stageNumber), Array.from({ length: 12 }, (_, i) => i + 1));
@@ -157,7 +157,7 @@ for (const id of ['coast', 'northwatch', 'archipelago', 'meridian', 'gerbozilla'
         t.marathon(id);
         const r = t.state.marathon, expected = id === 'grand-tour' ? 60 : 12;
         assert.equal(r.route.length, expected);
-        assert.equal(t.state.index, id === 'northwatch' ? 12 : id === 'archipelago' ? 24 : id === 'meridian' ? 36 : id === 'gerbozilla' ? 49 : 0);
+        assert.equal(t.state.index, id === 'grand-tour' ? 0 : L.findIndex(l => l.campaign === id));
         t.advance(3);
         t.retry();
         assert.ok(r.total > 2.99);

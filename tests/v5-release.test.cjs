@@ -13,7 +13,7 @@ test('version 5 is a full release with five twelve-stage circuits and one exclud
  assert.equal(require('../package-lock.json').version,require('../package.json').version);
  assert.equal(L.length,61);assert.equal(L.filter(l=>!l.bonus&&!l.standalone).length,60);
  assert.equal(L.filter(l=>l.bonus).length,1);
- for(const w of L.worlds){assert.ok(!w.preview);assert.equal(L.filter(l=>l.campaign===w.id&&!l.bonus&&!l.standalone).length,12);}
+ for(const w of L.worlds.filter(w=>!w.comingSoon)){assert.ok(!w.preview);assert.equal(L.filter(l=>l.campaign===w.id&&!l.bonus&&!l.standalone).length,12);}
 });
 test('river spans the chart and puts every survey stamp opposite the starting meadow',()=>{
  const l=L.find(l=>l.id==='gerbo-prickly-business'),c=l.rampage,water=c.lakes.find(l=>l.river);
@@ -96,7 +96,7 @@ test('older circuit migrations retain their distinct routes; current records are
  const current=S.fresh();current.races.gerbozilla=[sample];current.races['grand-tour']=[sample];
  assert.equal(S.sanitize(current).races.gerbozilla.length,1);assert.equal(S.sanitize(current).races['grand-tour'].length,1);
 });
-test('World 5 circuit keeps retry time, all twelve transitions and its own ranked record',()=>{
+test('World 4 circuit keeps retry time, all twelve transitions and its own ranked record',()=>{
  // Test-only completion isolation, not a claimed physical marathon recording.
  const t=create();t.marathon('gerbozilla');assert.equal(t.state.marathon.route.length,12);
  t.advance(1);t.retry();assert.equal(t.state.marathon.retries,1);
@@ -113,11 +113,11 @@ test('practice taints an entire rolling circuit and a failed course cannot be sk
  for(let i=0;i<12;i++){t.state.run.time=1;t.finish();if(i<11)t.next();}
  assert.equal(t.state.storage.races.gerbozilla.length,0);
 });
-test('Grand Tour includes rolling stages after space and records sixty stages, not the bonus',()=>{
+test('Grand Tour includes rolling stages before space and records sixty stages, not the bonus',()=>{
  const t=create();t.marathon('grand-tour');assert.equal(t.state.marathon.route.length,60);
  assert.ok(t.state.marathon.route.every(i=>!L[i].bonus));
  for(let i=0;i<60;i++){t.state.run.time=1;t.finish();if(i<59)t.next();}
- assert.equal(t.state.level.id,'gerbo-long-way-home');const r=t.state.storage.races['grand-tour'][0];
+ assert.equal(t.state.level.id,'perihelion-dispatch');const r=t.state.storage.races['grand-tour'][0];
  assert.equal(r.stages,60);assert.equal(r.time,60);
 });
 test('shipped reference module is synchronized exactly with its fixture source',()=>{

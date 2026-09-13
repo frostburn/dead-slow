@@ -1,6 +1,6 @@
 # Version 5 field atlas
 
-The twelve-course World 5 circuit is now enabled, with its own overall/clean
+The twelve-course World 4 circuit is now enabled, with its own overall/clean
 leaderboards and the same retry-inclusive circuit clock as the sea/space worlds.
 The Grand Tour contains sixty stages, ending with both hamsters home. This is a
 full release, not a preview. The Century Ship is excluded from both circuits.
@@ -33,7 +33,7 @@ shield tally, timer or scripted impact is required to complete the course.
 
 Schema 10 archives each revised map under `archivedStages[id + '-preview']`,
 leaving earlier `archivedStages[id]` and retired Hairpin archives separate. The
-previous 48-stage Grand Tour goes to `archivedRaces['grand-tour-48']`; new World 5
+previous 48-stage Grand Tour goes to `archivedRaces['grand-tour-48']`; new World 4
 and sixty-stage Grand Tour boards start empty. Current-schema imports do not
 repeat migration. See `tests/v5-release.test.cjs` for focused regression cases.
 
@@ -41,7 +41,7 @@ repeat migration. See `tests/v5-release.test.cjs` for focused regression cases.
 
 # Gerbozilla’s field guide
 
-World 5 has **twelve championship courses**, included in the 60-stage Grand
+World 4 has **twelve championship courses**, included in the 60-stage Grand
 Tour. The Century Ship remains a separate bonus. Every course is immediately selectable. There are no placeholder levels.
 The ball is 48 metres across; momentum, rolling resistance and slope—not an
 instant direction change—decide where it goes.

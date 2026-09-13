@@ -13,7 +13,7 @@ def check_space(browser, check, html, screenshots=None):
         if screenshots:
             Path(screenshots).mkdir(parents=True,exist_ok=True)
             page.screenshot(path=str(Path(screenshots)/name))
-    page.evaluate('DeadSlow.level(4,1);DeadSlow.speed(0);DeadSlowTest.courses(4)')
+    page.evaluate('DeadSlow.level(6,1);DeadSlow.speed(0);DeadSlowTest.courses(6)')
     check('Fourth world lists twelve sectors plus a selectable bonus',page.locator('.world-tab').count()==5 and page.locator('.level-card').count()==13)
     check('Bonus is explicitly excluded from the 60-stage Grand Tour','excluded from every circuit' in page.locator('#dialog').inner_text() and 'all 60' in page.locator('#dialog').inner_text())
     shot('worlds-four.png')
@@ -23,11 +23,11 @@ def check_space(browser, check, html, screenshots=None):
           and '0 / 1 BONUS CLEARED' in page.locator('.world-progress').inner_text())
     for sectors, bonus in [(0, True), (12, False), (12, True)]:
         page.evaluate("""([sectors, bonus]) => {
-            for (const l of HarborLevels.filter(l => l.worldNumber === 4)) {
+            for (const l of HarborLevels.filter(l => l.worldNumber === 6)) {
                 const saved = DeadSlowTest.state.storage.stages[l.id];
                 saved.runs = (l.bonus ? bonus : l.stageNumber <= sectors) ? [{time: 100, clean: true}] : [];
             }
-            DeadSlowTest.courses(4);
+            DeadSlowTest.courses(6);
         }""", [sectors, bonus])
         text = page.locator('.world-progress').inner_text()
         check(f'Meridian chart keeps {sectors}/12 sectors separate from bonus ({bonus})',
@@ -40,11 +40,11 @@ def check_space(browser, check, html, screenshots=None):
     page.set_viewport_size({'width': 1440, 'height': 1000})
     # Do not leave synthetic records behind for the replay/no-ranking checks.
     page.evaluate("""() => {
-        for (const l of HarborLevels.filter(l => l.worldNumber === 4))
+        for (const l of HarborLevels.filter(l => l.worldNumber === 6))
             DeadSlowTest.state.storage.stages[l.id].runs = [];
-        DeadSlowTest.courses(4);
+        DeadSlowTest.courses(6);
     }""")
-    page.click('[data-stage="36"]')
+    page.locator('.level-card').first.click()
     check('Space briefing teaches thrust and counterfire','rotational jets' in page.locator('#dialog').inner_text())
     page.click('[data-action="begin"]')
     check('Flight helm has correct units and rotation/lateral controls',page.locator('#speed-unit').inner_text()=='m/s' and page.locator('#helm-rudder-label').inner_text()=='ROTATIONAL JETS' and page.locator('#helm-bow-label').inner_text()=='LATERAL JETS')
@@ -54,7 +54,7 @@ def check_space(browser, check, html, screenshots=None):
     spin=page.evaluate('DeadSlow.state().run.ship.r');page.evaluate('DeadSlow.step(1)')
     check('Releasing rotational jets leaves angular momentum intact',abs(page.evaluate('DeadSlow.state().run.ship.r')-spin)<1e-10)
     page.evaluate('DeadSlow.watch("family-reunion",0);DeadSlow.step(250)')
-    check('Assembly replay transfers active helm to the heavier mothership',page.evaluate('DeadSlow.state().run.space.phase===2 && DeadSlow.state().run.ship.mass>4.6') and 'WAYFARER' in page.locator('#ship-name').inner_text())
+    check('Assembly replay transfers active helm to the heavier mothership',page.evaluate('DeadSlow.state().run.space.phase===2 && DeadSlow.state().run.ship.mass>4.6') and 'WAYWARDEN' in page.locator('#ship-name').inner_text())
     shot('space-assembly.png')
     page.evaluate('DeadSlow.watch("equal-and-opposite",0);DeadSlow.step(70)')
     check('Beam flight panel exposes attraction and repulsion',page.locator('#tow-controls').is_visible() and 'ATTRACT' in page.locator('#line-in-label').inner_text() and 'REPEL' in page.locator('#line-out-label').inner_text())
@@ -74,7 +74,7 @@ def check_space(browser, check, html, screenshots=None):
     check('Century bonus is directly accessible without starting a marathon',page.evaluate('DeadSlowTest.state.marathon===null && DeadSlowTest.state.level.bonus'))
     check('Deep-space instrumentation labels the bonus', 'CENTURY' in page.locator('#work-order').inner_text())
     page.click('#zoom-btn');page.click('#zoom-btn');shot('space-century-overview.png')
-    page.evaluate('DeadSlow.level(4,2);DeadSlow.speed(0)')
+    page.evaluate('DeadSlow.level(6,2);DeadSlow.speed(0)')
     page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(100)
     check('Portrait space HUD uses metres per second',page.locator('#mobile-speed-unit').inner_text()=='m/s')
     shot('space-mobile.png')

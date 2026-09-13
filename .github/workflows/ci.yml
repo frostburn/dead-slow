@@ -55,8 +55,11 @@ jobs:
             sleep 0.1
           done
           python tests/browser_smoke.py --url http://127.0.0.1:8080/dist/ --report reports/browser.json
-      - name: World 5 controls, presentation and wheel audio
+      - name: World 4 controls, presentation and wheel audio
         run: python tests/browser_rampage.py
 
       - name: Accelerated tour controls and revised approaches
         run: python tests/browser_readiness.py
+
+      - name: Restart safety, eight-world atlas and volcanic crossings
+        run: python tests/browser_release_atlas.py
