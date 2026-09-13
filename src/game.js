@@ -763,6 +763,7 @@
     function updateHud() {
         $('review-controls').hidden = !developer?.unlocked;
         if (developer?.unlocked) {
+            if (developer.rate > 0) reviewResumeRate = developer.rate;
             const custom = $('review-custom');
             custom.hidden = [0, 1, 2, 4, 8, 16, 32].includes(developer.rate);
             if (!custom.hidden) { custom.value = String(developer.rate); custom.textContent = developer.rate + '×'; }
