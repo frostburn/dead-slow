@@ -1,4 +1,4 @@
-/* Gerbozilla: rolling terrain, water traction and nine standalone field courses. */
+/* Gerbozilla: rolling terrain, water traction and twelve standalone field courses. */
 (function (root) {
     'use strict';
     const P = typeof module !== 'undefined' && module.exports ? require('./physics.js') : root.HarborPhysics;
@@ -177,6 +177,70 @@
             rescue:{name:'Lady Whiskerdoom',x:1840,y:460,r:23,mass:7,health:100},
             finish:{x:410,y:1340,r:115},authorSpeed:26
         });
+    const needles = (x,y,extra={}) => ({id:'needlesworth',name:'Sir Needlesworth',kind:'hedgehog',
+        x,y,r:59,mass:20,health:100,invulnerable:true,required:false,...extra});
+    const avoid = course('gerbo-prickly-business', 'Strictly No Petting', 'Invulnerable patrol / survey controls / boulder cover',
+        [180,1040,0],[2080,1380],
+        'Collect three ranger survey stamps in Needlewood, then return to the western meadow. Sir Needlesworth considers the survey equipment his property. Nothing can damage him. Use the black outcrops to break up his charges and visit each control while he is committed elsewhere.',
+        'Do not try to win a fight. The red charge line locks before he rolls. Pass behind him, take a clearing around the rocks, or shield a mistake. No monster defeat is required.', {
+            sheet:'NEEDLEWOOD SURVEY RESERVE',subtitle:'STRICTLY NO PETTING',
+            hills:[{x:1740,y:1060,rx:170,ry:100,height:24,lobes:[{x:-90,y:45,rx:95,ry:55,height:12}]}],
+            forests:[{x:770,y:850,rx:250,ry:240,shore:[.16,.08,.8],density:.55},
+                {x:1580,y:295,rx:240,ry:130,shore:[.14,.09,2],density:.55}],
+            rocks:[boulder(720,790,110,145,.6),boulder(1260,440,120,165,1.5),boulder(1540,860,160,110,.2)],
+            lakes:[{x:340,y:370,rx:155,ry:155,shore:[.17,.08,.9],name:'BRISTLE MERE'}],
+            controls:[{x:1050,y:1040,r:68,name:'South survey stamp'},
+                {x:1720,y:650,r:65,name:'East survey stamp'},
+                {x:1030,y:265,r:65,name:'North survey stamp'}],districts:[],
+            monsters:[needles(1160,780,{ai:{range:720,prowlSpeed:7,approach:200,warning:2.5,charge:4,rest:7}})],
+            finish:{x:280,y:1100,r:102},authorSpeed:24
+        });
+    const chase = course('gerbo-rolling-threat', 'A Hedge Against Disaster', 'Persistent pursuit / shield timing / forest pinches',
+        [330,660,0],[2860,1380],
+        'Carry the ranger warning through the three relay controls to the eastern refuge. Sir Needlesworth has decided to accompany you. His pursuit is faster than your careful passage through the forest pinches: read his wind-up and shield just before a hit, then use the impulse without rolling into black rock.',
+        'He cannot be damaged, stunned into submission or put to sleep. Three seconds of shield, then six seconds of recharge. A blocked charge still pushes you. The final narrow rock notch fits your ball but not his spines; brake only after slipping through it.', {
+            sheet:'THE BRISTLE EXPRESS',subtitle:'A HEDGE AGAINST DISASTER',
+            hills:[{x:1820,y:1060,rx:180,ry:90,height:26,lobes:[{x:110,y:20,rx:90,ry:55,height:10}]}],
+            forests:[{x:950,y:650,rx:180,ry:290,shore:[.12,.05,1],density:.8},
+                {x:1820,y:630,rx:175,ry:285,shore:[.13,.07,2.4],density:.75}],
+            rocks:[boulder(1050,300,180,120,.3),boulder(1050,1060,170,130,2),
+                boulder(1870,295,185,120,1.4),boulder(1850,1060,175,135,.4),
+                wall(2430,40,70,555,{lowWall:false}),wall(2430,685,70,655,{lowWall:false})],
+            lakes:[{x:470,y:1120,rx:190,ry:95,shore:[.1,.07,1],name:'BOOT POND'}],
+            controls:[{x:960,y:650,r:70,name:'Western warning relay'},
+                {x:1770,y:670,r:70,name:'Eastern warning relay'},
+                {x:2350,y:640,r:75,name:'Refuge approach'}],districts:[],
+            monsters:[needles(160,650,{ai:{range:2400,prowlSpeed:25,prowlAccel:3.2,approach:100,
+                warning:1.8,charge:3.4,power:10,rest:5.8,cooldown:2}})],
+            finish:{x:2630,y:640,r:120},authorSpeed:27
+        });
+    const escort = course('gerbo-long-way-home', 'The Long Way Home', 'Evacuation escort / interception / long-range strikes',
+        [320,1050,0],[2760,1630],
+        'Lady Whiskerdoom is already free and rolling beside you. Guide her from the forest refuge through two evacuation beacons to the eastern meadow. Crossing the first beacon draws Needlesworth out of the reserve; the second releases interceptors. An off-map battery targets both of you with fixed, clearly marked strikes.',
+        'This is an escort, not another jailbreak. Follow a route that her slower ball can negotiate. Your shield protects only you. Knock mortal interceptors aside, lure the invulnerable hedgehog away, and keep her clear of red circles. Both hamsters must settle safely at home.', {
+            sheet:'WHISKERDOOM’S EVACUATION ROUTE',subtitle:'THE LONG WAY HOME',
+            hills:[{x:950,y:430,rx:220,ry:100,height:30,lobes:[{x:110,y:-30,rx:100,ry:70,height:16}]},
+                {x:2110,y:1340,rx:240,ry:100,height:32,lobes:[{x:-120,y:30,rx:100,ry:65,height:12}]}],
+            forests:[{x:470,y:1330,rx:250,ry:150,shore:[.15,.06,1],density:.6},
+                {x:1380,y:550,rx:210,ry:150,shore:[.17,.06,2],density:.65},
+                {x:2400,y:400,rx:230,ry:145,shore:[.13,.08,.3],density:.45}],
+            rocks:[boulder(1110,750,125,145,1),boulder(1250,1340,155,115,.2),
+                boulder(1970,370,150,115,2),boulder(2100,1100,130,175,.4)],
+            lakes:[{x:1680,y:1190,rx:200,ry:170,shore:[.16,.08,1.2],name:'HOMEWARD MERE'}],
+            controls:[{x:810,y:1040,r:75,name:'Leave the forest refuge'},
+                {x:1600,y:780,r:75,name:'Eastern evacuation beacon'}],districts:[],
+            monsters:[needles(520,670,{releaseControl:1,ai:{range:1500,prowlSpeed:13,approach:180,warning:2.6,charge:3.5,rest:7}}),
+                {id:'nibbles',name:'Admiral Nibbles',kind:'mouse',x:1890,y:660,r:35,mass:5,health:115,
+                    required:false,releaseControl:2,target:'lady',ai:{range:1100,prowlSpeed:9,warning:2.7,charge:3,power:5,rest:7}},
+                {id:'flops-patrol',name:'Captain Cottonhop',kind:'rabbit',x:2230,y:450,r:46,mass:10,health:150,
+                    required:false,releaseControl:2,target:'lady',ai:{range:1300,prowlSpeed:8,warning:2.8,charge:3.5,power:6,rest:8}}],
+            rescue:{name:'Lady Whiskerdoom',x:210,y:1050,r:23,mass:7,health:100,free:true},
+            ambushes:[{control:1,delays:[12,25,38],targets:['lady','player','lady']},
+                {control:2,delays:[12,25,38,51],targets:['lady','player','lady','player']}],
+            retaliation:{delays:[],warning:10,lead:2,radius:52,damage:22},
+            finish:{x:2490,y:730,r:145},authorSpeed:17
+        });
+    avoid.pace=[280,360,480]; chase.pace=[120,165,240]; escort.pace=[245,335,460];
     // Gaussian shoulders make asymmetrical summits and saddles, while keeping
     // an exact analytical gradient shared by the physics and contour renderer.
     function terrain(c, x, y) {
@@ -264,6 +328,10 @@
     function blocked(st, a, b) {
         return solids(st).some(r=>!r.lowWall && P.segmentHitsPoly(a,b,r.poly));
     }
+    const requiredMonster = m => !m.invulnerable && m.required !== false;
+    function hurtMonster(m, amount) {
+        if (!m.invulnerable) m.health = Math.max(0, m.health - amount);
+    }
     function collideRock(run, body, radius, kind='player') {
         const st=run.rampage;
         for(const rock of solids(st)) {
@@ -276,7 +344,7 @@
             if(closing>2) {
                 if(kind==='player'){st.stats.rockHits++;hurt(run,.045*closing*closing);}
                 else if(kind==='lady') hurtLady(run,.025*closing*closing);
-                else body.health=Math.max(0,body.health-.07*closing*closing);
+                else hurtMonster(body,.07*closing*closing);
             }
         }
     }
@@ -293,7 +361,8 @@
         if(closing<(friendly?4:.5) || run.time-b.hitAt<.65) return;
         b.hitAt=run.time;st.flashes.push({x:b.x,y:b.y,t:run.time});
         if(friendly){hurt(run,.022*closing*closing);hurtLady(run,.022*closing*closing);}
-        else {b.health=Math.max(0,b.health-.5*closing*closing);hurt(run,.035*closing*closing);st.stats.monsterImpacts++;}
+        else {hurtMonster(b,.5*closing*closing);hurt(run,(b.invulnerable?4:0)+.035*closing*closing);st.stats.monsterImpacts++;
+            if(b.invulnerable && protectedAt(run)) st.stats.needleBlocks++;}
     }
     function hurtLady(run, amount) {
         const st=run.rampage, loss=Math.min(st.lady.health,amount);
@@ -310,27 +379,33 @@
     function monsterUpdate(level, run, dt, events) {
         const st=run.rampage,c=level.rampage,s=run.ship;
         for(const m of st.monsters) {
+            if (!m.released) {
+                if (st.control < m.releaseControl) continue;
+                m.released = true; m.until = run.time + .75;
+                events.push(m.name + ' enters the pursuit');
+            }
             if(m.health<=0) {
                 if(!m.defeated){m.defeated=true;st.stats.monsters++;events.push(m.name+' is taking a nap');}
                 m.vx=m.vy=0;continue;
             }
-            const dx=s.x-m.x,dy=s.y-m.y,d=Math.hypot(dx,dy);
-            if(m.state==='prowl' && d<600 && run.time>=m.until) {
-                m.state='warning';m.until=run.time+2.2;
-                const a=Math.atan2(dy+s.vy*1.2,dx+s.vx*1.2);
+            const target=m.target==='lady' && st.lady?.following && !st.rescued ? st.lady : s;
+            const ai=m.ai || {}, dx=target.x-m.x,dy=target.y-m.y,d=Math.hypot(dx,dy);
+            if(m.state==='prowl' && d<(ai.range ?? 600) && run.time>=m.until) {
+                m.state='warning';m.until=run.time+(ai.warning ?? 2.2);
+                const a=Math.atan2(dy+target.vy*1.2,dx+target.vx*1.2);
                 m.aim={x:m.x+Math.cos(a)*440,y:m.y+Math.sin(a)*440};m.angle=a;
-            } else if(m.state==='warning' && run.time>=m.until) {m.state='charge';m.until=run.time+3.5;}
-            else if(m.state==='charge' && run.time>=m.until) {m.state='rest';m.until=run.time+6;}
-            else if(m.state==='rest' && run.time>=m.until) {m.state='prowl';m.until=run.time+2;}
+            } else if(m.state==='warning' && run.time>=m.until) {m.state='charge';m.until=run.time+(ai.charge ?? 3.5);}
+            else if(m.state==='charge' && run.time>=m.until) {m.state='rest';m.until=run.time+(ai.rest ?? 6);}
+            else if(m.state==='rest' && run.time>=m.until) {m.state='prowl';m.until=run.time+(ai.cooldown ?? 2);}
             let ax=0,ay=0;
-            if(m.state==='charge'){ax=6*Math.cos(m.angle);ay=6*Math.sin(m.angle);}
+            if(m.state==='charge'){ax=(ai.power ?? 6)*Math.cos(m.angle);ay=(ai.power ?? 6)*Math.sin(m.angle);}
             else if(m.state==='prowl') {
-                const speed=d>250?5:0;ax=clamp((dx/(d||1)*speed-m.vx)*.8,-1.1,1.1);ay=clamp((dy/(d||1)*speed-m.vy)*.8,-1.1,1.1);
+                const speed=d>(ai.approach ?? 250)?(ai.prowlSpeed ?? 5):0, accel=ai.prowlAccel ?? 1.1;ax=clamp((dx/(d||1)*speed-m.vx)*.8,-accel,accel);ay=clamp((dy/(d||1)*speed-m.vy)*.8,-accel,accel);
             } else {ax=clamp(-m.vx*.6,-2,2);ay=clamp(-m.vy*.6,-2,2);}
             actorStep(c,m,ax,ay,dt);collideRock(run,m,m.r,'monster');
             // Pets remain on the play field; this edge turn gives no free attack impulse.
             for(const [axis,v,size] of [['x','vx',level.world[0]],['y','vy',level.world[1]]]) {
-                if(m[axis]<m.r || m[axis]>size-m.r){m[axis]=clamp(m[axis],m.r,size-m.r);m[v]*=-.25;m.state='rest';m.until=run.time+6;}
+                if(m[axis]<m.r || m[axis]>size-m.r){m[axis]=clamp(m[axis],m.r,size-m.r);m[v]*=-.25;m.state='rest';m.until=run.time+(ai.rest ?? 6);}
             }
             petPair(run,m);
             if(m.health<=0){m.defeated=true;st.stats.monsters++;events.push(m.name+' is taking a nap');}
@@ -371,7 +446,7 @@
         const st=run.rampage,c=level.rampage,l=st.lady;
         if(!l) return;
         if(l.health<=0){run.failure={type:'lost-friend',message:'Lady Whiskerdoom’s shell broke. Lead her clear of rocks and the sentry.'};return;}
-        if(!st.unlocked && st.districts.every(d=>d.health<=0)) {st.unlocked=true;events.push('Menagerie gate open');}
+        if(!c.rescue.free && !st.unlocked && st.districts.every(d=>d.health<=0)) {st.unlocked=true;events.push('Menagerie gate open');}
         if(!l.following && st.unlocked && Math.hypot(l.x-run.ship.x,l.y-run.ship.y)<115) {
             l.following=true;st.breadcrumbs=[{x:run.ship.x,y:run.ship.y}];events.push('Lady Whiskerdoom joins you');
         }
@@ -408,13 +483,13 @@
         ship.vessel = 'ball'; ship.radius = level.rampage.radius;
         const c=level.rampage;
         return { rocks:(c.rocks || []).map((r,i)=>({...r,id:'rock-'+i,poly:rockPolygon(r)})),
-            monsters:(c.monsters || []).map(m=>({...m,maxHealth:m.health,vx:0,vy:0,state:'prowl',until:0,hitAt:-100})),
-            lady:c.rescue?{...c.rescue,vx:0,vy:0,a:0,hitAt:-100,following:false}:null,
-            breadcrumbs:[],unlocked:false,rescued:false,rescueHold:0,forest:0,aim:0,breath:c.fire?.capacity || 0,fireActive:false,
+            monsters:(c.monsters || []).map(m=>({...m,maxHealth:m.health,vx:0,vy:0,state:'prowl',until:0,hitAt:-100,released:!m.releaseControl})),
+            lady:c.rescue?{...c.rescue,vx:0,vy:0,a:0,hitAt:-100,following:!!c.rescue.free}:null,
+            breadcrumbs:c.rescue?.free?[{x:ship.x,y:ship.y}]:[],unlocked:!!c.rescue?.free,ambushed:0,rescued:false,rescueHold:0,forest:0,aim:0,breath:c.fire?.capacity || 0,fireActive:false,
             roll: 0, pawPhase: 0, radius: level.rampage.radius, slip: 0, wet: 0, effort: 0, elevation: 0, control: 0, controlCount: level.rampage.controls.length,
             shieldUntil: 0, shieldReady: 0, shots: [], strikes: [], flashes: [], hold: 0,
             districts: level.rampage.districts.map(d => ({ ...d, maxHealth: d.health, nextShot: 0, aim: null, shotAt: null, hitAt: -100 })),
-            stats: { districts: 0, damage: 0, blocked: 0, shields: 0, impacts: 0, waterTime: 0, salvos: 0, strikeHits: 0, strikeDodges: 0, strikeBlocks: 0, rockHits:0, forestTime:0, monsters:0, monsterImpacts:0, fireTime:0, ladyDamage:0 }
+            stats: { districts: 0, damage: 0, blocked: 0, shields: 0, impacts: 0, waterTime: 0, salvos: 0, strikeHits: 0, strikeDodges: 0, strikeBlocks: 0, escortStrikeHits:0, rockHits:0, forestTime:0, monsters:0, monsterImpacts:0, needleBlocks:0, fireTime:0, ladyDamage:0 }
         };
     }
     function shield(run) {
@@ -432,19 +507,19 @@
     }
     function ready(run) {
         return run.rampage.control === run.rampage.controlCount && run.rampage.districts.every(d => d.health <= 0) &&
-            run.rampage.monsters.every(m=>m.health<=0) && (!run.rampage.lady || run.rampage.rescued);
+            run.rampage.monsters.every(m=>!requiredMonster(m) || m.health<=0) && (!run.rampage.lady || run.rampage.rescued);
     }
     function controlAvailable(c, st) {
         const cp=c.controls[st.control];
         return cp && (!cp.after || st.districts.some(d=>d.id===cp.after && d.health<=0));
     }
-    function retaliation(level, run, district) {
+    function retaliation(level, run, district, salvo = null) {
         const c=level.rampage.retaliation, st=run.rampage;
         if (!c) return;
         st.stats.salvos++;
-        for (const delay of c.delays) st.strikes.push({
+        for (const [i,delay] of (salvo?.delays || c.delays).entries()) st.strikes.push({
             source:district.id, launchAt:run.time+delay-c.warning, impactAt:run.time+delay,
-            x:null,y:null,r:c.radius,damage:c.damage,lead:c.lead || 0
+            x:null,y:null,r:c.radius,damage:c.damage,lead:c.lead || 0,target:salvo?.targets?.[i] || 'player'
         });
         st.strikes.sort((a,b)=>a.impactAt-b.impactAt);
     }
@@ -454,15 +529,20 @@
             if (b.x===null && run.time>=b.launchAt) {
                 // The reticle locks ONCE. Flight is long enough to steer away;
                 // the off-map battery never performs invisible homing hitscan.
-                b.x=clamp(s.x+s.vx*b.lead,b.r,level.world[0]-b.r);
-                b.y=clamp(s.y+s.vy*b.lead,b.r,level.world[1]-b.r);
+                const target=b.target==='lady' && st.lady && !st.rescued ? st.lady : s;
+                b.x=clamp(target.x+target.vx*b.lead,b.r,level.world[0]-b.r);
+                b.y=clamp(target.y+target.vy*b.lead,b.r,level.world[1]-b.r);
             }
             if (run.time<b.impactAt) return true;
             const hit=Math.hypot(s.x-b.x,s.y-b.y)<b.r+level.rampage.radius;
+            const ladyHit=st.lady?.following && !st.rescued && Math.hypot(st.lady.x-b.x,st.lady.y-b.y)<b.r+st.lady.r;
             if (hit) {
                 if (protectedAt(run)) st.stats.strikeBlocks++; else st.stats.strikeHits++;
                 hurt(run,b.damage);
-            } else st.stats.strikeDodges++;
+            } else if (!ladyHit) st.stats.strikeDodges++;
+            if (ladyHit) {
+                hurtLady(run,b.damage); st.stats.escortStrikeHits++;
+            }
             st.flashes.push({x:b.x,y:b.y,t:run.time,strike:true,r:b.r});
             return false;
         });
@@ -499,6 +579,12 @@
         monsterUpdate(level,run,dt,events);
         const cp = c.controls[st.control];
         if (controlAvailable(c,st) && Math.hypot(s.x-cp.x, s.y-cp.y) < cp.r) { st.control++; events.push(cp.name); }
+        const ambushes=c.ambushes || [];
+        while(st.ambushed<ambushes.length && st.control>=ambushes[st.ambushed].control) {
+            const salvo=ambushes[st.ambushed++];
+            retaliation(level,run,{id:'route-beacon-'+salvo.control},salvo);
+            events.push('Evacuation beacon spotted · long-range strikes inbound');
+        }
         for (const d of st.districts) {
             if (d.health <= 0) continue;
             const dx = s.x-d.x, dy = s.y-d.y, dist = Math.hypot(dx, dy);
@@ -544,6 +630,7 @@
         breathe(level,run,input,dt,events);
         rescueUpdate(level,run,dt,events);
         strikeUpdate(level,run);
+        if(st.lady?.health<=0) run.failure={type:'lost-friend',message:'Lady Whiskerdoom’s shell broke. Protect her route from pursuers and marked artillery.'};
         st.flashes = st.flashes.filter(f => run.time-f.t < 1.5);
         if (s.hull <= 0) run.failure = { type:'shell-broken',message:'The exercise ball cracked. Use the shield for defensive fire and high-speed impacts.' };
         const inside = Math.hypot(s.x-c.finish.x,s.y-c.finish.y) <= c.finish.r-c.radius;
@@ -559,9 +646,12 @@
         if (strike) return 'RETALIATION · '+Math.max(0,strike.impactAt-run.time).toFixed(1)+' s · LEAVE RED TARGET CIRCLES OR SHIELD';
         if (st.wet > .5) return 'NO TRACTION · keep coasting; running only spins the ball';
         if (run.dockHold > 0) return 'RECOVERY MEADOW · paws off · settling ' + Math.max(0,2-run.dockHold).toFixed(1)+' s';
+        const hazard=st.monsters.find(m=>m.invulnerable && m.released && m.state==='warning' && Math.hypot(m.x-run.ship.x,m.y-run.ship.y)<500);
+        if(hazard) return 'NEEDLESWORTH · INVULNERABLE · SHIELD / EVADE IN '+Math.max(0,hazard.until-run.time).toFixed(1)+' s';
         const cp = level.rampage.controls[st.control];
         if (controlAvailable(level.rampage,st)) return `${String(st.control + 1).padStart(2, '0')} · ${cp.name.toUpperCase()} · keep your momentum`;
-        const monster=st.monsters.find(m=>m.health>0);
+        if(st.lady && level.rampage.rescue?.free && !st.rescued) return 'ESCORT · LADY '+Math.ceil(st.lady.health)+'% · KEEP HER CLEAR OF PURSUERS';
+        const monster=st.monsters.find(m=>requiredMonster(m) && m.health>0);
         if(monster) return monster.name.toUpperCase()+' · '+(monster.state==='warning'?'CHARGE LOCKED · '+Math.max(0,monster.until-run.time).toFixed(1)+' s':monster.state==='rest'?'RECOVERING · SHIELD AND RAM':'KEEP ROOM FOR A RUN-UP');
         if(st.lady && st.unlocked && !st.rescued)return st.lady.following?'ESCORT LADY WHISKERDOOM · '+Math.ceil(st.lady.health)+'% SHELL · BRING BOTH HAMSTERS HOME':'GATE OPEN · APPROACH LADY WHISKERDOOM TO GREET HER';
         const d = st.districts.find(d=>d.health>0);
@@ -570,7 +660,7 @@
         if (st.strikes.length) return 'RETALIATION INBOUND · clear the marked strikes before recovery';
         return 'RECOVERY MEADOW · push against motion to brake, then release all directions';
     }
-    const api = { levels:[level, bank, lakes, downhill, forest, fortress, duel, fire, rescue], terrain, shoreRadius, lakePoint, inLake, water, woodland, rockPolygon, circleContact, solids, blocked, petPair, create, shield, protectedAt, ready, controlAvailable, update, message };
+    const api = { levels:[level, bank, lakes, downhill, forest, fortress, duel, fire, rescue, avoid, chase, escort], terrain, shoreRadius, lakePoint, inLake, water, woodland, rockPolygon, circleContact, requiredMonster, hurtMonster, solids, blocked, petPair, create, shield, protectedAt, ready, controlAvailable, update, message };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     root.GerboRampage = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

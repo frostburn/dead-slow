@@ -1,6 +1,6 @@
 # Gerbozilla’s field guide
 
-World 5 has **nine standalone courses**, outside the existing 48-stage Grand
+World 5 has **twelve standalone courses**, outside the existing 48-stage Grand
 Tour. Every course is immediately selectable. There are no placeholder levels.
 The ball is 48 metres across; momentum, rolling resistance and slope—not an
 instant direction change—decide where it goes.
@@ -122,3 +122,38 @@ and system Chromium when available, otherwise Playwright's installed Chromium.
 `tests/fixtures/gerbo-wheel-fortresses.js` is a fixed, test-only audio reference,
 not shipped game code; it makes the water comparison independent of Git history.
 The broader marine/space tests are intentionally not part of this iteration.
+
+## Needlesworth and the journey home
+
+Courses 10–12 are **Strictly No Petting**, **A Hedge Against Disaster**, and
+**The Long Way Home**. Needlesworth is a hedgehog hazard, never a defeat target.
+`invulnerable` skips all monster-damage entry points and implies no defeat
+requirement. Collisions still exchange momentum; the shield only blocks the
+player’s damage. Red warnings lock the charge direction. The chase uses faster
+pursuit parameters and ends behind a physical 90-metre notch: the 48-metre
+ball fits, the 118-metre hedgehog does not. No scripted teleport or finish unlock
+is used to stop him.
+
+The finale's `rescue.free` mode starts Whiskerdoom already following, with no
+locks or greeting requirement. The ordinary departure/braking and breadcrumb
+physics still apply. `releaseControl` makes predators wait at marked reserve
+positions until their beacon is crossed. `target: 'lady'` makes mortal
+interceptors aim their normal telegraphed charges at her. `required: false`
+keeps these enemies out of objective totals: no need to kill them to finish.
+
+Two `ambushes` are triggered once, at controls 1 and 2. Seven total marked
+strikes alternate target bodies. Each marker locks ten seconds before impact,
+with a two-second velocity lead, and never tracks afterward. The blast checks
+both circular hulls; the player shield does not transfer to the escort. Lethal
+escort damage fails immediately, including damage on the final blast tick.
+Queued strikes must resolve before the player's normal two-second meadow hold.
+There is no arbitrary extraction hold or recapture.
+
+Clean control-only reference times: 303.258333 s, 125.008333 s, 257.975 s.
+The avoidance run uses no shield and never touches Needlesworth; the pursuit
+blocks two collisions. The finale blocks two interceptor rams and one strike;
+both shells remain at 100%. These routes are not claimed optimal.
+
+Run `node --test tests/rampage-finale.test.cjs` and
+`python tests/browser_finale.py` for targeted coverage. The existing nine course
+layouts, recordings, audio, save format and 48-stage Grand Tour are unchanged.

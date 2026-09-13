@@ -19,7 +19,7 @@ with sync_playwright() as pw:
         if args.screenshots:
             args.screenshots.mkdir(parents=True,exist_ok=True);page.screenshot(path=str(args.screenshots/name))
     page.evaluate('DeadSlowTest.courses(5)')
-    check('World 5 selector has nine real courses, not twelve placeholders',page.locator('.level-card').count()==9 and '0 / 9 COURSES COMPLETE' in page.locator('#dialog').inner_text())
+    check('World 5 selector has twelve real courses',page.locator('.level-card').count()==12 and '0 / 12 COURSES COMPLETE' in page.locator('#dialog').inner_text())
     check('Grand Tour remains 48 stages','all 48' in page.locator('#dialog').inner_text())
     page.locator('.level-card').first.click();check('Ball introduction explains map controls and shields','W A S D' in page.locator('#dialog').inner_text() and 'shield' in page.locator('#dialog').inner_text())
     check('Seedhaven introduction counts controls and districts as objectives','04\nMISSION OBJECTIVES' in page.locator('#dialog').inner_text())
@@ -67,7 +67,7 @@ with sync_playwright() as pw:
         check(f'Course {number} has no leaderboard pollution',page.evaluate('(id)=>DeadSlowTest.state.storage.stages[id].runs.length===0',id))
         if id=='gerbo-pepperbreath':
             check('Pepperbreath result counts its control and three districts','4 / 4' in page.locator('#dialog').inner_text())
-    check('Ninth course has no nonexistent tenth-stage button',not page.locator('[data-action=next]').count())
+    check('Ninth course now leads into the Needlesworth courses',page.locator('[data-action=next]').count()==1)
     check('Ninth course result counts locks, sentry, and rescue','4 / 4' in page.locator('#dialog').inner_text())
     page.evaluate('DeadSlow.watch("gerbo-first-outing",0);DeadSlow.step(20)')
     page.click('#zoom-btn');page.wait_for_timeout(100);shot('gerbo-hind-paws.png')

@@ -125,7 +125,7 @@ Leave the helm alone while watching a reference run.
 `verify` intentionally replaces the current attempt with each recording. It
 finishes on the last result, at frozen practice speed. `normal()` returns to a
 fresh ranked attempt. Reading a timeline or report alone does not replace a run.
-There are **thirty-four published author recordings**, including nine Rampage courses. The other twenty-four sea
+There are **thirty-seven published author recordings**, including twelve Rampage courses. The other twenty-four sea
 stages do not yet have published control-only completions. A `null` author time is
 honest missing coverage, not an impossible stage. Gold/silver/bronze targets are
 level-design goals; their existence is not proof of a successful control run.

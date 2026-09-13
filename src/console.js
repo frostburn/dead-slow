@@ -24,7 +24,7 @@
         function findLevel(worldOrId, stage) {
             const i = typeof worldOrId === 'string' ? bridge.levels.findIndex(l => l.id === worldOrId) :
                 bridge.levels.findIndex(l => l.worldNumber === worldOrId && l.stageNumber === stage);
-            if (i < 0) throw new RangeError('Unknown assignment. Use its id or (world 1–4, stage 1–12; World 4 stage 13 is the bonus; World 5 has nine standalone courses); DeadSlow.levels() lists them.');
+            if (i < 0) throw new RangeError('Unknown assignment. Use its id or (world 1–4, stage 1–12; World 4 stage 13 is the bonus; World 5 has twelve standalone courses); DeadSlow.levels() lists them.');
             return i;
         }
         function fixture(id) {

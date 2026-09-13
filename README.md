@@ -9,12 +9,12 @@ records, personal-best ghosts, keyboard controls and a multitouch helm.
 
 ## World 5 preview — Gerbozilla’s Rampage
 
-**Nine standalone courses.** Gerbozilla treads a 48-metre exercise ball across
+**Twelve standalone courses.** Gerbozilla treads a 48-metre exercise ball across
 orienteering-style field maps. Hold **WASD / arrows** to push in map directions;
 counter-push early to brake. **Space / F** gives three seconds of shielding,
 then six seconds recharging. Shields stop damage, not momentum or solid rock.
 
-![Lady Whiskerdoom follows Gerbozilla out of the unlocked menagerie](docs/images/whiskerdoom.webp)
+![Lady Whiskerdoom’s free-start escort through the orienteering reserve](docs/images/whiskerdoom-home.webp)
 
 | Course | Challenge | Clean reference |
 | --- | --- | ---: |
@@ -27,6 +27,9 @@ then six seconds recharging. Shields stop damage, not momentum or solid rock.
 | A Very Territorial Guinea Pig | Cavyclasm commits to a telegraphed charge, then needs a rest. Time shielded rams. | 151.258 s |
 | Pepperbreath at Marshmallow Keep | Collect a pepper and aim finite bursts over low walls. Armor resists ordinary ramming. | 341.758 s |
 | Nobody Puts Whiskerdoom in a Cage | Defeat a rabbit sentry, smash two locks, greet Lady Whiskerdoom and escort her home. | 456.492 s |
+| Strictly No Petting | Collect three survey stamps while avoiding invulnerable Sir Needlesworth. | 303.258 s |
+| A Hedge Against Disaster | Time shields during pursuit; escape through a real size-limited rock notch. | 125.008 s |
+| The Long Way Home | Lady starts free. Intercept pursuers and guide her clear of off-map strikes; both must reach home. | 257.975 s |
 
 **Field-map symbols affect play.** Brown contours describe the elevation field
 used by gravity. Green woodland adds rolling resistance; lighter clearings offer
@@ -40,7 +43,9 @@ fire and rescue add different objectives rather than another sequence of cities.
 Enemies are enlarged guinea pigs and rabbits. They have mass, inertia, health,
 committed charge directions and recovery periods; impacts transfer momentum and
 deal mutual damage. A shield protects Gerbozilla, not the other animal.
-Defeated pets take a nap and stop attacking.
+Defeated mortal pets take a nap and stop attacking. **Sir Needlesworth cannot
+be damaged** by rams or terrain. His health is not an objective: evade his
+locked charge or shield an impact, which still transfers momentum.
 
 On the pepper course, **hold H** or the **BREATH** touch button. The flame points
 in your last push direction, not necessarily your velocity. It reaches over low
@@ -54,6 +59,14 @@ follows your travelled route rather than teleporting through obstacles. Leave
 braking room and bring **both** hamsters into the recovery meadow. Your shield
 does not protect her; a clean rescue means neither hamster takes damage.
 
+**The finale does not recapture her.** Lady Whiskerdoom begins free beside you.
+Two route beacons release Needlesworth and two mortal interceptors; the latter
+aim at her rather than automatically chasing Gerbozilla. Marked artillery
+alternates between both hamsters, locks its predicted impact point ten seconds
+before landing, and can damage either. Your shield cannot shield her. Defeating
+pursuers is optional; a safe route and well-timed interceptions are what matter.
+There is no cage, jailbreak, survival timer, or second capture.
+
 Course 3 and Fort Pillow retain their long-range retaliation: red blast marks
 lock 7.5 seconds before impact. They do not home, and recovery waits until queued
 strikes resolve. Keep moving, redirect after lock or shield at impact.
@@ -64,17 +77,16 @@ follow rotation. Water's accepted quiet, high-pitched chirps are unchanged.
 The hind paws still tread behind the belly. Fire has a soft filtered hiss.
 
 ```js
-DeadSlow.watch("gerbo-forest-slalom", 8)
-DeadSlow.watch("gerbo-cavy-clash", 8)
-DeadSlow.watch("gerbo-pepperbreath", 8)
-DeadSlow.watch("gerbo-whiskerdoom", 8)
+DeadSlow.watch("gerbo-prickly-business", 8)
+DeadSlow.watch("gerbo-rolling-threat", 8)
+DeadSlow.watch("gerbo-long-way-home", 8)
 ```
 
-Run one at a time. All nine courses have input-only reference recordings; the
-four replacement/new recordings are verified in this iteration. They are not
+Run one at a time. All twelve courses have input-only reference recordings; the
+three new recordings are verified in this iteration. They are not
 claimed optimal. Read the [field guide](docs/GERBOZILLA.md) for mechanics and tests.
 
-There are **34 recordings and 58 selectable assignments**. World 5 remains
+There are **37 recordings and 61 selectable assignments**. World 5 remains
 standalone; the four complete worlds still supply the **48-stage Grand Tour**.
 Schema 9 archives the retired Hairpin's times, ghost and splits. Its records
 remain visible from the woodland course's field log and preserved in exports.
