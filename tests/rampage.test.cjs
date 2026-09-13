@@ -1,6 +1,7 @@
 'use strict';
 const test=require('node:test'), assert=require('node:assert/strict');
 const R=require('../src/rampage.js'), L=require('../src/levels.js'), S=require('../src/storage.js');
+require('../src/rampage-view.js');const V=global.GerboView;
 const {create}=require('./headless.cjs'), {replay}=require('../tools/verify-island-runs.cjs');
 function start(){const t=create();t.load(L.findIndex(l=>l.rampage));return t;}
 function isolated(){const l=JSON.parse(JSON.stringify(L.find(l=>l.rampage)));l.rampage.hills=[];l.rampage.districts=[];
@@ -11,6 +12,14 @@ test('World 5 supplies twelve championship courses',()=>{
  const rows=L.filter(l=>l.worldNumber===5);assert.equal(rows.length,12);assert.ok(rows.every(l=>!l.standalone));assert.ok(!L.worlds[4].preview);
  const t=start();t.marathon('grand-tour');assert.equal(t.state.marathon.route.length,60);assert.equal(t.state.marathon.route.filter(i=>L[i].rampage).length,12);
  t.marathon('gerbozilla');assert.equal(t.state.marathon.route.length,12);assert.ok(t.state.run.rampage);
+});
+test('a rolling circuit result defaults to its next course',()=>{
+ const level=L.find(l=>l.rampage),run={time:10,pausedUsed:false,pb:false,result:{clean:true},ship:{hull:100},rampage:{stats:{blocked:0}}};
+ const circuit=V.dialog('result',level,run,String,[],{},null,{race:{name:'Grand Tour',id:'grand-tour',stages:49,length:60,retries:0,total:10,done:false}});
+ assert.match(circuit,/<button class="primary" data-action="next" autofocus>Next course/);
+ assert.doesNotMatch(circuit,/data-action="retry" autofocus/);
+ const individual=V.dialog('result',level,run,String);
+ assert.match(individual,/<button class="primary" data-action="retry" autofocus>/);
 });
 test('diagonal running is normalized; releasing preserves momentum',()=>{
  const a=isolated(),b=isolated();step(a,{rudder:1},5);step(b,{rudder:1,thruster:1},5);
@@ -106,7 +115,8 @@ test('only obsolete Seedhaven records are archived, idempotently',()=>{
  const v=S.sanitize(d);assert.equal(v.version,S.VERSION);assert.equal(v.stages['gerbo-first-outing'],undefined);
  assert.equal(v.archivedStages['gerbo-first-outing'].runs[0].time,89.5);
  assert.deepEqual(v.archivedStages['gerbo-first-outing'].ghost,old.ghost);assert.deepEqual(v.archivedStages['gerbo-first-outing'].bestSplits,old.bestSplits);
- assert.equal(v.stages.vacuum.runs[0].time,89.5);assert.equal(v.races['grand-tour'].length,1);
+ assert.equal(v.stages.vacuum.runs[0].time,89.5);assert.equal(v.races['grand-tour'].length,0);
+ assert.equal(v.archivedRaces['grand-tour-48'][0].time,9000);
  v.stages['gerbo-first-outing']=old;assert.equal(S.sanitize(v).stages['gerbo-first-outing'].runs.length,1);
 });
 test('Cushion Ridge bends a coasting ball south without player steering',()=>{
