@@ -51,7 +51,7 @@
         if(st.monsters.some(m=>m.invulnerable)) set('work-readout','NEEDLESWORTH IS INVULNERABLE · EVADE OR SHIELD · NO DEFEAT REQUIRED');
         if(st.lady)set('work-readout',`LADY WHISKERDOOM · ${Math.ceil(st.lady.health)}% · ${st.rescued?'SAFE':st.lady.following?'FOLLOWING YOUR TRAIL':st.unlocked?'GATE OPEN · GREET HER':'FREE BOTH LOCKS'}`);
         if(c.fire){set('work-readout',`${st.control<c.fire.unlockControl?'COLLECT THE PEPPER':st.wet>.5?'TOO WET TO BREATHE FIRE':st.fireActive?'FIRE BREATH':st.breath<.1?'RELEASE H TO REFILL':'HOLD H · AIM WITH A PUSH'} · BREATH ${st.breath.toFixed(1)} / ${c.fire.capacity} s`);set('gerbo-fire',`FIRE · ${st.breath.toFixed(1)} s · HOLD H`);}
-        if(st.strikes.length) { const next=st.strikes[0]; set('work-readout',`${next.target==='lady'?'LADY TARGETED':'LONG-RANGE FIRE'} · ${st.strikes.length} INBOUND · IMPACT ${Math.max(0,next.impactAt-run.time).toFixed(1)} s · AVOID RED CIRCLES`); }
+        if(st.strikes.length) { const next=st.strikes[0]; set('work-readout',`RETALIATION${next.target==='lady'?' · LADY TARGETED':''} · ${st.strikes.length} INBOUND · IMPACT ${Math.max(0,next.impactAt-run.time).toFixed(1)} s · AVOID RED CIRCLES`); }
         $('work-progress').style.width=(up?100:100*Math.max(0,1-wait/6))+'%';
         $('work-progress').style.background=up?'#9a3b7f':'var(--green)';
         $('manifest').hidden=false;
