@@ -188,7 +188,7 @@ for(const casualty of [false,true])for(const [side,x,y] of [['west',1,400],['eas
 });
 test('the Century Ship is selectable but excluded from both relevant marathons',()=>{
     const t=create();t.cheats.level(4,13);assert.equal(t.state.level.id,'century-ship');assert.ok(t.state.level.bonus);
-    for(const id of ['meridian','grand-tour']) {t.marathon(id);assert.ok(t.state.marathon.route.every(i=>!L[i].bonus));assert.equal(t.state.marathon.route.length,id==='meridian'?12:48);}
+    for(const id of ['meridian','grand-tour']) {t.marathon(id);assert.ok(t.state.marathon.route.every(i=>!L[i].bonus));assert.equal(t.state.marathon.route.length,id==='meridian'?12:60);}
     t.load(47);t.finish();t.next();assert.equal(t.state.modal,'courses');assert.equal(t.state.index,47);
 });
 test('century 30-minute lower bound follows distance and maximum acceleration, with docking tolerance',()=>{
