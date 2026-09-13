@@ -57,3 +57,6 @@ jobs:
           python tests/browser_smoke.py --url http://127.0.0.1:8080/dist/ --report reports/browser.json
       - name: World 5 controls, presentation and wheel audio
         run: python tests/browser_rampage.py
+
+      - name: Accelerated tour controls and revised approaches
+        run: python tests/browser_readiness.py

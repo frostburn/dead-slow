@@ -4,7 +4,7 @@
     const V = typeof module !== 'undefined' && module.exports ? require('./verification.js') : root.HarborVerification;
     function create(bridge, logger = root.console) {
         const copy = value => JSON.parse(JSON.stringify(value));
-        let rate = 1, playback = null, launching = false, lastReport = null;
+        let unlocked = false, rate = 1, playback = null, launching = false, lastReport = null;
         const log = (method, ...args) => { if (!bridge.quiet) logger?.[method]?.(...args); };
         function finite(value, min, max, name) {
             if (!Number.isFinite(value) || value < min || value > max)
@@ -24,7 +24,7 @@
         function findLevel(worldOrId, stage) {
             const i = typeof worldOrId === 'string' ? bridge.levels.findIndex(l => l.id === worldOrId) :
                 bridge.levels.findIndex(l => l.worldNumber === worldOrId && l.stageNumber === stage);
-            if (i < 0) throw new RangeError('Unknown assignment. Use its id or (world 1–4, stage 1–12; World 4 stage 13 is the bonus; World 5 has twelve standalone courses); DeadSlow.levels() lists them.');
+            if (i < 0) throw new RangeError('Unknown assignment. Use its id or (world 1–5, stage 1–12; World 4 stage 13 is the separate bonus); DeadSlow.levels() lists them.');
             return i;
         }
         function fixture(id) {
@@ -37,6 +37,18 @@
             try { bridge.load(i); } finally { launching = false; }
             practice('assignment selected');
             bridge.hud();
+        }
+        function circuit(worldOrId = 'grand-tour', speed = 8) {
+            finite(speed, 0, 32, 'Speed');
+            const id = typeof worldOrId === 'number'
+                ? bridge.levels.find(l => l.worldNumber === worldOrId)?.campaign : worldOrId;
+            if (id !== 'grand-tour' && !bridge.levels.some(l => l.campaign === id && !l.bonus && !l.standalone))
+                throw new RangeError('Unknown circuit. Use a world number 1–5 or "grand-tour".');
+            unlocked = true; rate = speed; playback = null; lastReport = null;
+            launching = true;
+            try { bridge.circuit(id); } finally { launching = false; }
+            practice('circuit playtest'); bridge.resetClock(); bridge.hud();
+            return menu.progress();
         }
         function controls(values) {
             if (!values || typeof values !== 'object' || Array.isArray(values)) throw new TypeError('Supply a controls object.');
@@ -53,7 +65,7 @@
         function watch(id, speed = 8) {
             const f = fixture(id), i = findLevel(id);
             finite(speed, 0, 32, 'Speed');
-            rate = speed;
+            unlocked = true; rate = speed;
             load(i);
             playback = { fixture: f, tick: 0, event: 0, controls: { rudder: 0, thruster: 0, winch: 0 } };
             lastReport = null;
@@ -98,6 +110,9 @@
         const menu = Object.freeze({
             help() {
                 const commands = [
+                    ['DeadSlow.tour(8)', 'Start a manual 60-stage Grand Tour at 8×, unranked from departure.'],
+                    ['DeadSlow.circuit(3, 8)', 'Start a twelve-stage world playtest; keep speed across retry/next.'],
+                    ['DeadSlow.progress()', 'Compact current mission, circuit clock and completed sector splits.'],
                     ['DeadSlow.levels()', 'List all assignments; world and stage numbers start at 1.'],
                     ['DeadSlow.level(3, 4)', 'Start The Floating Sauna as unranked practice (or supply an id).'],
                     ['DeadSlow.speed(8)', '0–32× wall-time rate. Physics always uses 1/120 second steps. 0 freezes.'],
@@ -119,6 +134,13 @@
                 log('info', 'Cheats are welcome aboard. Assisted runs never replace your records. Inspection alone is harmless.');
                 return commands;
             },
+            tour(speed = 8) { return circuit('grand-tour', speed); },
+            circuit,
+            progress() {
+                const s = bridge.state(), m = bridge.progress?.() || null;
+                return copy({ level: s.level.id, world: s.level.worldNumber, stage: s.level.stageNumber,
+                    status: s.status, timeScale: rate, practice: s.run.pausedUsed, time: s.run.time, circuit: m });
+            },
             levels() {
                 const rows = bridge.levels.map(l => ({ world: l.worldNumber, stage: l.stageNumber, id: l.id, name: l.name, bonus: !!l.bonus }));
                 return catalog(rows);
@@ -127,7 +149,7 @@
             speed(value) {
                 if (value === undefined) return rate;
                 finite(value, 0, 32, 'Speed');
-                rate = value; practice(value === 0 ? 'time frozen' : `${value}× time`);
+                unlocked = true; rate = value; practice(value === 0 ? 'time frozen' : `${value}× time`);
                 bridge.resetClock(); bridge.hud();
                 return rate;
             },
@@ -174,7 +196,7 @@
             },
             report() { return copy(lastReport); },
             normal() {
-                rate = 1; playback = null;
+                unlocked = false; rate = 1; playback = null;
                 bridge.load(bridge.state().index);
                 bridge.resetClock();
                 log('info', 'Back on the clock. Fresh individual trial, normal time, records enabled.');
@@ -185,7 +207,7 @@
             log('info', 'You found the secret chart room. Coffee is hot, the controls are yours, and mission control saw nothing. Type DeadSlow.help() for the spare keys.');
         }
         return {
-            menu, get rate() { return rate; }, beforeStep, afterStep,
+            menu, get unlocked() { return unlocked; }, get rate() { return rate; }, beforeStep, afterStep,
             onLoad() {
                 playback = null;
                 if (launching || rate !== 1) practice('test session');

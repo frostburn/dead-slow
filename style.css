@@ -2337,3 +2337,14 @@ body[data-theme="rampage"] #gerbo-shield.shield-on:disabled { opacity:1; }
   .gerbo-pad { margin-top:4px; }
   .gerbo-pad button { min-height:40px; }
 }
+
+/* Console-unlocked playtest controls; not exposed during normal ranked play. */
+.review-controls { position:absolute; z-index:4; left:18px; bottom:64px;
+  display:flex; align-items:center; gap:6px; padding:5px 7px; border:1px solid var(--muted);
+  border-radius:6px; background:var(--panel, #11242e); color:var(--text, #e5ece9); }
+.review-controls[hidden] { display:none; }
+.review-controls label { font:600 10px monospace; letter-spacing:.06em; }
+.review-controls select { font:600 13px monospace; min-height:32px; color:inherit; background:inherit; }
+.review-controls button { font-size:11px; min-height:32px; padding:5px 8px; }
+body[data-theme="rampage"] .review-controls { background:#f6f1dbed; color:#31483b; }
+@media(max-width:600px) { .review-controls { left:12px; bottom:112px; } }

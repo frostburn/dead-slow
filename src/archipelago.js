@@ -126,14 +126,14 @@
             obstacles: [quay(391, 198, 96, 13, 'PACKET WHARF'), quay(525, 191, 70, 12, 'SERVICE')], islands: [island(268, 72, 64, 36, 'Strömskär', 29), island(299, 334, 74, 25, '', 30), island(447, 81, 63, 33, '', 31)]
         },
         {
-            id: 'island-exchange', name: 'Island Exchange', kind: 'A return service · a changing manifest', world: [560, 380], start: [280, 265, 0], spec: FERRY, berth: slip(88, 260),
-            brief: 'Start mid-channel with an empty deck. Collect four vehicles at the mainland ramp and take them to the eastern landing. Two stay there; two new vans join the ferry. Bring all four vehicles now aboard back to the mainland, and finish at the mainland ramp.',
-            tip: 'Loading and unloading change your mass during the same voyage. The destination is always the amber ramp. Back clear, turn in open water, and line up again for the home berth.',
-            pace: [465, 630, 870], jobs: [
-                load('Mainland · board 4', 88, 260, ['car', 'car', 'van', 'car']), unload('East landing · unload 2', 472, 260, 2), { ...load('East landing · board 2 vans', 472, 260, ['van', 'van']), rampEnd: 1 }, { ...unload('Mainland · unload 4', 88, 260, 4), rampEnd: -1 }
+            id: 'island-exchange', name: 'Island Exchange', kind: 'A return service · perpendicular ramps', world: [560, 380], start: [280, 265, 0], spec: FERRY, berth: slip(88, 260),
+            brief: 'Start mid-channel with an empty deck. Collect four vehicles at the mainland ramp, round Long Island to the south, then turn north into Aspö’s landing. Two stay there; two new vans join the ferry. Back clear of the north-facing ramp, round the island again and bring all four vehicles home.',
+            tip: 'The two ramps face at right angles. Use the eastern turning basin, not the rock-strewn gap north of Long Island. The return load is heavier: reuse the route, not the outbound braking point.',
+            pace: [610, 800, 1050], jobs: [
+                load('Mainland · board 4', 88, 260, ['car', 'car', 'van', 'car']), unload('Aspö · unload 2', 470, 95, 2, -90 * D), { ...load('Aspö · board 2 vans', 470, 95, ['van', 'van'], -90 * D), rampEnd: 1 }, { ...unload('Mainland · unload 4', 88, 260, 4), rampEnd: -1 }
             ],
-            obstacles: [quay(39, 237, 30, 46, 'MAINLAND'), quay(491, 237, 34, 46, 'EAST LANDING')],
-            islands: [island(32, 261, 25, 68, 'Mainland', 32), island(533, 261, 23, 65, 'Aspö', 33), island(285, 154, 67, 71, 'Long Island', 34), island(290, 342, 66, 21, '', 35)]
+            obstacles: [quay(39, 237, 30, 46, 'MAINLAND'), quay(447, 45, 46, 31, 'ASPÖ NORTH RAMP')],
+            islands: [island(32, 261, 25, 68, 'Mainland', 32), island(470, 21, 70, 30, 'Aspö', 33), island(285, 180, 80, 71, 'Long Island', 34), island(365, 71, 25, 39, 'North Skerry', 36), island(290, 342, 66, 21, '', 35)]
         },
         {
             id: 'two-calls', name: 'One Line, Two Calls', kind: 'Two disabled vessels · separate berths', world: [660, 380], start: [229, 261, 0], spec: TUG, berth: berth(588, 98),

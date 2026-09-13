@@ -84,7 +84,8 @@ test('schema 6 archives only redesigned sectors and affected circuits, including
  assert.equal(n.stages['borrowed-sun'].runs[0].time,123);
  assert.equal(n.archivedStages['granite-needle-layout-v1'].runs[0].time,123);
  for(const id of ['meridian','grand-tour']){assert.equal(n.races[id].length,0);assert.equal(n.archivedRaces[id+'-layout-v1'].length,1);}
- for(const id of ['coast','northwatch'])assert.equal(n.races[id].length,1);
+ assert.equal(n.races.coast.length,1);
+    assert.equal(n.races.northwatch.length,0);assert.equal(n.archivedRaces['northwatch-approach-v1'].length,1);
  assert.equal(n.races.archipelago.length,0);assert.equal(n.archivedRaces['archipelago-layout-v2'].length,1);
  assert.deepEqual(S.sanitize(n),n);
 });

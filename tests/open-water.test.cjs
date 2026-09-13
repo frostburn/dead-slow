@@ -70,8 +70,10 @@ test('only changed departure routes are archived; tutorials and other worlds ret
     const run = { time: 200, contacts: 0, clean: true }, stage = { runs: [run], ghost: [[0, 88, 274, 0]], bestSplits: [80], clears: 1, attempts: 2 };
     const stages = Object.fromEntries(L.map(l => [l.id, stage]));
     const s = S.sanitize({ version: 3, stages, races: { coast: [run], northwatch: [run], archipelago: [run], 'grand-tour': [run] }, archivedRaces: { 'grand-tour-24': [run] } });
-    assert.equal(s.version, S.VERSION); assert.equal(Object.keys(s.archivedStages).length, 10);
-    for (const l of L) assert.equal(!!s.stages[l.id], !S.RESTARTED.includes(l.id), l.id);
+    assert.equal(s.version, S.VERSION); assert.equal(Object.keys(s.archivedStages).length, 11);
+    for (const l of L) assert.equal(!!s.stages[l.id], !S.RESTARTED.includes(l.id) && l.id !== 'backwater', l.id);
+    assert.deepEqual(s.archivedStages['backwater-approach-v1'].ghost, stage.ghost);
+    assert.equal(s.archivedRaces['northwatch-approach-v1'][0].time, 200);
     assert.deepEqual(s.archivedStages['milk-run'].ghost, stage.ghost);
     assert.deepEqual(s.archivedStages['milk-run'].bestSplits, [80]);
     for (const id of ['archipelago', 'grand-tour']) {

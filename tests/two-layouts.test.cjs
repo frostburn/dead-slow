@@ -50,7 +50,7 @@ test('new broadside recording is in the reproducible offline watch library', () 
     assert.equal(fs.readFileSync(require.resolve('../src/verification.js'),'utf8'),require('../tools/sync-replays.cjs').source());
     const runs=require('../src/verification.js').runs;
     assert.equal(runs.find(f=>f.level==='granite-needle').expectedTime,373.575);
-    assert.equal(runs.length,37);
+    assert.ok(runs.length >= 37); // Later additions must not invalidate these two recordings.
 });
 
 test('schema 10 preserves both changed layouts and affected circuits in separate archives', () => {
@@ -68,7 +68,9 @@ test('schema 10 preserves both changed layouts and affected circuits in separate
     for (const id of ['archipelago','gerbozilla','grand-tour']) {
         assert.equal(n.races[id].length,0); assert.equal(n.archivedRaces[id+'-layout-v2'][0].time,1000);
     }
-    for (const id of ['coast','northwatch','meridian']) assert.equal(n.races[id][0].time,1000);
+    for (const id of ['coast','meridian']) assert.equal(n.races[id][0].time,1000);
+    assert.equal(n.races.northwatch.length,0);
+    assert.equal(n.archivedRaces['northwatch-approach-v1'][0].time,1000);
     assert.equal(n.stages['bigger-boat'].runs[0].time,123);
     assert.equal(n.stages['gerbo-first-outing'].runs[0].time,123);
     assert.equal(n.archivedStages['granite-needle'].runs[0].time,89);

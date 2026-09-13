@@ -1,5 +1,19 @@
 # Changelog
 
+## 5.0.2 — Ready for the Grand Tour
+
+- Replace Backwater's straight backing lane with an offset reverse dogleg around
+  an old mole. Rework Island Exchange around perpendicular ramps and Long Island.
+- Ship two clean fixed-input approach recordings; the library now contains 38.
+- Add console-started practice tours/circuits, compact progress reports, an
+  on-chart time selector, freeze/resume and keyboard rate controls.
+- Preserve practice status across the entire circuit even after returning to 1×.
+  Do not record later individual PBs or ranked departures from a practice circuit.
+- Retain Codex's clean/overall archive presentation and add separate schema-12
+  archives for the two earlier approaches and their affected circuits.
+- Document all later-world route purposes and the targeted validation scope.
+  No physics coefficients, audio, dependencies or unrelated layouts change.
+
 ## 5.0.1 — Broadside Pickup & Teardrop Mere
 
 - Start The Granite Needle's barge north-facing, broadside to the passage. Add
