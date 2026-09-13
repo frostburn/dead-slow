@@ -1,5 +1,17 @@
 # Changelog
 
+## 5.0.0-preview.5 — Needlesworth & the Journey Home
+
+- Add three courses, taking World 5 to twelve standalone assignments: evade
+  invulnerable Sir Needlesworth, shield his pursuit, and escort Lady home.
+- Preserve impact impulses while blocking all damage to the hedgehog. Optional
+  predators are hazards, not defeat requirements or fake health-bar bosses.
+- Start the finale with Lady free; route beacons release interceptors and launch
+  finite long-range salvos targeting both hamsters. Player shielding is personal.
+- Add hedgehog artwork, release markers, target labels, focused regressions and
+  three clean fixed-input recordings. Existing course physics defaults, terrain,
+  audio, saved-record formats, and circuit routes remain unchanged.
+
 ## 5.0.0-preview.4 — Into the Wilds
 
 - Expand World 5 to nine standalone courses. Replace the repetitive Reservoir

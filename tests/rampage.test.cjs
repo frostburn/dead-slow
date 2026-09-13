@@ -8,7 +8,7 @@ function isolated(){const l=JSON.parse(JSON.stringify(L.find(l=>l.rampage)));l.r
  return {level:l,run:{ship:s,rampage:R.create(l,s),time:0,contacts:0,distance:0,maxSpeed:0,dockHold:0}};}
 function step(a,input={},duration=1){for(let i=0;i<Math.round(duration*120);i++){a.run.time+=1/120;R.update(a.level,a.run,input,1/120);}}
 test('World 5 contains nine explicitly standalone courses',()=>{
- const rows=L.filter(l=>l.worldNumber===5);assert.equal(rows.length,9);assert.ok(rows.every(l=>l.standalone));assert.ok(L.worlds[4].preview);
+ const rows=L.filter(l=>l.worldNumber===5);assert.equal(rows.length,12);assert.ok(rows.every(l=>l.standalone));assert.ok(L.worlds[4].preview);
  const t=start();t.marathon('grand-tour');assert.equal(t.state.marathon.route.length,48);assert.ok(t.state.marathon.route.every(i=>!L[i].rampage));
  t.marathon('gerbozilla');assert.equal(t.state.marathon,null);assert.ok(t.state.run.rampage);
 });
