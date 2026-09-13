@@ -86,7 +86,7 @@ Run one at a time. All twelve courses have input-only reference recordings; the
 ten revised-map recordings are verified for version 5.0.0. They are not
 claimed optimal. Read the [field guide](docs/GERBOZILLA.md) for mechanics and tests.
 
-There are **37 recordings and 61 selectable assignments**. All five worlds now
+There are **38 recordings and 61 selectable assignments**. All five worlds now
 have twelve-stage circuits; the **Grand Tour has 60 stages**. The Century Ship
 is the single bonus, excluded from every circuit. Each route has separate
 overall and clean records. The World 5 HUD, result screen and field log show
@@ -106,6 +106,20 @@ Schema 10 preserves the earlier **48-stage Grand Tour** separately. Records,
 ghosts and splits for revised preview field maps are archived under their own
 keys; earlier terrain archives remain intact. Seedhaven, The Long Way Home and
 all sea/space course records remain active. Export before moving HTML files.
+
+## Accelerated playtest
+
+```js
+DeadSlow.tour(8)          // Start the 60-stage Grand Tour as manual 8× practice.
+DeadSlow.circuit(3, 8)    // Or play a single world's circuit.
+DeadSlow.progress()      // Mission, total clock, retries and completed splits.
+```
+
+The console commands unlock an on-chart speed selector and Freeze button. Use
+`[` / `]` to slow down/speed up, and backslash to freeze/resume. Rate survives
+retries and stage changes; returning to 1× never makes an assisted circuit ranked.
+`DeadSlow.normal()` returns to a fresh ranked individual trial. See the
+[playtest guide and course audit](docs/PLAYTEST.md) for test scope and record migration.
 
 ## Play
 
@@ -322,7 +336,10 @@ leaderboard. Export the logbook before moving between files, browsers or hosts;
 then import it through **Logbook**. Import replaces the current local logbook.
 Storage denial or quota failure leaves the session playable and exportable.
 
-Logbooks using schemas 1–11 are accepted. Schema 11 archives the inline Granite
+Logbooks using schemas 1–12 are accepted. Schema 12 separately archives the
+earlier Backwater and Island Exchange approaches, plus their World 2, World 3
+and Grand Tour circuits. Their clean and overall records remain visible.
+Schema 11 archives the inline Granite
 Needle and the earlier Whiskerdoom lake layout, with their ghosts and splits.
 Their World 3, World 5 and 60-stage Grand Tour records remain separately available
 in the logbooks and exports. Other stage and circuit records remain active.

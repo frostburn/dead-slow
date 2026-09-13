@@ -35,6 +35,12 @@
    <div class="chart-bottom"><div class="mission-strip" id="mission-strip"><span class="status-dot"></span><span id="mission-status">Awaiting departure.</span></div><div class="chart-scale" id="scale-label">25 METRES</div></div>
    <button id="zoom-btn" class="chart-zoom" aria-label="Cycle chart zoom" title="Chart zoom (Z)">1×</button>
    <button id="radar-btn" class="chart-zoom" style="right:76px" title="Send radar pulse (H)" aria-label="Send radar pulse" hidden>◎</button>
+   <div class="review-controls" id="review-controls" hidden>
+    <label for="review-rate">PRACTICE</label>
+    <select id="review-rate" aria-label="Practice time multiplier" title="Slower [ / faster ]">
+     <option value="0">Frozen</option><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option><option value="8">8×</option><option value="16">16×</option><option value="32">32×</option><option id="review-custom" value="" hidden></option>
+    </select><button id="review-freeze" title="Freeze / resume time (backslash)">Freeze</button>
+   </div>
    <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </section>
   <aside class="sidebar">

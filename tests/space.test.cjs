@@ -206,7 +206,8 @@ test('v4 logbooks preserve all stages and sea circuits while archiving the 36-st
     for(const id of ['coast','northwatch','archipelago','grand-tour'])d.races[id]=[run];
     const n=S.sanitize(d);assert.equal(n.version,S.VERSION);assert.equal(n.archivedStages['granite-needle-layout-v1'].runs[0].time,123);
     assert.deepEqual(n.archivedStages['granite-needle-layout-v1'].ghost,[[0,1,2,0]]);assert.deepEqual(n.archivedStages['granite-needle-layout-v1'].bestSplits,[99]);
-    for(const id of ['coast','northwatch'])assert.equal(n.races[id].length,1);
+    assert.equal(n.races.coast.length,1);
+    assert.equal(n.races.northwatch.length,0);assert.equal(n.archivedRaces['northwatch-approach-v1'].length,1);
     assert.equal(n.races.archipelago.length,0);assert.equal(n.archivedRaces['archipelago-layout-v2'].length,1);
     assert.equal(n.races['grand-tour'].length,0);assert.equal(n.archivedRaces['grand-tour-36'].length,1);
     assert.deepEqual(S.sanitize(n),n);

@@ -112,6 +112,9 @@
         if (level.rampage) run.rampage = B.create(level, s);
         HarborSpaceUI.prepare(level);
         G.prepare(level);
+        // An assisted circuit stays assisted at 1× too, before begin() records
+        // a departure. Otherwise later individual PBs could leak out of a tour.
+        if (marathon?.practice) markPractice('Practice circuit');
         developer?.onLoad();
         toastUntil = 0;
         $('toast').classList.remove('visible');
@@ -600,7 +603,10 @@
             ['grand-tour', 'Grand Tour · earlier barge/lake']].map(([id, name]) => {
                 const rows = store.data.archivedRaces[id + '-layout-v2'] || [];
                 return { name, overall: rows[0]?.time, clean: rows.find(r => r.clean)?.time };
-            }).filter(row => Number.isFinite(row.overall));
+            }).concat([['northwatch', 'World 2 · straight Backwater'], ['archipelago', 'World 3 · same-axis exchange'], ['grand-tour', 'Grand Tour · earlier approaches']].map(([id, name]) => {
+                const rows = store.data.archivedRaces[id + '-approach-v1'] || [];
+                return { name, overall: rows[0]?.time, clean: rows.find(r => r.clean)?.time };
+            })).filter(row => Number.isFinite(row.overall));
     }
     function showLog(filter = 'overall') {
         if (level.rampage) { pauseForMenu(); return openDialog('log', G.dialog('log', level, run, format, store.stage(level.id).runs, settings, [level.id+'-layout-v1',level.id+'-preview',level.id,level.rampage.retiredId].filter(Boolean).filter(id=>store.data.archivedStages[id]).map(id=>({id,...store.data.archivedStages[id]})), fieldContext(true))); }
@@ -612,6 +618,7 @@
  <table class="log-table"><thead><tr><th>#</th><th>TIME / IGT</th><th>CONTACTS</th><th>CLASS</th></tr></thead><tbody>${runs.length ? runs.map((r, i) => `<tr><td>${String(i + 1).padStart(2, '0')}</td><td>${format(r.time)}</td><td>${r.contacts}</td><td class="${r.clean ? 'clean' : ''}">${r.clean ? 'CLEAN' : 'OPEN'}</td></tr>`).join('') : `<tr><td colspan="4">${wording('No ranked arrival yet. The harbor is waiting.', 'No ranked capture yet. Your sector is waiting.')}</td></tr>`}</tbody></table>
  <h3 class="circuit-heading">Circuit records</h3><table class="log-table"><thead><tr><th>ROUTE</th><th>OVERALL</th><th>CLEAN</th></tr></thead><tbody>${[...WORLDS.filter(w => !w.preview).map(w => [w.id, `World ${w.number} · ${w.name}`]), ['grand-tour', `Grand Tour · ${LEVELS.filter(l => !l.bonus && !l.standalone).length}`]].map(([id, name]) => `<tr><td>${name}</td><td>${format(store.bestRace(id)?.time)}</td><td class="clean">${format(store.bestRace(id, true)?.time)}</td></tr>`).join('')}</tbody></table><p class="subtle">${store.data.archivedRaces?.['grand-tour-48']?.length ? '48-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-48'][0].time) + '<br>' : ''}${store.data.archivedRaces?.['grand-tour-24']?.length ? '24-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-24'][0].time) + '<br>' : ''}${store.data.archivedRaces?.['grand-tour-36']?.length ? '36-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-36'][0].time) + '<br>' : ''}${store.data.marathon.length ? '12-stage circuit (archived): ' + format(store.data.marathon[0].time) + '<br>' : ''}Times use a fixed 120 Hz simulation clock. Paused runs are unranked. Gold / silver / bronze are course pace targets, not online rankings.</p>
  ${store.data.archivedStages[level.id+'-layout-v1']?.runs.length ? `<details><summary>Earlier layout records (archived)</summary><p class="subtle">The barge now starts broadside. Earlier inline-tow times, ghosts and splits remain in exports, not on this route’s board.</p><table class="log-table"><thead><tr><th>TIME / IGT</th><th>CONTACTS</th><th>CLASS</th></tr></thead><tbody>${store.data.archivedStages[level.id+'-layout-v1'].runs.map(r => `<tr><td>${format(r.time)}</td><td>${r.contacts}</td><td>${r.clean ? 'CLEAN' : 'OPEN'}</td></tr>`).join('')}</tbody></table></details>` : ''}
+ ${store.data.archivedStages[level.id + '-approach-v1']?.runs.length ? `<details><summary>Earlier straight-approach records (archived)</summary><p class="subtle">These times belong to the earlier approach. Its ghost and splits remain in exports.</p>${store.data.archivedStages[level.id + '-approach-v1'].runs.map(r => `<p>${format(r.time)} · ${r.clean ? 'CLEAN' : 'OPEN'}</p>`).join('')}</details>` : ''}
  ${layoutRaceArchives().map(a=>`<p class="subtle">${esc(a.name)} (archived): overall ${format(a.overall)} · clean ${format(a.clean)}</p>`).join('')}
  ${store.data.archivedStages[level.id]?.runs.length ? `<details><summary>${run.space ? 'Archived sector layout records' : 'Archived dock-side departure records'}</summary><p class="subtle">These runs use a different layout or starting position. Their ghosts and splits are preserved in exports, not compared with this route.</p><table class="log-table"><thead><tr><th>TIME / IGT</th><th>CONTACTS</th><th>CLASS</th></tr></thead><tbody>${store.data.archivedStages[level.id].runs.map(r => `<tr><td>${format(r.time)}</td><td>${r.contacts}</td><td>${r.clean ? 'CLEAN' : 'OPEN'}</td></tr>`).join('')}</tbody></table></details>` : ''}
  ${['archipelago', 'grand-tour'].some(id => store.data.archivedRaces[id + '-dock-starts']?.length) ? `<details><summary>Archived dock-side island circuits</summary><p class="subtle">Approach legs change these routes. Earlier records are retained separately.</p>${['archipelago', 'grand-tour'].map(id => { const rows = store.data.archivedRaces[id + '-dock-starts']; return rows.length ? `<p>${id === 'archipelago' ? 'World 3' : 'Grand Tour'} · ${format(rows[0].time)}</p>` : ''; }).join('')}</details>` : ''}
@@ -754,6 +761,14 @@
         }).join('');
     }
     function updateHud() {
+        $('review-controls').hidden = !developer?.unlocked;
+        if (developer?.unlocked) {
+            const custom = $('review-custom');
+            custom.hidden = [0, 1, 2, 4, 8, 16, 32].includes(developer.rate);
+            if (!custom.hidden) { custom.value = String(developer.rate); custom.textContent = developer.rate + '×'; }
+            $('review-rate').value = String(developer.rate);
+            $('review-freeze').textContent = developer.rate === 0 ? 'Resume time' : 'Freeze';
+        }
         if (run?.rampage) {
             const label = (developer?.rate === 0 ? 'FROZEN' : developer?.rate !== 1 ? developer?.rate + '× PRACTICE' : 'PRACTICE') + ' · UNRANKED';
             G.update(level, run, status, format, label, store.stage(level.id).bestSplits, store.best(level.id), fieldContext().race); return;
@@ -877,6 +892,18 @@
     };
     $('retry-btn').onclick = retry;
     $('quick-retry-btn').onclick = retry;
+    let reviewResumeRate = 8;
+    $('review-rate').onchange = () => {
+        const value = Number($('review-rate').value);
+        if (value > 0) reviewResumeRate = value;
+        developer.menu.speed(value);
+        $('review-rate').blur?.();
+    };
+    $('review-freeze').onclick = () => {
+        const rate = developer.rate;
+        if (rate > 0) { reviewResumeRate = rate; clearInput(); }
+        developer.menu.speed(rate === 0 ? reviewResumeRate : 0);
+    };
     $('horn-btn').onclick = signal;
     $('gerbo-shield').onclick = lineAction;
     $('radar-btn').onclick = signal;
@@ -913,6 +940,20 @@
     document.addEventListener('keydown', e => {
         if (e.ctrlKey || e.metaKey || e.altKey)
             return;
+        // The speed selector is a native input, not an alternative helm.
+        if (e.target?.matches?.('select, input, textarea')) return;
+        if (developer?.unlocked && ['BracketLeft', 'BracketRight', 'Backslash'].includes(e.code)) {
+            e.preventDefault();
+            if (e.repeat) return;
+            if (e.code === 'Backslash') $('review-freeze').onclick();
+            else {
+                const steps = [1, 2, 4, 8, 16, 32], value = developer.rate;
+                const next = e.code === 'BracketRight' ? steps.find(x => x > value) ?? 32
+                    : steps.slice().reverse().find(x => x < value) ?? 1;
+                reviewResumeRate = next; developer.menu.speed(next);
+            }
+            return;
+        }
         // Modal focus stays inside the dialog, including on touch/browser keyboards.
         if (e.code === 'Tab' && !$('overlay').hidden) {
             const items = [...$('dialog').querySelectorAll('button:not([disabled]),input,a')];
@@ -1112,6 +1153,14 @@
         quiet: new URLSearchParams(location.search).has('test'),
         state: () => ({ index, level, status, run, input }),
         load(i) { marathon = null; loadStage(i, true); },
+        circuit: startMarathon,
+        progress() {
+            if (!marathon) return null;
+            return { id: marathon.id, position: marathon.position + 1, length: marathon.route.length,
+                completed: marathon.stages, retries: marathon.retries, practice: marathon.practice,
+                time: marathon.total + (status === 'complete' ? 0 : run.time),
+                splits: marathon.splits.map(s => ({ ...s })) };
+        },
         practice: markPractice, advance: advanceSeconds, throttle, line: lineAction,
         input(values) {
             for (const key of ['rudder', 'thruster', 'winch'])

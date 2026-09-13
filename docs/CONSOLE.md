@@ -107,7 +107,8 @@ DeadSlow.verify("first-crossing")
 | `first-crossing` | World 3 · The First Crossing | 123.950000 s |
 | `bigger-boat` | World 3 · A Bigger Boat | 187.900000 s |
 | `granite-needle` | World 3 · The Granite Needle | 373.575000 s |
-| `island-exchange` | World 3 · Island Exchange | 396.283333 s |
+| `island-exchange` | World 3 · Island Exchange | 850.358333 s |
+| `backwater` | World 2 · Backwater | 330.150000 s |
 
 World 4 adds thirteen more recordings, including the Century Ship bonus: see
 the [space mission table](SPACE.md#verified-flight-library). Every spacecraft
@@ -149,3 +150,12 @@ attempt also does not inflate the ranked departure counter.
 This is a convenience guard against accidental record pollution, not security.
 A local browser game and its storage are inspectable and editable. Cheats are
 welcome aboard; keep a separate logbook export when experimenting with imports.
+
+## Manual circuit playtests
+
+`DeadSlow.tour(8)` starts a fresh, unranked 60-stage Grand Tour.
+`DeadSlow.circuit(3, 8)` starts World 3 (world numbers 1–5 or campaign IDs work).
+These do not autoplay or overwrite ranked departures, PBs, ghosts or circuit times.
+`DeadSlow.progress()` returns a compact detached clock/retry/split summary.
+The new speed controls remain available through retries and mode changes, including
+World 5. See [PLAYTEST.md](PLAYTEST.md) for key bindings and limitations.

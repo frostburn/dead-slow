@@ -411,12 +411,13 @@
             ]
         },
         {
-            id: 'backwater', name: 'Backwater', kind: 'Stern-first docking across a weak set', world: [420, 280], start: [63, 144, 180 * D], berth: {
+            id: 'backwater', name: 'Backwater', kind: 'Reverse dogleg into an offset finger berth', world: [420, 280], start: [63, 217, 180 * D], berth: {
                 x: 353, y: 144, a: 180 * D, l: 41, w: 19, angle: 11, speed: .5
             },
-            brief: 'Back down the channel, pass the reverse-approach mark and slot into a narrow bow-out berth. A weak northerly set makes a straight line slowly bend.',
-            tip: 'AHEAD is the brake when the speed reads ASTERN. Use short thruster corrections; the stern must clear the fingers before you settle.',
-            pace: [155, 225, 325], current: [0, -.13], obstacles: [
+            brief: 'Back through the southern approach, round the old mole and turn your stern north toward the finger basin. Straighten onto the west-facing berth before entering the fingers; a northerly set keeps pushing throughout the maneuver.',
+            tip: 'This is not a straight backing exercise. Leave room east of the mole for the dogleg, countersteer to stop the swing, and use ahead thrust to brake when the speed reads ASTERN.',
+            pace: [245, 340, 475], current: [0, -.13], obstacles: [
+                { x: 175, y: 20, w: 17, h: 143, label: 'OLD MOLE' },
                 {
                     x: 305, y: 109, w: 84, h: 13, label: 'NORTH FINGER'
                 }, {
@@ -424,7 +425,8 @@
                 }, { x: 374, y: 109, w: 15, h: 78 }
             ],
             buoys: [
-                { x: 266, y: 144, r: 24, name: 'Reverse-approach mark' }
+                { x: 235, y: 215, r: 23, name: 'Round the mole astern' },
+                { x: 285, y: 144, r: 20, name: 'Straighten for the fingers' }
             ]
         },
         {
