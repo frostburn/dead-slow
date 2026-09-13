@@ -43,16 +43,16 @@ with sync_playwright() as pw:
         const d=DeadSlowTest.state.storage;
         d.archivedStages['granite-needle-layout-v1']={runs:[{time:289.925,contacts:0,clean:true}]};
         d.archivedStages['gerbo-whiskerdoom-layout-v1']={runs:[{time:456.491667,contacts:0,clean:true}]};
-        for(const id of ['archipelago','gerbozilla','grand-tour'])d.archivedRaces[id+'-layout-v2']=[{time:1234,contacts:0,clean:true}];
+        for(const id of ['archipelago','gerbozilla','grand-tour'])d.archivedRaces[id+'-layout-v2']=[{time:1200,contacts:1,clean:false},{time:1234,contacts:0,clean:true}];
         DeadSlow.level('granite-needle');DeadSlow.speed(0);
     }''')
     page.click('#log-btn')
     text=page.locator('#dialog').inner_text()
-    check('Captain log exposes inline-tow stage and circuit archives', 'Earlier layout records (archived)' in text and 'World 3 · inline barge (archived)' in text)
+    check('Captain log exposes both classes of inline-tow circuit archives', 'Earlier layout records (archived)' in text and 'World 3 · inline barge (archived): overall 20:00.000 · clean 20:34.000' in text)
     page.evaluate('DeadSlow.level("gerbo-whiskerdoom");DeadSlow.speed(0)')
     page.click('#log-btn')
     text=page.locator('#dialog').inner_text()
-    check('Field log exposes earlier lake and affected circuit archives', 'Earlier terrain records (archived)' in text and 'World 5 · earlier lake (archived)' in text and 'Grand Tour · earlier barge/lake' in text)
+    check('Field log exposes both classes of affected circuit archives', 'Earlier terrain records (archived)' in text and 'World 5 · earlier lake (archived): overall 20:00.000 · clean 20:34.000' in text and 'Grand Tour · earlier barge/lake' in text)
     for id in ['granite-needle','gerbo-whiskerdoom']:
         page.set_viewport_size({'width':390,'height':844})
         page.evaluate('(id)=>{DeadSlow.level(id);DeadSlow.speed(0)}',id)
