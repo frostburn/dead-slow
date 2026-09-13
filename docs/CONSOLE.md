@@ -106,7 +106,7 @@ DeadSlow.verify("first-crossing")
 | `two-greens` | World 2 · Between Two Greens | 138.625000 s |
 | `first-crossing` | World 3 · The First Crossing | 123.950000 s |
 | `bigger-boat` | World 3 · A Bigger Boat | 187.900000 s |
-| `granite-needle` | World 3 · The Granite Needle | 289.925000 s |
+| `granite-needle` | World 3 · The Granite Needle | 373.575000 s |
 | `island-exchange` | World 3 · Island Exchange | 396.283333 s |
 
 World 4 adds thirteen more recordings, including the Century Ship bonus: see

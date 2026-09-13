@@ -211,7 +211,7 @@
             rocks:[boulder(1230,440,155,180,1),boulder(750,910,140,180,2),
                 wall(1660,300,380,22),wall(1660,600,380,22),wall(2018,300,22,322),
                 wall(1660,300,22,120),wall(1660,500,22,122),wall(1660,420,22,80,{gate:true})],
-            lakes:[{x:2070,y:1100,rx:150,ry:185,shore:[.17,.08,1],name:'TEARDROP MERE'}],
+            lakes:[{x:1810,y:1270,rx:150,ry:185,shore:[.17,.08,1],name:'TEARDROP MERE'}],
             controls:[],districts:[{id:'north-lock',name:'North Lock',x:1550,y:335,r:25,health:70,defence:false},
                 {id:'south-lock',name:'South Lock',x:1550,y:630,r:25,health:70,defence:false}],
             monsters:[{id:'flops',name:'Sir Flops-a-Lot',kind:'rabbit',x:1180,y:890,r:48,mass:11,health:160}],

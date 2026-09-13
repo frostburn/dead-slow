@@ -150,7 +150,7 @@ vehicle ferries and a red working tug. You operate **MS Linnea** or **MT Sisu**.
 | The Milk Run | Deliver one manifest to two separate island ramps. |
 | The Floating Sauna | Move a broad sauna pontoon around a wooded skerry. |
 | Market Day | Carry a full deck through no-wake water and crossing pleasure boats. |
-| The Granite Needle | Bring a 66-metre work barge through a rocky passage. |
+| The Granite Needle | Swing a north-facing, broadside work barge into line before towing through the granite passage. |
 | The Last Bus Home | Board a bus, cars and a van; catch a swing-bridge window. |
 | Slack Water Salvage | Tow a coastal packet through a pulsing cross-set into shelter. |
 | Island Exchange | Unload two, board two, then take the changing manifest home. |
@@ -322,12 +322,15 @@ leaderboard. Export the logbook before moving between files, browsers or hosts;
 then import it through **Logbook**. Import replaces the current local logbook.
 Storage denial or quota failure leaves the session playable and exportable.
 
-Logbooks using schemas 1–10 are accepted. Earlier migrations archive the retired Reservoir
+Logbooks using schemas 1–11 are accepted. Schema 11 archives the inline Granite
+Needle and the earlier Whiskerdoom lake layout, with their ghosts and splits.
+Their World 3, World 5 and 60-stage Grand Tour records remain separately available
+in the logbooks and exports. Other stage and circuit records remain active.
+ Earlier migrations archive the retired Reservoir
 Hairpin; schema 8 retains superseded Banking/Lake District routes separately. Schema 6 archives old records, ghosts and
 splits for the five redesigned missions (`vacuum`, `umbra`, `perihelion-dispatch`,
 `yesterday`, `century-ship`), plus their affected Meridian and Grand Tour circuits.
-These are not comparable routes. Every unchanged stage and the three sea-world
-circuits retain active records. Archives remain visible in the logbook and exports.
+These are not comparable routes. Unchanged stages and circuits retain active records. Archives remain visible in the logbook and exports.
 The earlier **36-stage Grand Tour** also remains separate from the 60-stage route.
 
 Older schema migrations still preserve dock-side island departure records and

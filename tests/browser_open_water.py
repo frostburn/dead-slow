@@ -42,7 +42,7 @@ def check_open_water(browser, check, html):
     page.evaluate('DeadSlow.watch("granite-needle",32)')
     page.wait_for_function('DeadSlow.report()?.verified === true', timeout=45000)
     check('Animated remote-barge replay reaches its author time',
-          abs(page.evaluate('DeadSlow.report().time')-289.925)<1/120)
+          abs(page.evaluate('DeadSlow.report().time')-page.evaluate('HarborVerification.runs.find(r=>r.level==="granite-needle").expectedTime'))<1/120)
     check('Animated barge replay secures the casualty without ranking', page.evaluate(
           'DeadSlow.state().run.jobs.stats.vesselsDelivered===1 && DeadSlow.report().ranked===false')
           and page.locator('#best-overall').inner_text()=='—')

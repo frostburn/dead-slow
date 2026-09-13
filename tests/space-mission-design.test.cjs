@@ -81,9 +81,11 @@ test('schema 6 archives only redesigned sectors and affected circuits, including
  for(const id of Object.keys(d.races))d.races[id]=[run];
  const n=S.sanitize(d);
  for(const id of S.REDESIGNED){assert.equal(n.stages[id],undefined);assert.deepEqual(n.archivedStages[id].ghost,[[0,1,2,0]]);assert.deepEqual(n.archivedStages[id].bestSplits,[45]);}
- for(const id of ['borrowed-sun','granite-needle'])assert.equal(n.stages[id].runs[0].time,123);
+ assert.equal(n.stages['borrowed-sun'].runs[0].time,123);
+ assert.equal(n.archivedStages['granite-needle-layout-v1'].runs[0].time,123);
  for(const id of ['meridian','grand-tour']){assert.equal(n.races[id].length,0);assert.equal(n.archivedRaces[id+'-layout-v1'].length,1);}
- for(const id of ['coast','northwatch','archipelago'])assert.equal(n.races[id].length,1);
+ for(const id of ['coast','northwatch'])assert.equal(n.races[id].length,1);
+ assert.equal(n.races.archipelago.length,0);assert.equal(n.archivedRaces['archipelago-layout-v2'].length,1);
  assert.deepEqual(S.sanitize(n),n);
 });
 // Only the affected mission recordings. The full library remains CI's job.

@@ -93,10 +93,10 @@
             islands: [island(31, 173, 27, 70, '', 17), island(534, 173, 23, 63, 'Market', 18), island(269, 60, 60, 33, 'Björkby', 19), island(292, 284, 68, 31, '', 20)]
         },
         {
-            id: 'granite-needle', name: 'The Granite Needle', kind: 'A heavy work barge · a rocky passage', world: [620, 380], start: [234, 240, 0], spec: TUG, berth: berth(552, 240),
-            brief: 'A 66-metre work barge waits west of your position. Approach its bow, pass the towline and take it between the granite heads and settle the whole barge inside the yard berth before parking the tug.',
-            tip: 'Watch the barge, not just the tug. Towlines do not wrap around islands: a line dragged across rock will chafe through. Slack off before changing direction.',
-            pace: [330, 475, 665], towables: [boat('workbarge', 'WORK BARGE', 80, 240, 66, 15, 3.8, 'barge')], jobs: [tow('workbarge', 'Barge · repair yard', 436, 240, 88, 36)],
+            id: 'granite-needle', name: 'The Granite Needle', kind: 'Broadside pickup · a heavy tow through granite', world: [620, 380], start: [234, 240, 0], spec: TUG, berth: berth(552, 240),
+            brief: 'The work barge lies broadside to the fairway in the western roadstead, bow pointing north. Approach its bow, make fast and swing the 66-metre hull onto an easterly heading before threading the granite heads. Settle it in the repair yard, then moor Sisu.',
+            tip: 'Pull the bow around in open water before entering the narrows. The stern swings wide and the barge cuts inside turns. Watch the whole tow, leave room north of the yard, and release early enough to let it coast into its berth.',
+            pace: [420, 570, 780], towables: [boat('workbarge', 'WORK BARGE', 110, 245, 66, 15, 3.8, 'barge', -90 * D)], jobs: [tow('workbarge', 'Barge · repair yard', 436, 240, 88, 36)],
             obstacles: [quay(390, 263, 94, 13, 'REPAIR YARD'), quay(529, 256, 67, 13, 'TUG BERTH')],
             islands: [island(303, 112, 49, 79, 'North Tooth', 21), island(320, 331, 52, 33, 'South Tooth', 22), island(461, 75, 69, 30, '', 23)]
         },

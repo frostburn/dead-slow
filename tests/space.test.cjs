@@ -204,9 +204,10 @@ test('v4 logbooks preserve all stages and sea circuits while archiving the 36-st
     const d=S.fresh(),run={time:123,contacts:0,clean:true};d.version=4;
     d.stages['granite-needle']={runs:[run],ghost:[[0,1,2,0]],bestSplits:[99],clears:2,attempts:3};
     for(const id of ['coast','northwatch','archipelago','grand-tour'])d.races[id]=[run];
-    const n=S.sanitize(d);assert.equal(n.version,S.VERSION);assert.equal(n.stages['granite-needle'].runs[0].time,123);
-    assert.deepEqual(n.stages['granite-needle'].ghost,[[0,1,2,0]]);assert.deepEqual(n.stages['granite-needle'].bestSplits,[99]);
-    for(const id of ['coast','northwatch','archipelago'])assert.equal(n.races[id].length,1);
+    const n=S.sanitize(d);assert.equal(n.version,S.VERSION);assert.equal(n.archivedStages['granite-needle-layout-v1'].runs[0].time,123);
+    assert.deepEqual(n.archivedStages['granite-needle-layout-v1'].ghost,[[0,1,2,0]]);assert.deepEqual(n.archivedStages['granite-needle-layout-v1'].bestSplits,[99]);
+    for(const id of ['coast','northwatch'])assert.equal(n.races[id].length,1);
+    assert.equal(n.races.archipelago.length,0);assert.equal(n.archivedRaces['archipelago-layout-v2'].length,1);
     assert.equal(n.races['grand-tour'].length,0);assert.equal(n.archivedRaces['grand-tour-36'].length,1);
     assert.deepEqual(S.sanitize(n),n);
 });

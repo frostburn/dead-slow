@@ -1,5 +1,16 @@
 # Changelog
 
+## 5.0.1 — Broadside Pickup & Teardrop Mere
+
+- Start The Granite Needle's barge north-facing, broadside to the passage. Add
+  approach guidance, adjusted pace targets and a clean 373.575-second recording.
+- Move Teardrop Mere southwest into low, open ground on the Whiskerdoom rescue
+  map. The existing clean 456.491667-second escort recording remains unchanged.
+- Archive the two superseded stage layouts and the affected World 3, World 5
+  and 60-stage circuit records separately; keep all previous archives intact.
+- Preserve Codex's rolling-circuit Next button fix, physics and audio. Add only
+  targeted geometry, migration and replay checks for these two assignments.
+
 ## 5.0.0 — The Complete Field Atlas
 
 - Promote Gerbozilla’s Rampage to a twelve-course championship and expand the
