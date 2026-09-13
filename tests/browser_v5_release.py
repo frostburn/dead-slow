@@ -17,13 +17,13 @@ with sync_playwright() as pw:
     page.evaluate("Object.defineProperty(window,'localStorage',{value:{getItem(k){return this[k]||null},setItem(k,v){this[k]=v}}})")
     html=(ROOT/'dist/index.html').read_text().replace("new URLSearchParams(location.search).has('test')",'true')
     page.set_content(html);page.wait_for_function('!!window.DeadSlowTest')
-    page.evaluate('DeadSlowTest.courses(5)')
+    page.evaluate('DeadSlowTest.courses(4)')
     text=page.locator('#dialog').inner_text()
-    check('Full World 5 has twelve course cards and no preview label',page.locator('.level-card').count()==12 and 'preview' not in text.lower())
-    check('World 5 circuit and sixty-stage Grand Tour are selectable','World 5 run · 12 courses' in text and 'all 60' in text)
+    check('Full World 4 has twelve course cards and no preview label',page.locator('.level-card').count()==12 and 'preview' not in text.lower())
+    check('World 4 circuit and sixty-stage Grand Tour are selectable','World 4 run · 12 courses' in text and 'all 60' in text)
     page.screenshot(path=str(OUT/'world-five.png'))
     for number in [2,3,4,5,6,7,8,9,10,11]:
-        page.evaluate('(n)=>{DeadSlow.level(5,n);DeadSlow.speed(0)}',number)
+        page.evaluate('(n)=>{DeadSlow.level(4,n);DeadSlow.speed(0)}',number)
         page.wait_for_timeout(110)
         check(f'Course {number} renders a nonempty field sheet',page.locator('#sea').evaluate('(e)=>e.width>500&&e.height>300'))
         if number in [2,3,4,5,6,7,8,10]:page.screenshot(path=str(OUT/f'course-{number}.png'))
@@ -36,11 +36,11 @@ with sync_playwright() as pw:
     page.screenshot(path=str(OUT/'three-shields.png'))
     # Exercise the actual field UI during a real circuit, then isolate its end.
     page.evaluate('DeadSlow.normal();DeadSlowTest.marathon("gerbozilla");DeadSlowTest.hud()')
-    check('Rolling circuit HUD displays its route counter and clock',page.locator('#race-banner').is_visible() and 'WORLD 5 1/12' in page.locator('#race-banner').inner_text())
+    check('Rolling circuit HUD displays its route counter and clock',page.locator('#race-banner').is_visible() and 'WORLD 4 1/12' in page.locator('#race-banner').inner_text())
     page.evaluate('DeadSlowTest.state.run.time=3;DeadSlowTest.retry();DeadSlowTest.hud()')
     check('Rolling circuit retries retain elapsed time',page.evaluate('DeadSlowTest.state.marathon.total>=3&&DeadSlowTest.state.marathon.retries===1'))
     page.evaluate('''() => {for(let i=0;i<12;i++){DeadSlowTest.state.run.time=2;DeadSlowTest.finish();if(i<11)DeadSlowTest.next();}}''')
-    check('Championship result reports the full route and total','WORLD 5 12/12' in page.locator('#dialog').inner_text() and 'Twelve courses.' in page.locator('#dialog').inner_text())
+    check('Championship result reports the full route and total','WORLD 4 12/12' in page.locator('#dialog').inner_text() and 'Twelve courses.' in page.locator('#dialog').inner_text())
     check('Championship record goes to its separate board',page.evaluate('DeadSlowTest.state.storage.races.gerbozilla.length===1 && DeadSlowTest.state.storage.races.gerbozilla[0].stages===12'))
     page.screenshot(path=str(OUT/'championship-result.png'))
     page.click('[data-action=log]')
@@ -50,7 +50,7 @@ with sync_playwright() as pw:
       data.archivedRaces['grand-tour-48']=[{time:9876,contacts:0,clean:true}];
       data.archivedStages['gerbo-banking-preview']={runs:[{time:100,contacts:0,clean:true}]};
       data.archivedStages['gerbo-banking']={runs:[{time:90,contacts:0,clean:true}]};
-      DeadSlow.level(5,2);DeadSlow.speed(0);
+      DeadSlow.level(4,2);DeadSlow.speed(0);
     }''')
     page.click('#log-btn')
     text=page.locator('#dialog').inner_text()
@@ -58,9 +58,9 @@ with sync_playwright() as pw:
     check('Old forty-eight-stage circuit is visible in the rolling field log','48-stage Grand Tour (archived)' in text)
     page.evaluate('DeadSlow.normal();DeadSlowTest.marathon("grand-tour")')
     page.evaluate('''() => {for(let i=0;i<60;i++){DeadSlowTest.state.run.time=1;DeadSlowTest.finish();if(i<59)DeadSlowTest.next();}}''')
-    check('Grand Tour actually ends with the World 5 finale',page.evaluate('DeadSlowTest.state.level.id==="gerbo-long-way-home" && DeadSlowTest.state.marathon.stages===60'))
+    check('Grand Tour ends in space after the field championship',page.evaluate('DeadSlowTest.state.level.id==="perihelion-dispatch" && DeadSlowTest.state.marathon.stages===60'))
     check('Final result celebrates all five worlds with the full circuit time','Five worlds.' in page.locator('#dialog').inner_text() and 'GRAND TOUR 60/60' in page.locator('#dialog').inner_text())
-    page.evaluate('DeadSlow.level(5,10);DeadSlow.speed(0)')
+    page.evaluate('DeadSlow.level(4,10);DeadSlow.speed(0)')
     for w,h in [(390,844),(320,740),(844,390)]:
         page.set_viewport_size({'width':w,'height':h});page.wait_for_timeout(90)
         check(f'Released field controls fit {w}x{h}',page.evaluate('document.documentElement.scrollWidth<=innerWidth'))

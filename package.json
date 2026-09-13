@@ -1,10 +1,12 @@
 {
   "name": "dead-slow-harbor-trials",
-  "version": "5.0.2",
+  "version": "5.1.0",
   "private": true,
-  "description": "Five complete inertial navigation worlds: sixty circuit stages and the Century Ship bonus. A dependency-free offline browser game.",
+  "description": "Eight-world atlas: five playable inertial navigation campaigns, three coming soon. Sixty circuit missions plus one bonus; offline and dependency-free.",
   "license": "MIT",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "node tools/build.cjs",
     "test": "node --test tests/*.test.cjs",

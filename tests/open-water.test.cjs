@@ -42,7 +42,7 @@ test('a casualty crossing an edge also loses the assignment', () => {
     const body = t.state.run.jobs.bodies[0];
     Object.assign(body, { x: 5, y: 155, moored: false, vx: -1 });
     t.advance(1 / 120);
-    assert.equal(t.state.status, 'failed'); assert.equal(t.state.run.failure.vessel, 'ELVIRA');
+    assert.equal(t.state.status, 'failed'); assert.equal(t.state.run.failure.vessel, 'ELVARA');
     assert.equal(t.state.run.failure.side, 'w'); assert.equal(t.state.run.contacts, 0);
 });
 test('edge warning is local, hull-based and never appears at a closed coast', () => {

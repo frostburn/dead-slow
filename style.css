@@ -2348,3 +2348,15 @@ body[data-theme="rampage"] #gerbo-shield.shield-on:disabled { opacity:1; }
 .review-controls button { font-size:11px; min-height:32px; padding:5px 8px; }
 body[data-theme="rampage"] .review-controls { background:#f6f1dbed; color:#31483b; }
 @media(max-width:600px) { .review-controls { left:12px; bottom:112px; } }
+
+/* The atlas distinguishes real assignments from planned chapters. */
+.world-tabs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); }
+.world-tab.coming-soon { filter:saturate(.15); color:var(--muted); background:#222a2d; }
+.world-tab.coming-soon.active { outline:2px solid var(--muted); outline-offset:-2px; }
+.level-card.coming-soon { opacity:.62; filter:grayscale(1); cursor:not-allowed; }
+.level-card.coming-soon:hover { transform:none; }
+.dialog button:disabled { cursor:not-allowed; }
+.support-link { margin:18px 0 0; font-size:12px; line-height:1.5; color:var(--muted); }
+.support-link a { color:inherit; text-decoration:underline; text-underline-offset:3px; }
+.permanent-support { padding:5px 14px; margin:0; text-align:center; font-size:11px; }
+@media(max-width:650px) { .world-tabs { grid-template-columns:repeat(2,minmax(0,1fr)); } }

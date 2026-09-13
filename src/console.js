@@ -24,7 +24,12 @@
         function findLevel(worldOrId, stage) {
             const i = typeof worldOrId === 'string' ? bridge.levels.findIndex(l => l.id === worldOrId) :
                 bridge.levels.findIndex(l => l.worldNumber === worldOrId && l.stageNumber === stage);
-            if (i < 0) throw new RangeError('Unknown assignment. Use its id or (world 1–5, stage 1–12; World 4 stage 13 is the separate bonus); DeadSlow.levels() lists them.');
+            if (i < 0) {
+                const upcoming = (bridge.levels.catalog || []).find(l => l.comingSoon &&
+                    (typeof worldOrId === 'string' ? l.id === worldOrId : l.worldNumber === worldOrId && l.stageNumber === stage));
+                throw new RangeError(upcoming ? 'Coming soon: this assignment is not playable yet.' :
+                    'Unknown assignment. Worlds 1, 2, 3, 4 and 6 are playable; World 6 stage 13 is the separate bonus. DeadSlow.levels() lists the atlas.');
+            }
             return i;
         }
         function fixture(id) {
@@ -43,7 +48,7 @@
             const id = typeof worldOrId === 'number'
                 ? bridge.levels.find(l => l.worldNumber === worldOrId)?.campaign : worldOrId;
             if (id !== 'grand-tour' && !bridge.levels.some(l => l.campaign === id && !l.bonus && !l.standalone))
-                throw new RangeError('Unknown circuit. Use a world number 1–5 or "grand-tour".');
+                throw new RangeError('Circuit unavailable. Worlds 1, 2, 3, 4 and 6 are playable; 5, 7 and 8 are coming soon.');
             unlocked = true; rate = speed; playback = null; lastReport = null;
             launching = true;
             try { bridge.circuit(id); } finally { launching = false; }
@@ -117,7 +122,7 @@
                     ['DeadSlow.level(3, 4)', 'Start The Floating Sauna as unranked practice (or supply an id).'],
                     ['DeadSlow.speed(8)', '0–32× wall-time rate. Physics always uses 1/120 second steps. 0 freezes.'],
                     ['DeadSlow.step(30)', 'Advance up to 600 simulated seconds, including replay controls.'],
-                    ['DeadSlow.controls({throttle: 4})', 'Persistent controls: throttle −3…4; rudder/thruster/winch −1…1. World 5: rudder = east, thruster = south; winch > 0 holds fire breath.'],
+                    ['DeadSlow.controls({throttle: 4})', 'Persistent controls: throttle −3…4; rudder/thruster/winch −1…1. World 4: rudder = east, thruster = south; winch > 0 holds fire breath.'],
                     ['DeadSlow.line()', 'Make fast / cast off at sea; lock / release the rescue beam in space; activate Gerbozilla’s shield.'],
                     ['DeadSlow.warp(150, 200, 0)', 'Reposition the player only, stop motion; heading in degrees.'],
                     ['DeadSlow.repair()', 'Restore the hulls; does not erase contacts or failure.'],
@@ -142,7 +147,7 @@
                     status: s.status, timeScale: rate, practice: s.run.pausedUsed, time: s.run.time, circuit: m });
             },
             levels() {
-                const rows = bridge.levels.map(l => ({ world: l.worldNumber, stage: l.stageNumber, id: l.id, name: l.name, bonus: !!l.bonus }));
+                const rows = (bridge.levels.catalog || bridge.levels).map(l => ({ comingSoon: !!l.comingSoon, world: l.worldNumber, stage: l.stageNumber, id: l.id, name: l.name, bonus: !!l.bonus }));
                 return catalog(rows);
             },
             level(worldOrId, stage) { load(findLevel(worldOrId, stage)); return menu.state(); },
@@ -180,10 +185,11 @@
                 return catalog(rows);
             },
             times() {
-                const rows = bridge.levels.map(l => ({
+                const rows = (bridge.levels.catalog || bridge.levels).map(l => ({
+                    comingSoon: !!l.comingSoon,
                     world: l.worldNumber, stage: l.stageNumber, id: l.id, bonus: !!l.bonus,
                     verifiedAuthorTime: V.runs.find(f => f.level === l.id)?.expectedTime ?? null,
-                    goldTarget: l.pace[0], silverTarget: l.pace[1], bronzeTarget: l.pace[2]
+                    goldTarget: l.pace?.[0] ?? null, silverTarget: l.pace?.[1] ?? null, bronzeTarget: l.pace?.[2] ?? null
                 }));
                 catalog(rows); log('info', 'null means no control-only author recording. Medal targets are design goals, not verified completion times.');
                 return rows;

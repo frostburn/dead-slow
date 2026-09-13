@@ -8,14 +8,14 @@ function isolated(){const l=JSON.parse(JSON.stringify(L.find(l=>l.rampage)));l.r
  const s={x:200,y:200,vx:0,vy:0,a:0,r:0,hull:100};
  return {level:l,run:{ship:s,rampage:R.create(l,s),time:0,contacts:0,distance:0,maxSpeed:0,dockHold:0}};}
 function step(a,input={},duration=1){for(let i=0;i<Math.round(duration*120);i++){a.run.time+=1/120;R.update(a.level,a.run,input,1/120);}}
-test('World 5 supplies twelve championship courses',()=>{
- const rows=L.filter(l=>l.worldNumber===5);assert.equal(rows.length,12);assert.ok(rows.every(l=>!l.standalone));assert.ok(!L.worlds[4].preview);
+test('World 4 supplies twelve championship courses',()=>{
+ const rows=L.filter(l=>l.worldNumber===4);assert.equal(rows.length,12);assert.ok(rows.every(l=>!l.standalone));assert.ok(!L.worlds.find(w=>w.id==='gerbozilla').comingSoon);
  const t=start();t.marathon('grand-tour');assert.equal(t.state.marathon.route.length,60);assert.equal(t.state.marathon.route.filter(i=>L[i].rampage).length,12);
  t.marathon('gerbozilla');assert.equal(t.state.marathon.route.length,12);assert.ok(t.state.run.rampage);
 });
 test('a rolling circuit result defaults to its next course',()=>{
  const level=L.find(l=>l.rampage),run={time:10,pausedUsed:false,pb:false,result:{clean:true},ship:{hull:100},rampage:{stats:{blocked:0}}};
- const circuit=V.dialog('result',level,run,String,[],{},null,{race:{name:'Grand Tour',id:'grand-tour',stages:49,length:60,retries:0,total:10,done:false}});
+ const circuit=V.dialog('result',level,run,String,[],{},null,{race:{name:'Grand Tour',id:'grand-tour',stages:49,length:60,retries:0,total:10,done:false,hasNext:true}});
  assert.match(circuit,/<button class="primary" data-action="next" autofocus>Next course/);
  assert.doesNotMatch(circuit,/data-action="retry" autofocus/);
  const individual=V.dialog('result',level,run,String);

@@ -1,4 +1,4 @@
-# Accelerated full-run playtest — 5.0.2
+# Accelerated full-run playtest — 5.1.0
 
 From the browser console:
 
@@ -9,8 +9,9 @@ DeadSlow.progress()      // Small detached report: mission, clock, retries, spli
 ```
 
 `tour` and `circuit` start a new playtest. They do not drive the vehicle or resume
-an earlier run. The Century Ship remains outside the Grand Tour. World 5 is a
-full twelve-stage championship, not a preview.
+an earlier run. The Century Ship remains outside the Grand Tour. World 4 is a
+full twelve-stage championship. The active route is worlds 1, 2, 3, 4 and 6;
+5, 7 and 8 contain disabled coming-soon plans, not playable stages.
 
 After starting, a PRACTICE time selector and Freeze button appear on the chart.
 The `[` / `]` keys step between 1, 2, 4, 8, 16 and 32×; backslash freezes/resumes.
@@ -24,7 +25,12 @@ are playtest choices, not part of the mission mechanics. The simulation keeps
 its 120 Hz steps at every rate. A slow device can run below the requested rate;
 it does not lengthen physics steps or fast-forward through collisions.
 
-The selected rate survives R/retry, next-stage menus and world changes. Menus do
+R and every restart button open a frozen, cancel-first confirmation. Escape or
+Enter on the default “Keep playing” button keeps mission progress as practice.
+Only the explicit Restart action abandons the current attempt; completed circuit
+stages remain. Confirmation itself never silently restarts or repeats.
+
+The selected rate survives confirmed restarts, next-stage menus and world changes. Menus do
 not advance the clock. Frozen time is distinct from the pause menu: the latter
 still needs Resume after focus loss. The overlay continues to block the helm.
 
@@ -78,7 +84,7 @@ an actual route/manoeuvre rather than just accelerating and braking.
 | The Granite Needle | Broadside heavy-barge pickup and narrow granite passage; preserved. |
 | The Last Bus | Bridge timing plus a north-facing unloading ramp. |
 | Slackwater Salvage | Remote casualty and a pulsing cross-race that reaches tug and tow at different times. |
-| **Island Exchange — revised** | Perpendicular ramps around Long Island, partial exchange and a heavier return load. |
+| **Island Exchange — revised** | Perpendicular ramps around Longfin Isle, partial exchange and a heavier return load. |
 | One Line, Two Calls | Separate recoveries and delivery basins, not one inline tow. |
 | Cars and a Casualty | Ferry duty then a northern rescue using the ferry's towing point. |
 | Midsummer Dispatch | Two island stops, bridge, clearance, traffic and final rescue. |
@@ -133,8 +139,12 @@ coefficients, other missions and workflow versions are unchanged.
 
 ## Records
 
+Schema 13 archives the three pre-volcano field courses and earlier Gerbozilla
+championship, plus the earlier Grand Tour order. Display renumbering leaves
+other mission IDs and their records intact.
+
 Schema 12 archives only the earlier Backwater/Island Exchange stage records and
 the affected Northwatch, Archipelago and Grand Tour circuits. Clean and overall
 classes remain separate, as do older archive generations. The latest merged
-Codex archive-display fix is preserved. World 1, World 4 and World 5 circuit
-records remain active. Earlier logbooks are still importable.
+Codex archive-display fix is preserved; schema 13 additionally archives the
+changed field circuit, without resetting the sea/space circuit boards. Earlier logbooks are still importable.

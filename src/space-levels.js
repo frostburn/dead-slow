@@ -4,9 +4,9 @@
     const PI = Math.PI;
     const berth = (x, y, a = 0, extra = {}) => ({ x, y, a, l: 48, w: 28, speed: .24, angle: 8, ...extra });
     const rock = (id, x, y, radius, extra = {}) => ({ id, x, y, radius, ...extra });
-    const courier = { name: 'CS KESTREL', vessel: 'space', length: 22, beam: 11, mass: 1, draft: 0 };
-    const tug = { ...courier, name: 'UT MOTH', length: 20, beam: 12, mass: 1 };
-    const warship = { ...courier, name: 'RS RESOLUTE', length: 38, beam: 15, mass: 1.8 };
+    const courier = { name: 'CS KESTRELLET', vessel: 'space', length: 22, beam: 11, mass: 1, draft: 0 };
+    const tug = { ...courier, name: 'UT LANTERNMOTH', length: 20, beam: 12, mass: 1 };
+    const warship = { ...courier, name: 'RS RESOLVANT', length: 38, beam: 15, mass: 1.8 };
     const levels = [
         {
             id: 'vacuum', name: 'Nothing to Push Against', kind: 'Burn · coast · counterburn',
@@ -24,11 +24,11 @@
         {
             id: 'wandering-stone', name: 'A Stone with a Schedule', kind: 'Moving asteroid landing',
             world: [960, 560], start: [125, 210, 0], berth: berth(745, 205),
-            brief: 'Land at the survey cradle on asteroid Hilda. The rock drifts slowly north and south. Match the moving cradle’s velocity, not merely its position, and hold with thrust cut.',
-            tip: 'The dashed landing box rides with Hilda. REL speed measures motion against the cradle. Granite is still solid; land beside it, not through it.',
+            brief: 'Land at the survey cradle on asteroid Hildara. The rock drifts slowly north and south. Match the moving cradle’s velocity, not merely its position, and hold with thrust cut.',
+            tip: 'The dashed landing box rides with Hildara. REL speed measures motion against the cradle. Granite is still solid; land beside it, not through it.',
             pace: [130, 195, 280], space: {
                 mission: 'landing', fuel: 100, acceleration: .34,
-                asteroids: [rock('hilda', 745, 300, 65, { motion: { ay: 38, period: 240 } }), rock('shard', 460, 375, 48)],
+                asteroids: [rock('hilda', 745, 300, 65, { label:'HILDARA', motion: { ay: 38, period: 240 } }), rock('shard', 460, 375, 48)],
                 landing: { asteroid: 'hilda', offset: [0, -95] }
             }
         },
@@ -45,18 +45,18 @@
         {
             id: 'family-reunion', name: 'Some Assembly Required', kind: 'Two tenders · one mothership',
             world: [1000, 650], start: [120, 225, 0], berth: berth(850, 320, 0, { l: 118, w: 106 }),
-            brief: 'Dock Kestrel on the upper cradle of the mothership, then fly Wren into the lower cradle. Control transfers automatically after each capture. Finally bring the assembled, heavier Wayfarer to the spaceport.',
-            tip: 'The active cradle is amber. Match its arrow and cut every jet for the two-second capture. Docked tenders become part of Wayfarer’s mass and collision envelope.',
+            brief: 'Dock Kestrellet on the upper cradle of the mothership, then fly Wrenlet into the lower cradle. Control transfers automatically after each capture. Finally bring the assembled, heavier Waywarden to the spaceport.',
+            tip: 'The active cradle is amber. Match its arrow and cut every jet for the two-second capture. Docked tenders become part of Waywarden’s mass and collision envelope.',
             pace: [265, 380, 550], space: {
                 mission: 'assembly', fuel: 200, acceleration: .36,
-                mother: { x: 460, y: 320, a: 0, length: 72, beam: 28, mass: 2.7, name: 'MS WAYFARER' },
-                second: { x: 120, y: 415, a: 0, name: 'CS WREN' }
+                mother: { x: 460, y: 320, a: 0, length: 72, beam: 28, mass: 2.7, name: 'MS WAYWARDEN' },
+                second: { x: 120, y: 415, a: 0, name: 'CS WRENLET' }
             }
         },
         {
             id: 'newtons-broadside', name: 'Newton’s Broadside', kind: 'Steady · fire · recover',
             world: [1000, 650], start: [150, 450, 0], spec: warship, berth: berth(150, 450, 0, { l: 64, w: 32 }),
-            brief: 'Move Resolute into the marked firing box. Rotate toward the practice target, stop drifting and spinning, and hold the firing solution for three seconds. The cannon fires automatically. Recover from recoil and return home.',
+            brief: 'Move Resolvant into the marked firing box. Rotate toward the practice target, stop drifting and spinning, and hold the firing solution for three seconds. The cannon fires automatically. Recover from recoil and return home.',
             tip: 'Follow the lead diamond. All jets must be cut to charge the cannon. A miss can be corrected and retried; a hit unlocks the home capture cradle. Recoil changes velocity, not just the screen.',
             pace: [230, 350, 500], space: {
                 mission: 'gunnery', fuel: 240, acceleration: .5,
@@ -67,7 +67,7 @@
         {
             id: 'moving-argument', name: 'A Moving Argument', kind: 'Lead the target',
             world: [1050, 680], start: [140, 470, 0], spec: warship, berth: berth(140, 470, 0, { l: 64, w: 32 }),
-            brief: 'The target this time is an enemy corvette moving across your field of fire. Reach the firing box, hold a steady lead solution, and let the cannon speak. Then recover and bring Resolute home.',
+            brief: 'The target this time is an enemy corvette moving across your field of fire. Reach the firing box, hold a steady lead solution, and let the cannon speak. Then recover and bring Resolvant home.',
             tip: 'Aim at the hollow lead diamond, not the hull. The intercept marker includes projectile travel time. The three-second lock resets when the aim or attitude drifts out of tolerance.',
             pace: [240, 370, 520], space: {
                 mission: 'gunnery', fuel: 260, acceleration: .5,
@@ -115,7 +115,7 @@
         {
             id: 'yesterday', name: 'Yesterday Has Right of Way', kind: 'Two gates · three competing timelines',
             world: [1440, 960], start: [220, 260, 0], berth: berth(1190, 560),
-            brief: 'Janus Station has two chronogates inside a winding freight concourse. Capture A, then B, then reach the experimental terminal. Each insertion adds your last flight as a repeating, solid history. The final leg shares the station with two past selves.',
+            brief: 'Janara Station has two chronogates inside a winding freight concourse. Capture A, then B, then reach the experimental terminal. Each insertion adds your last flight as a repeating, solid history. The final leg shares the station with two past selves.',
             tip: 'A → A′ and B → B′ destinations are marked. Use the passing bays, not the walls: copying your old line exactly can cause a paradox. Both histories keep replaying until you escape; waiting for them to disappear will not work.',
             pace: [700, 1050, 1500], space: {
                 mission: 'time', fuel: 360, acceleration: .36, maxLoop: 900,
@@ -124,7 +124,7 @@
                     { ...berth(220, 710), id: 'B', destination: [240, 360], replayLead: 32 }
                 ],
                 station: {
-                    name: 'JANUS / TEMPORAL FREIGHT TERMINAL',
+                    name: 'JANARA / TEMPORAL FREIGHT TERMINAL',
                     blocks: [
                         { id: 'north-spine', x: 80, y: 80, w: 1280, h: 40 },
                         { id: 'south-spine', x: 80, y: 840, w: 1280, h: 40 },
@@ -160,7 +160,7 @@
             pace: [480, 680, 960], space: {
                 mission: 'dispatch', fuel: 18, capacity: 220, acceleration: .65,
                 depot: berth(410, 480, 0, { hold: 6, label: 'SHIELDED DEPOT' }),
-                friendly: { x: 670, y: 480, a: 0, length: 34, beam: 16, mass: 1.9, name: 'TENDER NANSEN' },
+                friendly: { x: 670, y: 480, a: 0, length: 34, beam: 16, mass: 1.9, name: 'TENDER NAVREN' },
                 rescue: berth(1040, 480, 0, { l: 70, w: 44, angle: 16, speed: .3 }),
                 flare: { continuous: true },
                 asteroids: [
@@ -172,12 +172,12 @@
         {
             id: 'century-ship', name: 'The Century Ship', kind: 'BONUS · detour past a rogue planet', bonus: true,
             world: [111500, 18000], start: [128, 9000, 0], berth: berth(110720, 9000, 0, { l: 84, w: 44, speed: .24 }),
-            spec: { ...courier, name: 'IS CENTURY', length: 48, beam: 18, mass: 1 },
+            spec: { ...courier, name: 'IS LONGCENTURY', length: 48, beam: 18, mass: 1 },
             brief: 'A compressed interstellar voyage, outside every marathon. The next system is 110.592 km away on this navigation chart. With a 0.12 m/s² main drive and weak lateral jets, even the best possible rest-to-rest flight takes more than thirty minutes of in-game time. A rogue planet blocks the direct line. Clear its dark limb before turning your velocity back toward the destination; it is a solid obstruction, not a gravity assist.',
             tip: 'This is a distance-and-acceleration bound, not a waiting timer. Plan a two-dimensional counterburn. Lateral jets are weak but useful: build clearance well before the planet, then remove lateral velocity as well as forward speed. The console can accelerate practice; assisted voyages never enter the records. Z cycles between sector overview and local tracking.',
             pace: [2100, 2460, 3000], space: {
                 mission: 'century', fuel: 340, acceleration: .12, lateral: .04, century: true,
-                asteroids: [rock('EREBUS / ROGUE PLANET', 55424, 9000, 3800, { planet: true })]
+                asteroids: [rock('EREBUNE / ROGUE PLANET', 55424, 9000, 3800, { planet: true })]
             }
         }
     ];

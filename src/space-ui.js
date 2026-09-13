@@ -56,7 +56,7 @@
         const range = Math.hypot(target.x - s.x, target.y - s.y);
         const relative = Math.hypot(s.vx - (target.vx || 0), s.vy - (target.vy || 0));
         set('ship-name', s.name);
-        set('world-label', 'WORLD 4 · THE BLACK MERIDIAN');
+        set('world-label', 'WORLD 6 · THE BLACK MERIDIAN');
         set('shelter-status', st.inBlackout ? 'POWER INHIBITED' : st.light < .01 ? 'FULL SHADOW' : st.light < .99 ? 'PARTIAL SHADOW' : 'IN SUNLIGHT');
         set('local-set', `SPIN ${(s.r * 180 / Math.PI).toFixed(2)} °/s`);
         set('weather-text', `VACUUM · REL ${relative.toFixed(2)} m/s · ${range >= 1000 ? (range / 1000).toFixed(2) + ' km' : Math.round(range) + ' m'} TO ACTIVE TARGET`);

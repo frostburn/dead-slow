@@ -301,7 +301,7 @@
         if (st.phase === 1) run.ship = st.second;
         else {
             m.beam = 102; m.throttle = 0; m.engine = 0; m.r = 0;
-            run.ship = m; emit(st, 'Wayfarer flight control');
+            run.ship = m; emit(st, 'Waywarden flight control');
         }
         // No impulse or free fuel is granted to the newly selected craft.
         run.ship.throttle = 0; run.ship.engine = 0;
@@ -363,7 +363,7 @@
             // P.contact expects velocity components under x/y, never a body's position.
             for (const b of st.rocks) {
                 if (b.planet && P.sat(P.hull(s), b.poly)) {
-                    fail(run, 'planet-impact', 'Surface impact on Erebus. There is no landing site here; clear the entire limb.'); return;
+                    fail(run, 'planet-impact', 'Surface impact on Erebune. There is no landing site here; clear the entire limb.'); return;
                 }
                 contact(run, s, { id: b.id, poly: b.poly, velocity: { x: b.vx, y: b.vy } });
             }

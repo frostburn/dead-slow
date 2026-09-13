@@ -553,14 +553,14 @@
     function create(level, ship) {
         ship.vessel = 'ball'; ship.radius = level.rampage.radius;
         const c=level.rampage;
-        return { rocks:(c.rocks || []).map((r,i)=>({...r,id:'rock-'+i,poly:rockPolygon(r)})),
+        return { volcanoes:(c.volcanoes || []).map(v=>({...v,state:volcanoState(v,0),hitAt:-100,ladyHitAt:-100})), rocks:(c.rocks || []).map((r,i)=>({...r,id:'rock-'+i,poly:rockPolygon(r)})),
             monsters:(c.monsters || []).map(m=>({...m,maxHealth:m.health,vx:0,vy:0,state:'prowl',until:0,hitAt:-100,released:!m.releaseControl})),
             lady:c.rescue?{...c.rescue,vx:0,vy:0,a:0,hitAt:-100,following:!!c.rescue.free}:null,
             breadcrumbs:c.rescue?.free?[{x:ship.x,y:ship.y}]:[],unlocked:!!c.rescue?.free,ambushed:0,rescued:false,rescueHold:0,forest:woodland(c,ship),aim:0,breath:c.fire?.capacity || 0,fireActive:false,
             roll: 0, pawPhase: 0, radius: level.rampage.radius, slip: 0, wet: water(c,ship), effort: 0, elevation: terrain(c,ship.x,ship.y).height, control: 0, controlCount: level.rampage.controls.length,
             shieldUntil: 0, shieldReady: 0, shots: [], strikes: [], flashes: [], hold: 0,
             districts: level.rampage.districts.map(d => ({ ...d, maxHealth: d.health, nextShot: 0, aim: null, shotAt: null, hitAt: -100 })),
-            stats: { districts: 0, damage: 0, blocked: 0, shields: 0, impacts: 0, waterTime: 0, salvos: 0, strikeHits: 0, strikeDodges: 0, strikeBlocks: 0, escortStrikeHits:0, rockHits:0, forestTime:0, monsters:0, monsterImpacts:0, needleBlocks:0, fireTime:0, ladyDamage:0 }
+            stats: { volcanoHits:0, volcanoBlocks:0, districts: 0, damage: 0, blocked: 0, shields: 0, impacts: 0, waterTime: 0, salvos: 0, strikeHits: 0, strikeDodges: 0, strikeBlocks: 0, escortStrikeHits:0, rockHits:0, forestTime:0, monsters:0, monsterImpacts:0, needleBlocks:0, fireTime:0, ladyDamage:0 }
         };
     }
     function shield(run) {
@@ -701,6 +701,7 @@
         breathe(level,run,input,dt,events);
         rescueUpdate(level,run,dt,events);
         strikeUpdate(level,run);
+        volcanoUpdate(run);
         if(st.lady?.health<=0) run.failure={type:'lost-friend',message:'Lady Whiskerdoom’s shell broke. Protect her route from pursuers and marked artillery.'};
         st.flashes = st.flashes.filter(f => run.time-f.t < 1.5);
         if (s.hull <= 0) run.failure = { type:'shell-broken',message:'The exercise ball cracked. Use the shield for defensive fire and high-speed impacts.' };
@@ -715,6 +716,8 @@
         if (run.failure) return run.failure.message;
         const strike=st.strikes.find(b=>b.x!==null);
         if (strike) return 'RETALIATION · '+Math.max(0,strike.impactAt-run.time).toFixed(1)+' s · LEAVE RED TARGET CIRCLES OR SHIELD';
+        const vent=st.volcanoes.find(v=>v.state.phase!=='quiet' && (volcanoContact(v,run.ship,st.radius+90)));
+        if(vent) return vent.name+' · '+(vent.state.active?'ERUPTING · CLEAR THE MARKED FOOTPRINT':'ERUPTION IN '+vent.state.remaining.toFixed(1)+' s');
         if (st.wet > .5) return 'NO TRACTION · keep coasting; running only spins the ball';
         if (run.dockHold > 0) return 'RECOVERY MEADOW · paws off · settling ' + Math.max(0,2-run.dockHold).toFixed(1)+' s';
         const hazard=st.monsters.find(m=>m.invulnerable && m.released && m.state==='warning' && Math.hypot(m.x-run.ship.x,m.y-run.ship.y)<500);
@@ -731,7 +734,61 @@
         if (st.strikes.length) return 'RETALIATION INBOUND · clear the marked strikes before recovery';
         return 'RECOVERY MEADOW · push against motion to brake, then release all directions';
     }
-    const api = { levels:[level, bank, lakes, downhill, forest, fortress, duel, fire, rescue, avoid, chase, escort], terrain, shoreRadius, lakePoint, inLake, water, woodland, rockPolygon, circleContact, requiredMonster, hurtMonster, solids, blocked, petPair, create, shield, protectedAt, ready, controlAvailable, update, message };
+    // Timed geothermal footprints, not fluid simulation. The same polygons are
+    // painted by the renderer and tested against the entire circular shell.
+    function volcanoState(v, time) {
+        const phase = ((time + (v.offset || 0)) % v.period + v.period) % v.period;
+        const ignition = v.period - v.eruption, warning = ignition - v.warning;
+        return phase >= ignition ? { phase:'erupting', remaining:v.period-phase, active:true }
+            : phase >= warning ? { phase:'warning', remaining:ignition-phase, active:false }
+            : { phase:'quiet', remaining:ignition-phase, active:false };
+    }
+    function volcanoContact(v, body, radius) {
+        return Math.hypot(body.x-v.x,body.y-v.y) <= v.r+radius ||
+            v.zones.some(poly => !!circleContact(body,radius,poly));
+    }
+    function volcanoUpdate(run) {
+        const st=run.rampage;
+        for (const v of st.volcanoes) {
+            v.state=volcanoState(v,run.time);
+            if (!v.state.active) continue;
+            if (volcanoContact(v,run.ship,st.radius) && run.time >= v.hitAt) {
+                v.hitAt=run.time+.75;
+                if (protectedAt(run)) st.stats.volcanoBlocks++; else st.stats.volcanoHits++;
+                hurt(run,24);
+                st.flashes.push({x:run.ship.x,y:run.ship.y,t:run.time});
+            }
+            if (st.lady?.following && !st.rescued && volcanoContact(v,st.lady,st.lady.r) && run.time >= v.ladyHitAt) {
+                v.ladyHitAt=run.time+.75; hurtLady(run,24);
+            }
+        }
+    }
+    const footprint = points => points.map(([x,y])=>({x,y}));
+    downhill.rampage.volcanoes = [{ id:'muesli-furnace', name:'MUESLI FURNACE', x:1210,y:1015,r:38,
+        period:48,warning:7,eruption:13,offset:28,
+        zones:[footprint([[1145,975],[1140,610],[1195,550],[1240,980]])] }];
+    downhill.kind = 'Volcanic descent / a timed lava crossing / caldera ram';
+    downhill.brief += ' Muesli Furnace periodically sends lava across the western run-up. Watch its marked channel: preserve enough speed to cross the cooled lava bed and flooded rim in one committed approach.';
+    downhill.tip = 'The furnace countdown is in simulation seconds. Amber means the vent is warning; orange means dangerous lava. Cross during the quiet window, divert around the channel, or shield a brief exposure. Never stop in the moat.';
+    forest.rampage.volcanoes = [
+        {id:'bramble-vent',name:'BRAMBLE FISSURE',x:755,y:580,r:30,period:46,warning:6,eruption:12,offset:22,
+            zones:[footprint([[750,562],[1065,568],[1075,635],[750,620]])]},
+        {id:'birch-vent',name:'BIRCH FISSURE',x:1340,y:325,r:34,period:57,warning:7,eruption:15,offset:6,
+            zones:[footprint([[1298,90],[1362,90],[1380,320],[1310,330]])]}
+    ];
+    forest.kind = 'Forest navigation / independently timed volcanic fissures';
+    forest.brief += ' Two volcanic fissures cross the control approaches on independent cycles. Use the clearings to hold or take a wider line while a marked lava bed is active.';
+    forest.tip = 'Combine the map with the vent clocks: Bramble and Birch erupt independently. Full footprints turn amber before they heat. A shield buys three seconds, not immunity for an entire eruption.';
+    avoid.rampage.volcanoes = [
+        {id:'brook-boil',name:'BRISTLE BOIL',x:790,y:960,r:29,period:54,warning:7,eruption:18,offset:-10,steam:true,
+            zones:[footprint([[760,992],[990,998],[975,1092],[752,1085]])]},
+        {id:'north-boil',name:'NORTH STEAM VENT',x:915,y:305,r:27,period:64,warning:7,eruption:16,offset:5,steam:true,
+            zones:[footprint([[700,170],[970,170],[955,260],[705,252]])]}
+    ];
+    avoid.kind = 'Invulnerable patrol / river run-ups / timed steam vents';
+    avoid.brief += ' Geothermal vents boil the two useful river crossings at different times. Watch the steam footprints as well as Needlesworth: being safe from his charge does not make a hot crossing safe.';
+    avoid.tip = 'Plan both crossings. In the brook you cannot brake or steer by running, so line up on dry ground during a quiet vent window. Needlesworth is still invulnerable; use the outcrops, not a fight.';
+    const api = { volcanoState, volcanoContact, volcanoUpdate, levels:[level, bank, lakes, downhill, forest, fortress, duel, fire, rescue, avoid, chase, escort], terrain, shoreRadius, lakePoint, inLake, water, woodland, rockPolygon, circleContact, requiredMonster, hurtMonster, solids, blocked, petPair, create, shield, protectedAt, ready, controlAvailable, update, message };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     root.GerboRampage = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

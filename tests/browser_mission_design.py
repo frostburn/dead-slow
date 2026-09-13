@@ -1,4 +1,4 @@
-"""Focused World 4 layout checks. Run directly; the complete smoke suite also calls it."""
+"""Focused World 6 layout checks. Run directly; the complete smoke suite also calls it."""
 from pathlib import Path
 
 def check_mission_design(browser, check, html, screenshots=None):

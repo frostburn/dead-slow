@@ -12,8 +12,8 @@ test('practice Grand Tour starts unranked without recording a ranked departure',
  assert.ok(t.state.marathon.route.every(i=>!L[i].bonus&&!L[i].standalone));
 });
 test('all five practice circuits have twelve missions; invalid requests are atomic',()=>{
- const t=create();for(let w=1;w<=5;w++){const p=t.cheats.circuit(w,4);assert.equal(p.world,w);assert.equal(p.circuit.length,12);assert.ok(p.practice);}
- const before=t.cheats.progress();for(const call of [()=>t.cheats.circuit(6),()=>t.cheats.circuit('century-ship'),()=>t.cheats.tour(33),()=>t.cheats.tour(NaN)])assert.throws(call);
+ const t=create();for(const w of [1,2,3,4,6]){const p=t.cheats.circuit(w,4);assert.equal(p.world,w);assert.equal(p.circuit.length,12);assert.ok(p.practice);}
+ const before=t.cheats.progress();for(const call of [()=>t.cheats.circuit(5),()=>t.cheats.circuit('century-ship'),()=>t.cheats.tour(33),()=>t.cheats.tour(NaN)])assert.throws(call);
  assert.deepEqual(t.cheats.progress(),before);
 });
 test('practice survives all sixty transitions, retries and a return to 1x',()=>{
@@ -30,7 +30,7 @@ test('practice survives all sixty transitions, retries and a return to 1x',()=>{
   if(i<59)t.next();
  }
  const p=t.cheats.progress();assert.equal(p.circuit.completed,60);assert.equal(p.circuit.splits.length,60);assert.equal(p.circuit.retries,5);
- assert.equal(p.level,'gerbo-long-way-home');assert.equal(t.state.storage.races['grand-tour'].length,0);assert.equal(t.state.storage.attempts,0);
+ assert.equal(p.level,'perihelion-dispatch');assert.equal(t.state.storage.races['grand-tour'].length,0);assert.equal(t.state.storage.attempts,0);
  p.circuit.splits[0].time=-1;assert.ok(t.cheats.progress().circuit.splits[0].time>=0,'inspection is detached');
  t.cheats.normal();assert.equal(t.state.marathon,null);assert.equal(t.cheats.speed(),1);assert.equal(t.state.run.pausedUsed,false);
 });
@@ -76,10 +76,11 @@ test('approach archive migration preserves clean/overall records and is idempote
  for(const id of ['backwater','island-exchange','granite-needle','gerbo-whiskerdoom'])old.stages[id]=structuredClone(stage);
  for(const id of Object.keys(old.races))old.races[id]=structuredClone(stage.runs);
  old.archivedRaces['archipelago-layout-v2']=structuredClone(stage.runs);
- const d=S.sanitize(old);assert.equal(d.version,12);
+ const d=S.sanitize(old);assert.equal(d.version,S.VERSION);
  for(const id of ['backwater','island-exchange']){assert.ok(!d.stages[id]);assert.deepEqual(d.archivedStages[id+'-approach-v1'].ghost,stage.ghost);assert.deepEqual(d.archivedStages[id+'-approach-v1'].bestSplits,[22]);}
  for(const id of ['northwatch','archipelago','grand-tour']){assert.equal(d.races[id].length,0);assert.deepEqual(d.archivedRaces[id+'-approach-v1'],stage.runs);}
- for(const id of ['coast','meridian','gerbozilla'])assert.deepEqual(d.races[id],stage.runs);
+ for(const id of ['coast','meridian'])assert.deepEqual(d.races[id],stage.runs);
+ assert.deepEqual(d.archivedRaces['gerbozilla-volcano-v1'],stage.runs);assert.equal(d.races.gerbozilla.length,0);
  assert.deepEqual(d.archivedRaces['archipelago-layout-v2'],stage.runs);assert.ok(d.stages['granite-needle']&&d.stages['gerbo-whiskerdoom']);
  d.stages.backwater=stage;d.races.northwatch=stage.runs;const next=S.sanitize(d);assert.equal(next.stages.backwater.runs.length,2);assert.equal(next.races.northwatch.length,2);
 });

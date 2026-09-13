@@ -545,41 +545,51 @@
             ]
         }
     ];
-    const worlds = [
-        {
-            id: 'coast', number: 1, name: 'The Sheltered Coast', subtitle: 'DAY WATCH · ROOM TO LEARN', theme: 'coast', description: 'Twelve working harbors. Wavebreak basins protect the current-heavy moorings without taking the weight out of the ship.'
-        },
-        {
-            id: 'northwatch', number: 2, name: 'Northwatch', subtitle: 'NIGHT SHIFT · NO EASY WATER', theme: 'night', description: 'Twelve exposed night-shift trials: sluice jets, double booms, convoys, tight locks and the final lighthouse run.'
-        },
-        {
-            id: 'archipelago', number: 3, name: 'The Archipelago', subtitle: 'SUMMER SERVICE · EVERY ISLAND COUNTS', theme: 'archipelago', description: 'A long-light island service. Carry cars between village ramps, tow stranded vessels past granite skerries, relocate a floating sauna and keep the islanders moving.'
-        }
-    ];
-    worlds.push({ id: 'meridian', number: 4, name: 'The Black Meridian', subtitle: 'DEEP SPACE · NO FREE BRAKES', theme: 'space', description: 'Twelve spacecraft assignments: moving cradles, fuel rendezvous, assembly, recoil, beam rescue, stellar shadows and a collision with your own history. The Century Ship is a separate long-haul bonus, outside every marathon.' });
-    const spaceLevels = typeof module !== 'undefined' && module.exports ? require('./space-levels.js') : root.HarborSpaceLevels;
+    // Campaign identity is stable; presentation order is not an array-index formula.
     const islandLevels = typeof module !== 'undefined' && module.exports ? require('./archipelago.js') : root.HarborArchipelago;
+    const spaceLevels = typeof module !== 'undefined' && module.exports ? require('./space-levels.js') : root.HarborSpaceLevels;
     const rampageLevels = typeof module !== 'undefined' && module.exports ? require('./rampage.js').levels : root.GerboRampage.levels;
-    worlds.push({ id: 'gerbozilla', number: 5, name: 'Gerbozilla’s Rampage', subtitle: 'GIANT PET · TWELVE FIELD COURSES', theme: 'rampage', description: 'Twelve championship field courses: momentum trials, forest orienteering, mountain fortresses, giant-pet duels, fire breathing, the invulnerable Sir Needlesworth and Lady Whiskerdoom’s journey home. Green woodland slows rolling; black boulders are impassable. A complete world circuit and the final leg of the sixty-stage Grand Tour.' });
-    levels.push(...night, ...islandLevels, ...spaceLevels, ...rampageLevels);
-    levels.forEach((l, i) => {
-        const w = l.rampage ? worlds[4] : worlds[Math.min(3, Math.floor(i / 12))];
-        l.campaign = w.id;
-        l.worldNumber = w.number;
-        l.stageNumber = l.rampage ? rampageLevels.indexOf(l) + 1 : i >= 36 ? i - 35 : i % 12 + 1;
-        l.theme = w.theme;
-        // Working harbors open west onto the fairway; the skerries have no perimeter coast.
-        l.openSides = l.openSides || (w.number >= 3 ? ['n', 'e', 's', 'w'] : ['w']);
-        const oldTag = l.tag?.split(' / ')[1] || l.kind.toUpperCase();
-        l.tag = `W${w.number} · ${l.bonus ? "BONUS" : String(l.stageNumber).padStart(2, '0')} / ${oldTag}`;
-        l.current = l.current || [0, 0];
-        l.wind = l.wind || [0, 0];
-        for (const key of ['obstacles', 'buoys', 'gates', 'traffic', 'speedZones', 'shelters', 'currentZones', 'islands', 'jobs', 'towables'])
-            l[key] = l[key] || [];
-    });
+    const sources = { coast: levels.slice(), northwatch: night, archipelago: islandLevels,
+        gerbozilla: rampageLevels, meridian: spaceLevels };
+    const worlds = [
+        { id:'coast', number:1, name:'The Sheltered Coast', subtitle:'DAY WATCH · ROOM TO LEARN', theme:'coast', description:'Twelve working harbors. Wavebreak basins protect the current-heavy moorings without taking the weight out of the ship.' },
+        { id:'northwatch', number:2, name:'Northwatch', subtitle:'NIGHT SHIFT · NO EASY WATER', theme:'night', description:'Twelve exposed night-shift trials: sluice jets, double booms, convoys, tight locks and the final lighthouse run.' },
+        { id:'archipelago', number:3, name:'The Archipelago', subtitle:'SUMMER SERVICE · EVERY ISLAND COUNTS', theme:'archipelago', description:'A long-light island service. Carry cars between village ramps, tow stranded vessels past granite skerries and relocate a floating sauna.' },
+        { id:'gerbozilla', number:4, name:'Gerbozilla’s Rampage', subtitle:'GIANT PET · TWELVE FIELD COURSES', theme:'rampage', description:'Twelve championship field courses: momentum, forest orienteering, volcanic crossings, giant pets and Lady Whiskerdoom’s journey home. Green slows rolling; black boulders are impassable.' },
+        { id:'long-grade', number:5, name:'The Long Grade', subtitle:'HEAVY RAIL · COMING SOON', theme:'rail', comingSoon:true, description:'Coming soon: heavy freight, coupler slack, mountain grades and a train whose tail is still in the previous valley.' },
+        { id:'meridian', number:6, name:'The Black Meridian', subtitle:'DEEP SPACE · NO FREE BRAKES', theme:'space', description:'Twelve spacecraft assignments: moving cradles, refuelling, assembly, recoil, beam rescue, stellar shadows and your own history. The Century Ship is a separate bonus, outside every circuit.' },
+        { id:'pale-reach', number:7, name:'Race for the Pale Reach', subtitle:'ICE & CONFLICT · COMING SOON', theme:'polar', comingSoon:true, description:'Coming soon: icebreakers, supply convoys and submarine operations in a wholly fictional polar conflict. Keep the passage open.' },
+        { id:'megastructures', number:8, name:'Tow the Impossible', subtitle:'BUILD SOMETHING BIGGER · COMING SOON', theme:'platform', comingSoon:true, description:'Coming soon: floating hospitals, bridge spans and entire terminals. End the journey by placing the harbor itself.' }
+    ];
+    const planned = {
+        'long-grade': ['The Last Wagon Counts','Head at the Wrong End','Stone Runs Downhill','Meet at Rook’s Hollow','Three Wagons Going Somewhere','Leaves on the Line','One Bridge, Two Loads','The Corners Are the Cargo','A Push from Behind','The Railway Ends Here','The Last Working Line','The Long Grade'],
+        'pale-reach': ['The First Fracture','Borrowed Water','Deliveries Beyond the Map','Buoys, Not Borders','Home Ice','The Other Shore','What the Ice Heard','Under the Listening Post','Three Echoes Too Many','Bring Them Back','No Flag on the Lifeboats','The Passage Must Stay Open'],
+        'megastructures': ['A Building Changes Address','The L-Shaped Problem','Too Tall, Too Deep','The Far End Is Still Turning','A Permanent Decision','The Sail Nobody Ordered','Three Corners Working','The Cargo Keeps Moving','One Platform, Two Pieces','A Harbor You Can Move','Keep It Afloat','A Port for Everyone']
+    };
+    // Placeholders belong to the catalog, never to the simulation's playable list.
+    // This keeps loads, records, replays and circuits from entering an empty mission.
+    const catalog = [];
+    levels.length = 0;
+    for (const w of worlds) {
+        if (w.comingSoon) {
+            w.stages = planned[w.id].map((name, i) => Object.freeze({ id:`${w.id}-${i+1}`, name,
+                campaign:w.id, worldNumber:w.number, stageNumber:i+1, comingSoon:true, theme:w.theme, kind:'Coming soon' }));
+            catalog.push(...w.stages);
+            continue;
+        }
+        sources[w.id].forEach((l, i) => {
+            l.campaign = w.id; l.worldNumber = w.number; l.stageNumber = i + 1; l.theme = w.theme;
+            l.openSides = l.openSides || (w.number >= 3 ? ['n','e','s','w'] : ['w']);
+            const oldTag = l.tag?.split(' / ')[1] || l.kind.toUpperCase();
+            l.tag = `W${w.number} · ${l.bonus ? 'BONUS' : String(l.stageNumber).padStart(2,'0')} / ${oldTag}`;
+            l.current = l.current || [0,0]; l.wind = l.wind || [0,0];
+            for (const key of ['obstacles','buoys','gates','traffic','speedZones','shelters','currentZones','islands','jobs','towables']) l[key] = l[key] || [];
+            levels.push(l); catalog.push(l);
+        });
+    }
     levels.worlds = worlds;
-    if (typeof module !== 'undefined' && module.exports)
-        module.exports = levels;
+    levels.catalog = catalog;
+    if (typeof module !== 'undefined' && module.exports) module.exports = levels;
     root.HarborLevels = levels;
     root.HarborWorlds = worlds;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

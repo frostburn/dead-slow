@@ -1,3 +1,24 @@
+# Current release checks — 5.1.0
+
+Focused tests for the current release are in `tests/release-atlas.test.cjs` and
+`tests/browser_release_atlas.py`. The Node tests exercise restart state transitions,
+placeholder rejection and playable ordering, record archives, hazard geometry and
+timing, and the three affected control-only recordings. The browser test exercises
+actual key/click confirmation, grayscale chapters, renumbered instruments,
+volcano forecasts and the single-composite ghost alpha.
+
+```sh
+npm run build
+node --test tests/release-atlas.test.cjs
+python tests/browser_release_atlas.py
+```
+
+See [RELEASE_5_1.md](RELEASE_5_1.md) for the exact verification scope. The following
+sections document earlier test passes and the wider suite; they are not claims
+that every suite or every navigation recording was rerun for this release.
+
+---
+
 # Testing and verification
 
 ## Core suite
@@ -177,7 +198,7 @@ python tests/browser_v5_release.py
 ```
 
 The browser check uses the built standalone file and system Chromium. It checks
-all field charts, the river, chase playback, World 5 circuit result/log screens,
+all field charts, the river, chase playback, World 4 circuit result/log screens,
 mobile layout and that switching back to marine play restores its UI. Circuit
 completion isolation uses the test harness, not claimed full marathon runs.
 The unchanged audio, other twenty-seven recordings and full regression suite are

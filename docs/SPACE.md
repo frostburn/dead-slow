@@ -1,6 +1,6 @@
 # The Black Meridian — flight and mission guide
 
-World 4 has twelve circuit sectors and a thirteenth, optional Century Ship.
+World 6 has twelve circuit sectors and a thirteenth, optional Century Ship.
 All are available immediately. There are 49 selectable stages in the game;
 the Grand Tour includes 48 and the Meridian circuit includes twelve.
 
@@ -56,7 +56,7 @@ Onboard audio represents instrument/engine feedback, not sound crossing vacuum.
 
 ## Moving cradles and compulsory fuel
 
-Hilda's landing platform follows the asteroid's analytic motion. The rock's
+Hildara's landing platform follows the asteroid's analytic motion. The rock's
 silhouette is solid; its cantilevered survey cradle is the landing zone. The
 same ephemeris gives rendering, collision position and cradle velocity.
 
@@ -70,7 +70,7 @@ An interrupted hold resets progress and never grants partial free fuel.
 
 ## Some Assembly Required
 
-Fly Kestrel into Wayfarer's upper cradle, then Wren into the lower cradle.
+Fly Kestrellet into Waywarden's upper cradle, then Wrenlet into the lower cradle.
 Each capture requires two seconds of relative rest with all jets cut. Control
 transfers to the other actual spacecraft; no fuel or impulse is manufactured
 by the handover. Captured tender mass joins the mothership. Terminal clamps
@@ -137,7 +137,7 @@ field; its moving maintenance drones demand a stable, correctly timed coast.
 
 ## Yesterday Has Right of Way
 
-**Janus Station** is a physical concourse, not painted scenery. Two large freight
+**Janara Station** is a physical concourse, not painted scenery. Two large freight
 stacks force a winding path between its bays. The west entrance stays open; the
 station plates and equipment blocks share their drawing and collision geometry.
 
@@ -167,7 +167,7 @@ The nearest-system capture centre is 110,592 metres from departure on this
 acceleration 0.04 m/s². Even simultaneous full main and lateral burns have magnitude
 at most `hypot(0.12, 0.04) = 0.126491106 m/s²`. Rotational jets do not add translation.
 
-**Erebus**, a 3,800-metre-radius rogue planet, blocks the straight route. The chart
+**Erebune**, a 3,800-metre-radius rogue planet, blocks the straight route. The chart
 is now 18 km tall, leaving real space to pass above or below its limb. The normal
 camera tracks locally; the overview and route strip mark the planet. There is no
 gravity assist. Any planetary surface overlap ends the mission, rather than giving

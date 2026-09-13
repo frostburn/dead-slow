@@ -68,7 +68,7 @@ test('moving docking measures relative speed, including rotational cradle veloci
     s.r=.005;assert.ok(!X.dock(s,b,true,{rudder:1}).ready);
     assert.ok(!X.dock(s,b,false).ready);
 });
-test('Hilda landing cradle follows the same moving rock used for collision',()=>{
+test('Hildara landing cradle follows the same moving rock used for collision',()=>{
     const t=load('wandering-stone'),r=t.state.run;r.time=41;X.refresh(t.state.level,r);
     const b=r.space.rocks.find(b=>b.id==='hilda');near(r.space.port.y,b.y-95);near(r.space.port.vy,b.vy);
     park(r.ship,r.space.port);assert.ok(X.dock(r.ship,r.space.port).ready);
@@ -187,9 +187,9 @@ for(const casualty of [false,true])for(const [side,x,y] of [['west',1,400],['eas
     assert.equal(t.state.storage.stages['equal-and-opposite'].runs.length,0);
 });
 test('the Century Ship is selectable but excluded from both relevant marathons',()=>{
-    const t=create();t.cheats.level(4,13);assert.equal(t.state.level.id,'century-ship');assert.ok(t.state.level.bonus);
+    const t=create();t.cheats.level(6,13);assert.equal(t.state.level.id,'century-ship');assert.ok(t.state.level.bonus);
     for(const id of ['meridian','grand-tour']) {t.marathon(id);assert.ok(t.state.marathon.route.every(i=>!L[i].bonus));assert.equal(t.state.marathon.route.length,id==='meridian'?12:60);}
-    t.load(47);t.finish();t.next();assert.equal(t.state.modal,'courses');assert.equal(t.state.index,47);
+    const i=L.findIndex(l=>l.id==='perihelion-dispatch');t.load(i);t.finish();t.next();assert.equal(t.state.modal,'courses');assert.equal(t.state.index,i);
 });
 test('century 30-minute lower bound follows distance and maximum acceleration, with docking tolerance',()=>{
     const l=L.find(l=>l.id==='century-ship'),a=Math.hypot(l.space.acceleration,l.space.lateral)/l.spec.mass,T=1800,v=l.berth.speed;

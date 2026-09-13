@@ -1,5 +1,17 @@
 # Changelog
 
+## 5.1.0 — The Eight-World Atlas
+
+- Confirm keyboard and touch restarts; keep completed circuit stages and cancel safely.
+- Composite the complete hamster ghost once to prevent translucent limb stacking.
+- Give all named ships and geographic settings fictional display names.
+- Put Gerbozilla in World 4 and space in World 6; show twelve disabled coming-soon
+  stages each for railway (5), the Pale Reach (7) and megastructures (8).
+- Keep the playable Grand Tour at sixty missions; exclude placeholders and bonus.
+- Add deterministic lava/steam windows to Downhill, Boulder Wood and No Petting.
+- Preserve changed-layout and reordered-circuit records in schema-13 archives.
+- Add official play/support links and targeted regression checks.
+
 ## 5.0.2 — Ready for the Grand Tour
 
 - Replace Backwater's straight backing lane with an offset reverse dogleg around

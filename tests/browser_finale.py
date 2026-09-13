@@ -22,8 +22,8 @@ with sync_playwright() as pw:
     def shot(name):
         page.wait_for_timeout(90)
         page.screenshot(path=str(SHOTS/(name+'.png')))
-    page.evaluate('DeadSlowTest.courses(5)')
-    check('All twelve World 5 courses are selectable', page.locator('.level-card').count()==12)
+    page.evaluate('DeadSlowTest.courses(4)')
+    check('All twelve World 4 courses are selectable', page.locator('.level-card').count()==12)
     check('Course count and existing Grand Tour remain honest', '0 / 12 COURSES COMPLETE' in page.locator('#dialog').inner_text() and 'all 60' in page.locator('#dialog').inner_text())
     shot('world-five')
     for number in [10,11,12]:
@@ -31,7 +31,7 @@ with sync_playwright() as pw:
         text = page.locator('#dialog').inner_text()
         check(f'Course {number} counts three real objectives, not unkillable enemies', '03\nMISSION OBJECTIVES' in text and 'SHIELD DURATION' in text)
         check(f'Course {number} explains its actual hazard or escort', ('Nothing can damage him' in text if number==10 else 'pursuit' in text if number==11 else 'already free' in text))
-        page.evaluate('DeadSlowTest.courses(5)')
+        page.evaluate('DeadSlowTest.courses(4)')
     snapshots = {'gerbo-prickly-business':55,'gerbo-rolling-threat':32,'gerbo-long-way-home':148}
     for id, stop in snapshots.items():
         fixture = json.loads((ROOT/'tests/fixtures'/f'{id}-controls.json').read_text())

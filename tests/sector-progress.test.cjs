@@ -7,11 +7,11 @@ const { create } = require('./headless.cjs');
 // Seed records only to inspect progress, not to claim navigation completions.
 function progress(campaignClears, bonusCleared) {
     const t = create();
-    for (const l of L.filter(l => l.worldNumber === 4)) {
+    for (const l of L.filter(l => l.worldNumber === 6)) {
         const cleared = l.bonus ? bonusCleared : l.stageNumber <= campaignClears;
         t.state.storage.stages[l.id] = { runs: cleared ? [{ time: 100, clean: true }] : [], clears: cleared ? 1 : 0 };
     }
-    t.courses(4);
+    t.courses(6);
     return { t, html: t.html('dialog') };
 }
 for (const [sectors, bonus] of [[0, false], [0, true], [7, false], [7, true], [12, false], [12, true]]) {

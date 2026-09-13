@@ -1,6 +1,6 @@
 {
   "level": "century-ship",
-  "description": "Eight ordinary main/lateral jet commands. Build a northern clearance offset, pass Erebus, return to the destination line and remove both velocity components. No pose writes or altered physics.",
+  "description": "Eight ordinary main/lateral jet commands. Build a northern clearance offset, pass Erebune, return to the destination line and remove both velocity components. No pose writes or altered physics.",
   "duration": 1930,
   "expectedTime": 1922.3333333333333,
   "events": [

@@ -55,10 +55,10 @@ def check_flight_presentation(browser, check, html, screenshots=None):
     for button,label in [('#log-btn','Flight logbook'),('#help-btn','Flight manual')]:
         page.evaluate('DeadSlow.level("vacuum");DeadSlow.speed(0)')
         page.click(button);flight_text(label+' has no marine defaults')
-    page.evaluate('DeadSlowTest.load(36);DeadSlow.normal();DeadSlowTest.state.run.time=100;DeadSlowTest.finish()')
+    page.evaluate('DeadSlowTest.load(HarborLevels.findIndex(l=>l.id==='vacuum'));DeadSlow.normal();DeadSlowTest.state.run.time=100;DeadSlowTest.finish()')
     flight_text('Personal-best capture screen has no marine defaults');shot('flight-capture.png')
     check('Capture result advances to a sector','Next sector' in page.locator('#dialog').inner_text())
-    page.evaluate('DeadSlowTest.load(36);DeadSlow.normal();DeadSlowTest.state.run.time=10000;DeadSlowTest.finish()')
+    page.evaluate('DeadSlowTest.load(HarborLevels.findIndex(l=>l.id==='vacuum'));DeadSlow.normal();DeadSlowTest.state.run.time=10000;DeadSlowTest.finish()')
     flight_text('Slow, non-PB capture screen has no marine defaults')
     check('Unmedalled flight is capture secured, not moored','CAPTURE SECURED' in page.locator('#dialog').inner_text())
     page.evaluate('DeadSlow.level("vacuum");DeadSlow.speed(0);DeadSlowTest.state.run.time=200;DeadSlowTest.finish()')
