@@ -47,7 +47,7 @@ with sync_playwright() as pw:
         check(id+' completes its actual production watch with no ranking',page.evaluate('DeadSlow.report().verified && DeadSlow.report().clean && !DeadSlow.report().ranked'))
     # Exercise layout, actual controls, and course changes at phone dimensions.
     page.set_viewport_size({'width':390,'height':844})
-    for world in [1,3,4,5]:
+    for world in [1,3,4,6]:
         page.evaluate('w=>DeadSlow.circuit(w,0)',world)
         check(f'World {world} portrait has accessible practice controls and no overflow',page.locator('#review-controls').is_visible() and page.evaluate('document.documentElement.scrollWidth<=innerWidth'))
     check('Portrait practice panel does not cover the motion instruments',page.evaluate('''() => {
