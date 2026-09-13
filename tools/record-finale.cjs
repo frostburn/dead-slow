@@ -21,6 +21,7 @@ function record(id,write=false){
   const target=route[leg]==='intercept'?{...st.monsters.find(m=>!m.invulnerable&&m.health>0),ram:true}:route[leg],final=leg===route.length-1;
   const dx=target.x-s.x,dy=target.y-s.y,d=Math.hypot(dx,dy),v=Math.hypot(s.vx,s.vy);
   let speed=target.ram?30:Math.min(c.authorSpeed||24,Math.sqrt(2*1.2*Math.max(0,d-4)),d*.4);
+  if(id==='gerbo-rolling-threat'&&!final)speed=c.authorSpeed || 45;
   // Keep the walking escort within sight; the leader does not teleport her.
   if(st.lady&&!st.rescued&&!target.ram){const gap=Math.hypot(s.x-st.lady.x,s.y-st.lady.y);speed=Math.min(speed,gap>240?2:gap>170?10:17);}
   const slope=R.terrain(c,s.x,s.y),drag=c.resistance+R.woodland(c,s)*.11;

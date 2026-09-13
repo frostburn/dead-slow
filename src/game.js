@@ -188,7 +188,7 @@
         }
         if (marathon && status === 'complete') {
             marathon = null;
-            toast(wording('Restarting this harbor as an individual trial.', 'Restarting this sector as an individual flight.'));
+            toast(run.rampage ? 'Restarting this course as an individual run.' : wording('Restarting this harbor as an individual trial.', 'Restarting this sector as an individual flight.'));
         }
         loadStage(index, true);
     }
@@ -479,6 +479,7 @@
         $('best-clean').textContent = cleanRun ? format(cleanRun.time) : '—';
     }
     function nextHarbor() {
+        if (status !== 'complete') return;
         if (hasNext()) {
             if (marathon) {
                 marathon.position++;
@@ -532,13 +533,13 @@
     }
     function showResult() {
         const r = run.result;
-        if (r && run.rampage) return openDialog('result', G.dialog('result', level, run, format));
+        if (r && run.rampage) return openDialog('result', G.dialog('result', level, run, format, [], settings, null, fieldContext()));
         if (!r)
             return;
         const rank = r.time <= level.pace[0] ? 'GOLD PACE' : r.time <= level.pace[1] ? 'SILVER PACE' : r.time <= level.pace[2] ? 'BRONZE PACE' : wording('SAFELY MOORED', 'CAPTURE SECURED');
         const marathonDone = marathon && !hasNext();
         openDialog('result', `<div class="eyebrow">${run.pausedUsed ? 'PRACTICE COMPLETE' : run.pb ? 'NEW PERSONAL BEST' : wording('LINES ASHORE', 'CAPTURE CONFIRMED')} · ${level.name.toUpperCase()}</div>
- <h1>${marathonDone ? (marathon.id === 'grand-tour' ? 'Four worlds. One captain.' : wording('One world. All fast.', 'Twelve sectors. Mission complete.')) : run.space ? 'Capture confirmed.' : 'All fast. At last.'}</h1><div class="result-badge">${run.pausedUsed ? 'UNRANKED PRACTICE' : rank}${r.clean ? ' · CLEAN' : ''}</div><div class="result-time">${format(r.time)}</div>
+ <h1>${marathonDone ? (marathon.id === 'grand-tour' ? 'Five worlds. One captain.' : wording('One world. All fast.', 'Twelve sectors. Mission complete.')) : run.space ? 'Capture confirmed.' : 'All fast. At last.'}</h1><div class="result-badge">${run.pausedUsed ? 'UNRANKED PRACTICE' : rank}${r.clean ? ' · CLEAN' : ''}</div><div class="result-time">${format(r.time)}</div>
  <p class="subtle">${run.pausedUsed ? esc(run.practiceReason || 'Practice attempt') + '. This time was not saved to the leaderboards.' : run.pb ? wording('Your new best line is saved as the ghost for this harbor.', 'Your best flight is saved as the ghost for this sector.') : wording('A harbor conquered. A braking point learned.', 'Rendezvous complete. Counterburn mastered.')}</p>
  <div class="result-grid"><div><strong>${r.contacts}</strong><span>HULL CONTACTS</span></div><div><strong>${r.hull}%</strong><span>HULL REMAINING</span></div><div><strong>${r.commands}</strong><span>ENGINE ORDERS</span></div></div>
  <p class="subtle">${r.space ? `${r.distance} m traveled · ${r.space.fuelUsed.toFixed(2)} Δv propellant used · ${r.space.shots} shots · ${r.space.captures} captures<br>Clean = no hull contacts. Moving cradles require relative rest, not absolute rest.` : `${r.distance} m traveled · ${r.thruster.toFixed(1)} s bow thrust · ${r.wakes} wake violations · ${r.groundings} groundings<br>Clean = no contacts, wake violations, grounding or parted towlines.`} No hidden time penalties.</p>
@@ -572,25 +573,36 @@
         const bonusArrivals = bonuses.filter(l => store.best(l.id)).length;
         openDialog('courses', `${topModal(w.name, `WORLD ${w.number} · ${w.subtitle}`)}
  <div class="world-tabs" role="tablist" aria-label="Select world">${WORLDS.map(v => `<button role="tab" aria-selected="${v.number === selectedWorld}" class="world-tab ${v.number === selectedWorld ? 'active' : ''}" data-world="${v.number}"><span>WORLD ${v.number}</span><strong>${v.name}</strong><small>${v.subtitle}</small></button>`).join('')}</div>
- <p>${w.description}</p><div class="world-progress"><span>${arrivals} / ${sectors.length} ${w.preview ? 'COURSES COMPLETE' : w.number === 4 ? 'SECTORS CLEARED' : 'HARBORS MOORED'}</span>${bonuses.length ? `<span>${bonusArrivals} / ${bonuses.length} BONUS CLEARED</span>` : ''}<span>ALL STAGES AVAILABLE</span></div>
+ <p>${w.description}</p><div class="world-progress"><span>${arrivals} / ${sectors.length} ${w.number === 5 ? 'COURSES COMPLETE' : w.number === 4 ? 'SECTORS CLEARED' : 'HARBORS MOORED'}</span>${bonuses.length ? `<span>${bonusArrivals} / ${bonuses.length} BONUS CLEARED</span>` : ''}<span>ALL STAGES AVAILABLE</span></div>
  ${marathon ? '<p class="subtle">Selecting an assignment starts an individual trial and ends your current circuit.</p>' : ''}
  <div class="level-grid">${stages.map(l => {
             const i = LEVELS.indexOf(l), b = store.best(l.id);
             return `<button class="level-card ${i === index ? 'selected' : ''}" data-stage="${i}"><span class="number">W${l.worldNumber} · ${l.bonus ? 'BONUS' : (l.rampage ? 'COURSE ' : l.space ? 'SECTOR ' : 'HARBOR ') + String(l.stageNumber).padStart(2, '0')}${store.best(l.id, true) ? ' · CLEAN' : ''}</span><span class="name">${l.name}</span><span class="kind">${l.kind}</span><span class="pb">${b ? 'PB ' + format(b.time) : 'NO TIME ON FILE'}</span></button>`;
         }).join('')}</div>
- <div class="dialog-actions"><button class="primary" data-action="marathon">${w.preview ? 'Start course 1 · standalone →' : `World ${w.number} run · 12 ${w.number === 4 ? 'sectors' : 'harbors'} →`}</button><button data-action="grand-tour">Grand Tour · all ${LEVELS.filter(l => !l.bonus && !l.standalone).length}</button><button class="secondary small" data-action="back">Back</button><button class="secondary small" data-action="log">Logbook</button></div>
- <p class="subtle" style="margin-top:13px">The Century Ship bonus and World 5 preview are excluded from every circuit. Each complete world and the 48-stage Grand Tour have separate overall and clean records. Circuit clocks include failed attempts and retries, but exclude between-stage menus. Pausing makes the circuit practice.</p>`, true);
+ <div class="dialog-actions"><button class="primary" data-action="marathon">World ${w.number} run · 12 ${w.number === 5 ? 'courses' : w.number === 4 ? 'sectors' : 'harbors'} →</button><button data-action="grand-tour">Grand Tour · all ${LEVELS.filter(l => !l.bonus && !l.standalone).length}</button><button class="secondary small" data-action="back">Back</button><button class="secondary small" data-action="log">Logbook</button></div>
+ <p class="subtle" style="margin-top:13px">The Century Ship bonus is excluded from every circuit. Each of the five worlds and the 60-stage Grand Tour have separate overall and clean records. Circuit clocks include failed attempts and retries, but exclude between-stage menus. Pausing makes the circuit practice.</p>`, true);
         $('dialog').dataset.theme = w.theme;
     }
+    function fieldContext(log = false) {
+        return {
+            race: marathon ? { name: raceLabel(), id: marathon.id, position: marathon.position,
+                total: marathon.total, stages: marathon.stages, length: marathon.route.length,
+                retries: marathon.retries, practice: marathon.practice, done: !hasNext() } : null,
+            boards: log ? [...WORLDS.map(w=>[w.id,`World ${w.number} · ${w.name}`]),
+                ['grand-tour','Grand Tour · 60 stages']].map(([id,name])=>({ name,
+                    overall:store.bestRace(id)?.time, clean:store.bestRace(id,true)?.time })) : [],
+            archived48: log ? store.data.archivedRaces['grand-tour-48'] : []
+        };
+    }
     function showLog(filter = 'overall') {
-        if (level.rampage) { pauseForMenu(); return openDialog('log', G.dialog('log', level, run, format, store.stage(level.id).runs, settings, store.data.archivedStages[level.id] || store.data.archivedStages[level.rampage.retiredId])); }
+        if (level.rampage) { pauseForMenu(); return openDialog('log', G.dialog('log', level, run, format, store.stage(level.id).runs, settings, [level.id+'-preview',level.id,level.rampage.retiredId].filter(Boolean).filter(id=>store.data.archivedStages[id]).map(id=>({id,...store.data.archivedStages[id]})), fieldContext(true))); }
         pauseForMenu();
         const s = store.stage(level.id), runs = s.runs.filter(r => filter !== 'clean' || r.clean).slice(0, 10);
         openDialog('log', `${topModal(wording('The captain’s logbook.', 'The flight logbook.'))}
  <p>World ${level.worldNumber} / ${level.bonus ? "BONUS" : level.stageNumber} · ${level.name} · ${s.attempts} ${wording("departures", "launches")} · ${s.clears} ranked ${wording("arrivals", "captures")}</p>
  <div class="dialog-actions" style="margin-top:8px"><button class="${filter === 'overall' ? 'primary' : 'secondary'} small" data-filter="overall">Overall</button><button class="${filter === 'clean' ? 'primary' : 'secondary'} small" data-filter="clean">Clean only</button></div>
  <table class="log-table"><thead><tr><th>#</th><th>TIME / IGT</th><th>CONTACTS</th><th>CLASS</th></tr></thead><tbody>${runs.length ? runs.map((r, i) => `<tr><td>${String(i + 1).padStart(2, '0')}</td><td>${format(r.time)}</td><td>${r.contacts}</td><td class="${r.clean ? 'clean' : ''}">${r.clean ? 'CLEAN' : 'OPEN'}</td></tr>`).join('') : `<tr><td colspan="4">${wording('No ranked arrival yet. The harbor is waiting.', 'No ranked capture yet. Your sector is waiting.')}</td></tr>`}</tbody></table>
- <h3 class="circuit-heading">Circuit records</h3><table class="log-table"><thead><tr><th>ROUTE</th><th>OVERALL</th><th>CLEAN</th></tr></thead><tbody>${[...WORLDS.filter(w => !w.preview).map(w => [w.id, `World ${w.number} · ${w.name}`]), ['grand-tour', `Grand Tour · ${LEVELS.filter(l => !l.bonus && !l.standalone).length}`]].map(([id, name]) => `<tr><td>${name}</td><td>${format(store.bestRace(id)?.time)}</td><td class="clean">${format(store.bestRace(id, true)?.time)}</td></tr>`).join('')}</tbody></table><p class="subtle">${store.data.archivedRaces?.['grand-tour-24']?.length ? '24-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-24'][0].time) + '<br>' : ''}${store.data.archivedRaces?.['grand-tour-36']?.length ? '36-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-36'][0].time) + '<br>' : ''}${store.data.marathon.length ? '12-stage circuit (archived): ' + format(store.data.marathon[0].time) + '<br>' : ''}Times use a fixed 120 Hz simulation clock. Paused runs are unranked. Gold / silver / bronze are course pace targets, not online rankings.</p>
+ <h3 class="circuit-heading">Circuit records</h3><table class="log-table"><thead><tr><th>ROUTE</th><th>OVERALL</th><th>CLEAN</th></tr></thead><tbody>${[...WORLDS.filter(w => !w.preview).map(w => [w.id, `World ${w.number} · ${w.name}`]), ['grand-tour', `Grand Tour · ${LEVELS.filter(l => !l.bonus && !l.standalone).length}`]].map(([id, name]) => `<tr><td>${name}</td><td>${format(store.bestRace(id)?.time)}</td><td class="clean">${format(store.bestRace(id, true)?.time)}</td></tr>`).join('')}</tbody></table><p class="subtle">${store.data.archivedRaces?.['grand-tour-48']?.length ? '48-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-48'][0].time) + '<br>' : ''}${store.data.archivedRaces?.['grand-tour-24']?.length ? '24-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-24'][0].time) + '<br>' : ''}${store.data.archivedRaces?.['grand-tour-36']?.length ? '36-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-36'][0].time) + '<br>' : ''}${store.data.marathon.length ? '12-stage circuit (archived): ' + format(store.data.marathon[0].time) + '<br>' : ''}Times use a fixed 120 Hz simulation clock. Paused runs are unranked. Gold / silver / bronze are course pace targets, not online rankings.</p>
  ${store.data.archivedStages[level.id]?.runs.length ? `<details><summary>${run.space ? 'Archived sector layout records' : 'Archived dock-side departure records'}</summary><p class="subtle">These runs use a different layout or starting position. Their ghosts and splits are preserved in exports, not compared with this route.</p><table class="log-table"><thead><tr><th>TIME / IGT</th><th>CONTACTS</th><th>CLASS</th></tr></thead><tbody>${store.data.archivedStages[level.id].runs.map(r => `<tr><td>${format(r.time)}</td><td>${r.contacts}</td><td>${r.clean ? 'CLEAN' : 'OPEN'}</td></tr>`).join('')}</tbody></table></details>` : ''}
  ${['archipelago', 'grand-tour'].some(id => store.data.archivedRaces[id + '-dock-starts']?.length) ? `<details><summary>Archived dock-side island circuits</summary><p class="subtle">Approach legs change these routes. Earlier records are retained separately.</p>${['archipelago', 'grand-tour'].map(id => { const rows = store.data.archivedRaces[id + '-dock-starts']; return rows.length ? `<p>${id === 'archipelago' ? 'World 3' : 'Grand Tour'} · ${format(rows[0].time)}</p>` : ''; }).join('')}</details>` : ''}
  ${['meridian', 'grand-tour'].some(id => store.data.archivedRaces[id + '-layout-v1']?.length) ? `<details><summary>Archived Meridian-layout circuits</summary><p class="subtle">Mission geometry has changed. Earlier circuit records remain separate.</p>${['meridian', 'grand-tour'].map(id => { const rows = store.data.archivedRaces[id + '-layout-v1']; return rows.length ? `<p>${id === 'meridian' ? 'World 4' : 'Grand Tour'} · ${format(rows[0].time)}</p>` : ''; }).join('')}</details>` : ''}
@@ -602,7 +614,7 @@
         if (level.rampage) { pauseForMenu(); return openDialog('help', G.dialog('help', level, run, format)); }
         if (level.space) {
             pauseForMenu();
-            openDialog('help', `${topModal('Flight manual.', 'MERIDIAN FLIGHT AUTHORITY')}<div class="help-grid"><div><h3>No free brakes</h3><p>W/S select persistent fore/aft thrust, from full retro to full forward. Space cuts main thrust. Velocity persists when engines stop. A/D fire rotational jets: rotation also persists after release, so counterfire. H (or RADAR PULSE) sends a visual scan with an electronic ping; M mutes the audio but not the scan. Q/E translate sideways without turning. The controls and touch buttons work simultaneously.</p><h3>Capture is relative</h3><p>Fit the whole hull in the cradle, match its nose arrow and velocity, reduce relative spin below 0.69°/s, cut every jet, and hold for two seconds. Fuel and assembly collars show their own progress. Moving cradles do not stop while you dock.</p><h3>Propellant</h3><p>Fuel is a reference-mass impulse budget (Δv in m/s), shared by main, lateral, attitude and beam systems. Heavier spacecraft gain less velocity from each unit. Rotation consumes fuel too. Solar craft cannot fire jets in full shadow; scanners also inhibit power. No hidden drag makes up for an empty tank.</p></div><div><h3>Special assignments</h3><p>F acquires/releases a rescue beam within 170 m and with clear line of sight. J attracts; K repels. Forces are equal and opposite. Friendly craft must settle in their own capture cradle; then dock the tug.</p><p>For gunnery, move into the firing box, face the lead diamond and hold still with all jets off for three seconds. Firing and projectile flight are automatic; recoil is a physical impulse. A confirmed hit unlocks the home cradle.</p><p>Stellar radiation heats exposed hulls. Actual asteroid silhouettes cast shadows; partial cover is only partial protection. The solar assignment reverses that rule: darkness removes thrust, not momentum.</p><p>Two chronogates send you to their marked destinations and add each recorded leg as a repeating solid history. Use the station’s passing bays to avoid your past selves. Your clock never rewinds. The Century Ship is a separate 30+ minute bonus, excluded from the 48-stage Grand Tour.</p><h3>Local-frame simulation</h3><p>These are planar, non-orbital navigation puzzles. There is no gravity or relativity. The Century Ship uses a compressed distance scale. Onboard audio is instrument feedback, not sound propagating through vacuum.</p></div></div><div class="dialog-actions"><button class="primary" data-action="back" autofocus>Back to flight</button></div>`, true); return;
+            openDialog('help', `${topModal('Flight manual.', 'MERIDIAN FLIGHT AUTHORITY')}<div class="help-grid"><div><h3>No free brakes</h3><p>W/S select persistent fore/aft thrust, from full retro to full forward. Space cuts main thrust. Velocity persists when engines stop. A/D fire rotational jets: rotation also persists after release, so counterfire. H (or RADAR PULSE) sends a visual scan with an electronic ping; M mutes the audio but not the scan. Q/E translate sideways without turning. The controls and touch buttons work simultaneously.</p><h3>Capture is relative</h3><p>Fit the whole hull in the cradle, match its nose arrow and velocity, reduce relative spin below 0.69°/s, cut every jet, and hold for two seconds. Fuel and assembly collars show their own progress. Moving cradles do not stop while you dock.</p><h3>Propellant</h3><p>Fuel is a reference-mass impulse budget (Δv in m/s), shared by main, lateral, attitude and beam systems. Heavier spacecraft gain less velocity from each unit. Rotation consumes fuel too. Solar craft cannot fire jets in full shadow; scanners also inhibit power. No hidden drag makes up for an empty tank.</p></div><div><h3>Special assignments</h3><p>F acquires/releases a rescue beam within 170 m and with clear line of sight. J attracts; K repels. Forces are equal and opposite. Friendly craft must settle in their own capture cradle; then dock the tug.</p><p>For gunnery, move into the firing box, face the lead diamond and hold still with all jets off for three seconds. Firing and projectile flight are automatic; recoil is a physical impulse. A confirmed hit unlocks the home cradle.</p><p>Stellar radiation heats exposed hulls. Actual asteroid silhouettes cast shadows; partial cover is only partial protection. The solar assignment reverses that rule: darkness removes thrust, not momentum.</p><p>Two chronogates send you to their marked destinations and add each recorded leg as a repeating solid history. Use the station’s passing bays to avoid your past selves. Your clock never rewinds. The Century Ship is a separate 30+ minute bonus, excluded from the 60-stage Grand Tour.</p><h3>Local-frame simulation</h3><p>These are planar, non-orbital navigation puzzles. There is no gravity or relativity. The Century Ship uses a compressed distance scale. Onboard audio is instrument feedback, not sound propagating through vacuum.</p></div></div><div class="dialog-actions"><button class="primary" data-action="back" autofocus>Back to flight</button></div>`, true); return;
         }
         pauseForMenu();
         openDialog('help', `${topModal('It handles like a ship.')}
@@ -632,7 +644,6 @@
         }
     }
     function startMarathon(id = WORLDS[selectedWorld - 1].id) {
-        if (WORLDS.find(w => w.id === id)?.preview) { marathon = null; loadStage(LEVELS.findIndex(l => l.campaign === id), true); return; }
         if (![...WORLDS.map(w => w.id), 'grand-tour'].includes(id))
             id = 'coast';
         const route = LEVELS.map((l, i) => i).filter(i => !LEVELS[i].bonus && !LEVELS[i].standalone && (id === 'grand-tour' || LEVELS[i].campaign === id));
@@ -735,7 +746,7 @@
     function updateHud() {
         if (run?.rampage) {
             const label = (developer?.rate === 0 ? 'FROZEN' : developer?.rate !== 1 ? developer?.rate + '× PRACTICE' : 'PRACTICE') + ' · UNRANKED';
-            G.update(level, run, status, format, label, store.stage(level.id).bestSplits, store.best(level.id)); return;
+            G.update(level, run, status, format, label, store.stage(level.id).bestSplits, store.best(level.id), fieldContext().race); return;
         }
         if (!run)
             return;

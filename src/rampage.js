@@ -1,11 +1,11 @@
-/* Gerbozilla: rolling terrain, water traction and twelve standalone field courses. */
+/* Gerbozilla: rolling terrain, water traction and twelve championship field courses. */
 (function (root) {
     'use strict';
     const P = typeof module !== 'undefined' && module.exports ? require('./physics.js') : root.HarborPhysics;
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
     const level = {
         id: 'gerbo-first-outing', name: 'A Small Problem in Seedhaven', kind: 'Rolling / ridge / lake / two districts',
-        start: [130, 530, 0], world: [1500, 920], pace: [125, 180, 260], standalone: true,
+        start: [130, 530, 0], world: [1500, 920], pace: [125, 180, 260], standalone: false,
         brief: 'Gerbozilla has outgrown the exercise wheel. Build a run-up over the ridge, coast across Blue Lake, flatten Seedhaven’s two evacuated districts, then settle in the recovery meadow. The northern district needs a little redirection.',
         tip: 'Push with WASD or the arrows. Push against your motion to brake. Water removes traction, not momentum. Space / F gives 3 seconds of protection; recharge takes another 6 seconds.',
         spec: { name: 'GERBOZILLA', length: 48, beam: 48, mass: 8, draft: 0, vessel: 'ball' },
@@ -33,7 +33,7 @@
         }
     };
     const course = (id, name, kind, start, world, brief, tip, config) => ({
-        id, name, kind, start, world, brief, tip, standalone: true, pace: [160, 220, 320],
+        id, name, kind, start, world, brief, tip, standalone: false, pace: [160, 220, 320],
         spec: { ...level.spec },
         berth: { x: config.finish.x, y: config.finish.y, a: 0, l: 156, w: 156, speed: .8 },
         rampage: { radius: 24, drive: 1.9, resistance: .032, waterResistance: .05, ...config }
@@ -53,6 +53,12 @@
                 {x:1060,y:650,r:170,width:28,height:47,shore:[.07,.035,.5],name:'CUSHION WALL'},
                 {x:1640,y:530,r:150,width:27,height:44,shore:[.06,.04,1.7],name:'HAYLOFT RIM'}
             ],
+            forests:[
+                {x:315,y:275,rx:205,ry:125,angle:-.32,shore:[.18,.06,.7],density:.5,name:'CLOVER COPSE'},
+                {x:775,y:1140,rx:260,ry:135,angle:.18,shore:[.16,.08,2.4],density:.65,name:'LOWLAND PINES'},
+                {x:1975,y:205,rx:270,ry:105,angle:-.21,shore:[.13,.09,1.1],density:.45,name:'HAYLOFT WOOD'},
+                {x:2150,y:1010,rx:200,ry:130,angle:.48,shore:[.15,.07,3],density:.6}
+            ],
             lakes:[{x:350,y:1080,rx:160,ry:80,shore:[.16,.08,2.1],name:'CLOVER MERE'}],
             controls:[{x:640,y:650,r:68,name:'Western run-up'}],
             districts:[
@@ -71,6 +77,12 @@
                 {x:1640,y:780,rx:235,ry:230,inner:.47,shore:[.07,.045,3],name:'OAT MOAT'},
                 {x:1150,y:1370,rx:230,ry:230,inner:.46,shore:[.09,.035,2],name:'PIPSQUEAK MOAT'}
             ],
+            forests:[
+                {x:440,y:915,rx:265,ry:185,angle:-.3,shore:[.16,.07,2],density:.55,name:'REEDBANK ALDERS'},
+                {x:1550,y:180,rx:270,ry:95,angle:.17,shore:[.18,.06,.7],density:.5,name:'OAT GROVE'},
+                {x:1930,y:1450,rx:165,ry:200,angle:.4,shore:[.14,.09,1.8],density:.65},
+                {x:245,y:1650,rx:145,ry:100,angle:-.2,shore:[.18,.07,2.9],density:.4}
+            ],
             controls:[{x:430,y:420,r:62,name:'Build crossing speed'},
                 {x:2010,y:1030,r:65,name:'Dry turning ground',after:'oatbridge',number:4}],
             districts:[
@@ -85,8 +97,18 @@
         'Start high on Mount Muesli. The single fortified caldera town lies behind a broad flooded rim. Trade height for speed on the descent, cross the moat and break the armored core in one shielded impact; then roll out to the eastern meadow.',
         'Gravity supplies the run-up. Aim before the long descent; frantic steering in the flooded rim only makes tiny squeaks. The armored town needs a harder hit than Seedhaven.',{
             sheet:'MOUNT MUESLI',subtitle:'IT ALL GOES DOWNHILL',
-            hills:[{x:155,y:135,rx:235,ry:225,height:140,angle:.35,lobes:[{x:-80,y:60,rx:115,ry:140,height:30}]},
-                {x:1550,y:1230,rx:260,ry:75,height:74,lobes:[{x:135,y:-20,rx:110,ry:65,height:23}]}],
+            // A broken, oblique crest with separate spurs and a saddle, not a round dome.
+            hills:[{x:150,y:145,rx:168,ry:84,height:126,angle:.7,
+                    lobes:[{x:95,y:-95,rx:122,ry:55,height:62,angle:-1},
+                           {x:-70,y:155,rx:130,ry:68,height:63,angle:.65}]},
+                {x:445,y:190,rx:166,ry:67,height:70,angle:-.23,
+                    lobes:[{x:112,y:63,rx:105,ry:53,height:35,angle:.9}]},
+                {x:1405,y:1240,rx:188,ry:69,height:67,angle:-.35,
+                    lobes:[{x:230,y:-45,rx:140,ry:58,height:53,angle:.85},
+                           {x:-90,y:105,rx:92,ry:54,height:28,angle:1.1}]}],
+            forests:[{x:220,y:950,rx:150,ry:205,angle:-.3,shore:[.18,.07,1.7],density:.6,name:'MUESLI LARCHES'},
+                {x:1070,y:205,rx:295,ry:120,angle:-.15,shore:[.13,.08,.7],density:.5},
+                {x:2140,y:420,rx:125,ry:195,angle:.32,shore:[.19,.06,2],density:.7}],
             rims:[{x:1540,y:860,r:155,width:25,height:38,shore:[.06,.03,.9],name:'CALDERA RIM'}],
             lakes:[{x:1540,y:860,rx:290,ry:275,inner:.68,shore:[.075,.035,2.4],name:'FLOODED CALDERA'}],
             controls:[{x:755,y:610,r:85,name:'Downhill commitment'}],
@@ -98,8 +120,17 @@
         'Fort Pillow has two water moats with a steep mountain ring between them. One long run-up must pay for the outer crossing, the uphill crest and the inner crossing. Destroy the command core, escape its retaliatory strike pattern, then take the northern satellite fort before extraction.',
         'Spend momentum, not patience. A shield will not pull you out of a moat. Preserve speed through the nested defenses; after the command core falls, the eastern muster point provides room to turn north.',{
             sheet:'FORT PILLOW DEFENSE RESERVE',subtitle:'ONE VERY LARGE PILLOW FIGHT',
-            hills:[{x:510,y:1710,rx:210,ry:75,height:66,lobes:[{x:120,y:-25,rx:90,ry:63,height:31}]}],
-            rims:[{x:1560,y:1110,r:244,width:28,height:37,shore:[.045,.025,.8],name:'PILLOW WALL'},
+            hills:[{x:450,y:1670,rx:150,ry:70,height:63,angle:-.45,
+                    lobes:[{x:165,y:-10,rx:130,ry:53,height:42,angle:.85},
+                           {x:-120,y:82,rx:115,ry:45,height:29,angle:.3}]},
+                {x:1215,y:840,rx:80,ry:120,height:24,angle:.52},
+                {x:1730,y:1390,rx:125,ry:65,height:32,angle:-.55},
+                {x:1480,y:1505,rx:80,ry:125,height:23,angle:.4}],
+            forests:[{x:555,y:350,rx:315,ry:155,angle:-.3,shore:[.16,.08,2.2],density:.65,name:'PILLOW PINE RESERVE'},
+                {x:730,y:1450,rx:260,ry:120,angle:.3,shore:[.19,.07,.4],density:.5},
+                {x:2670,y:1380,rx:240,ry:180,angle:-.6,shore:[.18,.08,1],density:.6},
+                {x:2760,y:805,rx:180,ry:130,angle:.2,shore:[.15,.06,2.8],density:.45}],
+            rims:[{x:1560,y:1110,r:244,width:28,height:37,shore:[.1,.055,.8],bends:[[.065,1,.5],[.045,2,1.4]],name:'PILLOW WALL'},
                 {x:2170,y:370,r:155,width:26,height:44,shore:[.06,.035,1.8],name:'SATELLITE RIM'}],
             lakes:[{x:1560,y:1110,rx:420,ry:410,inner:.76,shore:[.045,.03,2],name:'OUTER MOAT'},
                 {x:1560,y:1110,rx:191,ry:190,inner:.52,shore:[.07,.035,.5],name:'INNER MOAT'}],
@@ -119,13 +150,17 @@
         'No cities today. Punch five controls in order through Bramble Wood. Black boulders are solid, not hills to crest. The darkest forest eats rolling speed; longer routes through pale clearings can be faster than a direct push through the trees.',
         'Read the magenta numbers before committing. Ease off before the boulder chicanes. Shields prevent damage, not collisions. Finish with paws off in the southern clearing.', {
             retiredId:'gerbo-hairpin',sheet:'BRAMBLE WOOD',subtitle:'THE BLACK BOULDER WOOD',
-            hills:[{x:1060,y:1020,rx:140,ry:90,height:23,lobes:[{x:70,y:-20,rx:90,ry:60,height:11}]}],
+            hills:[{x:1060,y:1020,rx:140,ry:90,height:23,lobes:[{x:70,y:-20,rx:90,ry:60,height:11}]},
+                {x:725,y:1140,rx:140,ry:68,height:32,angle:.3,lobes:[{x:-90,y:-40,rx:85,ry:45,height:19}]},
+                {x:1410,y:580,rx:120,ry:66,height:26,angle:.6,lobes:[{x:-60,y:90,rx:80,ry:48,height:15}]}],
             forests:[{x:570,y:820,rx:380,ry:280,shore:[.15,.08,.7],density:.75},
                 {x:940,y:380,rx:260,ry:150,shore:[.18,.08,2],density:1},
                 {x:1530,y:1000,rx:160,ry:180,shore:[.12,.1,1],density:.55}],
             rocks:[boulder(550,960,115,125,.5),boulder(670,480,180,105,1),
                 boulder(1170,440,130,195,2),boulder(1390,890,125,95,.1)],
-            lakes:[{x:285,y:265,rx:125,ry:120,shore:[.15,.09,2],name:'FERN POND'}],
+            lakes:[{x:285,y:265,rx:125,ry:120,shore:[.15,.09,2],name:'FERN POND'},
+                {x:555,y:810,rx:102,ry:57,angle:-.28,shore:[.18,.07,1.3],name:'BRAMBLE TARN'},
+                {x:1400,y:605,rx:94,ry:52,angle:.55,shore:[.16,.08,2.4],name:'BIRCH POOL'}],
             controls:[{x:330,y:650,r:65,name:'Fern clearing'},{x:880,y:710,r:65,name:'South of the split stone'},
                 {x:940,y:180,r:60,name:'Northern notch'},{x:1500,y:230,r:65,name:'Beyond the black wall'},
                 {x:1620,y:720,r:60,name:'Birch clearing'}],districts:[],finish:{x:1560,y:1120,r:87},authorSpeed:24
@@ -135,7 +170,10 @@
         'Cavyclasm has declared this entire valley his food bowl. He marks a charge, commits to that line and needs a breather afterwards. Build a run-up and shield the collision. Both giants recoil; your shield does not stop him moving.',
         'Red dashes show a locked charge, not a homing attack. Bait him past a boulder, then strike during recovery. A defeated pet curls up for a nap. Clear the approach control and return to the western meadow.', {
             sheet:'CAVYCLASM’S FOOD BOWL',subtitle:'A VERY TERRITORIAL GUINEA PIG',
-            hills:[{x:1630,y:285,rx:170,ry:80,height:30,lobes:[{x:60,y:30,rx:80,ry:50,height:12}]}],
+            hills:[{x:1630,y:285,rx:170,ry:80,height:30,lobes:[{x:60,y:30,rx:80,ry:50,height:12}]},
+                {x:1010,y:1110,rx:215,ry:83,height:33,angle:-.35,lobes:[{x:125,y:70,rx:115,ry:60,height:21}]},
+                {x:600,y:170,rx:115,ry:57,height:29,angle:.72,lobes:[{x:140,y:50,rx:104,ry:65,height:20}]},
+                {x:1010,y:685,rx:125,ry:70,height:16,angle:-.6}],
             forests:[{x:660,y:1050,rx:180,ry:160,density:.7,shore:[.16,.07,.8]},
                 {x:1600,y:530,rx:170,ry:190,density:.5,shore:[.14,.08,2]}],
             rocks:[boulder(880,310,100,95,.5),boulder(1490,850,105,180,2),boulder(480,550,90,120,1)],
@@ -152,7 +190,9 @@
             forests:[{x:420,y:320,rx:210,ry:150,shore:[.18,.08,1],density:.65}],
             rocks:[wall(880,340,630,22),wall(880,920,630,22),wall(880,340,22,602),wall(1488,340,22,602),
                 boulder(740,1040,85,110,1),boulder(1590,270,75,100,2)],
-            lakes:[],controls:[{x:420,y:680,r:65,name:'Giant pepper collected'}],
+            lakes:[{x:535,y:265,rx:91,ry:64,angle:-.25,shore:[.15,.09,.6],name:'SUGAR POND'},
+                {x:1210,y:1110,rx:142,ry:67,angle:.2,shore:[.18,.06,2.3],name:'COCOA POOL'}],
+            controls:[{x:420,y:680,r:65,name:'Giant pepper collected'}],
             fire:{unlockControl:1,range:340,spread:.38,capacity:3,recharge:.6,dps:44},
             districts:[{id:'sugar',name:'Sugar Battery',x:1050,y:540,r:33,health:100,defence:true,fireOnly:true},
                 {id:'mallow',name:'Mallow Foundry',x:1250,y:540,r:33,health:100,defence:true,fireOnly:true},
@@ -164,7 +204,8 @@
         'Lady Whiskerdoom is being held in a granite menagerie. Flatten both external lock pylons to open its western gate and send Sir Flops-a-Lot to sleep. Roll close to greet her, then lead her along a safe route to the recovery meadow.',
         'She follows your trail with her own momentum; she cannot teleport through stone. Give her room in the gate, avoid ramming her and wait for her to catch up. Your shield protects your shell only. Both hamsters must get home.', {
             sheet:'THE GRANITE MENAGERIE',subtitle:'LADY WHISKERDOOM’S RESCUE',
-            hills:[{x:470,y:375,rx:210,ry:90,height:22,lobes:[{x:100,y:30,rx:90,ry:60,height:10}]}],
+            hills:[{x:470,y:375,rx:210,ry:90,height:22,lobes:[{x:100,y:30,rx:90,ry:60,height:10}]},
+                {x:2090,y:780,rx:160,ry:78,height:31,angle:-.4,lobes:[{x:100,y:-30,rx:94,ry:55,height:18}]}],
             forests:[{x:1090,y:1190,rx:330,ry:170,shore:[.17,.09,1.6],density:.5},
                 {x:620,y:570,rx:200,ry:180,shore:[.17,.07,2.4],density:.7}],
             rocks:[boulder(1230,440,155,180,1),boulder(750,910,140,180,2),
@@ -179,16 +220,18 @@
         });
     const needles = (x,y,extra={}) => ({id:'needlesworth',name:'Sir Needlesworth',kind:'hedgehog',
         x,y,r:59,mass:20,health:100,invulnerable:true,required:false,...extra});
-    const avoid = course('gerbo-prickly-business', 'Strictly No Petting', 'Invulnerable patrol / survey controls / boulder cover',
+    const avoid = course('gerbo-prickly-business', 'Strictly No Petting', 'River crossing / invulnerable patrol / survey controls',
         [180,1040,0],[2080,1380],
-        'Collect three ranger survey stamps in Needlewood, then return to the western meadow. Sir Needlesworth considers the survey equipment his property. Nothing can damage him. Use the black outcrops to break up his charges and visit each control while he is committed elsewhere.',
+        'Collect three ranger survey stamps in Needlewood, then return to the western meadow. Sir Needlesworth considers the survey equipment his property. Nothing can damage him. Build momentum to cross Bristle Brook, then return across it with all three stamps. Use the black outcrops to break up his charges and visit each control while he is committed elsewhere.',
         'Do not try to win a fight. The red charge line locks before he rolls. Pass behind him, take a clearing around the rocks, or shield a mistake. No monster defeat is required.', {
             sheet:'NEEDLEWOOD SURVEY RESERVE',subtitle:'STRICTLY NO PETTING',
             hills:[{x:1740,y:1060,rx:170,ry:100,height:24,lobes:[{x:-90,y:45,rx:95,ry:55,height:12}]}],
             forests:[{x:770,y:850,rx:250,ry:240,shore:[.16,.08,.8],density:.55},
                 {x:1580,y:295,rx:240,ry:130,shore:[.14,.09,2],density:.55}],
             rocks:[boulder(720,790,110,145,.6),boulder(1260,440,120,165,1.5),boulder(1540,860,160,110,.2)],
-            lakes:[{x:340,y:370,rx:155,ry:155,shore:[.17,.08,.9],name:'BRISTLE MERE'}],
+            lakes:[{x:340,y:370,rx:155,ry:155,shore:[.17,.08,.9],name:'BRISTLE MERE'},
+                {x:850,y:1220,name:'BRISTLE BROOK',river:{x:830,width:100,amplitude:85,period:780,phase:.5},
+                    poly:riverRibbon(1380,{x:830,width:100,amplitude:85,period:780,phase:.5})}],
             controls:[{x:1050,y:1040,r:68,name:'South survey stamp'},
                 {x:1720,y:650,r:65,name:'East survey stamp'},
                 {x:1030,y:265,r:65,name:'North survey stamp'}],districts:[],
@@ -197,7 +240,7 @@
         });
     const chase = course('gerbo-rolling-threat', 'A Hedge Against Disaster', 'Persistent pursuit / shield timing / forest pinches',
         [330,660,0],[2860,1380],
-        'Carry the ranger warning through the three relay controls to the eastern refuge. Sir Needlesworth has decided to accompany you. His pursuit is faster than your careful passage through the forest pinches: read his wind-up and shield just before a hit, then use the impulse without rolling into black rock.',
+        'Carry the ranger warning through the three relay controls to the eastern refuge. Sir Needlesworth has decided to accompany you. His close pursuit and bristling spines make high-speed unshielded hits fatal. Read his wind-up and shield just before a hit, then use the impulse without rolling into black rock.',
         'He cannot be damaged, stunned into submission or put to sleep. Three seconds of shield, then six seconds of recharge. A blocked charge still pushes you. The final narrow rock notch fits your ball but not his spines; brake only after slipping through it.', {
             sheet:'THE BRISTLE EXPRESS',subtitle:'A HEDGE AGAINST DISASTER',
             hills:[{x:1820,y:1060,rx:180,ry:90,height:26,lobes:[{x:110,y:20,rx:90,ry:55,height:10}]}],
@@ -210,9 +253,9 @@
             controls:[{x:960,y:650,r:70,name:'Western warning relay'},
                 {x:1770,y:670,r:70,name:'Eastern warning relay'},
                 {x:2350,y:640,r:75,name:'Refuge approach'}],districts:[],
-            monsters:[needles(160,650,{ai:{range:2400,prowlSpeed:25,prowlAccel:3.2,approach:100,
-                warning:1.8,charge:3.4,power:10,rest:5.8,cooldown:2}})],
-            finish:{x:2630,y:640,r:120},authorSpeed:27
+            monsters:[needles(160,650,{spineDamage:100,ai:{range:450,prowlSpeed:42,prowlAccel:5,approach:90,
+                warning:1.8,charge:3.8,power:13,rest:6,cooldown:2}})],
+            finish:{x:2630,y:640,r:120},authorSpeed:60
         });
     const escort = course('gerbo-long-way-home', 'The Long Way Home', 'Evacuation escort / interception / long-range strikes',
         [320,1050,0],[2760,1630],
@@ -240,7 +283,7 @@
             retaliation:{delays:[],warning:10,lead:2,radius:52,damage:22},
             finish:{x:2490,y:730,r:145},authorSpeed:17
         });
-    avoid.pace=[280,360,480]; chase.pace=[120,165,240]; escort.pace=[245,335,460];
+    avoid.pace=[280,360,480]; chase.pace=[95,125,180]; escort.pace=[245,335,460];
     // Gaussian shoulders make asymmetrical summits and saddles, while keeping
     // an exact analytical gradient shared by the physics and contour renderer.
     function terrain(c, x, y) {
@@ -261,8 +304,12 @@
             const ex=x-rim.x, ey=y-rim.y, d=Math.hypot(ex,ey);
             if (d < 1e-6) continue; // Interior center is flat to numerical precision.
             const a=Math.atan2(ey,ex), [u,v,phase]=rim.shore || [0,0,0];
-            const radius=rim.r*(1+u*Math.cos(3*a+phase)+v*Math.sin(5*a-phase));
-            const derivative=rim.r*(-3*u*Math.sin(3*a+phase)+5*v*Math.cos(5*a-phase));
+            let radius=rim.r*(1+u*Math.cos(3*a+phase)+v*Math.sin(5*a-phase));
+            let derivative=rim.r*(-3*u*Math.sin(3*a+phase)+5*v*Math.cos(5*a-phase));
+            for (const [amplitude, frequency, offset] of rim.bends || []) {
+                radius += rim.r * amplitude * Math.cos(frequency*a+offset);
+                derivative -= rim.r * amplitude * frequency * Math.sin(frequency*a+offset);
+            }
             const q=(d-radius)/rim.width, z=rim.height*Math.exp(-.5*q*q), slope=-z*q/rim.width;
             height+=z; dx+=slope*(ex/d+derivative*ey/(d*d)); dy+=slope*(ey/d-derivative*ex/(d*d));
         }
@@ -279,7 +326,26 @@
         const x = l.rx * r * Math.cos(angle), y = l.ry * r * Math.sin(angle);
         return {x: l.x + cs * x - sn * y, y: l.y + sn * x + cs * y};
     }
+    function riverRibbon(height, river) {
+        const left=[], right=[];
+        for(let y=-120;y<=height+120;y+=12) {
+            const t=y*Math.PI*2/river.period+river.phase;
+            const x=river.x+river.amplitude*Math.sin(t)+river.amplitude*.28*Math.sin(t*2.3+.6);
+            const half=river.width*.5*(1+.14*Math.sin(t*.8+1.1));
+            left.push({x:x-half,y});right.push({x:x+half,y});
+        }
+        return left.concat(right.reverse());
+    }
     function inLake(l, x, y) {
+        if(l.poly) {
+            if(l.river && Math.abs(x-l.river.x)>l.river.amplitude*1.28+l.river.width*.57) return false;
+            let inside=false;
+            for(let i=0,j=l.poly.length-1;i<l.poly.length;j=i++) {
+                const a=l.poly[i],b=l.poly[j];
+                if((a.y>y)!==(b.y>y) && x<(b.x-a.x)*(y-a.y)/(b.y-a.y)+a.x) inside=!inside;
+            }
+            return inside;
+        }
         const cs = Math.cos(l.angle || 0), sn = Math.sin(l.angle || 0), dx = x - l.x, dy = y - l.y;
         const u = (cs * dx + sn * dy) / l.rx, v = (-sn * dx + cs * dy) / l.ry;
         const radius=shoreRadius(l, Math.atan2(v,u)), distance=Math.hypot(u,v);
@@ -361,7 +427,12 @@
         if(closing<(friendly?4:.5) || run.time-b.hitAt<.65) return;
         b.hitAt=run.time;st.flashes.push({x:b.x,y:b.y,t:run.time});
         if(friendly){hurt(run,.022*closing*closing);hurtLady(run,.022*closing*closing);}
-        else {hurtMonster(b,.5*closing*closing);hurt(run,(b.invulnerable?4:0)+.035*closing*closing);st.stats.monsterImpacts++;
+        else {
+            // The Bristle Express variant cannot be damage-tanked for an equally
+            // fast unshielded time. Glancing contacts and other Needlesworth
+            // courses retain their normal damage; no shield-count gate exists.
+            const spines=b.invulnerable?(b.spineDamage && closing>4 ? b.spineDamage : 4):0;
+            hurtMonster(b,.5*closing*closing);hurt(run,spines+.035*closing*closing);st.stats.monsterImpacts++;
             if(b.invulnerable && protectedAt(run)) st.stats.needleBlocks++;}
     }
     function hurtLady(run, amount) {
@@ -485,8 +556,8 @@
         return { rocks:(c.rocks || []).map((r,i)=>({...r,id:'rock-'+i,poly:rockPolygon(r)})),
             monsters:(c.monsters || []).map(m=>({...m,maxHealth:m.health,vx:0,vy:0,state:'prowl',until:0,hitAt:-100,released:!m.releaseControl})),
             lady:c.rescue?{...c.rescue,vx:0,vy:0,a:0,hitAt:-100,following:!!c.rescue.free}:null,
-            breadcrumbs:c.rescue?.free?[{x:ship.x,y:ship.y}]:[],unlocked:!!c.rescue?.free,ambushed:0,rescued:false,rescueHold:0,forest:0,aim:0,breath:c.fire?.capacity || 0,fireActive:false,
-            roll: 0, pawPhase: 0, radius: level.rampage.radius, slip: 0, wet: 0, effort: 0, elevation: 0, control: 0, controlCount: level.rampage.controls.length,
+            breadcrumbs:c.rescue?.free?[{x:ship.x,y:ship.y}]:[],unlocked:!!c.rescue?.free,ambushed:0,rescued:false,rescueHold:0,forest:woodland(c,ship),aim:0,breath:c.fire?.capacity || 0,fireActive:false,
+            roll: 0, pawPhase: 0, radius: level.rampage.radius, slip: 0, wet: water(c,ship), effort: 0, elevation: terrain(c,ship.x,ship.y).height, control: 0, controlCount: level.rampage.controls.length,
             shieldUntil: 0, shieldReady: 0, shots: [], strikes: [], flashes: [], hold: 0,
             districts: level.rampage.districts.map(d => ({ ...d, maxHealth: d.health, nextShot: 0, aim: null, shotAt: null, hitAt: -100 })),
             stats: { districts: 0, damage: 0, blocked: 0, shields: 0, impacts: 0, waterTime: 0, salvos: 0, strikeHits: 0, strikeDodges: 0, strikeBlocks: 0, escortStrikeHits:0, rockHits:0, forestTime:0, monsters:0, monsterImpacts:0, needleBlocks:0, fireTime:0, ladyDamage:0 }

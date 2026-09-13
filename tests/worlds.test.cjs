@@ -4,7 +4,7 @@ const P = require('../src/physics.js'), L = require('../src/levels.js'), S = req
 const { create } = require('./headless.cjs');
 const near = (a, b, eps = 1e-8) => assert.ok(Math.abs(a - b) < eps, `${a} != ${b}`);
 const level = id => L.find(l => l.id === id);
-test('four complete worlds retain twelve circuit stages; World 5 has twelve standalone courses', () => {
+test('all five worlds supply twelve circuit stages', () => {
     assert.equal(L.worlds.length, 5);
     assert.equal(new Set(L.map(l => l.id)).size, 61);
     for (const w of L.worlds.filter(w => !w.preview)) {
@@ -151,13 +151,13 @@ test('new project load applies its explicit mass and keeps the longer hull', () 
     assert.equal(t.state.run.ship.mass, 2.25);
     assert.equal(t.state.run.ship.length, 34);
 });
-for (const id of ['coast', 'northwatch', 'archipelago', 'meridian', 'grand-tour'])
+for (const id of ['coast', 'northwatch', 'archipelago', 'meridian', 'gerbozilla', 'grand-tour'])
     test(`${id}: circuit route, transitions, retry time and final record`, () => {
         const t = create();
         t.marathon(id);
-        const r = t.state.marathon, expected = id === 'grand-tour' ? 48 : 12;
+        const r = t.state.marathon, expected = id === 'grand-tour' ? 60 : 12;
         assert.equal(r.route.length, expected);
-        assert.equal(t.state.index, id === 'northwatch' ? 12 : id === 'archipelago' ? 24 : id === 'meridian' ? 36 : 0);
+        assert.equal(t.state.index, id === 'northwatch' ? 12 : id === 'archipelago' ? 24 : id === 'meridian' ? 36 : id === 'gerbozilla' ? 49 : 0);
         t.advance(3);
         t.retry();
         assert.ok(r.total > 2.99);
@@ -166,7 +166,7 @@ for (const id of ['coast', 'northwatch', 'archipelago', 'meridian', 'grand-tour'
             const l = t.state.level;
             // Circuit progression test only: spacecraft objective state machines
             // and complete control recordings are checked in space.test.cjs.
-            if (l.space) {
+            if (l.space || l.rampage) {
                 t.advance(2); t.finish();
                 if (j < expected - 1) t.next();
                 continue;

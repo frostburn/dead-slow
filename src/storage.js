@@ -1,15 +1,17 @@
 (function (root) {
     'use strict';
     // Keep the original key so same-origin upgrades discover the v1 logbook.
-    const KEY = 'dead-slow.records.v1', VERSION = 9;
+    const KEY = 'dead-slow.records.v1', VERSION = 10;
     // These routes now include an approach leg. Keep their earlier PBs/ghosts,
     // but never compare a dock-side departure against a midwater departure.
     const RESTARTED = ['milk-run', 'floating-sauna', 'market-day', 'granite-needle', 'last-bus', 'slackwater-salvage', 'island-exchange', 'two-calls', 'cars-and-casualty', 'midsummer-dispatch'];
     const REDESIGNED = ['vacuum', 'umbra', 'perihelion-dispatch', 'yesterday', 'century-ship'];
-    const ARCHIVES = ['meridian-layout-v1', 'grand-tour-layout-v1', 'grand-tour-36', 'grand-tour-24', 'archipelago-dock-starts', 'grand-tour-dock-starts'];
-    const RACES = ['coast', 'northwatch', 'archipelago', 'meridian', 'grand-tour'];
+    const FIELD_INTRODUCED = { 'gerbo-banking':7, 'gerbo-lake-skipping':7, 'gerbo-downhill':8, 'gerbo-fort-pillow':8 };
+    const FIELD_REVISED = ['gerbo-banking', 'gerbo-lake-skipping', 'gerbo-downhill', 'gerbo-forest-slalom', 'gerbo-fort-pillow', 'gerbo-cavy-clash', 'gerbo-pepperbreath', 'gerbo-whiskerdoom', 'gerbo-prickly-business', 'gerbo-rolling-threat'];
+    const ARCHIVES = ['grand-tour-48', 'meridian-layout-v1', 'grand-tour-layout-v1', 'grand-tour-36', 'grand-tour-24', 'archipelago-dock-starts', 'grand-tour-dock-starts'];
+    const RACES = ['coast', 'northwatch', 'archipelago', 'meridian', 'gerbozilla', 'grand-tour'];
     const fresh = () => ({
-        version: VERSION, stages: {}, marathon: [], races: { coast: [], northwatch: [], archipelago: [], meridian: [], 'grand-tour': [] }, archivedStages: {}, archivedRaces: Object.fromEntries(ARCHIVES.map(id => [id, []])), settings: { ghost: true, sound: true, guide: true }, attempts: 0
+        version: VERSION, stages: {}, marathon: [], races: { coast: [], northwatch: [], archipelago: [], meridian: [], gerbozilla: [], 'grand-tour': [] }, archivedStages: {}, archivedRaces: Object.fromEntries(ARCHIVES.map(id => [id, []])), settings: { ghost: true, sound: true, guide: true }, attempts: 0
     });
     function validRun(r) {
         return r && Number.isFinite(r.time) && r.time >= 0 && r.time < 86400 && Number.isInteger(r.contacts) && r.contacts >= 0 && typeof r.clean === 'boolean';
@@ -35,7 +37,7 @@
     }
     function sanitize(data) {
         const result = fresh();
-        if (!data || ![1, 2, 3, 4, 5, 6, 7, 8, VERSION].includes(data.version))
+        if (!data || ![1, 2, 3, 4, 5, 6, 7, 8, 9, VERSION].includes(data.version))
             return result;
         result.attempts = Math.max(0, Math.floor(Number(data.attempts) || 0));
         result.stages = sanitizeStages(data.stages);
@@ -107,6 +109,22 @@
             result.archivedStages['gerbo-hairpin']=result.stages['gerbo-hairpin'];
             delete result.stages['gerbo-hairpin'];
         }
+        // All earlier migration rules run first. Only still-active 48-stage
+        // Grand Tours move here; do not relabel older, already archived routes.
+        if(data.version < 10) {
+            result.archivedRaces['grand-tour-48'] = retain([
+                ...result.archivedRaces['grand-tour-48'], ...result.races['grand-tour']
+            ]);
+            result.races['grand-tour'] = [];
+            result.races.gerbozilla = [];
+            if(data.version >= 6) for(const id of FIELD_REVISED) {
+                if(data.version < (FIELD_INTRODUCED[id] || 9) || !result.stages[id]) continue;
+                // A separate key preserves earlier terrain archives too, including
+                // their own ghost and split arrays. Never mix different layouts.
+                result.archivedStages[id+'-preview'] = result.stages[id];
+                delete result.stages[id];
+            }
+        }
         for (const k of ['ghost', 'sound', 'guide'])
             if (typeof data.settings?.[k] === 'boolean')
                 result.settings[k] = data.settings[k];
@@ -177,7 +195,7 @@
             }, save, stage, best, attempt, record, recordRace, bestRace,
             import(text) {
                 const d = JSON.parse(text);
-                if (!d || ![1, 2, 3, 4, 5, 6, 7, 8, VERSION].includes(d.version))
+                if (!d || ![1, 2, 3, 4, 5, 6, 7, 8, 9, VERSION].includes(d.version))
                     throw Error('This is not a compatible Dead Slow logbook.');
                 data = sanitize(d);
                 save();
@@ -191,7 +209,7 @@
         };
     }
     const api = {
-        KEY, VERSION, RESTARTED, REDESIGNED, fresh, sanitize, create
+        KEY, VERSION, RESTARTED, REDESIGNED, FIELD_REVISED, fresh, sanitize, create
     };
     if (typeof module !== 'undefined' && module.exports)
         module.exports = api;

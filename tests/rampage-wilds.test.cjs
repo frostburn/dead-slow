@@ -11,9 +11,9 @@ function scenario(id='gerbo-forest-slalom'){
 }
 function step(t,input={},time=DT){for(let n=0;n<Math.round(time/DT);n++){t.run.time+=DT;R.update(t.level,t.run,input,DT);}}
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-8,`${a} != ${b}`);
-test('twelve standalone courses include four different mission types; old hairpin is retired',()=>{
+test('twelve championship courses include four different mission types; old hairpin is retired',()=>{
  const rows=L.filter(l=>l.rampage);assert.equal(rows.length,12);
- assert.deepEqual(rows.map(l=>l.stageNumber),Array.from({length:12},(_,i)=>i+1));assert.ok(rows.every(l=>l.standalone));
+ assert.deepEqual(rows.map(l=>l.stageNumber),Array.from({length:12},(_,i)=>i+1));assert.ok(rows.every(l=>!l.standalone));
  assert.ok(!L.some(l=>l.id==='gerbo-hairpin'));assert.equal(rows[4].rampage.districts.length,0);
  assert.ok(rows[6].rampage.monsters.length);assert.ok(rows[7].rampage.fire);assert.ok(rows[8].rampage.rescue);
 });
@@ -100,7 +100,7 @@ test('retired Hairpin records, ghosts and splits are archived without changing o
  const old={runs:[{time:189,contacts:0,clean:true}],ghost:[[0,10,20,0]],bestSplits:[10,20]};
  data.stages['gerbo-hairpin']=structuredClone(old);data.stages['gerbo-banking']=structuredClone(old);data.races['grand-tour']=old.runs;
  const v=S.sanitize(data);assert.equal(v.stages['gerbo-hairpin'],undefined);assert.deepEqual(v.archivedStages['gerbo-hairpin'].ghost,old.ghost);
- assert.deepEqual(v.archivedStages['gerbo-hairpin'].bestSplits,old.bestSplits);assert.equal(v.stages['gerbo-banking'].runs[0].time,189);assert.equal(v.races['grand-tour'].length,1);
+ assert.deepEqual(v.archivedStages['gerbo-hairpin'].bestSplits,old.bestSplits);assert.equal(v.archivedStages['gerbo-banking-preview'].runs[0].time,189);assert.equal(v.archivedRaces['grand-tour-48'].length,1);
  assert.deepEqual(S.sanitize(v),v);
 });
 for(const id of ['gerbo-forest-slalom','gerbo-cavy-clash','gerbo-pepperbreath','gerbo-whiskerdoom'])test(id+' has a clean input-only production-console recording',()=>{

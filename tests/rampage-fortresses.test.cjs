@@ -104,7 +104,7 @@ test('only schema-7 banking/lake records move to the defense-layout archive',()=
         assert.deepEqual(s.archivedStages[id].bestSplits,old.bestSplits);
     }
     assert.equal(s.stages['gerbo-first-outing'].runs[0].time,123);assert.equal(s.stages.vacuum.runs[0].time,123);
-    assert.equal(s.races['grand-tour'][0].time,9500);
+    assert.equal(s.archivedRaces['grand-tour-48'][0].time,9500);
     s.stages['gerbo-banking']=old;assert.equal(S.sanitize(s).stages['gerbo-banking'].runs[0].time,123);
 });
 test('paws are painted before the belly, not pasted over it',()=>{

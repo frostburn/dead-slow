@@ -9,6 +9,7 @@ function record(id,write=false){
  const stop=(x,y)=>({x,y,stop:true});
  const route=id==='gerbo-whiskerdoom' ? [stop(540,1220),stop(1060,1210),'monster',stop(1510,870),'locks',stop(1500,760),stop(1540,460),{x:1735,y:460,greet:true},stop(1530,460),stop(1510,780),stop(1080,780),stop(1060,1210),stop(700,1330),c.finish] :
  id==='gerbo-pepperbreath' ? [c.controls[0],{...stop(760,540),burn:'sugar'},stop(770,230),{...stop(1240,230),burn:'mallow'},stop(1230,130),stop(1720,130),{...stop(1690,740),burn:'fluff'},stop(1680,1200),stop(1030,1230),stop(530,1230),c.finish] :
+ id==='gerbo-forest-slalom' ? [...c.controls,c.finish] :
  [c.controls[0],'monster',stop(670,1010),stop(270,820),c.finish];
  for(let n=0;n<6000&&t.state.status==='running';n++){
   const run=t.state.run,st=run.rampage,s=run.ship,time=n/4;let target;

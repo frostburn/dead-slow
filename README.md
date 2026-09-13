@@ -1,15 +1,15 @@
 # DEAD SLOW — Harbor Trials
 
 **Neutral is not a brake.** A top-down ship-handling game about arriving slowly,
-with enough room left to stop—at sea or in vacuum. Forty-eight circuit stages
-across four worlds, a separate Century Ship bonus, local speedrun
+with enough room left to stop—at sea, in vacuum, or inside a giant hamster ball.
+Sixty circuit stages across five complete worlds, a separate Century Ship bonus, local speedrun
 records, personal-best ghosts, keyboard controls and a multitouch helm.
 
-![The Black Meridian: navigating between asteroid shadows](docs/images/black-meridian.webp)
+![World 5’s field atlas: Bramble Tarn among woods, boulders and contour hills](docs/images/v5-field-atlas.webp)
 
-## World 5 preview — Gerbozilla’s Rampage
+## World 5 — Gerbozilla’s Rampage
 
-**Twelve standalone courses.** Gerbozilla treads a 48-metre exercise ball across
+**Twelve courses and a complete championship.** Gerbozilla treads a 48-metre exercise ball across
 orienteering-style field maps. Hold **WASD / arrows** to push in map directions;
 counter-push early to brake. **Space / F** gives three seconds of shielding,
 then six seconds recharging. Shields stop damage, not momentum or solid rock.
@@ -20,15 +20,15 @@ then six seconds recharging. Shields stop damage, not momentum or solid rock.
 | --- | --- | ---: |
 | A Small Problem in Seedhaven | Ridge, crooked lake and a small redirection: the introduction. | 100.258 s |
 | Banks for the Memories | Closed mountain-ring citadels. Carry speed into and out of the bowls. | 95.008 s |
-| No Grip, No Problem | Three water-moat islands. Each demolition launches three long-range strikes. | 172.758 s |
-| It All Goes Downhill | Summit descent into a flooded caldera with one heavily armored core. | 71.758 s |
-| The Black Boulder Wood | Five ordered orienteering controls. Pick between slow forest and longer open lanes; no city demolition. | 187.508 s |
-| Fort Pillow | A double moat, steep mountain ring, retaliation and northern satellite fort. | 169.508 s |
-| A Very Territorial Guinea Pig | Cavyclasm commits to a telegraphed charge, then needs a rest. Time shielded rams. | 151.258 s |
+| No Grip, No Problem | Three water-moat islands. Each demolition launches three long-range strikes. | 174.258 s |
+| It All Goes Downhill | Summit descent into a flooded caldera with one heavily armored core. | 115.758 s |
+| The Black Boulder Wood | Five ordered orienteering controls. Pick between slow forest and longer open lanes; no city demolition. | 201.758 s |
+| Fort Pillow | A double moat, steep mountain ring, retaliation and northern satellite fort. | 168.508 s |
+| A Very Territorial Guinea Pig | Cavyclasm commits to a telegraphed charge, then needs a rest. Time shielded rams. | 151.758 s |
 | Pepperbreath at Marshmallow Keep | Collect a pepper and aim finite bursts over low walls. Armor resists ordinary ramming. | 341.758 s |
 | Nobody Puts Whiskerdoom in a Cage | Defeat a rabbit sentry, smash two locks, greet Lady Whiskerdoom and escort her home. | 456.492 s |
-| Strictly No Petting | Collect three survey stamps while avoiding invulnerable Sir Needlesworth. | 303.258 s |
-| A Hedge Against Disaster | Time shields during pursuit; escape through a real size-limited rock notch. | 125.008 s |
+| Strictly No Petting | Collect three survey stamps while avoiding invulnerable Sir Needlesworth. | 304.258 s |
+| A Hedge Against Disaster | Time shields during pursuit; escape through a real size-limited rock notch. | 89.508 s |
 | The Long Way Home | Lady starts free. Intercept pursuers and guide her clear of off-map strikes; both must reach home. | 257.975 s |
 
 **Field-map symbols affect play.** Brown contours describe the elevation field
@@ -38,7 +38,7 @@ Blue water removes paw traction, not downhill gravity or existing momentum.
 The same outlines drive rendering, forest/water queries and rock collisions.
 
 The Reservoir Hairpin has been replaced by the control-only woodland course.
-The other five existing courses retain their layouts and records. Pet combat,
+Pet combat,
 fire and rescue add different objectives rather than another sequence of cities.
 Enemies are enlarged guinea pigs and rabbits. They have mass, inertia, health,
 committed charge directions and recovery periods; impacts transfer momentum and
@@ -83,14 +83,29 @@ DeadSlow.watch("gerbo-long-way-home", 8)
 ```
 
 Run one at a time. All twelve courses have input-only reference recordings; the
-three new recordings are verified in this iteration. They are not
+ten revised-map recordings are verified for version 5.0.0. They are not
 claimed optimal. Read the [field guide](docs/GERBOZILLA.md) for mechanics and tests.
 
-There are **37 recordings and 61 selectable assignments**. World 5 remains
-standalone; the four complete worlds still supply the **48-stage Grand Tour**.
-Schema 9 archives the retired Hairpin's times, ghost and splits. Its records
-remain visible from the woodland course's field log and preserved in exports.
-Unchanged courses, earlier archives and circuit records remain intact.
+There are **37 recordings and 61 selectable assignments**. All five worlds now
+have twelve-stage circuits; the **Grand Tour has 60 stages**. The Century Ship
+is the single bonus, excluded from every circuit. Each route has separate
+overall and clean records. The World 5 HUD, result screen and field log show
+the circuit clock and records, including failed-attempt time and retries.
+
+The field atlas adds Clover Copse and lowland pines to the citadels, alder woods
+to the lake district, a broken Mount Muesli crest, and an asymmetric Fort Pillow
+rim. Bramble Tarn sits within the forest; Birch Pool has its own hillside.
+Cavyclasm's arena has rolling ground, and the Keep has Sugar Pond and Cocoa Pool.
+**Strictly No Petting** crosses meandering Bristle Brook in both directions.
+**A Hedge Against Disaster** now has a faster, closer pursuit: the 89.508-second
+clean reference blocks three actual hits. Hard spine impacts in this pursuit are fatal without protection: omitting any one
+of the three reference shields breaks the ball. There is no shield-count
+completion condition and no claim of global time optimality.
+
+Schema 10 preserves the earlier **48-stage Grand Tour** separately. Records,
+ghosts and splits for revised preview field maps are archived under their own
+keys; earlier terrain archives remain intact. Seedhaven, The Long Way Home and
+all sea/space course records remain active. Export before moving HTML files.
 
 ## Play
 
@@ -112,7 +127,7 @@ for the game, build, server or Node tests. `npm ci` is optional and uses the
 included dependency-free lockfile. Set `PORT` to change the local port; set
 `HOST=0.0.0.0` only when intentionally exposing the server to your local network.
 
-## Four worlds
+## The other four worlds
 
 **World 1 — The Sheltered Coast.** Twelve daylight harbor trials teach braking,
 berth alignment, gates, crossing traffic, locks, reverse parking, loading,
@@ -285,7 +300,7 @@ Complete all clearance and service jobs. Fit your own hull inside the final
 order neutral, let engine output drop below 15%, and hold for two seconds. In
 space, match the cradle's velocity, keep relative spin below 0.012 rad/s and
 cut all jets (main output below 2%). Each world has a twelve-stage circuit; the
-Grand Tour has 48 stages. The Century Ship never enters either route.
+Grand Tour has 60 stages. The Century Ship never enters either route.
 
 The clock is fixed-step **in-game time (120 Hz)**. Gates, traffic, tides and
 current pulses reset to identical phases on retry. Circuit clocks retain failed
@@ -307,13 +322,13 @@ leaderboard. Export the logbook before moving between files, browsers or hosts;
 then import it through **Logbook**. Import replaces the current local logbook.
 Storage denial or quota failure leaves the session playable and exportable.
 
-Logbooks using schemas 1–9 are accepted. Schema 9 archives the retired Reservoir
+Logbooks using schemas 1–10 are accepted. Earlier migrations archive the retired Reservoir
 Hairpin; schema 8 retains superseded Banking/Lake District routes separately. Schema 6 archives old records, ghosts and
 splits for the five redesigned missions (`vacuum`, `umbra`, `perihelion-dispatch`,
 `yesterday`, `century-ship`), plus their affected Meridian and Grand Tour circuits.
 These are not comparable routes. Every unchanged stage and the three sea-world
 circuits retain active records. Archives remain visible in the logbook and exports.
-The earlier **36-stage Grand Tour** also remains separate from the 48-stage route.
+The earlier **36-stage Grand Tour** also remains separate from the 60-stage route.
 
 Older schema migrations still preserve dock-side island departure records and
 24-stage circuits in their existing archives; none are deleted. The logbook
