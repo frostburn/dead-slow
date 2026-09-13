@@ -103,7 +103,7 @@ with sync_playwright() as p:
     page.evaluate('DeadSlowTest.load(12)')
     check('World 2 switches the bridge palette',page.locator('body').get_attribute('data-theme')=='night')
     page.click('#courses-btn')
-    check('World selector displays five complete campaigns',page.locator('[data-world]').count()==5)
+    check('World selector displays all eight atlas worlds',page.locator('[data-world]').count()==8)
     page.click('[data-world="1"]')
     check('World 1 contains twelve cards and sheltered approaches',page.locator('.level-card').count()==12 and page.locator('[data-stage="2"]').count()==1)
     page.click('[data-world="2"]')
