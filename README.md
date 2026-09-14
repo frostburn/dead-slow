@@ -26,6 +26,11 @@ are not counted as playable levels or included in circuits. The Grand Tour visit
 **1 → 2 → 3 → 4 → 6**, sixty assignments; the Century Ship remains separate.
 There are still **61 playable assignments and 38 author recordings**.
 
+**Window focus pausing is optional.** In Logbook & settings, turn off
+“Pause when window loses focus” to keep playing a ranked run while using
+another window. Held controls are released on focus loss. Hidden tabs and
+manual pauses still pause the game and mark the attempt as practice.
+
 **Restart immediately with Shift+R or a retry button.** Plain R does nothing.
 There is no confirmation or intervening pause. Restarting retains completed
 circuit stages and charges the attempted-stage time without marking a ranked

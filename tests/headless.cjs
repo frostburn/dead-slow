@@ -13,7 +13,9 @@ function create() {
                     }, add() {
                     }, remove() {
                     } }, setAttribute() {
-                }, addEventListener() {
+                }, addEventListener(type, handler) {
+                    this.listeners ??= new Map();
+                    this.listeners.set(type, handler);
                 }, querySelector() {
                     return null;
                 }, querySelectorAll() {
@@ -25,7 +27,7 @@ function create() {
             });
         return nodes.get(id);
     };
-    const listeners = new Map();
+    const listeners = new Map(), windowListeners = new Map();
     const document = {
         getElementById: node, querySelectorAll() {
             return [];
@@ -41,12 +43,15 @@ function create() {
         HarborConsole: require('../src/console.js'), HarborPhysics: P, HarborNavigation: require('../src/navigation.js'), HarborJobs: require('../src/jobs.js'), HarborLevels: L, HarborWorlds: L.worlds, HarborStorage: S, HarborRenderer: { create: () => ({ scale: 1, render: noop }) }, HarborAudio: { create: () => ({
                 setRampage: noop, setSpace: noop, radar: noop, init: noop, tick: noop, order: noop, impact: noop, checkpoint: noop, success: noop, horn: noop
             }) }, document,
-        localStorage: { getItem: () => null, setItem: noop }, requestAnimationFrame: noop, performance: { now: () => 0 }, location: { search: '?test' }, URLSearchParams, console, addEventListener: noop, setTimeout: noop
+        localStorage: { getItem: () => null, setItem: noop }, requestAnimationFrame: noop, performance: { now: () => 0 }, location: { search: '?test' }, URLSearchParams, console, addEventListener: (type,handler) => windowListeners.set(type,handler), setTimeout: noop
     };
     ctx.window = ctx;
     vm.createContext(ctx);
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/game.js'), 'utf8'), ctx);
     ctx.DeadSlowTest.keydown = event => listeners.get('keydown')({ preventDefault() {}, ...event });
+    ctx.DeadSlowTest.action = action => node('dialog').listeners.get('click')({ target: { closest: () => ({ dataset: { action } }) } });
+    ctx.DeadSlowTest.blur = () => windowListeners.get('blur')();
+    ctx.DeadSlowTest.visibility = hidden => { document.hidden = hidden; listeners.get('visibilitychange')(); };
     ctx.DeadSlowTest.html = id => node(id).innerHTML;
     return ctx.DeadSlowTest;
 }

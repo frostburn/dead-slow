@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add a persistent setting for pausing when the window loses focus. Turning it off preserves the running attempt; hidden tabs and manual pauses still pause as practice.
+
 - Retry immediately with Shift+R or a retry button; remove the pause-inducing confirmation.
 - Replace angular volcanic footprints with shared winding contours, rounded lobes and matching collision boundaries. Keep eruption timing; archive records from the angular layouts.
 

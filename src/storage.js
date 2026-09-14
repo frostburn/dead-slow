@@ -11,7 +11,7 @@
     const ARCHIVES = ['gerbozilla-contour-v1', 'grand-tour-contour-v1', 'gerbozilla-volcano-v1', 'grand-tour-order-v1', 'northwatch-approach-v1', 'archipelago-approach-v1', 'grand-tour-approach-v1', 'archipelago-layout-v2', 'gerbozilla-layout-v2', 'grand-tour-layout-v2', 'grand-tour-48', 'meridian-layout-v1', 'grand-tour-layout-v1', 'grand-tour-36', 'grand-tour-24', 'archipelago-dock-starts', 'grand-tour-dock-starts'];
     const RACES = ['coast', 'northwatch', 'archipelago', 'meridian', 'gerbozilla', 'grand-tour'];
     const fresh = () => ({
-        version: VERSION, stages: {}, marathon: [], races: { coast: [], northwatch: [], archipelago: [], meridian: [], gerbozilla: [], 'grand-tour': [] }, archivedStages: {}, archivedRaces: Object.fromEntries(ARCHIVES.map(id => [id, []])), settings: { ghost: true, sound: true, guide: true }, attempts: 0
+        version: VERSION, stages: {}, marathon: [], races: { coast: [], northwatch: [], archipelago: [], meridian: [], gerbozilla: [], 'grand-tour': [] }, archivedStages: {}, archivedRaces: Object.fromEntries(ARCHIVES.map(id => [id, []])), settings: { ghost: true, sound: true, guide: true, pauseOnBlur: true }, attempts: 0
     });
     function validRun(r) {
         return r && Number.isFinite(r.time) && r.time >= 0 && r.time < 86400 && Number.isInteger(r.contacts) && r.contacts >= 0 && typeof r.clean === 'boolean';
@@ -191,7 +191,7 @@
                 result.races[id] = [];
             }
         }
-        for (const k of ['ghost', 'sound', 'guide'])
+        for (const k of ['ghost', 'sound', 'guide', 'pauseOnBlur'])
             if (typeof data.settings?.[k] === 'boolean')
                 result.settings[k] = data.settings[k];
         return result;
