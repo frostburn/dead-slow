@@ -715,7 +715,7 @@
         if (status === 'complete')
             return run.space ? 'Capture complete. All thrusters secured.' : 'Mooring complete. All lines secured.';
         if (status === 'failed')
-            return wording('Hull lost. Press R to retry.', 'Flight terminated. Press R to retry.');
+            return wording('Hull lost. Press Shift+R to retry.', 'Flight terminated. Press Shift+R to retry.');
         if (status === 'paused')
             return 'Paused. This attempt is now practice.';
         if (run.grounded)
