@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Keep shortcut badges inside their buttons when controls wrap; remove the tiny berth BOW label and simplify player-facing help and status copy.
+
 - Add a persistent setting for pausing when the window loses focus. Turning it off preserves the running attempt; hidden tabs and manual pauses still pause as practice.
 
 - Retry immediately with Shift+R or a retry button; remove the pause-inducing confirmation.

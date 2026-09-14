@@ -218,7 +218,7 @@
                 x: 345, y: 68, a: -90 * D, l: 41, w: 19, angle: 10, speed: .50
             },
             brief: 'Get pilot clearance at the amber buoy. Catch the boom window, round the next buoy, cross the ferry lane and finish bow-north at the tight final berth.',
-            tip: 'Everything is deterministic. A patient first run is reconnaissance for a much faster second run.',
+            tip: 'Watch the traffic and tide on your first attempt, then plan a faster route.',
             pace: [210, 295, 410], current: [.13, -.09], obstacles: [
                 {
                     x: 205, y: 20, w: 17, h: 131, label: 'OUTER MOLE'
