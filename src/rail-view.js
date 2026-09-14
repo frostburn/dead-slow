@@ -12,10 +12,10 @@
             <div class="rail-summary" id="rail-summary"></div><div id="rail-heat" class="rail-summary"></div><div id="rail-alert" class="rail-alert" hidden></div>
             <div class="rail-levers">${[['power','Power','S / W',0,4,1],['brake','Train brake','A / D',0,1,.25],['independent','Loco brake','Q / E',0,1,.25]].map(([id,label,keys,min,max,step])=>`<label for="rail-${id}">${label}<output id="rail-${id}-value"></output><small>${keys}</small></label><input id="rail-${id}" data-rail="${id}" type="range" min="${min}" max="${max}" step="${step}" value="${id==='brake'?1:0}" aria-label="${label}">`).join('')}</div>
             <div class="rail-actions"><button data-rail="reverse" id="rail-reverse" title="Change travel direction (X)">Reverse · X</button><button data-rail="stop">Full brake · Space</button><button data-rail="couple">Couple · F</button><button data-rail="hand" id="rail-hand">Handbrakes · B</button></div>
-            <p class="rail-caption">Select a cut to set its handbrakes. Cut a link to uncouple.</p><div id="rail-consist" class="rail-consist"></div>
+            <p class="rail-caption">Power and air brakes control the locomotive’s train. Select wagons below for handbrakes.</p><p id="rail-cut-status" class="rail-caption"></p><p id="rail-pickup" class="rail-caption"></p><div id="rail-consist" class="rail-consist"></div>
             <div id="rail-switches" class="rail-switches"></div><div id="rail-tasks" class="rail-tasks"></div><p id="rail-notice" role="status"></p>
             <div class="rail-actions"><button data-rail="retry">Retry <kbd>Shift+R</kbd></button><button data-rail="help">Controls</button></div>`;
-        $('rail-panel').onclick=e=>{const b=e.target.closest('[data-rail]');if(b&&b.tagName!=='INPUT')act(b.dataset.rail,b.dataset.value);};
+        $('rail-panel').onclick=e=>{const b=e.target.closest('[data-rail]');if(b&&!b.disabled&&b.tagName!=='INPUT')act(b.dataset.rail,b.dataset.rail==='uncouple'?{after:b.dataset.value,before:b.dataset.next}:b.dataset.value);};
         $('rail-panel').oninput=e=>{if(e.target.dataset.rail)act(e.target.dataset.rail,Number(e.target.value));};
         $('sea').onclick=e=>{
             if(!levelNow?.rail||!transform)return;
@@ -49,7 +49,7 @@
         const sig=st.groups.map(cut=>cut.cars.map(c=>c.id).join(',')).join('|');
         if(sig!==signature) {
             signature=sig;
-            $('rail-consist').innerHTML=st.groups.map(cut=>`<div class="rail-cut">${cut.cars.map((c,i)=>`<button data-rail="select" data-value="${c.id}" id="rail-car-${c.id}" title="${c.powered?'Locomotive':c.id+' · '+Math.round(c.mass/1000)+' t'}">${c.powered?'Loco':c.id}<span></span></button>${i<cut.cars.length-1?`<button class="rail-link" data-rail="uncouple" data-value="${c.id}" aria-label="Uncouple between ${c.id} and ${cut.cars[i+1].id}" title="Uncouple">✂</button>`:''}`).join('')}</div>`).join('');
+            $('rail-consist').innerHTML=st.groups.map(cut=>`<div class="rail-cut">${cut.cars.map((c,i)=>`<button data-rail="select" data-value="${c.id}" id="rail-car-${c.id}" title="${c.powered?'Locomotive':c.id+' · '+Math.round(c.mass/1000)+' t'}">${c.powered?'Loco':c.id}<span></span></button>${i<cut.cars.length-1?`<button class="rail-link" data-rail="uncouple" data-value="${c.id}" data-next="${cut.cars[i+1].id}" aria-label="Uncouple between ${c.id} and ${cut.cars[i+1].id}" title="Uncouple">✂</button>`:''}`).join('')}</div>`).join('');
         }
         for(const cut of st.groups)for(const c of cut.cars) {
             const b=$('rail-car-'+c.id),p=R.locate(st,cut,c.q),grade=p.grade*(Math.abs(c.v)>.02?Math.sign(c.v):st.reverser*c.face);
@@ -68,13 +68,23 @@
             }).join('');
         }
         $('rail-tasks').innerHTML=st.config.tasks.map(t=>`<div class="${st.completed.includes(t.id)?'done':''}">${st.completed.includes(t.id)?'✓':'○'} ${t.text}</div>`).join('');
-        $('rail-notice').textContent=st.notice;
+        const help=R.assistance(st);
+        $('rail-cut-status').textContent=help.cut;
+        $('rail-pickup').textContent=help.pickup;
+        $('rail-notice').textContent=help.next;
         $('clock-label').classList.toggle('practice',run.pausedUsed);
         $('clock-label').textContent=run.pausedUsed?'PRACTICE · UNRANKED':'RUN TIME';
         $('clock').textContent=format(run.time);
         $('mission-name').textContent=level.name;$('brief').textContent=level.brief;
         $('weather-text').textContent='THE LONG GRADE';
-        $('rail-panel').querySelectorAll('button,input').forEach(b=>{if(!['help','retry'].includes(b.dataset.rail)&&b.dataset.rail!=='switch')b.disabled=status!=='running';});
+        $('rail-panel').querySelectorAll('button,input').forEach(b=>{
+            const name=b.dataset.rail;if(['help','retry'].includes(name))return;
+            const value=name==='uncouple'?{after:b.dataset.value,before:b.dataset.next}:b.dataset.value;
+            const state=R.availability(st,name,value);
+            b.disabled=status!=='running'||!state.enabled;
+            if(['uncouple','couple','hand'].includes(name))b.title=state.reason||(name==='uncouple'?b.getAttribute('aria-label'):name==='hand'?help.cut:'Couple the adjacent cut');
+            b.classList.toggle('rail-relevant',!b.disabled&&name===help.action&&(name!=='uncouple'||(value.after===help.split?.after&&value.before===help.split?.before)));
+        });
     }
     function render(canvas,level,run,zoom=1) {
         const st=run.rail,ctx=canvas.getContext('2d'),rect=canvas.getBoundingClientRect(),dpr=root.devicePixelRatio||1;
