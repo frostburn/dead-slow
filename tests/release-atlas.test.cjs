@@ -39,28 +39,33 @@ test('60-stage tour skips future chapters and bonus, and crosses field-to-space 
  assert.equal(t.state.level.id,'perihelion-dispatch');assert.equal(t.state.marathon.stages,60);
  assert.ok(t.state.marathon.practice);
 });
-test('all in-game restart requests freeze first, cancel preserves progress as practice',()=>{
- const t=create();t.marathon('archipelago');t.advance(2);
- const r=t.state.run;r.ship.hull=87;r.jobs.stats.lineChanges=3;
- const time=r.time,position=t.state.marathon.position;
- t.requestRetry();t.requestRetry();assert.equal(t.state.status,'confirming');assert.equal(t.state.modal,'restart');
- t.advance(15);near(r.time,time);assert.equal(t.state.marathon.retries,0);assert.equal(r.pausedUsed,false);
- t.cancelRetry();assert.equal(t.state.status,'running');assert.equal(t.state.run,r);assert.equal(r.ship.hull,87);
- assert.equal(r.jobs.stats.lineChanges,3);assert.equal(t.state.marathon.position,position);assert.ok(r.pausedUsed);assert.ok(t.state.marathon.practice);
+test('only a fresh Shift+R resets; plain R, repeats and modified or form input preserve the run',()=>{
+ const t=create();t.marathon('coast');t.advance(2);const original=t.state.run;
+ for(const event of [
+  {code:'KeyR'}, {code:'KeyR',shiftKey:true,repeat:true},
+  ...['ctrlKey','altKey','metaKey'].map(key=>({code:'KeyR',shiftKey:true,[key]:true})),
+  {code:'KeyR',shiftKey:true,target:{matches:()=>true}}
+ ]) {t.keydown(event);assert.equal(t.state.run,original);assert.equal(original.pausedUsed,false);}
+ t.keydown({code:'KeyR',shiftKey:true});assert.notEqual(t.state.run,original);
+ assert.equal(t.state.modal,null);assert.equal(t.state.status,'running');assert.equal(t.state.marathon.retries,1);
+ t.advance(1);const fresh=t.state.run;
+ t.keydown({code:'KeyR',shiftKey:true,repeat:true});assert.equal(t.state.run,fresh);assert.ok(fresh.time>0);
 });
-test('confirmed restart charges attempted time once and does not taint a ranked circuit',()=>{
- const t=create();t.marathon('coast');t.advance(2);const time=t.state.run.time;
- t.requestRetry();t.confirmRetry();t.confirmRetry();
- assert.equal(t.state.run.time,0);assert.equal(t.state.marathon.retries,1);near(t.state.marathon.total,time);
+test('immediate restart charges time once without tainting a ranked circuit',()=>{
+ const t=create();t.marathon('archipelago');t.advance(2);const time=t.state.run.time;
+ t.state.run.jobs.stats.lineChanges=3;t.requestRetry();
+ assert.equal(t.state.status,'running');assert.equal(t.state.modal,null);
+ assert.equal(t.state.run.time,0);assert.equal(t.state.run.jobs.stats.lineChanges,0);
+ assert.equal(t.state.marathon.retries,1);near(t.state.marathon.total,time);
  assert.equal(t.state.marathon.practice,false);assert.equal(t.state.run.pausedUsed,false);
 });
-test('cancelling restart restores result screen and never adds another ranked clear',()=>{
- const t=create();t.load(0);t.finish();const clears=t.state.storage.stages['dead-slow'].clears;
- t.requestRetry();t.cancelRetry();assert.equal(t.state.status,'complete');assert.equal(t.state.modal,'result');
+test('retrying a result starts an individual attempt without another ranked clear',()=>{
+ const t=create();t.marathon('coast');t.finish();const clears=t.state.storage.stages['dead-slow'].clears;
+ t.requestRetry();assert.equal(t.state.status,'running');assert.equal(t.state.marathon,null);
  assert.equal(t.state.storage.stages['dead-slow'].clears,clears);
 });
 test('accelerated restart keeps selected speed and starts the same stage',()=>{
- const t=create();t.cheats.circuit(4,16);t.advance(1);t.requestRetry();t.confirmRetry();
+ const t=create();t.cheats.circuit(4,16);t.advance(1);t.requestRetry();
  assert.equal(t.cheats.speed(),16);assert.equal(t.state.level.id,'gerbo-first-outing');assert.ok(t.state.run.pausedUsed);
 });
 test('volcanic cycles have exact warning, hot and cooldown boundaries',()=>{
@@ -114,8 +119,41 @@ test('named locations and craft use fictional labels without changing persistent
  L.forEach(walk);assert.doesNotMatch(displayed.join('\n'),/\b(?:SISU|LINNEA|ELVIRA|NANSEN|Hilda|Aspö|Kivikari|Rönnskär|Strömskär|Långön)\b/);
 });
 
-test('asking to restart a completed circuit stage does not count its time twice',()=>{
+test('retrying a completed circuit stage leaves the circuit',()=>{
  const t=create();t.cheats.circuit(1,0);t.state.run.time=12;t.finish();
- t.requestRetry();assert.equal(t.cheats.progress().circuit.time,12);
- t.cancelRetry();assert.equal(t.cheats.progress().circuit.time,12);
+ assert.equal(t.cheats.progress().circuit.time,12);
+ t.requestRetry();assert.equal(t.cheats.progress().circuit,null);assert.equal(t.state.run.time,0);
+});
+
+// Contour tests use geometry probes, not navigation shortcuts.
+test('volcano banks are densely sampled, simple concave contours with full-shell contact',()=>{
+ for(const l of R.levels)for(const v of l.rampage.volcanoes||[])for(const poly of v.zones){
+  assert.equal(poly.length,256);let left=0,right=0;
+  const cross=(a,b,c)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
+  for(let i=0;i<poly.length;i++){
+   const a=poly[i],b=poly[(i+1)%poly.length],c=poly[(i+2)%poly.length];
+   assert.ok(Number.isFinite(a.x)&&Number.isFinite(a.y));
+   assert.ok(Math.hypot(a.x-b.x,a.y-b.y)>0 && Math.hypot(a.x-b.x,a.y-b.y)<8);
+   if(cross(a,b,c)>0)left++;else right++;
+   assert.ok(R.volcanoContact(v,a,1));
+   for(let j=i+2;j<poly.length;j++){
+    if(i===0 && j===poly.length-1)continue;
+    const d=poly[j],e=poly[(j+1)%poly.length];
+    assert.ok(!(cross(a,b,d)*cross(a,b,e)<0 && cross(d,e,a)*cross(d,e,b)<0),'bank must not cross itself');
+   }
+  }
+  assert.ok(left>0&&right>0,'banks have both coves and lobes');
+ }
+});
+test('schema 14 preserves angular hazard records in separate, idempotent archives',()=>{
+ const d=S.fresh();d.version=13;
+ const stage={runs:[{time:90,contacts:1,clean:false},{time:100,contacts:0,clean:true}],ghost:[[0,1,2,3]],bestSplits:[30]};
+ for(const id of [...altered,'dead-slow'])d.stages[id]=stage;
+ for(const id of ['coast','gerbozilla','grand-tour'])d.races[id]=stage.runs;
+ const s=S.sanitize(d);assert.equal(s.version,14);
+ for(const id of altered){assert.equal(s.stages[id],undefined);assert.deepEqual(s.archivedStages[id+'-contour-v1'].ghost,stage.ghost);}
+ for(const id of ['gerbozilla','grand-tour']){assert.equal(s.races[id].length,0);assert.equal(s.archivedRaces[id+'-contour-v1'].length,2);}
+ assert.equal(s.stages['dead-slow'].runs.length,2);assert.equal(s.races.coast.length,2);
+ s.stages[altered[0]]=s.stages['dead-slow'];s.races.gerbozilla=stage.runs;
+ assert.deepEqual(S.sanitize(s),s);
 });

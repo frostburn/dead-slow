@@ -763,7 +763,27 @@
             }
         }
     }
-    const footprint = points => points.map(([x,y])=>({x,y}));
+    // Sample a winding channel with broad, rounded lobes. These very same
+    // vertices drive rendering and full-shell contact, including concave banks.
+    function footprint(points) {
+        const p=points.map(([x,y])=>({x,y}));
+        const lengths=p.map((a,i)=>Math.hypot(a.x-p[(i+1)%4].x,a.y-p[(i+1)%4].y));
+        const start=lengths.indexOf(Math.max(...lengths));
+        const a=p[start],b=p[(start+1)%4],c=p[(start+2)%4],d=p[(start+3)%4];
+        const near={x:(a.x+d.x)/2,y:(a.y+d.y)/2};
+        const far={x:(b.x+c.x)/2,y:(b.y+c.y)/2};
+        const dx=far.x-near.x,dy=far.y-near.y,len=Math.hypot(dx,dy);
+        const nx=-dy/len,ny=dx/len;
+        const w0=Math.hypot(a.x-d.x,a.y-d.y)/2,w1=Math.hypot(b.x-c.x,b.y-c.y)/2;
+        return Array.from({length:256},(_,i)=>{
+            const angle=i*Math.PI*2/256,t=(1-Math.cos(angle))/2;
+            const width=w0+(w1-w0)*t;
+            const bend=width*.34*Math.sin(t*Math.PI*3);
+            const lobes=1+.19*Math.sin(t*Math.PI*5+.6)+.09*Math.sin(t*Math.PI*9-1);
+            const offset=bend+Math.sin(angle)*width*lobes;
+            return {x:near.x+dx*t+nx*offset,y:near.y+dy*t+ny*offset};
+        });
+    }
     downhill.rampage.volcanoes = [{ id:'muesli-furnace', name:'MUESLI FURNACE', x:1210,y:1015,r:38,
         period:48,warning:7,eruption:13,offset:28,
         zones:[footprint([[1145,975],[1140,610],[1195,550],[1240,980]])] }];

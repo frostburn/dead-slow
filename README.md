@@ -26,13 +26,10 @@ are not counted as playable levels or included in circuits. The Grand Tour visit
 **1 → 2 → 3 → 4 → 6**, sixty assignments; the Century Ship remains separate.
 There are still **61 playable assignments and 38 author recordings**.
 
-**Restart is now deliberate.** R and all restart buttons open a confirmation with
-“Keep playing” focused. R does not confirm itself; Escape cancels. The simulation
-freezes. Keeping an in-progress frozen attempt makes it unranked practice, just
-like pausing; confirming restarts only that stage and retains completed circuit
-stages and the attempted-stage time. Saved records are not deleted. A confirmed
-restart does not itself taint a ranked circuit. Test-only/console tools may still
-intentionally start a fresh mission directly.
+**Restart immediately with Shift+R or a retry button.** Plain R does nothing.
+There is no confirmation or intervening pause. Restarting retains completed
+circuit stages and charges the attempted-stage time without marking a ranked
+circuit as practice. Saved records are never deleted.
 
 Campaign place and vessel names are fictional; see [the naming ledger](docs/FICTIONAL_NAMES.md).
 Real software credits, project URLs and license attribution are unchanged.
@@ -299,7 +296,7 @@ verified times and the Century Ship's lower-bound argument.
 | Space | Order neutral. This does not stop the ship. |
 | F | Make fast to the current rescue target, or cast off. |
 | J / K | Hold to reel in / pay out the towline. |
-| R | Open restart confirmation; Escape keeps the attempt. |
+| Shift+R | Retry immediately. |
 | Escape | Pause / return. Pausing makes the attempt unranked. |
 | Z | Cycle chart zoom. |
 | G / V / M / H | Toggle ghost / coast guide / audio; horn at sea, radar pulse in space. |

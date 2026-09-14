@@ -25,14 +25,14 @@ are playtest choices, not part of the mission mechanics. The simulation keeps
 its 120 Hz steps at every rate. A slow device can run below the requested rate;
 it does not lengthen physics steps or fast-forward through collisions.
 
-R and every restart button open a frozen, cancel-first confirmation. Escape or
-Enter on the default “Keep playing” button keeps mission progress as practice.
-Only the explicit Restart action abandons the current attempt; completed circuit
-stages remain. Confirmation itself never silently restarts or repeats.
+Shift+R and every restart button immediately abandon the current attempt and
+start a fresh one; there is no confirmation dialog. Completed circuit stages
+remain, and holding Shift+R does not trigger repeated restarts.
 
-The selected rate survives confirmed restarts, next-stage menus and world changes. Menus do
-not advance the clock. Frozen time is distinct from the pause menu: the latter
-still needs Resume after focus loss. The overlay continues to block the helm.
+The selected rate survives immediate restarts, next-stage menus and world
+changes. Menus do not advance the clock. Frozen time is distinct from the pause
+menu: the latter still needs Resume after focus loss. The overlay continues to
+block the helm.
 
 Every playtest stage and circuit remains unranked, including subsequent stages
 after switching back to 1×. These runs do not write PBs, ghosts, best splits,
