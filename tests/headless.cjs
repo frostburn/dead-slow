@@ -38,6 +38,7 @@ function create() {
     const noop = () => {
     };
     const ctx = {
+        Railway: require('../src/rail.js'), RailView: {prepare:noop, update:noop, key:()=>false, dialog:()=>''},
         GerboRampage: require('../src/rampage.js'), GerboView: {prepare:noop, update:noop, dialog:()=>''},
         HarborSpace: require('../src/space.js'), HarborSpaceUI: { prepare: noop, update: noop },
         HarborConsole: require('../src/console.js'), HarborPhysics: P, HarborNavigation: require('../src/navigation.js'), HarborJobs: require('../src/jobs.js'), HarborLevels: L, HarborWorlds: L.worlds, HarborStorage: S, HarborRenderer: { create: () => ({ scale: 1, render: noop }) }, HarborAudio: { create: () => ({

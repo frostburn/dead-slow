@@ -1,6 +1,6 @@
 (function () {
     'use strict';
-    const B = GerboRampage, G = GerboView;
+    const B = GerboRampage, G = GerboView, R = Railway, V = RailView;
     const P = HarborPhysics, N = HarborNavigation, J = HarborJobs, X = HarborSpace, LEVELS = HarborLevels, WORLDS = HarborWorlds, $ = id => document.getElementById(id);
     const store = HarborStorage.create({ getItem: k => localStorage.getItem(k), setItem: (k, v) => localStorage.setItem(k, v) });
     const audio = HarborAudio.create(), renderer = HarborRenderer.create($('sea'));
@@ -30,7 +30,7 @@
     }
     function applyTheme() {
         document.body.dataset.theme = level.theme;
-        $('world-label').textContent = `WORLD ${level.worldNumber} · ${level.theme === 'night' ? 'NIGHT SHIFT' : level.theme === 'archipelago' ? 'SUMMER SERVICE' : 'DAY WATCH'}`;
+        $('world-label').textContent = `WORLD ${level.worldNumber} · ${level.rail ? 'THE LONG GRADE' : level.theme === 'night' ? 'NIGHT SHIFT' : level.theme === 'archipelago' ? 'SUMMER SERVICE' : 'DAY WATCH'}`;
     }
     function hasNext() {
         return marathon ? marathon.position + 1 < marathon.route.length : LEVELS[index + 1]?.campaign === level.campaign && !LEVELS[index + 1]?.bonus;
@@ -39,10 +39,12 @@
         return marathon?.name || 'World run';
     }
     function clean() {
+        if (run.rail) return run.rail.stats.contacts === 0;
         if (run.rampage) return run.rampage.stats.damage === 0;
         return run.contacts === 0 && run.wakes === 0 && run.groundings === 0 && run.jobs.stats.lineBreaks === 0;
     }
     function objectiveReady() {
+        if (run.rail) return run.rail.config.tasks.every(t=>run.rail.completed.includes(t.id));
         if (run.rampage) return B.ready(run);
         if (run.space) return X.ready(run.space, level.space);
         return run.buoyIndex === level.buoys.length && (!level.lock || run.lock.phase === 'exit') && J.ready(level, run.jobs);
@@ -111,8 +113,10 @@
             run.dock = X.dock(s, run.space.port, false);
         }
         if (level.rampage) run.rampage = B.create(level, s);
+        if (level.rail) run.rail = R.create(level);
         HarborSpaceUI.prepare(level);
         G.prepare(level);
+        V.prepare(level, railCommand);
         // An assisted circuit stays assisted at 1× too, before begin() records
         // a departure. Otherwise later individual PBs could leak out of a tour.
         if (marathon?.practice) markPractice('Practice circuit');
@@ -276,9 +280,27 @@
         toast(`${name} · ${format(run.time)}${Number.isFinite(prev) ? ` (${deltaFormat(run.time - prev)} vs PB)` : ''}`);
         audio.checkpoint();
     }
+    function railCommand(name, value) {
+        if (name === 'help') return showHelp();
+        if (name === 'retry') return retry();
+        if (status !== 'running' || !run.rail) return false;
+        const ok = R.command(run.rail, name, value);
+        if (name === 'power' && ok) run.throttleOrders++;
+        updateHud(); return ok;
+    }
+    function advanceRail(dt) {
+        R.update(run.rail, dt); run.time = run.rail.time; run.distance = run.rail.stats.distance;
+        const g = R.engineGroup(run.rail), c = g.cars.find(c=>c.powered), p = R.locate(run.rail,g,c.q);
+        Object.assign(run.ship,{x:p.x,y:p.y,a:p.a,vx:c.v*Math.cos(p.a),vy:c.v*Math.sin(p.a)});
+        run.maxSpeed = Math.max(run.maxSpeed,Math.abs(c.v));
+        if (run.rail.failure) { status='failed'; clearInput(); showFailure(); return; }
+        if (run.time>=run.sampleAt) { run.ghost.push([run.time,p.x,p.y,p.a]); run.sampleAt=run.time+.2; }
+        if (run.rail.finishHold>=2) finish();
+    }
     function advance(dt) {
         if (status !== 'running')
             return;
+        if (run.rail) return advanceRail(dt);
         if (run.rampage) return advanceRampage(dt);
         if (run.space) return advanceSpace(dt);
         run.time += dt;
@@ -451,6 +473,7 @@
         const result = {
             time: Math.round(run.time * 120) / 120, contacts: run.contacts, wakes: run.wakes, groundings: run.groundings, clean: clean(), hull: Math.round(run.ship.hull), commands: run.throttleOrders, thruster: Math.round(run.thrusterTime * 10) / 10, distance: Math.round(run.distance), work: { ...run.jobs.stats }, space: run.space ? { ...run.space.stats } : undefined, rampage: run.rampage ? { ...run.rampage.stats } : undefined, lineBreaks: run.jobs.stats.lineBreaks, date: new Date().toISOString()
         };
+        if (run.rail) result.rail = { ...run.rail.stats };
         run.result = result;
         if (!run.pausedUsed)
             run.pb = store.record(level.id, result, run.ghost, run.splits.map(s => s.time));
@@ -513,6 +536,7 @@
         return `<div class="modal-top"><div><div class="eyebrow">${eyebrow}</div><h2>${title}</h2></div><button data-action="back" aria-label="Close dialog">×</button></div>`;
     }
     function showIntro() {
+        if (level.rail) return openDialog('intro', V.dialog('intro', level, run, format));
         if (level.rampage) return openDialog('intro', G.dialog('intro', level, run, format));
         if (level.space) {
             openDialog('intro', `<div class="eyebrow">WORLD 6 · THE BLACK MERIDIAN · ${level.bonus ? 'BONUS / OUTSIDE MARATHONS' : level.stageNumber + ' / 12'}</div><h1>${level.name}</h1><p>${level.brief}</p><div class="intro-details"><div><strong>${run.ship.length} m</strong><span>${esc(run.ship.name)}</span></div><div><strong>${level.space.fuel} Δv</strong><span>INITIAL PROPELLANT</span></div><div><strong>02 sec</strong><span>RELATIVE CAPTURE HOLD</span></div></div><p class="subtle">${level.tip}</p><div class="control-summary"><kbd>W</kbd><kbd>S</kbd> fore/aft thrust · <kbd>Space</kbd> cut thrust<br><kbd>A</kbd><kbd>D</kbd> rotational jets · <kbd>Q</kbd><kbd>E</kbd> sideways jets<br>${level.space.friendly ? '<kbd>F</kbd> lock / release beam · hold <kbd>J</kbd> attract / <kbd>K</kbd> repel<br>' : ''}Counterfire to stop rotation. Cutting thrust does not brake. Touch controls support simultaneous holds.</div><p class="subtle">Keep every free spacecraft inside the navigation sector. Space is open; the assignment is not infinite.</p><div class="dialog-actions"><button class="primary" data-action="begin" autofocus>Release clamps →</button><button data-action="courses">Choose sector</button><button data-action="help">Flight manual</button></div>`);
@@ -530,6 +554,7 @@
     }
     function showPause(reason = wording('The harbor can wait.', 'Flight control on standby.')) {
         pauseForMenu();
+        if (level.rail) return openDialog('pause', V.dialog('pause', level, run, format));
         if (level.rampage) return openDialog('pause', G.dialog('pause', level, run, format));
         openDialog('pause', `
  <div class="eyebrow">PAUSED · PRACTICE RUN</div><h1>${reason}</h1><p>${wording('Your ship and the harbor clock are stopped.', 'Your spacecraft and the mission clock are suspended.')} This attempt is now practice and will not overwrite your records. A retry starts a record-eligible attempt.</p>
@@ -537,6 +562,7 @@
     }
     function showResult() {
         const r = run.result;
+        if (r && run.rail) return openDialog('result', V.dialog('result', level, run, format, hasNext()));
         if (r && run.rampage) return openDialog('result', G.dialog('result', level, run, format, [], settings, null, fieldContext()));
         if (!r)
             return;
@@ -554,6 +580,7 @@
  ${!store.available ? '<div class="storage-warning">Save failed: export your logbook to keep these records.</div>' : ''}`);
     }
     function showFailure() {
+        if (run.rail) return openDialog('failed', V.dialog('failed', level, run, format));
         audio.tick(run.ship, false);
         if (run.rampage) return openDialog('failed', G.dialog('failed', level, run, format));
         if (run.space) {
@@ -571,20 +598,20 @@
             world = selectedWorld;
         selectedWorld = P.clamp(Math.round(world) || 1, 1, WORLDS.length);
         pauseForMenu();
-        const w = WORLDS[selectedWorld - 1], stages = w.comingSoon ? w.stages : LEVELS.filter(l => l.campaign === w.id);
+        const w = WORLDS[selectedWorld - 1], stages = w.stages || LEVELS.filter(l => l.campaign === w.id);
         const sectors = stages.filter(l => !l.bonus && !l.comingSoon), bonuses = stages.filter(l => l.bonus);
         const arrivals = sectors.filter(l => store.best(l.id)).length;
         const bonusArrivals = bonuses.filter(l => store.best(l.id)).length;
         openDialog('courses', `${topModal(w.name, `WORLD ${w.number} · ${w.subtitle}`)}
  <div class="world-tabs" role="tablist" aria-label="Select world">${WORLDS.map(v => `<button role="tab" aria-selected="${v.number === selectedWorld}" class="world-tab ${v.comingSoon ? 'coming-soon' : ''} ${v.number === selectedWorld ? 'active' : ''}" data-world="${v.number}"><span>WORLD ${v.number}</span><strong>${v.name}</strong><small>${v.subtitle}</small></button>`).join('')}</div>
- <p>${w.description}</p><div class="world-progress">${w.comingSoon ? '<span>12 PLANNED ASSIGNMENTS · COMING SOON</span><span>NOT YET PLAYABLE</span>' : `<span>${arrivals} / ${sectors.length} ${w.theme === 'rampage' ? 'COURSES COMPLETE' : w.theme === 'space' ? 'SECTORS CLEARED' : 'HARBORS MOORED'}</span>${bonuses.length ? `<span>${bonusArrivals} / ${bonuses.length} BONUS CLEARED</span>` : ''}<span>ALL STAGES AVAILABLE</span>`}</div>
+ <p>${w.description}</p><div class="world-progress">${w.comingSoon ? '<span>12 PLANNED ASSIGNMENTS · COMING SOON</span><span>NOT YET PLAYABLE</span>' : `<span>${arrivals} / ${sectors.length} ${w.theme === 'rail' ? 'DELIVERIES COMPLETE' : w.theme === 'rampage' ? 'COURSES COMPLETE' : w.theme === 'space' ? 'SECTORS CLEARED' : 'HARBORS MOORED'}</span>${bonuses.length ? `<span>${bonusArrivals} / ${bonuses.length} BONUS CLEARED</span>` : ''}<span>${w.partial ? '3 OF 12 AVAILABLE' : 'ALL STAGES AVAILABLE'}</span>`}</div>
  ${marathon ? '<p class="subtle">Selecting an assignment starts an individual trial and ends your current circuit.</p>' : ''}
  <div class="level-grid">${stages.map(l => {
             if (l.comingSoon) return `<button class="level-card coming-soon" disabled aria-disabled="true"><span class="number">W${l.worldNumber} · ${String(l.stageNumber).padStart(2,'0')}</span><span class="name">${esc(l.name)}</span><span class="kind">Planned assignment</span><span class="pb">COMING SOON</span></button>`;
             const i = LEVELS.indexOf(l), b = store.best(l.id);
-            return `<button class="level-card ${i === index ? 'selected' : ''}" data-stage="${i}"><span class="number">W${l.worldNumber} · ${l.bonus ? 'BONUS' : (l.rampage ? 'COURSE ' : l.space ? 'SECTOR ' : 'HARBOR ') + String(l.stageNumber).padStart(2, '0')}${store.best(l.id, true) ? ' · CLEAN' : ''}</span><span class="name">${l.name}</span><span class="kind">${l.kind}</span><span class="pb">${b ? 'PB ' + format(b.time) : 'NO TIME ON FILE'}</span></button>`;
+            return `<button class="level-card ${i === index ? 'selected' : ''}" data-stage="${i}"><span class="number">W${l.worldNumber} · ${l.bonus ? 'BONUS' : (l.rail ? 'FREIGHT ' : l.rampage ? 'COURSE ' : l.space ? 'SECTOR ' : 'HARBOR ') + String(l.stageNumber).padStart(2, '0')}${store.best(l.id, true) ? ' · CLEAN' : ''}</span><span class="name">${l.name}</span><span class="kind">${l.kind}</span><span class="pb">${b ? 'PB ' + format(b.time) : 'NO TIME ON FILE'}</span></button>`;
         }).join('')}</div>
- <div class="dialog-actions"><button class="primary" data-action="marathon" ${w.comingSoon ? 'disabled aria-disabled="true"' : ''}>${w.comingSoon ? 'Coming soon · ' : ''}World ${w.number} run · 12 ${w.theme === 'rampage' ? 'courses' : w.theme === 'space' ? 'sectors' : 'harbors'} →</button><button data-action="grand-tour">Grand Tour · all ${LEVELS.filter(l => !l.bonus && !l.standalone).length}</button><button class="secondary small" data-action="back">Back</button><button class="secondary small" data-action="log">Logbook</button></div>
+ <div class="dialog-actions"><button class="primary" data-action="marathon" ${w.comingSoon || w.partial ? 'disabled aria-disabled="true"' : ''}>${w.comingSoon || w.partial ? 'Coming soon · ' : ''}World ${w.number} run · 12 ${w.theme === 'rail' ? 'assignments' : w.theme === 'rampage' ? 'courses' : w.theme === 'space' ? 'sectors' : 'harbors'} →</button><button data-action="grand-tour">Grand Tour · all ${LEVELS.filter(l => !l.bonus && !l.standalone).length}</button><button class="secondary small" data-action="back">Back</button><button class="secondary small" data-action="log">Logbook</button></div>
  <p class="subtle" style="margin-top:13px">Each circuit has overall and clean records. Retries count toward your time; between-stage menus do not. Pausing makes the circuit practice.</p>`, true);
         $('dialog').dataset.theme = w.theme;
     }
@@ -593,7 +620,7 @@
             race: marathon ? { name: raceLabel(), id: marathon.id, position: marathon.position,
                 total: marathon.total, stages: marathon.stages, length: marathon.route.length,
                 retries: marathon.retries, practice: marathon.practice, done: !hasNext(), hasNext: hasNext() } : null,
-            boards: log ? [...WORLDS.filter(w=>!w.comingSoon).map(w=>[w.id,`World ${w.number} · ${w.name}`]),
+            boards: log ? [...WORLDS.filter(w=>!w.comingSoon && !w.partial).map(w=>[w.id,`World ${w.number} · ${w.name}`]),
                 ['grand-tour','Grand Tour · 60 stages']].map(([id,name])=>({ name,
                     overall:store.bestRace(id)?.time, clean:store.bestRace(id,true)?.time })) : [],
             archived48: log ? store.data.archivedRaces['grand-tour-48'] : [],
@@ -620,6 +647,15 @@
         }).filter(row=>Number.isFinite(row.overall)));
     }
     function showLog(filter = 'overall') {
+        if (level.rail) {
+            pauseForMenu();
+            const stage=store.stage(level.id);
+            return openDialog('log', `${topModal('Railway logbook','THE LONG GRADE')}<p>${level.name} · ${stage.attempts} attempts</p>
+                <p>Best ${format(store.best(level.id)?.time)} · clean ${format(store.best(level.id,true)?.time)}</p>
+                <p>${stage.runs.slice(0,10).map(r=>format(r.time)).join(' · ')||'No recorded deliveries yet.'}</p>
+                <div class="dialog-actions"><button data-action="toggle-focus-pause">Pause on window blur: ${settings.pauseOnBlur?'on':'off'}</button><button data-action="toggle-sound">Sound: ${settings.sound?'on':'off'}</button><button data-action="export">Export records</button><button data-action="import">Import records</button><button data-action="back">Back</button></div>
+                <p class="subtle">Pausing makes a run practice. Hiding the tab always pauses.</p>`);
+        }
         if (level.rampage) { pauseForMenu(); return openDialog('log', G.dialog('log', level, run, format, store.stage(level.id).runs, settings, [level.id+'-contour-v1',level.id+'-volcano-v1',level.id+'-layout-v1',level.id+'-preview',level.id,level.rampage.retiredId].filter(Boolean).filter(id=>store.data.archivedStages[id]).map(id=>({id,...store.data.archivedStages[id]})), fieldContext(true))); }
         pauseForMenu();
         const s = store.stage(level.id), runs = s.runs.filter(r => filter !== 'clean' || r.clean).slice(0, 10);
@@ -627,7 +663,7 @@
  <p>World ${level.worldNumber} / ${level.bonus ? "BONUS" : level.stageNumber} · ${level.name} · ${s.attempts} ${wording("departures", "launches")} · ${s.clears} ranked ${wording("arrivals", "captures")}</p>
  <div class="dialog-actions" style="margin-top:8px"><button class="${filter === 'overall' ? 'primary' : 'secondary'} small" data-filter="overall">Overall</button><button class="${filter === 'clean' ? 'primary' : 'secondary'} small" data-filter="clean">Clean only</button></div>
  <table class="log-table"><thead><tr><th>#</th><th>TIME / IGT</th><th>CONTACTS</th><th>CLASS</th></tr></thead><tbody>${runs.length ? runs.map((r, i) => `<tr><td>${String(i + 1).padStart(2, '0')}</td><td>${format(r.time)}</td><td>${r.contacts}</td><td class="${r.clean ? 'clean' : ''}">${r.clean ? 'CLEAN' : 'OPEN'}</td></tr>`).join('') : `<tr><td colspan="4">${wording('No ranked arrival yet. The harbor is waiting.', 'No ranked capture yet. Your sector is waiting.')}</td></tr>`}</tbody></table>
- <h3 class="circuit-heading">Circuit records</h3><table class="log-table"><thead><tr><th>ROUTE</th><th>OVERALL</th><th>CLEAN</th></tr></thead><tbody>${[...WORLDS.filter(w => !w.comingSoon).map(w => [w.id, `World ${w.number} · ${w.name}`]), ['grand-tour', `Grand Tour · ${LEVELS.filter(l => !l.bonus && !l.standalone).length}`]].map(([id, name]) => `<tr><td>${name}</td><td>${format(store.bestRace(id)?.time)}</td><td class="clean">${format(store.bestRace(id, true)?.time)}</td></tr>`).join('')}</tbody></table><p class="subtle">${store.data.archivedRaces?.['grand-tour-48']?.length ? '48-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-48'][0].time) + '<br>' : ''}${store.data.archivedRaces?.['grand-tour-24']?.length ? '24-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-24'][0].time) + '<br>' : ''}${store.data.archivedRaces?.['grand-tour-36']?.length ? '36-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-36'][0].time) + '<br>' : ''}${store.data.marathon.length ? '12-stage circuit (archived): ' + format(store.data.marathon[0].time) + '<br>' : ''}Paused runs are unranked. Beat the course targets to earn gold, silver or bronze.</p>
+ <h3 class="circuit-heading">Circuit records</h3><table class="log-table"><thead><tr><th>ROUTE</th><th>OVERALL</th><th>CLEAN</th></tr></thead><tbody>${[...WORLDS.filter(w => !w.comingSoon && !w.partial).map(w => [w.id, `World ${w.number} · ${w.name}`]), ['grand-tour', `Grand Tour · ${LEVELS.filter(l => !l.bonus && !l.standalone).length}`]].map(([id, name]) => `<tr><td>${name}</td><td>${format(store.bestRace(id)?.time)}</td><td class="clean">${format(store.bestRace(id, true)?.time)}</td></tr>`).join('')}</tbody></table><p class="subtle">${store.data.archivedRaces?.['grand-tour-48']?.length ? '48-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-48'][0].time) + '<br>' : ''}${store.data.archivedRaces?.['grand-tour-24']?.length ? '24-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-24'][0].time) + '<br>' : ''}${store.data.archivedRaces?.['grand-tour-36']?.length ? '36-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-36'][0].time) + '<br>' : ''}${store.data.marathon.length ? '12-stage circuit (archived): ' + format(store.data.marathon[0].time) + '<br>' : ''}Paused runs are unranked. Beat the course targets to earn gold, silver or bronze.</p>
  ${store.data.archivedStages[level.id+'-layout-v1']?.runs.length ? `<details><summary>Earlier layout records (archived)</summary><p class="subtle">The barge now starts broadside. Earlier inline-tow times, ghosts and splits remain in exports, not on this route’s board.</p><table class="log-table"><thead><tr><th>TIME / IGT</th><th>CONTACTS</th><th>CLASS</th></tr></thead><tbody>${store.data.archivedStages[level.id+'-layout-v1'].runs.map(r => `<tr><td>${format(r.time)}</td><td>${r.contacts}</td><td>${r.clean ? 'CLEAN' : 'OPEN'}</td></tr>`).join('')}</tbody></table></details>` : ''}
  ${store.data.archivedStages[level.id + '-approach-v1']?.runs.length ? `<details><summary>Earlier straight-approach records (archived)</summary><p class="subtle">These times belong to the earlier approach. Its ghost and splits remain in exports.</p>${store.data.archivedStages[level.id + '-approach-v1'].runs.map(r => `<p>${format(r.time)} · ${r.clean ? 'CLEAN' : 'OPEN'}</p>`).join('')}</details>` : ''}
  ${layoutRaceArchives().map(a=>`<p class="subtle">${esc(a.name)} (archived): overall ${format(a.overall)} · clean ${format(a.clean)}</p>`).join('')}
@@ -640,6 +676,7 @@
  <p class="subtle" style="margin-top:13px">Records are local, not tamper-proof. File copies and browsers can have separate storage. Export before moving the game. Earlier logbooks are accepted. Existing stage records stay with their courses; circuits of different lengths are kept separate.</p>${!store.available ? '<div class="storage-warning">Persistent storage is unavailable. Export to preserve this session’s records.</div>' : ''}`);
     }
     function showHelp() {
+        if (level.rail) { pauseForMenu(); return openDialog('help', V.dialog('help', level, run, format)); }
         if (level.rampage) { pauseForMenu(); return openDialog('help', G.dialog('help', level, run, format)); }
         if (level.space) {
             pauseForMenu();
@@ -673,7 +710,7 @@
         }
     }
     function startMarathon(id = WORLDS[selectedWorld - 1].id) {
-        if (id !== 'grand-tour' && !WORLDS.some(w => w.id === id && !w.comingSoon))
+        if (id !== 'grand-tour' && !WORLDS.some(w => w.id === id && !w.comingSoon && !w.partial))
             throw new RangeError('This world is coming soon or does not exist.');
         const route = LEVELS.map((l, i) => i).filter(i => !LEVELS[i].bonus && !LEVELS[i].standalone && (id === 'grand-tour' || LEVELS[i].campaign === id));
         const name = id === 'grand-tour' ? 'Grand Tour' : `World ${WORLDS.find(w => w.id === id).number}`;
@@ -782,6 +819,7 @@
             $('review-rate').value = String(developer.rate);
             $('review-freeze').textContent = developer.rate === 0 ? 'Resume time' : 'Freeze';
         }
+        if (run?.rail) { V.update(level, run, status, format); return; }
         if (run?.rampage) {
             const label = (developer?.rate === 0 ? 'FROZEN' : developer?.rate !== 1 ? developer?.rate + '× PRACTICE' : 'PRACTICE') + ' · UNRANKED';
             G.update(level, run, status, format, label, store.stage(level.id).bestSplits, store.best(level.id), fieldContext().race); return;
@@ -956,6 +994,7 @@
         if (e.code === 'Enter' && e.target?.tagName === 'A') return;
         // The speed selector is a native input, not an alternative helm.
         if (e.target?.matches?.('select, input, textarea')) return;
+        if (run.rail && status === 'running' && V.key(e, run.rail)) return;
         if (developer?.unlocked && ['BracketLeft', 'BracketRight', 'Backslash'].includes(e.code)) {
             e.preventDefault();
             if (e.repeat) return;
@@ -1154,10 +1193,11 @@
         }
         if (now > toastUntil)
             $('toast').classList.remove('visible');
-        renderer.render({
+        if (run.rail) V.render($('sea'),level,run,zoom);
+        else renderer.render({
             level, run, index, status, input, zoom, settings, ghost: store.stage(level.id).ghost, visualTime: now / 1000
         });
-        audio.tick(run.ship, status === 'running' && developer?.rate !== 0, run.space, run.rampage);
+        audio.tick(run.ship, !run.rail && status === 'running' && developer?.rate !== 0, run.space, run.rampage);
         requestAnimationFrame(frame);
     }
     updateSettings();
@@ -1203,7 +1243,7 @@
             }, start: begin, advance: advanceSeconds, cheats: developer.menu, frame,
             setShip(values) {
                 Object.assign(run.ship, values);
-            }, throttle, lineAction, signal, finish, pause: showPause, retry, requestRetry: retry, marathon: startMarathon, next: nextHarbor, format, zoom: zoomChart, hud: updateHud, courses: showCourses
+            }, railCommand, throttle, lineAction, signal, finish, pause: showPause, retry, requestRetry: retry, marathon: startMarathon, next: nextHarbor, format, zoom: zoomChart, hud: updateHud, courses: showCourses
         };
     }
 })();

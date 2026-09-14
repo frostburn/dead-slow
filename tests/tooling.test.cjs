@@ -4,10 +4,10 @@ const assert = require('node:assert/strict');
 const http = require('node:http');
 const { bundle } = require('../tools/build.cjs');
 const { createServer } = require('../tools/serve.cjs');
-test('single-file build is deterministic and has all nineteen inlined modules', () => {
+test('single-file build is deterministic and has all twenty-two inlined modules', () => {
     const a = bundle();
     assert.equal(a, bundle());
-    assert.equal((a.match(/<script>/g) || []).length, 19);
+    assert.equal((a.match(/<script>/g) || []).length, 22);
     assert.equal(/<script[^>]+src=/.test(a), false);
     assert.match(a, /Midsummer Dispatch/);
     assert.match(a, /HarborJobs/);

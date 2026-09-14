@@ -6,9 +6,9 @@ const active=['coast','northwatch','archipelago','gerbozilla','meridian'];
 const altered=['gerbo-downhill','gerbo-forest-slalom','gerbo-prickly-business'];
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-7,`${a} != ${b}`);
 
-test('eight-world catalog separates 61 playable assignments from 36 locked plans',()=>{
+test('eight-world catalog separates 64 playable assignments from 33 locked plans',()=>{
  assert.deepEqual(L.worlds.map(w=>w.id),['coast','northwatch','archipelago','gerbozilla','long-grade','meridian','pale-reach','megastructures']);
- assert.equal(L.length,61);assert.equal(L.catalog.length,97);assert.equal(new Set(L.catalog.map(l=>l.id)).size,97);
+ assert.equal(L.length,64);assert.equal(L.catalog.length,97);assert.equal(new Set(L.catalog.map(l=>l.id)).size,97);
  for(const w of L.worlds) {
   const rows=L.catalog.filter(l=>l.campaign===w.id && !l.bonus);
   assert.equal(rows.length,12);assert.deepEqual(rows.map(l=>l.stageNumber),Array.from({length:12},(_,i)=>i+1));
@@ -19,12 +19,14 @@ test('eight-world catalog separates 61 playable assignments from 36 locked plans
 });
 test('console rejects future missions/circuits without disturbing the current attempt',()=>{
  const t=create();t.cheats.tour(8);const r=t.state.run;
- for(const w of [5,7,8]){
+ for(const w of [7,8]){
   assert.throws(()=>t.cheats.level(w,1),/Coming soon/);
   assert.throws(()=>t.cheats.circuit(w),/unavailable/);
   assert.equal(t.state.run,r);
  }
- assert.equal(t.cheats.levels().filter(l=>l.comingSoon).length,36);
+ assert.throws(()=>t.cheats.level(5,4),/Coming soon/);
+ assert.throws(()=>t.cheats.circuit(5),/unavailable/);
+ assert.equal(t.cheats.levels().filter(l=>l.comingSoon).length,33);
  assert.ok(t.cheats.times().filter(l=>l.comingSoon).every(l=>l.goldTarget===null && l.verifiedAuthorTime===null));
 });
 test('60-stage tour skips future chapters and bonus, and crosses field-to-space boundary',()=>{

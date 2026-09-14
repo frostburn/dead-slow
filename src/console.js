@@ -28,7 +28,7 @@
                 const upcoming = (bridge.levels.catalog || []).find(l => l.comingSoon &&
                     (typeof worldOrId === 'string' ? l.id === worldOrId : l.worldNumber === worldOrId && l.stageNumber === stage));
                 throw new RangeError(upcoming ? 'Coming soon: this assignment is not playable yet.' :
-                    'Unknown assignment. Worlds 1, 2, 3, 4 and 6 are playable; World 6 stage 13 is the separate bonus. DeadSlow.levels() lists the atlas.');
+                    'Unknown assignment. Worlds 1–4 and 6 are complete; World 5 stages 1–3 are playable; World 6 stage 13 is the separate bonus. DeadSlow.levels() lists the atlas.');
             }
             return i;
         }
@@ -166,6 +166,7 @@
             controls,
             line() { live(); practice('line override'); bridge.line(); },
             warp(x, y, degrees = 0) {
+                if (bridge.state().run.rail) throw new Error('Rail vehicles stay on their track. Retry to reset the train.');
                 const [w, h] = bridge.state().level.world;
                 finite(x, -w, 2 * w, 'X'); finite(y, -h, 2 * h, 'Y'); finite(degrees, -36000, 36000, 'Heading');
                 live(); practice('repositioned hull'); playback = null;

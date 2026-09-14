@@ -11,9 +11,9 @@ const stage=()=>({runs:[{...sample}],ghost:[[0,100,150,0]],bestSplits:[10,20],cl
 test('version 5 is a full release with five twelve-stage circuits and one excluded bonus',()=>{
  assert.match(require('../package.json').version,/^5\.\d+\.\d+$/);
  assert.equal(require('../package-lock.json').version,require('../package.json').version);
- assert.equal(L.length,61);assert.equal(L.filter(l=>!l.bonus&&!l.standalone).length,60);
+ assert.equal(L.length,64);assert.equal(L.filter(l=>!l.bonus&&!l.standalone).length,60);
  assert.equal(L.filter(l=>l.bonus).length,1);
- for(const w of L.worlds.filter(w=>!w.comingSoon)){assert.ok(!w.preview);assert.equal(L.filter(l=>l.campaign===w.id&&!l.bonus&&!l.standalone).length,12);}
+ for(const w of L.worlds.filter(w=>!w.comingSoon&&!w.partial)){assert.ok(!w.preview);assert.equal(L.filter(l=>l.campaign===w.id&&!l.bonus&&!l.standalone).length,12);}
 });
 test('river spans the chart and puts every survey stamp opposite the starting meadow',()=>{
  const l=L.find(l=>l.id==='gerbo-prickly-business'),c=l.rampage,water=c.lakes.find(l=>l.river);
