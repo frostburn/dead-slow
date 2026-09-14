@@ -1,10 +1,10 @@
-# The Long Grade: first three assignments
+# The Long Grade: eight assignments
 
-World 5 now has three playable missions. The other nine retain their named,
-disabled catalog entries. These three are standalone trials until the full
+World 5 now has eight playable missions. The other four retain their named,
+disabled catalog entries. These eight are standalone trials until the full
 campaign is ready, so the existing 60-stage Grand Tour and its records retain
 their meaning. New stage IDs are the previously unused `long-grade-1` through
-`long-grade-3`; existing save schemas and record imports remain compatible.
+`long-grade-8`; existing save schemas and record imports remain compatible.
 
 ## Engine boundaries
 
@@ -60,26 +60,31 @@ are changed during playback. `DeadSlow.normal()` starts a fresh ranked attempt a
 out of the player UI. Regenerate with `node tools/record-rail-run.cjs`
 followed by `node tools/sync-replays.cjs`.
 
-## Space for the remaining missions
+## Assignments 5-04 through 5-08
 
-The graph, separate cuts and per-vehicle state are shared foundations, not
-mission-specific movement scripts. Later mechanics should attach here:
-
-| Missions | Extension point |
+| Assignment | Handling problem and reusable mechanic |
 | --- | --- |
-| 5-04, 5-12 | Add dispatcher-controlled consists and visible signal blocks using route occupancy. |
-| 5-05 | Moving detached cuts and momentum-preserving coupling already exist; add interception objectives and catch-siding outcomes. |
-| 5-06 | Track adhesion already limits traction/braking; add weather and explicit sliding feedback. |
-| 5-07 | Aggregate vehicles occupying a bridge edge for load limits; destinations can require cargo order. |
-| 5-08 | Derive carrier overhang and swept clearance from sampled front/rear positions along candidate routes. |
-| 5-09 | Split powered-vehicle commands into front/helper groups; retain individual grades and coupler loads. |
-| 5-10 | Attach a mass/balance model to ferry deck edges and ramp availability. |
-| 5-11 | Close edges according to a visible flood forecast; collection remains ordinary coupling. |
+| Meet at Rook’s Hollow | A scheduled passenger follows a surveyed route with acceleration, braking, edge-sized signal blocks and point reservations. The full freight fits Rook’s loop; the short refuge requires splitting. |
+| Three Wagons Going Somewhere | Detached cuts may start with speed and empty air reservoirs. Both service connections permit interception; coupling conserves the moving cuts’ longitudinal momentum. The gravel bed adds resistance and counts one rough contact. Secure the caught wagons manually. |
+| Leaves on the Line | Low track adhesion limits tractive effort. Excess brake demand slides the wheels and reduces effective grip; brake estimates include that reduction. Rain and shaded ballast show the affected track. |
+| One Bridge, Two Loads | Bridge capacity counts the full mass of every vehicle whose body overlaps the span. The locomotive begins between the loads. A receiving pocket and engine return loop allow ordered reassembly without teleporting or trapping the locomotive. |
+| The Corners Are the Cargo | A vessel spans two articulated carriers. Its actual swept rectangle is checked against visible platforms and equipment. The preview uses the same geometry along a copy of the selected route; inspection does not reserve points. |
 
-These extensions are not shipped mechanics yet. In particular, collision
-handling currently covers the player’s train approaching detached cuts;
-multiple autonomous trains will need general pairwise collision and block
-reservation handling. Route history is not a full signaling system.
+Traffic uses a separate autonomous consist representation with a prescribed
+route, bounded acceleration/deceleration, body occupancy and collision checks
+against player cuts. Its current route uses whole track edges as signal
+blocks. Timetable holds cost elapsed time, without an additional score penalty.
+Passenger vehicles do not participate in the player's coupling controls.
+
+Bridge ratings and cargo clearance are physical requirements, not mission
+checkpoints. Cargo carrier links cannot be split while the vessel spans them.
+Assembly tasks can require wagon order toward the siding's buffers, ignoring
+the locomotive's position within the completed train.
+
+Future helper locomotives can build on per-vehicle force, facing and coupler
+state. Ferry deck balance can build on body-based edge occupancy and mass
+aggregation. Flood closures can extend the existing visible closed-track
+boundary. Missions 5-09 through 5-12 remain disabled.
 
 ## Validation
 
@@ -89,7 +94,7 @@ the complete run-around/delivery sequence in 5-02, and both descent routes in
 brake, reverser, coupling and switch commands without moving vehicles directly.
 It is a conservative smoke driver, not an authored pace or optimal solution.
 
-Separate tests cover tail occupancy, air-brake delay, temperature-dependent
+`tests/rail-sprint.test.cjs` completes all five new assignments using ordinary\ncontrols, including both interception routes, the emergency catch, and the\nfull pocket/shuttle/return-loop sequence. `tests/rail-infrastructure.test.cjs`\nuses isolated geometry and force probes for bridge overlap, sliding, cargo\npreview purity and a passenger held by an uncleared tail.\n\nSeparate tests cover tail occupancy, air-brake delay, temperature-dependent
 stopping estimates, detached handbrakes, shared records and pause/retry rules.
 Those geometry/objective fixtures are explicitly distinguished from routes.
 The existing suite was run; its marine-only spawn filter was updated to exclude

@@ -1,6 +1,18 @@
 """Focused railway presentation and audio checks, using the release-atlas page."""
 def check_railway(page, check, out):
     page.set_viewport_size({'width':1440,'height':1000})
+    page.evaluate('DeadSlow.level(5,4);DeadSlow.speed(0)')
+    check('Passenger timetable is visible before departure','Rook’s Hollow due 5:55' in page.locator('#rail-operations').inner_text())
+    page.evaluate('DeadSlow.level(5,5);DeadSlow.speed(0)')
+    check('Runaway wagons start moving independently',page.evaluate('Railway.groupFor(DeadSlowTest.state.run.rail,"R1").cars.every(c=>c.v>0)') and 'rolling free' in page.locator('#rail-operations').inner_text())
+    page.evaluate('DeadSlow.level(5,7);DeadSlow.speed(0)')
+    check('Bridge rating is visible before entering','205 t' in page.locator('#rail-operations').inner_text())
+    page.evaluate('DeadSlow.level(5,8);DeadSlow.speed(0)')
+    check('Cargo clearance warning appears before moving','fouled' in page.locator('#rail-operations').inner_text())
+    page.screenshot(path=str(out/'rail-cargo-clearance.png'))
+    page.locator('[data-rail="switch"][data-value="fork"]').click()
+    page.locator('[data-rail="switch"][data-value="join"]').click()
+    check('Selecting both broad-route points clears the vessel preview','clears the vessel' in page.locator('#rail-operations').inner_text())
     page.evaluate("DeadSlowTest.load(HarborLevels.findIndex(l=>l.id==='long-grade-1'),false)")
     check('Replay controls stay out of the player UI',page.locator('[data-action=watch-rail], [data-rail=watch], .rail-watch').count()==0 and 'Watch run' not in page.locator('#dialog').inner_text())
     page.evaluate('DeadSlow.watch("long-grade-1",8)')

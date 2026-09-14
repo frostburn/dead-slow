@@ -6,7 +6,7 @@ const near = (a, b, eps = 1e-8) => assert.ok(Math.abs(a - b) < eps, `${a} != ${b
 const level = id => L.find(l => l.id === id);
 test('all five playable worlds supply twelve circuit stages', () => {
     assert.equal(L.worlds.length, 8);
-    assert.equal(new Set(L.map(l => l.id)).size, 64);
+    assert.equal(new Set(L.map(l => l.id)).size, 69);
     for (const w of L.worlds.filter(w => !w.comingSoon && !w.partial)) {
         const stages = L.filter(l => l.campaign === w.id && !l.bonus);
         assert.equal(stages.length, 12);
