@@ -24,9 +24,9 @@ records, personal-best ghosts, keyboard controls and a multitouch helm.
 Gray chapters can be inspected but not launched. The 33 placeholder missions
 are not counted as playable levels or included in circuits. The Grand Tour visits
 **1 → 2 → 3 → 4 → 6**, sixty assignments; the Century Ship remains separate.
-There are **64 playable assignments and 38 author recordings**. The first three railway assignments are individual trials; World 5 joins circuits when its full campaign is ready.
+There are **64 playable assignments and 39 author recordings**. The first three railway assignments are individual trials; World 5 joins circuits when its full campaign is ready.
 
-World 5 starts with collecting two quarry wagons, then a station run-around, then a heavy descent with a gentler branch and cooling loop. W/S changes power, A/D the train brake, Q/E the locomotive brake, X reverses at rest, F couples, and B sets or releases the selected cut’s handbrakes. Click a link in the train strip to uncouple. Point buttons lock while occupied. The map shows the head and tail; the strip shows each wagon’s grade. See [rail engine notes](docs/RAILWAY.md) for architecture and validation.
+World 5 starts with collecting two quarry wagons, then a station run-around, then a heavy descent with a gentler branch and cooling loop. W/S changes power, A/D the train brake, Q/E the locomotive brake, X reverses at rest, F couples, and B sets or releases the selected cut’s handbrakes. Click a link in the train strip to uncouple. Point buttons lock while occupied. The map shows the head and tail; the strip shows each wagon’s grade. Use **Watch run** in 5-01’s briefing to see a complete demonstration, or enter `DeadSlow.watch("long-grade-1", 8)` in the console. **Take controls** starts a fresh attempt at normal speed. See [rail engine notes](docs/RAILWAY.md) for architecture and validation.
 
 **Window focus pausing is optional.** In Logbook & settings, turn off
 “Pause when window loses focus” to keep playing a ranked run while using
@@ -141,7 +141,7 @@ Run one at a time. All twelve courses have input-only reference recordings; the
 ten revised-map recordings are verified for version 5.0.0. They are not
 claimed optimal. Read the [field guide](docs/GERBOZILLA.md) for mechanics and tests.
 
-There are **38 recordings and 61 selectable assignments**. All five playable worlds
+There are **39 recordings and 64 selectable assignments**. All five playable worlds
 have twelve-stage circuits; the **Grand Tour has 60 stages**. The Century Ship
 is the single bonus, excluded from every circuit. Each route has separate
 overall and clean records. The World 4 HUD, result screen and field log show

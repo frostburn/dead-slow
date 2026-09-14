@@ -85,6 +85,7 @@
             const p = playback;
             while (p.event < p.fixture.events.length && p.fixture.events[p.event].time <= p.tick * V.step + 1e-7) {
                 const e = p.fixture.events[p.event++];
+                if (e.rail) bridge.rail(...e.rail);
                 if (e.line) bridge.line();
                 if (e.throttle !== undefined) bridge.throttle(e.throttle - bridge.state().run.ship.throttle);
                 for (const key of ['rudder', 'thruster', 'winch']) if (e[key] !== undefined) p.controls[key] = e[key];
@@ -101,7 +102,7 @@
                 level: p.fixture.level, status: s.status, clean, time: s.run.time,
                 expectedTime: p.fixture.expectedTime, difference: error,
                 verified: s.status === 'complete' && clean && Math.abs(error) <= V.step + 1e-6,
-                contacts: s.run.contacts, lineBreaks: s.run.jobs.stats.lineBreaks, space: s.run.space ? copy(s.run.space.stats) : null, rampage: s.run.rampage ? copy(s.run.rampage.stats) : null,
+                contacts: s.run.contacts, lineBreaks: s.run.jobs.stats.lineBreaks, space: s.run.space ? copy(s.run.space.stats) : null, rampage: s.run.rampage ? copy(s.run.rampage.stats) : null, rail: s.run.rail ? copy(s.run.rail.stats) : null,
                 steps: p.tick, eventsApplied: p.event, ranked: false,
                 method: 'Fixed control inputs through the live game; no repositioning or objective shortcuts.'
             };

@@ -19,7 +19,12 @@ test('published recordings have unique known levels and input-only timelines', (
             previous = e.time;
             assert.ok(Object.keys(e).length > 1);
             for (const [key, value] of Object.entries(e)) {
-                assert.ok(['time', 'throttle', 'rudder', 'thruster', 'winch', 'line'].includes(key), key);
+                assert.ok(['time', 'throttle', 'rudder', 'thruster', 'winch', 'line', 'rail'].includes(key), key);
+                if (key === 'rail') {
+                    assert.ok(L.find(l=>l.id===f.level).rail);
+                    assert.ok(Array.isArray(value) && value.length>=1 && value.length<=2);
+                    assert.ok(['power','brake','independent','stop','reverse','switch','select','hand','uncouple','couple'].includes(value[0]));
+                }
                 if (key === 'throttle') assert.ok(Number.isInteger(value) && value >= -3 && value <= 4);
                 if (['rudder', 'thruster', 'winch'].includes(key)) assert.ok(Number.isFinite(value) && value >= -1 && value <= 1);
                 if (key === 'line') assert.equal(value, true);

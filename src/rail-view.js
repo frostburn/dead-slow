@@ -9,12 +9,12 @@
         if(!level.rail)return;
         $('sea').setAttribute('aria-label','Railway map. Head and tail markers show the moving ends. Change points using the route buttons.');
         $('rail-panel').innerHTML=`<div class="rail-readings"><div><strong id="rail-speed">0.0</strong><span>km/h</span></div><div><b id="rail-stop">0 m</b><span>estimated stop</span></div></div>
-            <div class="rail-summary" id="rail-summary"></div><div id="rail-heat" class="rail-summary"></div>
+            <div class="rail-summary" id="rail-summary"></div><div id="rail-heat" class="rail-summary"></div><div id="rail-alert" class="rail-alert" hidden></div>
             <div class="rail-levers">${[['power','Power','S / W',0,4,1],['brake','Train brake','A / D',0,1,.25],['independent','Loco brake','Q / E',0,1,.25]].map(([id,label,keys,min,max,step])=>`<label for="rail-${id}">${label}<output id="rail-${id}-value"></output><small>${keys}</small></label><input id="rail-${id}" data-rail="${id}" type="range" min="${min}" max="${max}" step="${step}" value="${id==='brake'?1:0}" aria-label="${label}">`).join('')}</div>
-            <div class="rail-actions"><button data-rail="reverse" id="rail-reverse">Forward · X</button><button data-rail="stop">Full brake · Space</button><button data-rail="couple">Couple · F</button><button data-rail="hand" id="rail-hand">Handbrakes · B</button></div>
+            <div class="rail-actions"><button data-rail="reverse" id="rail-reverse" title="Change travel direction (X)">Reverse · X</button><button data-rail="stop">Full brake · Space</button><button data-rail="couple">Couple · F</button><button data-rail="hand" id="rail-hand">Handbrakes · B</button></div>
             <p class="rail-caption">Select a cut to set its handbrakes. Cut a link to uncouple.</p><div id="rail-consist" class="rail-consist"></div>
             <div id="rail-switches" class="rail-switches"></div><div id="rail-tasks" class="rail-tasks"></div><p id="rail-notice" role="status"></p>
-            <div class="rail-actions"><button data-rail="retry">Retry <kbd>Shift+R</kbd></button><button data-rail="help">Controls</button></div>`;
+            <div class="rail-actions"><button data-rail="retry">Retry <kbd>Shift+R</kbd></button><button data-rail="help">Controls</button></div>${level.id==='long-grade-1'?'<button class="rail-watch" data-rail="watch">Watch run</button>':''}`;
         $('rail-panel').onclick=e=>{const b=e.target.closest('[data-rail]');if(b&&b.tagName!=='INPUT')act(b.dataset.rail,b.dataset.value);};
         $('rail-panel').oninput=e=>{if(e.target.dataset.rail)act(e.target.dataset.rail,Number(e.target.value));};
         $('sea').onclick=e=>{
@@ -40,7 +40,11 @@
             const value=name==='brake'?g.brake:st[name];$('rail-'+name).value=value;
             $('rail-'+name+'-value').textContent=name==='power'?`${value} / 4`:Math.round(value*100)+'%';
         }
-        $('rail-reverse').textContent=(st.reverser===1?'Forward':'Reverse')+' · X';
+        $('rail-reverse').textContent='Reverse · X';
+        $('rail-reverse').title='Change direction · currently '+(st.reverser===1?'forward':'reverse');
+        const warning=R.danger(st),alert=$('rail-alert'),worst=warning.cars.reduce((a,c)=>!a||c.ratio>a.ratio?c:a,null);
+        alert.hidden=!warning.severity;alert.classList.toggle('critical',warning.severity===2);
+        alert.textContent=warning.severity===2?'Derailment risk · brake now':worst?`${worst.id==='engine'?'Locomotive':worst.id} over ${Math.round(worst.limit*3.6)} km/h`:warning.ahead?`Slow to ${Math.round(warning.ahead.limit*3.6)} km/h · ${Math.round(warning.ahead.distance)} m ahead`:'';
         $('rail-hand').textContent=(selected.cars.some(c=>c.hand)?'Release handbrakes':'Set handbrakes')+' · B';
         const sig=st.groups.map(cut=>cut.cars.map(c=>c.id).join(',')).join('|');
         if(sig!==signature) {
@@ -50,6 +54,7 @@
         for(const cut of st.groups)for(const c of cut.cars) {
             const b=$('rail-car-'+c.id),p=R.locate(st,cut,c.q),grade=p.grade*(Math.abs(c.v)>.02?Math.sign(c.v):st.reverser*c.face);
             b.classList.toggle('selected',cut===selected);b.classList.toggle('secured',c.hand);
+            b.classList.toggle('at-risk',warning.cars.some(v=>v.id===c.id));
             b.style.borderBottomColor=c.destination==='mill'?'#8cbccf':c.destination==='foundry'?'#e7a25d':'';
             b.querySelector('span').textContent=(grade>.003?'↗':grade<-.003?'↘':'→')+(c.hand?' P':'');
             b.title=`${c.powered?'Locomotive':c.id}: ${Math.abs(grade*100).toFixed(1)}% ${grade>=0?'uphill':'downhill'}${c.hand?', handbrakes set':''}`;
@@ -65,17 +70,19 @@
         $('rail-tasks').innerHTML=st.config.tasks.map(t=>`<div class="${st.completed.includes(t.id)?'done':''}">${st.completed.includes(t.id)?'✓':'○'} ${t.text}</div>`).join('');
         $('rail-notice').textContent=st.notice;
         $('clock-label').classList.toggle('practice',run.pausedUsed);
-        $('clock-label').textContent=run.pausedUsed?'PRACTICE · UNRANKED':'RUN TIME';$('clock').textContent=format(run.time);
+        $('clock-label').textContent=run.watch?'WATCHING RUN':run.pausedUsed?'PRACTICE · UNRANKED':'RUN TIME';
+        const watch=$('rail-panel').querySelector('.rail-watch');
+        if(watch){watch.textContent=run.watch?'Take controls':'Watch run';watch.dataset.rail=run.watch?'drive':'watch';}$('clock').textContent=format(run.time);
         $('mission-name').textContent=level.name;$('brief').textContent=level.brief;
         $('weather-text').textContent='THE LONG GRADE';
-        $('rail-panel').querySelectorAll('button,input').forEach(b=>{if(!['help','retry'].includes(b.dataset.rail)&&b.dataset.rail!=='switch')b.disabled=status!=='running';});
+        $('rail-panel').querySelectorAll('button,input').forEach(b=>{if(!['help','retry','watch','drive'].includes(b.dataset.rail)&&b.dataset.rail!=='switch')b.disabled=status!=='running';});
     }
     function render(canvas,level,run,zoom=1) {
         const st=run.rail,ctx=canvas.getContext('2d'),rect=canvas.getBoundingClientRect(),dpr=root.devicePixelRatio||1;
         const w=rect.width,h=rect.height;if(!w||!h)return;
         if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
         ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#d6d1b5';ctx.fillRect(0,0,w,h);
-        const m=R.metrics(st),mapHeight=h-75,scale=Math.min((w-42)/level.world[0],(mapHeight-25)/level.world[1])*zoom;
+        const warning=R.danger(st),m=R.metrics(st),mapHeight=h-75,scale=Math.min((w-42)/level.world[0],(mapHeight-25)/level.world[1])*zoom;
         const x=zoom===1?(w-level.world[0]*scale)/2:w/2-m.head.x*scale,y=zoom===1?(mapHeight-level.world[1]*scale)/2:mapHeight/2-m.head.y*scale;
         transform={x,y,s:scale};ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);
         const stroke=(points,color,width)=>{ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();};
@@ -118,16 +125,26 @@
             const p=R.at(st.net,z.edge,(z.from+z.to)/2);ctx.font=`600 ${12/scale}px sans-serif`;ctx.fillStyle='#344b40';ctx.textAlign='center';ctx.fillText(z.name,p.x,p.y-24/scale);
         }
         for(const sw of st.net.switches) {
-            const node=st.net.nodes[sw.node],edge=st.net.edges[sw.branches[sw.selected]],from=edge.a===sw.node;
-            const pts=Array.from({length:10},(_,i)=>R.at(st.net,edge.id,from?i*3:edge.length-i*3));stroke(pts,'#e2bb68',4);
+            const node=st.net.nodes[sw.node];
+            for(const id of [sw.stem,sw.branches[sw.selected]]) {
+                const edge=st.net.edges[id],from=edge.a===sw.node;
+                const pts=Array.from({length:13},(_,i)=>R.at(st.net,id,from?i*3:edge.length-i*3));stroke(pts,'#e2bb68',5);
+            }
             ctx.beginPath();ctx.arc(node[0],node[1],6/scale,0,Math.PI*2);ctx.fillStyle=R.occupied(st,sw.node)?'#b66d46':'#ffdb85';ctx.fill();ctx.strokeStyle='#68533c';ctx.lineWidth=1/scale;ctx.stroke();
             ctx.fillStyle='#514c39';ctx.font=`600 ${11/scale}px sans-serif`;ctx.textAlign='center';ctx.fillText(sw.label,node[0],node[1]-14/scale);
+        }
+        const restriction=warning.ahead||warning.cars[0];
+        if(restriction) {
+            const edge=st.net.edges[restriction.edge],section=Array.from({length:25},(_,i)=>R.at(st.net,edge.id,clamp(restriction.s-35+i*4,0,edge.length)));
+            ctx.globalAlpha=.65;stroke(section,warning.severity===2?'#dc382b':'#df922d',24);ctx.globalAlpha=1;
         }
         for(const group of st.groups) {
             stroke(group.cars.map(c=>R.locate(st,group,c.q)),'#413a31',2);
             for(const c of group.cars) {
                 const p=R.locate(st,group,c.q),front=R.locate(st,group,c.q+c.length*.35),back=R.locate(st,group,c.q-c.length*.35);
                 ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Math.atan2(front.y-back.y,front.x-back.x));
+                const danger=warning.cars.find(v=>v.id===c.id);
+                if(danger){ctx.strokeStyle=danger.ratio>=1.2?'#d33124':'#df852c';ctx.lineWidth=2.5/scale;ctx.strokeRect(-c.length/2-3,-8,c.length+6,16);}
                 ctx.fillStyle='#454338';ctx.fillRect(-c.length/2, -5.5,c.length,11);
                 ctx.fillStyle=c.powered?'#486b61':c.destination==='mill'?'#7d9eae':c.destination==='foundry'?'#be824b':'#a45f48';ctx.fillRect(-c.length/2+1,-4.5,c.length-2,9);
                 if(c.powered){ctx.fillStyle='#e5d398';ctx.fillRect(c.face>0?2:-8,-3,6,6);}else{ctx.fillStyle='#514e41';ctx.fillRect(-c.length/2+3,-2.5,c.length-6,5);}
@@ -136,7 +153,8 @@
         }
         for(const [p,label,color,offset] of [[m.head,'HEAD','#f7edc2',-22],[m.tail,'TAIL','#f5c386',25]]) {
             ctx.fillStyle='#333e35';ctx.beginPath();ctx.arc(p.x,p.y,4/scale,0,Math.PI*2);ctx.fill();
-            const tx=p.x,ty=p.y+offset/scale;ctx.font=`bold ${10/scale}px sans-serif`;ctx.textAlign='center';ctx.fillStyle=color;ctx.fillRect(tx-22/scale,ty-10/scale,44/scale,15/scale);ctx.fillStyle='#333e35';ctx.fillText(label,tx,ty+1/scale);
+            const tx=p.x-Math.sin(p.a)*offset/scale,ty=p.y+Math.cos(p.a)*offset/scale;
+            ctx.font=`bold ${10/scale}px sans-serif`;ctx.textAlign='center';ctx.fillStyle=color;ctx.fillRect(tx-22/scale,ty-10/scale,44/scale,15/scale);ctx.fillStyle='#333e35';ctx.fillText(label,tx,ty+1/scale);
         }
         ctx.restore();
         // Elevation under the entire consist: the crest visibly travels through
@@ -151,10 +169,10 @@
     }
     function dialog(kind,level,run,format,hasNext=false) {
         const st=run.rail,actions=(primary,label)=>`<div class="dialog-actions"><button class="primary" data-action="${primary}" autofocus>${label}</button><button data-action="courses">World map</button>${kind!=='intro'?'<button data-action="retry">Retry · Shift+R</button>':'<button data-action="help">Controls</button>'}</div>`;
-        if(kind==='intro')return `<div class="eyebrow">${level.tag}</div><h1>${level.name}</h1><p>${level.brief}</p><p class="subtle">${level.tip}</p>${actions('begin','Take the controls')}`;
+        if(kind==='intro')return `<div class="eyebrow">${level.tag}</div><h1>${level.name}</h1><p>${level.brief}</p><p class="subtle">${level.tip}</p>${actions('begin','Take the controls')}${level.id==='long-grade-1'?'<button class="rail-watch" data-action="watch-rail">Watch run</button>':''}`;
         if(kind==='pause')return `<div class="eyebrow">PRACTICE</div><h1>Train held.</h1><p>Pausing makes this attempt unranked. Retry for a recorded run.</p>${actions('resume','Resume')}`;
         if(kind==='failed')return `<div class="eyebrow">RUN ENDED</div><h1>Freight stopped.</h1><p>${st.failure}</p>${actions('retry','Try again')}`;
-        if(kind==='result')return `<div class="eyebrow">${run.pausedUsed?'PRACTICE COMPLETE':run.pb?'PERSONAL BEST':'DELIVERY COMPLETE'}</div><h1>Every wagon accounted for.</h1><div class="result-time">${format(run.time)}</div><p>${Math.round(st.stats.distance)} m traveled · ${st.stats.couplings} couplings${level.rail.thermal?' · peak brakes '+Math.round(st.stats.peakTemperature)+'°C':''}</p>${actions(hasNext?'next':'courses',hasNext?'Next assignment':'World map')}${!run.pausedUsed?'<p class="subtle">Time saved to your logbook.</p>':''}`;
+        if(kind==='result')return `<div class="eyebrow">${run.pausedUsed?'PRACTICE COMPLETE':run.pb?'PERSONAL BEST':'DELIVERY COMPLETE'}</div><h1>Every wagon accounted for.</h1><div class="result-time">${format(run.time)}</div><p>${Math.round(st.stats.distance)} m traveled · ${st.stats.couplings} couplings${level.rail.thermal?' · peak brakes '+Math.round(st.stats.peakTemperature)+'°C':''}</p>${actions(run.watch?'rail-drive':hasNext?'next':'courses',run.watch?'Take controls':hasNext?'Next assignment':'World map')}${!run.pausedUsed?'<p class="subtle">Time saved to your logbook.</p>':''}`;
         return `<div class="eyebrow">RAILWAY CONTROLS</div><h1>Give the tail time.</h1><p>W / S changes power. A / D releases / applies the train brake. Q / E releases / applies the locomotive brake. Space cuts power and applies full train brake. Stop before reversing with X.</p><p>Click a signal or route button to change points. Occupied points are locked until the whole train clears.</p><p>Approach within 3 m at less than 2 km/h, then press F to couple. Stop with brakes applied and power off before cutting a link in the train strip. Select a cut and press B to set or release its handbrakes. Detached air brakes slowly leak away.</p><p>The grade strip shows which wagons are uphill. Stopping distance estimates full train braking, including brake delay and current temperature. Brake before a lower speed limit; it applies until the tail clears.</p><p>Shift+R retries. Escape pauses. Focus-loss pausing is optional in the logbook.</p>${actions('back','Back')}`;
     }
     const api={prepare,key,update,render,dialog};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.RailView=api;

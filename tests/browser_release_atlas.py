@@ -2,6 +2,7 @@
 from pathlib import Path
 import json,shutil
 from playwright.sync_api import sync_playwright
+from browser_rail import check_railway
 ROOT=Path(__file__).resolve().parents[1];OUT=ROOT/'reports/release';OUT.mkdir(parents=True,exist_ok=True)
 checks=[]
 def check(name,ok):
@@ -34,7 +35,10 @@ with sync_playwright() as p:
     page.evaluate('DeadSlowTest.finish()');page.keyboard.press('r')
     check('Plain R leaves the result screen intact',page.evaluate('DeadSlowTest.state.status==="complete" && DeadSlowTest.state.modal==="result"'))
     check('Bug reporting and feature requests are discoverable',page.locator('.permanent-support a').get_attribute('href')=='https://github.com/frostburn/dead-slow/issues/' and 'Feature requests' in page.locator('#dialog').inner_text())
-    for w in [5,7,8]:
+    page.evaluate('DeadSlowTest.courses(5)')
+    check('World 5 has three playable freight missions and nine future missions',page.locator('.level-card:not(:disabled)').count()==3 and page.locator('.level-card:disabled').count()==9)
+    check('World 5 cannot start an incomplete circuit',page.locator('[data-action=marathon]').is_disabled())
+    for w in [7,8]:
         page.evaluate('(w)=>DeadSlowTest.courses(w)',w)
         check(f'World {w} shows 12 disabled future missions',page.locator('.level-card:disabled').count()==12 and 'COMING SOON' in page.locator('#dialog').inner_text())
         check(f'World {w} cannot start a circuit',page.locator('[data-action=marathon]').is_disabled())
@@ -97,6 +101,7 @@ with sync_playwright() as p:
     check('Mobile retry is immediate',page.evaluate('DeadSlowTest.state.status==="running" && DeadSlowTest.state.modal===null'))
     check('Restart buttons and text fit a portrait viewport',page.evaluate('document.documentElement.scrollWidth<=innerWidth'))
     page.screenshot(path=str(OUT/'restart-mobile.png'))
+    check_railway(page,check,OUT)
     check('No page errors',not errors)
     browser.close()
 (OUT/'browser-atlas.json').write_text(json.dumps({'passed':len(checks),'checks':checks},indent=2))

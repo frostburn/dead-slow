@@ -98,6 +98,7 @@
         applyTheme();
         audio.setSpace(!!level.space);
         audio.setRampage(!!level.rampage);
+        audio.setRail(!!level.rail);
         clearInput();
         accumulator = 0;
         lastFrame = null;
@@ -183,6 +184,7 @@
         audio.tick(run.ship, false);
     }
     function retry() {
+        if (run.watch) return developer.menu.normal();
         if (marathon && status !== 'complete' && run.time > 0) {
             marathon.total += run.time;
             marathon.sectorTime += run.time;
@@ -280,11 +282,20 @@
         toast(`${name} · ${format(run.time)}${Number.isFinite(prev) ? ` (${deltaFormat(run.time - prev)} vs PB)` : ''}`);
         audio.checkpoint();
     }
+    function watchRail() {
+        const result=developer.menu.watch('long-grade-1',8);
+        run.watch=true; updateHud(); return result;
+    }
     function railCommand(name, value) {
         if (name === 'help') return showHelp();
+        if (name === 'watch') return watchRail();
+        if (name === 'drive') return developer.menu.normal();
         if (name === 'retry') return retry();
         if (status !== 'running' || !run.rail) return false;
+        const oldBrake = R.engineGroup(run.rail).brake;
         const ok = R.command(run.rail, name, value);
+        if (ok && ['couple','uncouple','switch','hand','reverse'].includes(name)) audio.railEvent(name);
+        if (ok && name === 'brake' && Math.abs(oldBrake-value)>=.25) audio.railEvent('brake');
         if (name === 'power' && ok) run.throttleOrders++;
         updateHud(); return ok;
     }
@@ -293,7 +304,7 @@
         const g = R.engineGroup(run.rail), c = g.cars.find(c=>c.powered), p = R.locate(run.rail,g,c.q);
         Object.assign(run.ship,{x:p.x,y:p.y,a:p.a,vx:c.v*Math.cos(p.a),vy:c.v*Math.sin(p.a)});
         run.maxSpeed = Math.max(run.maxSpeed,Math.abs(c.v));
-        if (run.rail.failure) { status='failed'; clearInput(); showFailure(); return; }
+        if (run.rail.failure) { status='failed'; clearInput(); audio.tick(run.ship,false); showFailure(); return; }
         if (run.time>=run.sampleAt) { run.ghost.push([run.time,p.x,p.y,p.a]); run.sampleAt=run.time+.2; }
         if (run.rail.finishHold>=2) finish();
     }
@@ -905,7 +916,7 @@
         $('work-panel').classList.toggle('tow-mode', isTow);
     }
     const actions = {
-        begin, resume, retry, courses: showCourses, log: () => showLog(), help: showHelp, back, next: nextHarbor, marathon: () => startMarathon(), 'grand-tour': () => startMarathon('grand-tour'), export: exportRecords, import: () => $('import-file').click(),
+        'watch-rail': watchRail, 'rail-drive': () => developer.menu.normal(), begin, resume, retry, courses: showCourses, log: () => showLog(), help: showHelp, back, next: nextHarbor, marathon: () => startMarathon(), 'grand-tour': () => startMarathon('grand-tour'), export: exportRecords, import: () => $('import-file').click(),
         'toggle-ghost': () => toggleSetting('ghost'), 'toggle-guide': () => toggleSetting('guide'), 'toggle-sound': () => toggleSetting('sound'), 'toggle-focus-pause': () => toggleSetting('pauseOnBlur'), reset: () => {
             openDialog('erase', `${topModal('Clear the logbook?')}<p>This erases all local times, ghosts and arrival counts. Export first to keep a copy.</p><div class="dialog-actions"><button data-action="confirm-reset" class="danger">Erase all records</button><button class="primary" data-action="log" autofocus>Keep my records</button></div>`);
         }, 'confirm-reset': () => {
@@ -1197,7 +1208,7 @@
         else renderer.render({
             level, run, index, status, input, zoom, settings, ghost: store.stage(level.id).ghost, visualTime: now / 1000
         });
-        audio.tick(run.ship, !run.rail && status === 'running' && developer?.rate !== 0, run.space, run.rampage);
+        audio.tick(run.ship, status === 'running' && developer?.rate !== 0, run.space, run.rampage, run.rail);
         requestAnimationFrame(frame);
     }
     updateSettings();
@@ -1215,7 +1226,7 @@
                 time: marathon.total + (status === 'complete' ? 0 : run.time),
                 splits: marathon.splits.map(s => ({ ...s })) };
         },
-        practice: markPractice, advance: advanceSeconds, throttle, line: lineAction,
+        practice: markPractice, advance: advanceSeconds, throttle, line: lineAction, rail: railCommand,
         input(values) {
             for (const key of ['rudder', 'thruster', 'winch'])
                 if (values[key] !== undefined) input[key] = values[key];

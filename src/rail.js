@@ -247,7 +247,29 @@
             head:locate(st,group,direction>0?b.hi:b.lo),tail:locate(st,group,direction>0?b.lo:b.hi),
             temperature:Math.max(...group.cars.map(c=>c.temp)),limit:Math.min(...group.cars.map(c=>locate(st,group,c.q).limit))};
     }
-    const api={network,at,locate,create,update,command,occupied,engineGroup,groupFor,bounds,metrics,taskReady};
+    // Presentation-only lookahead. Extend a copy so inspecting an unoccupied
+    // junction never reserves its route or alters subsequent train movement.
+    function danger(st) {
+        const g=engineGroup(st),m=metrics(st),engine=g.cars.find(c=>c.powered);
+        const direction=Math.abs(engine.v)>.02?Math.sign(engine.v):st.reverser*engine.face,b=bounds(g);
+        const cars=g.cars.map(c=>{const p=locate(st,g,c.q);return {id:c.id,ratio:Math.abs(c.v)/p.limit,limit:p.limit,edge:p.edge,s:p.s};}).filter(c=>c.ratio>1);
+        const severity=cars.some(c=>c.ratio>=1.2)?2:cars.length?1:0;
+        const head=direction>0?b.hi:b.lo,path={path:g.path.map(e=>({...e}))};
+        const horizon=Math.min(500,Math.max(70,(Number.isFinite(m.stopping)?m.stopping:400)+Math.abs(m.speed)*4));
+        for(let i=0;i<20;i++) {
+            const end=direction>0?path.path.at(-1).end:path.path[0].start;
+            if((end-head)*direction>=horizon||!extend(st,path,direction>0))break;
+        }
+        let ahead=null;
+        for(let d=0;d<=horizon;d+=4) {
+            const q=head+direction*d;
+            if(q<path.path[0].start||q>path.path.at(-1).end)break;
+            const p=locate(st,path,q);
+            if(Math.abs(m.speed)>p.limit*1.02){ahead={edge:p.edge,s:p.s,limit:p.limit,distance:d};break;}
+        }
+        return {severity:Math.max(severity,ahead?1:0),cars,ahead};
+    }
+    const api={network,at,locate,create,update,command,occupied,engineGroup,groupFor,bounds,metrics,taskReady,danger};
     if(typeof module!=='undefined'&&module.exports)module.exports=api;
     root.Railway=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

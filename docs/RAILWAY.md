@@ -34,6 +34,27 @@ mass-weighted grade and brake response delay. It is an estimate, not a promised
 stop point; changing grades ahead and coupler movement still matter. Curve
 limits apply to every wagon, with sustained severe overspeed ending a run.
 
+## Sound, warnings and a watchable run
+
+The train has filtered diesel rumble, distance-driven wheel joints, braking
+noise, air release and mechanical coupling/point cues. Sound stops on pause,
+mute, departure changes and failure. Cue counts are bounded during accelerated
+playback. The shared horn remains available with H.
+
+Curve warnings inspect each wagon and a copy of the selected route ahead.
+Amber highlights the approaching speed restriction or an overspeed wagon;
+red begins at 120% of the limit, before the sustained 135% derailment threshold.
+Looking ahead does not reserve points. Junction lamps highlight both the common
+track and the selected branch. Reverse is always labeled as an action.
+
+5-01 has a fixed input recording available from **Watch run** in the briefing
+or `DeadSlow.watch("long-grade-1", 8)`. It completes in 590.408 seconds of
+simulation time (about 74 seconds at 8×). No vehicle positions or objectives
+are changed during playback. **Take controls**, or retrying the demonstration,
+starts a fresh ranked attempt at 1×. Console playback keeps the existing
+console speed behavior. Regenerate with `node tools/record-rail-run.cjs`
+followed by `node tools/sync-replays.cjs`.
+
 ## Space for the remaining missions
 
 The graph, separate cuts and per-vehicle state are shared foundations, not
@@ -75,4 +96,4 @@ layout and touch QA remain for CI/review: browser access to the cloud preview
 was blocked in this Work chat. No localhost permission request was repeated.
 
 `npm run build` produces the complete offline game in `dist/index.html`, with
-all 22 modules and the stylesheet inlined. Generated builds are not committed.
+all 23 modules and the stylesheet inlined. Generated builds are not committed.
