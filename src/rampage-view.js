@@ -83,10 +83,10 @@
         const intro=`<div class="eyebrow">WORLD 4 · GERBOZILLA’S RAMPAGE · COURSE ${level.stageNumber} / ${R.levels.length}</div>`;
         const next=kind==='result'&&(race ? race.hasNext : level.stageNumber<R.levels.length);
         const circuitNext=next&&race&&!race.done;
-        const actions=`<div class="dialog-actions">${circuitNext?'<button class="primary" data-action="next" autofocus>Next course →</button>':''}<button${circuitNext?'':' class="primary"'} data-action="retry"${circuitNext?'':' autofocus'}>Roll again · R</button>${next&&!circuitNext?'<button data-action="next">Next course →</button>':''}<button data-action="courses">World map</button><button data-action="log">Field log</button></div>`;
-        if(kind==='intro') return `${intro}<h1>${level.stageNumber===1?'A small pet.<br>A very large problem.':esc(level.name)}</h1><p>${level.brief}</p><div class="intro-details"><div><strong>48 m</strong><span>EXERCISE BALL</span></div><div><strong>${String(taskCount).padStart(2,'0')}</strong><span>MISSION OBJECTIVES</span></div><div><strong>03 s</strong><span>SHIELD DURATION</span></div></div><p class="subtle">${level.tip}</p><div class="control-summary"><kbd>W A S D</kbd> / arrows: hold a push in map directions. Release to coast.<br><kbd>Space</kbd> / <kbd>F</kbd>: shield · <kbd>R</kbd>: retry · <kbd>Z</kbd>: zoom<br>Orange footprints mark timed volcanic hazards; their countdowns use game time. Brown contours show hills. Blue removes traction; dense green forest slows rolling. Black boulders are impassable. Magenta circles mark ordered controls.${c.fire?'<br><kbd>H</kbd> hold to breathe toward your last push; release to refill.':''}</div><p class="subtle">Twelve field courses, one World 4 championship. Included in the 60-stage Grand Tour; the Century Ship remains a separate bonus.</p><div class="dialog-actions"><button class="primary" data-action="begin" autofocus>Let the hamster out →</button><button data-action="help">Field guide</button><button data-action="courses">World map</button></div>`;
+        const actions=`<div class="dialog-actions">${circuitNext?'<button class="primary" data-action="next" autofocus>Next course →</button>':''}<button${circuitNext?'':' class="primary"'} data-action="retry"${circuitNext?'':' autofocus'}>Roll again · Shift+R</button>${next&&!circuitNext?'<button data-action="next">Next course →</button>':''}<button data-action="courses">World map</button><button data-action="log">Field log</button></div>`;
+        if(kind==='intro') return `${intro}<h1>${level.stageNumber===1?'A small pet.<br>A very large problem.':esc(level.name)}</h1><p>${level.brief}</p><div class="intro-details"><div><strong>48 m</strong><span>EXERCISE BALL</span></div><div><strong>${String(taskCount).padStart(2,'0')}</strong><span>MISSION OBJECTIVES</span></div><div><strong>03 s</strong><span>SHIELD DURATION</span></div></div><p class="subtle">${level.tip}</p><div class="control-summary"><kbd>W A S D</kbd> / arrows: hold a push in map directions. Release to coast.<br><kbd>Space</kbd> / <kbd>F</kbd>: shield · <kbd>Shift+R</kbd>: retry · <kbd>Z</kbd>: zoom<br>Orange footprints mark timed volcanic hazards; their countdowns use game time. Brown contours show hills. Blue removes traction; dense green forest slows rolling. Black boulders are impassable. Magenta circles mark ordered controls.${c.fire?'<br><kbd>H</kbd> hold to breathe toward your last push; release to refill.':''}</div><p class="subtle">Twelve field courses, one World 4 championship. Included in the 60-stage Grand Tour; the Century Ship remains a separate bonus.</p><div class="dialog-actions"><button class="primary" data-action="begin" autofocus>Let the hamster out →</button><button data-action="help">Field guide</button><button data-action="courses">World map</button></div>`;
         if(kind==='help') return `${intro}<h1>Weight wins.<br>Until it doesn’t.</h1><p><b>Push, don’t point.</b> WASD / arrows accelerate north, west, south and east on the map. Diagonal pushes have the same total strength. Counter-push early to brake; releasing a key does not remove momentum.</p><p><b>Read the contours.</b> Brown 5-metre contours use the same elevation field as the rolling physics. Closed mountain rings enclose fortified towns: a standing push cannot overcome the steep rim, so back away and build a run-up. Annular blue moats contain dry islands, not bridges. Downhill builds speed; the first ridge needs a run-up. Cross every numbered magenta control in order. Their count varies by course.</p><p><b>The lake removes traction.</b> Running spins the ball and squeaks its bearings, but applies no useful push in deep water. Existing motion coasts through with water resistance. Gravity still pulls downhill even when your paws cannot grip. Retry rather than waiting forever after a poor run-up.</p><p><b>Ram the city cores.</b> Speed deals damage to both structures and your shell. Slow nudging cannot flatten a district. Space or F gives 3 seconds of protection followed by 6 seconds recharging. Shielded rams still lose momentum. A dashed red line warns of a local defensive shot; local guns stop when their district falls. On retaliation courses, off-map batteries keep firing after demolition. Red circles mark fixed impact points with a countdown. Steer away after they lock, or shield at impact. Recovery cannot finish while a salvo remains inbound.</p><p><b>Woodland and boulders.</b> Darker green forest increases rolling resistance; pale clearings are faster. Black rocks are solid to the whole ball, not hills to crest. Shields protect your shell but cannot let you phase through them. Rocks also stop defensive shots and fire; low gray walls stop the ball but can be fired over.</p><p><b>Volcanic crossings.</b> Fissures and steam vents are quiet, then warn amber, then erupt inside the marked footprint. Their independent cycles repeat on the course clock. Quiet channels are traversable. A shield protects for only three seconds; hot water still removes traction. Keep a way to leave before the next eruption.</p><p><b>Giant pets.</b> Cavyclasm and Sir Flops-a-Lot mark their charges, commit to one direction, then rest. Ramming exchanges momentum and deals damage to both pets. Shield just before impact. Sleeping defeated pets are no longer dangerous. <b>Sir Needlesworth is invulnerable:</b> ramming, boulders and shields cannot injure him. His charge warning locks a direction. Evade it or time the shield; even a shielded impact changes your momentum. He is never a defeat objective.</p><p><b>Fire breath.</b> On pepper courses, collect the pepper control, then hold H (or the FIRE button). Your last directional push aims the fan; velocity does not aim it. Release to refill its three-second breath meter. Deep water stops the flame. Armored cores inside the keep can only be burned.</p><p><b>Lady Whiskerdoom.</b> Break both lock pylons to open the gate, defeat the sentry, then approach her to start the escort. She follows your actual trail with her own momentum, so clear the gate before stopping. Ramming her or leading her into rock damages her shell. Your shield protects you, not her. Wait for her to enter the meadow and settle too. In <b>The Long Way Home</b> she starts free beside you: no cage or locks. Route beacons release pursuers and off-map strikes targeting both of you. Circles lock once and give ten seconds to move her clear. Optional mortal enemies can be knocked aside; the hedgehog cannot be defeated. This is a journey home, not a timed last stand.</p><p><b>Finish in the meadow.</b> Complete every course objective, return to the double-ring finish, and stay below 0.8 m/s with no push for two seconds. A clean run means zero damage to either hamster—not zero destruction.</p><p class="subtle">Play individual courses, the twelve-course World 4 championship or the sixty-stage Grand Tour. Circuit clocks retain retries; practice never overwrites ranked records.</p><div class="dialog-actions"><button class="primary" data-action="back" autofocus>Back to the ball</button></div>`;
-        if(kind==='pause') return `${intro}<h1>The hamster is<br>on a snack break.</h1><p>The ball and course clock are frozen. This attempt is now unranked practice; a fresh retry is record-eligible.</p><div class="result-time">${format(run.time)}</div><div class="dialog-actions"><button class="primary" data-action="resume" autofocus>Resume practice</button><button data-action="retry">Fresh run · R</button><button data-action="courses">World map</button></div>`;
+        if(kind==='pause') return `${intro}<h1>The hamster is<br>on a snack break.</h1><p>The ball and course clock are frozen. This attempt is now unranked practice; a fresh retry is record-eligible.</p><div class="result-time">${format(run.time)}</div><div class="dialog-actions"><button class="primary" data-action="resume" autofocus>Resume practice</button><button data-action="retry">Fresh run · Shift+R</button><button data-action="courses">World map</button></div>`;
         if(kind==='failed') return `${intro}<h1>${run.failure?.type==='off-map'?'Beyond the paper.':'Exercise ball recalled.'}</h1><p>${esc(run.failure?.message||'The shell could not take another hit.')}</p><div class="result-time">${format(run.time)}</div>${actions}`;
         if(kind==='result') return `${intro}<h1>${resultTitle}</h1><div class="result-badge">${run.pausedUsed?'UNRANKED PRACTICE':run.pb?'NEW PERSONAL BEST':'COURSE COMPLETE'}${run.result.clean?' · CLEAN':''}</div><div class="result-time">${format(run.time)}</div><div class="result-grid"><div><strong>${taskCount} / ${taskCount}</strong><span>MISSION OBJECTIVES</span></div><div><strong>${Math.ceil(run.ship.hull)}%</strong><span>BALL INTEGRITY</span></div><div><strong>${run.rampage.stats.blocked}</strong><span>HITS BLOCKED</span></div></div><p>${run.pausedUsed?'Practice never replaces records or ghosts.':'Your field log keeps overall and zero-damage times separately.'} ${c.rescue?.free?'No cages. No encore. Just two hamsters home.':c.rescue?'Lady Whiskerdoom is safe. There will be snacks.':'The giant wheel squeak was entirely necessary.'}</p>${race?`<div class="race-banner">${esc(race.name.toUpperCase())} ${race.stages}/${race.length} · ${format(race.total)} · ${race.retries} retries${race.practice?' · PRACTICE':''}</div>`:''}${actions}`;
         if(kind==='log') return `${intro}<h1>Gerbozilla’s field log.</h1><table class="log-table"><thead><tr><th>TIME / IGT</th><th>DAMAGE EVENTS</th><th>CLASS</th></tr></thead><tbody>${records.length?records.map(r=>`<tr><td>${format(r.time)}</td><td>${r.contacts}</td><td>${r.clean?'CLEAN':'OPEN'}</td></tr>`).join(''):'<tr><td colspan="3">No completed course yet.</td></tr>'}</tbody></table><p class="subtle">Clean means zero shell damage. Records and ghosts are local. The twelve-course World 4 circuit and sixty-stage Grand Tour have separate overall and clean records.</p>${archives.filter(a=>a.runs?.length).map(a=>`<details><summary>${a.id?.endsWith('-preview')?'Preview field map':'Earlier terrain'} records (archived)</summary><p class="subtle">This layout differs from the active course. Its own ghost and splits remain in exports.</p>${a.runs.map(r=>`<p>${format(r.time)} · ${r.clean?'CLEAN':'OPEN'}</p>`).join('')}</details>`).join('')}
@@ -300,20 +300,73 @@ ${context.archived48?.length?`<details><summary>48-stage Grand Tour (archived)</
                 if(!R.blocked(st,s,{x,y})){g.globalAlpha=(1-u)*.7;circle(g,x,y,4+u*12,i%2?'#ffbd56':'#e96e37');g.globalAlpha=1;}}
         }
         function volcanoes(g,st,time) {
+            // Banks and the vent apron are scenery. The translucent outer fill
+            // still marks the exact collision polygon; all moving texture is clipped.
+            function outline(poly,rounded=false) {
+                g.beginPath();
+                if(!rounded) {
+                    poly.forEach((p,i)=>i?g.lineTo(p.x,p.y):g.moveTo(p.x,p.y));
+                } else {
+                    const cut=(p,q)=>{
+                        const f=Math.min(.18,10/Math.hypot(q.x-p.x,q.y-p.y));
+                        return {x:p.x+(q.x-p.x)*f,y:p.y+(q.y-p.y)*f};
+                    };
+                    poly.forEach((p,i)=>{
+                        const before=cut(p,poly[(i+poly.length-1)%poly.length]);
+                        const after=cut(p,poly[(i+1)%poly.length]);
+                        if(i)g.lineTo(before.x,before.y);else g.moveTo(before.x,before.y);
+                        g.quadraticCurveTo(p.x,p.y,after.x,after.y);
+                    });
+                }
+                g.closePath();
+            }
             for(const v of st.volcanoes || []) {
                 const state=R.volcanoState(v,time),hot=state.active,warn=state.phase==='warning';
                 const color=hot?'#c94e2e':warn?'#aa7625':'#77654e';
+                g.save();g.lineJoin='round';g.lineCap='round';
+                const apron=g.createRadialGradient(v.x,v.y,v.r*.5,v.x,v.y,v.r+65);
+                apron.addColorStop(0,'#65594eff');apron.addColorStop(.6,'#8b796f90');apron.addColorStop(1,'#8b796f00');
+                circle(g,v.x,v.y,v.r+65,apron);
                 for(const poly of v.zones) {
-                    g.beginPath();poly.forEach((p,i)=>i?g.lineTo(p.x,p.y):g.moveTo(p.x,p.y));g.closePath();
-                    g.fillStyle=hot?(v.steam?'#d6d5c2c0':'#df702cb0'):warn?'#dcb44f55':'#8f77591f';g.fill();
-                    g.strokeStyle=color;g.lineWidth=hot?3:1.5;g.setLineDash(hot?[]:[7,5]);g.stroke();g.setLineDash([]);
-                    if(hot) {const c=poly.reduce((a,p)=>({x:a.x+p.x/poly.length,y:a.y+p.y/poly.length}),{x:0,y:0});
-                        for(let i=0;i<4;i++){const u=(time*.45+i*.23)%1;circle(g,c.x+Math.sin(i*3)*26,c.y-u*45,7+u*15,v.steam?'#faf1dd90':'#ffc06499');}}
+                    const c=poly.reduce((a,p)=>({x:a.x+p.x/poly.length,y:a.y+p.y/poly.length}),{x:0,y:0});
+                    // A cooled feeder joins the channel to the crater, including
+                    // the safe gap on Muesli Furnace. It never glows like hot lava.
+                    g.beginPath();g.moveTo(v.x,v.y);g.lineTo(c.x,c.y);
+                    g.strokeStyle='#8b796f90';g.lineWidth=v.r*1.5;g.stroke();
+                    outline(poly,true);g.strokeStyle='#ad98826b';g.lineWidth=22;g.stroke();
+                    g.fillStyle='#776858';g.fill();g.strokeStyle='#706357';g.lineWidth=7;g.stroke();
+                    outline(poly);g.fillStyle=hot?(v.steam?'#dedcccaa':'#d8683280'):warn?'#dcb44f55':'#a38b6328';g.fill();
+                    g.save();g.clip();
+                    const bed=g.createRadialGradient(v.x,v.y,0,v.x,v.y,Math.hypot(c.x-v.x,c.y-v.y)*2+v.r);
+                    bed.addColorStop(0,hot?(v.steam?'#fff2d8':'#fff09a'):warn?'#dcb663':'#544d46');
+                    bed.addColorStop(1,hot?(v.steam?'#abaeaa':'#9b3925'):warn?'#977341':'#897360');
+                    outline(poly,true);g.fillStyle=bed;g.fill();
+                    const angle=Math.atan2(c.y-v.y,c.x-v.x),length=Math.max(...poly.map(p=>Math.hypot(p.x-v.x,p.y-v.y)));
+                    g.translate(v.x,v.y);g.rotate(angle);
+                    for(let lane=-2;lane<=2;lane++) {
+                        g.beginPath();
+                        for(let x=0;x<=length+12;x+=12) {
+                            const y=lane*13+Math.sin(x*.035+lane*2)*5+Math.sin(x*.013-lane)*7;
+                            if(x)g.lineTo(x,y);else g.moveTo(x,y);
+                        }
+                        g.strokeStyle=hot?(v.steam?'#f9f5e680':lane%2?'#ffcf728c':'#742e2870'):'#d4b48745';
+                        g.lineWidth=hot?4:1.5;g.stroke();
+                    }
+                    if(hot)for(let i=0;i<18;i++) {
+                        const u=(time*(v.steam?.13:.09)+i*.137)%1;
+                        const x=u*length,y=Math.sin(i*7)*30+Math.sin(x*.035)*5;
+                        circle(g,x,y,v.steam?8+u*13:2+u*3,v.steam?'#faf3df50':'#ffe9a899');
+                    }
+                    g.restore();
                 }
-                circle(g,v.x,v.y,v.r+8,'#93836b',color,2);
-                circle(g,v.x,v.y,v.r,'#544e47');circle(g,v.x,v.y,v.r*.6,hot?'#ffc26c':warn?'#d79b49':'#93816a');
+                const cone=g.createRadialGradient(v.x-v.r*.25,v.y-v.r*.3,v.r*.15,v.x,v.y,v.r+8);
+                cone.addColorStop(0,'#a68c70');cone.addColorStop(.6,'#78685c');cone.addColorStop(1,'#554c46');
+                circle(g,v.x,v.y,v.r+8,cone);
+                circle(g,v.x,v.y,v.r*.68,'#433e39','#b09a7a',3);
+                circle(g,v.x,v.y,v.r*.5,hot?(v.steam?'#f4e7cf':'#ffc26c'):warn?'#d79b49':'#776859');
                 text(g,v.name,v.x,v.y-v.r-30,12,color);
                 text(g,(hot?'ERUPTING · ':warn?'ERUPTION IN ':'QUIET · ERUPTION IN ')+state.remaining.toFixed(1)+' s',v.x,v.y-v.r-13,10,color);
+                g.restore();
             }
         }
         function render(v){

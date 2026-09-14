@@ -25,10 +25,12 @@ function create() {
             });
         return nodes.get(id);
     };
+    const listeners = new Map();
     const document = {
         getElementById: node, querySelectorAll() {
             return [];
-        }, addEventListener() {
+        }, addEventListener(type, handler) {
+            listeners.set(type, handler);
         }, body: node('body'), activeElement: null
     };
     const noop = () => {
@@ -44,6 +46,7 @@ function create() {
     ctx.window = ctx;
     vm.createContext(ctx);
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/game.js'), 'utf8'), ctx);
+    ctx.DeadSlowTest.keydown = event => listeners.get('keydown')({ preventDefault() {}, ...event });
     ctx.DeadSlowTest.html = id => node(id).innerHTML;
     return ctx.DeadSlowTest;
 }

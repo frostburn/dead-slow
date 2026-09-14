@@ -39,28 +39,33 @@ test('60-stage tour skips future chapters and bonus, and crosses field-to-space 
  assert.equal(t.state.level.id,'perihelion-dispatch');assert.equal(t.state.marathon.stages,60);
  assert.ok(t.state.marathon.practice);
 });
-test('all in-game restart requests freeze first, cancel preserves progress as practice',()=>{
- const t=create();t.marathon('archipelago');t.advance(2);
- const r=t.state.run;r.ship.hull=87;r.jobs.stats.lineChanges=3;
- const time=r.time,position=t.state.marathon.position;
- t.requestRetry();t.requestRetry();assert.equal(t.state.status,'confirming');assert.equal(t.state.modal,'restart');
- t.advance(15);near(r.time,time);assert.equal(t.state.marathon.retries,0);assert.equal(r.pausedUsed,false);
- t.cancelRetry();assert.equal(t.state.status,'running');assert.equal(t.state.run,r);assert.equal(r.ship.hull,87);
- assert.equal(r.jobs.stats.lineChanges,3);assert.equal(t.state.marathon.position,position);assert.ok(r.pausedUsed);assert.ok(t.state.marathon.practice);
+test('only a fresh Shift+R resets; plain R, repeats and modified or form input preserve the run',()=>{
+ const t=create();t.marathon('coast');t.advance(2);const original=t.state.run;
+ for(const event of [
+  {code:'KeyR'}, {code:'KeyR',shiftKey:true,repeat:true},
+  ...['ctrlKey','altKey','metaKey'].map(key=>({code:'KeyR',shiftKey:true,[key]:true})),
+  {code:'KeyR',shiftKey:true,target:{matches:()=>true}}
+ ]) {t.keydown(event);assert.equal(t.state.run,original);assert.equal(original.pausedUsed,false);}
+ t.keydown({code:'KeyR',shiftKey:true});assert.notEqual(t.state.run,original);
+ assert.equal(t.state.modal,null);assert.equal(t.state.status,'running');assert.equal(t.state.marathon.retries,1);
+ t.advance(1);const fresh=t.state.run;
+ t.keydown({code:'KeyR',shiftKey:true,repeat:true});assert.equal(t.state.run,fresh);assert.ok(fresh.time>0);
 });
-test('confirmed restart charges attempted time once and does not taint a ranked circuit',()=>{
- const t=create();t.marathon('coast');t.advance(2);const time=t.state.run.time;
- t.requestRetry();t.confirmRetry();t.confirmRetry();
- assert.equal(t.state.run.time,0);assert.equal(t.state.marathon.retries,1);near(t.state.marathon.total,time);
+test('immediate restart charges time once without tainting a ranked circuit',()=>{
+ const t=create();t.marathon('archipelago');t.advance(2);const time=t.state.run.time;
+ t.state.run.jobs.stats.lineChanges=3;t.requestRetry();
+ assert.equal(t.state.status,'running');assert.equal(t.state.modal,null);
+ assert.equal(t.state.run.time,0);assert.equal(t.state.run.jobs.stats.lineChanges,0);
+ assert.equal(t.state.marathon.retries,1);near(t.state.marathon.total,time);
  assert.equal(t.state.marathon.practice,false);assert.equal(t.state.run.pausedUsed,false);
 });
-test('cancelling restart restores result screen and never adds another ranked clear',()=>{
- const t=create();t.load(0);t.finish();const clears=t.state.storage.stages['dead-slow'].clears;
- t.requestRetry();t.cancelRetry();assert.equal(t.state.status,'complete');assert.equal(t.state.modal,'result');
+test('retrying a result starts an individual attempt without another ranked clear',()=>{
+ const t=create();t.marathon('coast');t.finish();const clears=t.state.storage.stages['dead-slow'].clears;
+ t.requestRetry();assert.equal(t.state.status,'running');assert.equal(t.state.marathon,null);
  assert.equal(t.state.storage.stages['dead-slow'].clears,clears);
 });
 test('accelerated restart keeps selected speed and starts the same stage',()=>{
- const t=create();t.cheats.circuit(4,16);t.advance(1);t.requestRetry();t.confirmRetry();
+ const t=create();t.cheats.circuit(4,16);t.advance(1);t.requestRetry();
  assert.equal(t.cheats.speed(),16);assert.equal(t.state.level.id,'gerbo-first-outing');assert.ok(t.state.run.pausedUsed);
 });
 test('volcanic cycles have exact warning, hot and cooldown boundaries',()=>{
@@ -114,8 +119,8 @@ test('named locations and craft use fictional labels without changing persistent
  L.forEach(walk);assert.doesNotMatch(displayed.join('\n'),/\b(?:SISU|LINNEA|ELVIRA|NANSEN|Hilda|Aspö|Kivikari|Rönnskär|Strömskär|Långön)\b/);
 });
 
-test('asking to restart a completed circuit stage does not count its time twice',()=>{
+test('retrying a completed circuit stage leaves the circuit',()=>{
  const t=create();t.cheats.circuit(1,0);t.state.run.time=12;t.finish();
- t.requestRetry();assert.equal(t.cheats.progress().circuit.time,12);
- t.cancelRetry();assert.equal(t.cheats.progress().circuit.time,12);
+ assert.equal(t.cheats.progress().circuit.time,12);
+ t.requestRetry();assert.equal(t.cheats.progress().circuit,null);assert.equal(t.state.run.time,0);
 });

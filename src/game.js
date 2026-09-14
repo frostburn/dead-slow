@@ -7,7 +7,6 @@
     let developer = null;
     const DT = 1 / 120, KNOTS = 1.9438444924406;
     let index = 0, level = LEVELS[0], run, status = 'ready', modal = 'intro', zoom = 1, accumulator = 0, lastFrame = null, lastHud = 0, marathon = null, selectedWorld = 1;
-    let restartContext = null;
     let toastUntil = 0, focusBeforeModal = null, pressed = new Map(), pointers = new Map(), hiddenAt = 0;
     const input = { rudder: 0, thruster: 0, winch: 0 };
     const format = t => {
@@ -91,7 +90,6 @@
     }
     function loadStage(i, start = false) {
         if (!Number.isInteger(i) || !LEVELS[i]) throw new RangeError('This assignment is not playable. Choose an available stage from the world map.');
-        restartContext = null;
         index = i;
         level = LEVELS[index];
         selectedWorld = level.worldNumber;
@@ -181,44 +179,6 @@
         audio.tick(run.ship, false);
     }
     function retry() {
-        if (restartContext) return; // A held/repeated R must never confirm itself.
-        restartContext = { status, modal, html: $('dialog').innerHTML,
-            wide: $('dialog').classList.contains?.('wide') || false,
-            theme: $('dialog').dataset.theme, focus: document.activeElement };
-        status = 'confirming';
-        clearInput(); accumulator = 0; lastFrame = null;
-        audio.tick(run.ship, false, run.space, run.rampage);
-        const effect = marathon && restartContext.status === 'complete'
-            ? 'Restarting this completed assignment leaves the current circuit and starts an individual attempt.'
-            : marathon ? 'Only this assignment restarts. Earlier circuit stages stay completed; this attempt’s time remains on the circuit clock.'
-            : 'This attempt restarts from the beginning. Saved records and ghosts are never deleted.';
-        openDialog('restart', `<div class="eyebrow">RESTART CONFIRMATION · CLOCK FROZEN</div>
-            <h1>Restart this attempt?</h1><p>${esc(level.name)} · ${format(run.time)}</p><p>${effect}</p>
-            <p class="subtle">${restartContext.status === 'running' ? 'Keeping this attempt preserves all progress as unranked practice, just like pausing. A frozen confirmation cannot be used to pause a ranked run.' : 'Keeping this attempt returns to the previous screen without changing your progress.'}</p>
-            <div class="dialog-actions"><button class="primary" data-action="cancel-retry" autofocus>Keep playing · Esc</button>
-            <button class="danger" data-action="confirm-retry">Restart this attempt</button></div>
-            <p class="subtle">R never confirms. Choose Restart deliberately.</p>`);
-    }
-    function cancelRetry() {
-        if (!restartContext) return;
-        const previous = restartContext; restartContext = null;
-        status = previous.status; accumulator = 0; lastFrame = null; clearInput();
-        if (status === 'running') {
-            markPractice('Restart confirmation paused the attempt');
-            modal = null; $('overlay').hidden = true;
-            previous.focus?.blur?.();
-        } else {
-            openDialog(previous.modal, previous.html, previous.wide);
-            $('dialog').dataset.theme = previous.theme;
-        }
-        updateHud();
-    }
-    function confirmRetry() {
-        if (!restartContext) return;
-        status = restartContext.status; restartContext = null;
-        performRetry();
-    }
-    function performRetry() {
         if (marathon && status !== 'complete' && run.time > 0) {
             marathon.total += run.time;
             marathon.sectorTime += run.time;
@@ -564,7 +524,7 @@
  <p>${level.brief}</p><div class="intro-details"><div><strong>${run.ship.length} m</strong><span>${esc(run.ship.name || 'MV LONG PAUSE')}</span></div><div><strong>${String(level.stageNumber).padStart(2, '0')} / 12</strong><span>WORLD ${level.worldNumber} HARBOR</span></div><div><strong>02 sec</strong><span>NEUTRAL MOORING HOLD</span></div></div>
  <p class="subtle">${level.tip}</p>
  <p class="subtle">${level.worldNumber === 3 ? "Open water on every side." : "The western fairway is open water."} Keep every hull on the chart: crossing an edge ends the attempt.</p>
- <div class="control-summary"><kbd>W</kbd><kbd>S</kbd> change throttle · <kbd>A</kbd><kbd>D</kbd> hold rudder<br><kbd>Q</kbd><kbd>E</kbd> hold bow thruster · <kbd>Space</kbd> neutral · <kbd>R</kbd> retry<br>${level.towables.length ? '<kbd>F</kbd> make / release towline · <kbd>J</kbd><kbd>K</kbd> hold winch<br>' : ''}Touch helm below. The engine telegraph stays where you leave it.</div>
+ <div class="control-summary"><kbd>W</kbd><kbd>S</kbd> change throttle · <kbd>A</kbd><kbd>D</kbd> hold rudder<br><kbd>Q</kbd><kbd>E</kbd> hold bow thruster · <kbd>Space</kbd> neutral · <kbd>Shift+R</kbd> retry<br>${level.towables.length ? '<kbd>F</kbd> make / release towline · <kbd>J</kbd><kbd>K</kbd> hold winch<br>' : ''}Touch helm below. The engine telegraph stays where you leave it.</div>
  <div class="dialog-actions"><button class="primary" data-action="begin" autofocus>Cast off <span aria-hidden="true">→</span></button><button data-action="courses">Choose harbor</button><button class="secondary small" data-action="help">How to dock</button></div>
  <p class="subtle" style="margin:16px 0 0">No installs. No accounts. Records stay in this browser.</p>${!store.available ? '<div class="storage-warning">Browser storage is unavailable. Records will last for this session only; export them from the logbook.</div>' : ''}`);
     }
@@ -573,7 +533,7 @@
         if (level.rampage) return openDialog('pause', G.dialog('pause', level, run, format));
         openDialog('pause', `
  <div class="eyebrow">PAUSED · PRACTICE RUN</div><h1>${reason}</h1><p>${wording('Your ship and the harbor clock are stopped.', 'Your spacecraft and the mission clock are suspended.')} This attempt is now practice and will not overwrite your records. A retry starts a record-eligible attempt.</p>
- <div class="result-time">${format(run.time)}</div><div class="dialog-actions"><button class="primary" data-action="resume" autofocus>Resume practice</button><button data-action="retry">Retry fresh · R</button><button class="secondary" data-action="courses">${wording("Harbors", "Sectors")}</button></div>`);
+ <div class="result-time">${format(run.time)}</div><div class="dialog-actions"><button class="primary" data-action="resume" autofocus>Resume practice</button><button data-action="retry">Retry fresh · Shift+R</button><button class="secondary" data-action="courses">${wording("Harbors", "Sectors")}</button></div>`);
     }
     function showResult() {
         const r = run.result;
@@ -590,21 +550,21 @@
  ${run.space ? `<div class="work-summary">${r.space.fuelUsed.toFixed(2)} Δv propellant expended · ${r.space.burnTime.toFixed(1)} s burning<br>${r.space.shots} shots · ${r.space.hits} hits · ${r.space.captures} captures · ${r.space.jumps} temporal insertions</div>` : ''}
  ${level.jobs.length ? `<div class="work-summary">${r.work.vehiclesDelivered} vehicles delivered · ${r.work.vesselsDelivered} vessels secured · ${r.work.lineBreaks} lines parted<br>${Math.round(r.work.towDistance)} m towed · ${r.work.lineChanges} line operations · ${r.work.winchTime.toFixed(1)} s winch</div>` : ''}
  ${marathon ? `<div class="race-banner">${esc(raceLabel().toUpperCase())} ${marathon.stages}/${marathon.route.length} · ${format(marathon.total)} · ${marathon.retries} retries${marathon.practice ? ' · PRACTICE' : ''}</div>` : ''}
- <div class="dialog-actions"><button class="primary" data-action="${hasNext() ? 'next' : 'courses'}" autofocus>${hasNext() ? wording('Next harbor →', 'Next sector →') : 'World chart'}</button><button data-action="retry">Retry · R</button><button class="secondary small" data-action="log">Logbook</button></div>
+ <div class="dialog-actions"><button class="primary" data-action="${hasNext() ? 'next' : 'courses'}" autofocus>${hasNext() ? wording('Next harbor →', 'Next sector →') : 'World chart'}</button><button data-action="retry">Retry · Shift+R</button><button class="secondary small" data-action="log">Logbook</button></div>
  ${!store.available ? '<div class="storage-warning">Save failed: export your logbook to keep these records.</div>' : ''}`);
     }
     function showFailure() {
         audio.tick(run.ship, false);
         if (run.rampage) return openDialog('failed', G.dialog('failed', level, run, format));
         if (run.space) {
-            openDialog('failed', `<div class="eyebrow">${esc((run.failure?.type || 'FLIGHT LOST').toUpperCase())}</div><h1>${run.failure?.type === 'paradox' ? 'Two captains.<br>One contradiction.' : 'Flight terminated.'}</h1><p>${esc(run.failure?.message || 'The spacecraft was lost.')}</p><div class="result-time">${format(run.time)}</div><p class="subtle">Failed attempts do not enter the leaderboard. Retry resets every ephemeris and timeline.</p><div class="dialog-actions"><button class="primary" data-action="retry" autofocus>Retry · R</button><button data-action="courses">Choose sector</button></div>`); return;
+            openDialog('failed', `<div class="eyebrow">${esc((run.failure?.type || 'FLIGHT LOST').toUpperCase())}</div><h1>${run.failure?.type === 'paradox' ? 'Two captains.<br>One contradiction.' : 'Flight terminated.'}</h1><p>${esc(run.failure?.message || 'The spacecraft was lost.')}</p><div class="result-time">${format(run.time)}</div><p class="subtle">Failed attempts do not enter the leaderboard. Retry resets every ephemeris and timeline.</p><div class="dialog-actions"><button class="primary" data-action="retry" autofocus>Retry · Shift+R</button><button data-action="courses">Choose sector</button></div>`); return;
         }
         if (run.failure?.type === 'out-of-bounds') {
             const f = run.failure;
-            openDialog('failed', `<div class="eyebrow">OUT OF BOUNDS · ${N.NAMES[f.side].toUpperCase()} EDGE</div><h1>Beyond the chart.</h1><p>${esc(f.vessel)} crossed the ${N.NAMES[f.side]} limit of the assignment. The sea is open, but this watch is over. Keep the whole hull—and any tow—inside the chart.</p><div class="result-time">${format(run.time)}</div><p class="subtle">No invisible wall, no bounce. Failed attempts never enter the leaderboard.</p><div class="dialog-actions"><button class="primary" data-action="retry" autofocus>Retry · R</button><button data-action="courses">Choose harbor</button></div>`);
+            openDialog('failed', `<div class="eyebrow">OUT OF BOUNDS · ${N.NAMES[f.side].toUpperCase()} EDGE</div><h1>Beyond the chart.</h1><p>${esc(f.vessel)} crossed the ${N.NAMES[f.side]} limit of the assignment. The sea is open, but this watch is over. Keep the whole hull—and any tow—inside the chart.</p><div class="result-time">${format(run.time)}</div><p class="subtle">No invisible wall, no bounce. Failed attempts never enter the leaderboard.</p><div class="dialog-actions"><button class="primary" data-action="retry" autofocus>Retry · Shift+R</button><button data-action="courses">Choose harbor</button></div>`);
             return;
         }
-        openDialog('failed', `<div class="eyebrow">HULL INTEGRITY LOST</div><h1>The paperwork<br>will be substantial.</h1><p>The ship can take a gentle fender touch, but not a full-speed argument with concrete. Use opposite thrust earlier.</p><div class="result-time">${format(run.time)}</div><p class="subtle">${run.contacts} contacts · ${run.groundings} groundings. Failed attempts never enter the stage leaderboard.</p><div class="dialog-actions"><button class="primary" data-action="retry" autofocus>Retry · R</button><button data-action="courses">Choose harbor</button></div>`);
+        openDialog('failed', `<div class="eyebrow">HULL INTEGRITY LOST</div><h1>The paperwork<br>will be substantial.</h1><p>The ship can take a gentle fender touch, but not a full-speed argument with concrete. Use opposite thrust earlier.</p><div class="result-time">${format(run.time)}</div><p class="subtle">${run.contacts} contacts · ${run.groundings} groundings. Failed attempts never enter the stage leaderboard.</p><div class="dialog-actions"><button class="primary" data-action="retry" autofocus>Retry · Shift+R</button><button data-action="courses">Choose harbor</button></div>`);
     }
     function showCourses(world = selectedWorld) {
         if (typeof world !== 'number')
@@ -684,7 +644,7 @@
         }
         pauseForMenu();
         openDialog('help', `${topModal('It handles like a ship.')}
- <div class="help-grid"><div><h3>The helm</h3><div class="key-row"><kbd>W</kbd> / <kbd>↑</kbd> one notch ahead<br><kbd>S</kbd> / <kbd>↓</kbd> one notch astern<br><kbd>A</kbd><kbd>D</kbd> / <kbd>←</kbd><kbd>→</kbd> hold rudder<br><kbd>Q</kbd><kbd>E</kbd> hold bow thruster<br><kbd>Space</kbd> neutral, not a brake<br><kbd>R</kbd> restart confirmation · <kbd>Esc</kbd> pause<br><kbd>G</kbd> ghost · <kbd>V</kbd> coast guide<br><kbd>Z</kbd> zoom · <kbd>M</kbd> audio · <kbd>H</kbd> horn<br><kbd>F</kbd> make / release towline<br><kbd>J</kbd><kbd>K</kbd> reel in / pay out (hold)</div><p style="margin-top:12px">The touch helm supports simultaneous fingers. Rudder and thruster return to center on release; throttle stays at its selected notch. Use the chart’s zoom button to follow the ship more closely.</p></div>
+ <div class="help-grid"><div><h3>The helm</h3><div class="key-row"><kbd>W</kbd> / <kbd>↑</kbd> one notch ahead<br><kbd>S</kbd> / <kbd>↓</kbd> one notch astern<br><kbd>A</kbd><kbd>D</kbd> / <kbd>←</kbd><kbd>→</kbd> hold rudder<br><kbd>Q</kbd><kbd>E</kbd> hold bow thruster<br><kbd>Space</kbd> neutral, not a brake<br><kbd>Shift+R</kbd> retry · <kbd>Esc</kbd> pause<br><kbd>G</kbd> ghost · <kbd>V</kbd> coast guide<br><kbd>Z</kbd> zoom · <kbd>M</kbd> audio · <kbd>H</kbd> horn<br><kbd>F</kbd> make / release towline<br><kbd>J</kbd><kbd>K</kbd> reel in / pay out (hold)</div><p style="margin-top:12px">The touch helm supports simultaneous fingers. Rudder and thruster return to center on release; throttle stays at its selected notch. Use the chart’s zoom button to follow the ship more closely.</p></div>
  <div><h3>Anticipate, don’t twitch</h3><p>Engine output spools over several seconds. Neutral leaves momentum intact. Order astern to brake an ahead-moving ship, then return to neutral before it starts backing away.</p><p>The rudder needs water flow and reverses its steering effect astern. The bow thruster both turns and pushes the bow sideways; it loses authority at speed. The dashed white line predicts 12 seconds after ordering neutral, with centered rudder, no thruster and no collisions.</p>
  <h3>Read the motion, not the throttle</h3><p>The ground-speed number shows + AHEAD when your velocity points toward the bow and − ASTERN when it points toward the stern. It can still read AHEAD while your engine is in reverse. ABEAM means almost pure sideways motion. The separate drift line shows port or starboard motion relative to the hull. All are measured over ground.</p>
  <h3>Open water, finite assignment</h3><p>The archipelago has no perimeter seawall. Other harbors open west onto the fairway. A brief chart-limit warning appears near an open edge. If any part of your hull or a casualty crosses the chart edge, the attempt ends immediately. The sea does not bounce you back.</p>
@@ -696,7 +656,6 @@
  <div class="dialog-actions"><button class="primary" data-action="back" autofocus>${wording("Back to harbor", "Back to flight")}</button><button class="secondary" data-action="log">Logbook & settings</button></div>`, true);
     }
     function back() {
-        if (restartContext) { cancelRetry(); return; }
         if (status === 'paused')
             resume();
         else if (status === 'ready')
@@ -883,7 +842,7 @@
         $('clock-label').classList.toggle('practice', run.pausedUsed);
         $('race-banner').hidden = !marathon;
         if (marathon)
-            $('race-banner').textContent = `${raceLabel().toUpperCase()} ${marathon.position + 1}/${marathon.route.length} · ${format(marathon.total + ((restartContext?.status || status) === 'complete' ? 0 : run.time))}${marathon.practice ? ' · PRACTICE' : ''}`;
+            $('race-banner').textContent = `${raceLabel().toUpperCase()} ${marathon.position + 1}/${marathon.route.length} · ${format(marathon.total + (status === 'complete' ? 0 : run.time))}${marathon.practice ? ' · PRACTICE' : ''}`;
         const guideScale = 25 * renderer.scale;
         $('scale-label').style.setProperty('--scale-width', guideScale + 'px');
         $('scale-label').textContent = '25 METRES';
@@ -905,7 +864,7 @@
         $('work-panel').classList.toggle('tow-mode', isTow);
     }
     const actions = {
-        begin, resume, retry, 'cancel-retry': cancelRetry, 'confirm-retry': confirmRetry, courses: showCourses, log: () => showLog(), help: showHelp, back, next: nextHarbor, marathon: () => startMarathon(), 'grand-tour': () => startMarathon('grand-tour'), export: exportRecords, import: () => $('import-file').click(),
+        begin, resume, retry, courses: showCourses, log: () => showLog(), help: showHelp, back, next: nextHarbor, marathon: () => startMarathon(), 'grand-tour': () => startMarathon('grand-tour'), export: exportRecords, import: () => $('import-file').click(),
         'toggle-ghost': () => toggleSetting('ghost'), 'toggle-guide': () => toggleSetting('guide'), 'toggle-sound': () => toggleSetting('sound'), reset: () => {
             openDialog('erase', `${topModal('Clear the logbook?')}<p>This erases all local times, ghosts and arrival counts. Export first to keep a copy.</p><div class="dialog-actions"><button data-action="confirm-reset" class="danger">Erase all records</button><button class="primary" data-action="log" autofocus>Keep my records</button></div>`);
         }, 'confirm-reset': () => {
@@ -993,17 +952,6 @@
             return;
         if (e.code === 'Enter' && e.target?.tagName === 'A') return;
         // The speed selector is a native input, not an alternative helm.
-        if (restartContext && e.code !== 'Tab') {
-            if (e.ctrlKey || e.metaKey || e.altKey) return;
-            e.preventDefault();
-            if (e.repeat) return;
-            if (e.code === 'Escape') cancelRetry();
-            else if (e.code === 'Enter') {
-                const action = document.activeElement?.dataset?.action;
-                if (action === 'confirm-retry') confirmRetry(); else cancelRetry();
-            }
-            return;
-        }
         if (e.target?.matches?.('select, input, textarea')) return;
         if (developer?.unlocked && ['BracketLeft', 'BracketRight', 'Backslash'].includes(e.code)) {
             e.preventDefault();
@@ -1048,7 +996,7 @@
         if (e.repeat)
             return;
         if (e.code === 'KeyR') {
-            retry();
+            if (e.shiftKey) retry();
             return;
         }
         if (e.code === 'Escape') {
@@ -1195,7 +1143,7 @@
                 }
             }
         }
-        const time = marathon ? marathon.total + ((restartContext?.status || status) === 'complete' ? 0 : run.time) : run.time;
+        const time = marathon ? marathon.total + (status === 'complete' ? 0 : run.time) : run.time;
         $('clock').textContent = format(time);
         if (now - lastHud > 80) {
             updateHud();
@@ -1221,7 +1169,7 @@
             if (!marathon) return null;
             return { id: marathon.id, position: marathon.position + 1, length: marathon.route.length,
                 completed: marathon.stages, retries: marathon.retries, practice: marathon.practice,
-                time: marathon.total + ((restartContext?.status || status) === 'complete' ? 0 : run.time),
+                time: marathon.total + (status === 'complete' ? 0 : run.time),
                 splits: marathon.splits.map(s => ({ ...s })) };
         },
         practice: markPractice, advance: advanceSeconds, throttle, line: lineAction,
@@ -1252,7 +1200,7 @@
             }, start: begin, advance: advanceSeconds, cheats: developer.menu, frame,
             setShip(values) {
                 Object.assign(run.ship, values);
-            }, throttle, lineAction, signal, finish, pause: showPause, retry: performRetry, requestRetry: retry, cancelRetry, confirmRetry, marathon: startMarathon, next: nextHarbor, format, zoom: zoomChart, hud: updateHud, courses: showCourses
+            }, throttle, lineAction, signal, finish, pause: showPause, retry, requestRetry: retry, marathon: startMarathon, next: nextHarbor, format, zoom: zoomChart, hud: updateHud, courses: showCourses
         };
     }
 })();

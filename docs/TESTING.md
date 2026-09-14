@@ -4,7 +4,7 @@ Focused tests for the current release are in `tests/release-atlas.test.cjs` and
 `tests/browser_release_atlas.py`. The Node tests exercise restart state transitions,
 placeholder rejection and playable ordering, record archives, hazard geometry and
 timing, and the three affected control-only recordings. The browser test exercises
-actual key/click confirmation, grayscale chapters, renumbered instruments,
+Shift+R and immediate retry buttons, grayscale chapters, renumbered instruments,
 volcano forecasts and the single-composite ghost alpha.
 
 ```sh

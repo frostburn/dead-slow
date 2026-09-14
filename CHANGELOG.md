@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Retry immediately with Shift+R or a retry button; remove the pause-inducing confirmation.
+- Blend volcanic channels into their vents with rounded basalt banks, shaded lava and drifting steam; preserve hazard geometry and timing.
+
 ## 5.1.0 — The Eight-World Atlas
 
 - Confirm keyboard and touch restarts; keep completed circuit stages and cancel safely.
