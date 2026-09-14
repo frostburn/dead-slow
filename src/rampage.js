@@ -202,7 +202,7 @@
     const rescue = course('gerbo-whiskerdoom', 'Nobody Puts Whiskerdoom in a Cage', 'Break two locks / rabbit sentry / breadcrumb escort',
         [180,1260,0],[2400,1580],
         'Lady Whiskerdoom is being held in a granite menagerie. Flatten both external lock pylons to open its western gate and send Sir Flops-a-Lot to sleep. Roll close to greet her, then lead her along a safe route to the recovery meadow.',
-        'She follows your trail with her own momentum; she cannot teleport through stone. Give her room in the gate, avoid ramming her and wait for her to catch up. Your shield protects your shell only. Both hamsters must get home.', {
+        'She follows your trail and needs room to turn. Give her room in the gate, avoid ramming her and wait for her to catch up. Your shield protects your shell only. Both hamsters must get home.', {
             sheet:'THE GRANITE MENAGERIE',subtitle:'LADY WHISKERDOOM’S RESCUE',
             hills:[{x:470,y:375,rx:210,ry:90,height:22,lobes:[{x:100,y:30,rx:90,ry:60,height:10}]},
                 {x:2090,y:780,rx:160,ry:78,height:31,angle:-.4,lobes:[{x:100,y:-30,rx:94,ry:55,height:18}]}],
@@ -789,7 +789,7 @@
         zones:[footprint([[1145,975],[1140,610],[1195,550],[1240,980]])] }];
     downhill.kind = 'Volcanic descent / a timed lava crossing / caldera ram';
     downhill.brief += ' Muesli Furnace periodically sends lava across the western run-up. Watch its marked channel: preserve enough speed to cross the cooled lava bed and flooded rim in one committed approach.';
-    downhill.tip = 'The furnace countdown is in simulation seconds. Amber means the vent is warning; orange means dangerous lava. Cross during the quiet window, divert around the channel, or shield a brief exposure. Never stop in the moat.';
+    downhill.tip = 'Amber warns of an eruption; orange means lava. Cross during the quiet window, divert around the channel, or shield a brief exposure. Never stop in the moat.';
     forest.rampage.volcanoes = [
         {id:'bramble-vent',name:'BRAMBLE FISSURE',x:755,y:580,r:30,period:46,warning:6,eruption:12,offset:22,
             zones:[footprint([[750,562],[1065,568],[1075,635],[750,620]])]},

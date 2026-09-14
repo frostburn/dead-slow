@@ -272,7 +272,6 @@
             line([
                 { x: 8, y: 0 }, { x: 5, y: 2 }
             ], '#82cfa5bb', .5);
-            text('BOW', 10, 0, '#9fe3bd', 2.4, 'left');
             const ghostShip = {
                 x: 0, y: 0, a: 0, length: run.ship.length, beam: run.ship.beam, vessel: run.ship.vessel
             };

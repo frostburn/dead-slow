@@ -218,7 +218,7 @@
                 x: 345, y: 68, a: -90 * D, l: 41, w: 19, angle: 10, speed: .50
             },
             brief: 'Get pilot clearance at the amber buoy. Catch the boom window, round the next buoy, cross the ferry lane and finish bow-north at the tight final berth.',
-            tip: 'Everything is deterministic. A patient first run is reconnaissance for a much faster second run.',
+            tip: 'Watch the traffic and tide on your first attempt, then plan a faster route.',
             pace: [210, 295, 410], current: [.13, -.09], obstacles: [
                 {
                     x: 205, y: 20, w: 17, h: 131, label: 'OUTER MOLE'
@@ -557,7 +557,7 @@
         { id:'archipelago', number:3, name:'The Archipelago', subtitle:'SUMMER SERVICE · EVERY ISLAND COUNTS', theme:'archipelago', description:'A long-light island service. Carry cars between village ramps, tow stranded vessels past granite skerries and relocate a floating sauna.' },
         { id:'gerbozilla', number:4, name:'Gerbozilla’s Rampage', subtitle:'GIANT PET · TWELVE FIELD COURSES', theme:'rampage', description:'Twelve championship field courses: momentum, forest orienteering, volcanic crossings, giant pets and Lady Whiskerdoom’s journey home. Green slows rolling; black boulders are impassable.' },
         { id:'long-grade', number:5, name:'The Long Grade', subtitle:'HEAVY RAIL · COMING SOON', theme:'rail', comingSoon:true, description:'Coming soon: heavy freight, coupler slack, mountain grades and a train whose tail is still in the previous valley.' },
-        { id:'meridian', number:6, name:'The Black Meridian', subtitle:'DEEP SPACE · NO FREE BRAKES', theme:'space', description:'Twelve spacecraft assignments: moving cradles, refuelling, assembly, recoil, beam rescue, stellar shadows and your own history. The Century Ship is a separate bonus, outside every circuit.' },
+        { id:'meridian', number:6, name:'The Black Meridian', subtitle:'DEEP SPACE · NO FREE BRAKES', theme:'space', description:'Twelve spacecraft assignments: moving cradles, refuelling, assembly, recoil, beam rescue, stellar shadows and your own history. The Century Ship is a separate bonus, excluded from every circuit.' },
         { id:'pale-reach', number:7, name:'Race for the Pale Reach', subtitle:'ICE & CONFLICT · COMING SOON', theme:'polar', comingSoon:true, description:'Coming soon: icebreakers, supply convoys and submarine operations in a wholly fictional polar conflict. Keep the passage open.' },
         { id:'megastructures', number:8, name:'Tow the Impossible', subtitle:'BUILD SOMETHING BIGGER · COMING SOON', theme:'platform', comingSoon:true, description:'Coming soon: floating hospitals, bridge spans and entire terminals. End the journey by placing the harbor itself.' }
     ];
