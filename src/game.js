@@ -184,7 +184,6 @@
         audio.tick(run.ship, false);
     }
     function retry() {
-        if (run.watch) return developer.menu.normal();
         if (marathon && status !== 'complete' && run.time > 0) {
             marathon.total += run.time;
             marathon.sectorTime += run.time;
@@ -282,14 +281,8 @@
         toast(`${name} · ${format(run.time)}${Number.isFinite(prev) ? ` (${deltaFormat(run.time - prev)} vs PB)` : ''}`);
         audio.checkpoint();
     }
-    function watchRail() {
-        const result=developer.menu.watch('long-grade-1',8);
-        run.watch=true; updateHud(); return result;
-    }
     function railCommand(name, value) {
         if (name === 'help') return showHelp();
-        if (name === 'watch') return watchRail();
-        if (name === 'drive') return developer.menu.normal();
         if (name === 'retry') return retry();
         if (status !== 'running' || !run.rail) return false;
         const oldBrake = R.engineGroup(run.rail).brake;
@@ -300,7 +293,9 @@
         updateHud(); return ok;
     }
     function advanceRail(dt) {
-        R.update(run.rail, dt); run.time = run.rail.time; run.distance = run.rail.stats.distance;
+        R.update(run.rail, dt);
+        if (run.rail.stats.contacts>run.contacts) audio.railEvent('couple');
+        run.time = run.rail.time; run.distance = run.rail.stats.distance; run.contacts = run.rail.stats.contacts;
         const g = R.engineGroup(run.rail), c = g.cars.find(c=>c.powered), p = R.locate(run.rail,g,c.q);
         Object.assign(run.ship,{x:p.x,y:p.y,a:p.a,vx:c.v*Math.cos(p.a),vy:c.v*Math.sin(p.a)});
         run.maxSpeed = Math.max(run.maxSpeed,Math.abs(c.v));
@@ -916,7 +911,7 @@
         $('work-panel').classList.toggle('tow-mode', isTow);
     }
     const actions = {
-        'watch-rail': watchRail, 'rail-drive': () => developer.menu.normal(), begin, resume, retry, courses: showCourses, log: () => showLog(), help: showHelp, back, next: nextHarbor, marathon: () => startMarathon(), 'grand-tour': () => startMarathon('grand-tour'), export: exportRecords, import: () => $('import-file').click(),
+        begin, resume, retry, courses: showCourses, log: () => showLog(), help: showHelp, back, next: nextHarbor, marathon: () => startMarathon(), 'grand-tour': () => startMarathon('grand-tour'), export: exportRecords, import: () => $('import-file').click(),
         'toggle-ghost': () => toggleSetting('ghost'), 'toggle-guide': () => toggleSetting('guide'), 'toggle-sound': () => toggleSetting('sound'), 'toggle-focus-pause': () => toggleSetting('pauseOnBlur'), reset: () => {
             openDialog('erase', `${topModal('Clear the logbook?')}<p>This erases all local times, ghosts and arrival counts. Export first to keep a copy.</p><div class="dialog-actions"><button data-action="confirm-reset" class="danger">Erase all records</button><button class="primary" data-action="log" autofocus>Keep my records</button></div>`);
         }, 'confirm-reset': () => {

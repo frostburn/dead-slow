@@ -29,6 +29,12 @@ handbrakes hold them indefinitely. Gentle coupling merges routes, reverses
 vehicle facing when needed and conserves longitudinal momentum. A route check
 prevents coupling across adjacent parallel tracks.
 
+Buffer and track-end impacts count once per contact episode. Stopping at the
+buffers does not erase approach speed: an impact over 2 km/h blocks coupling
+until the cuts separate beyond 3 m and approach again. Final parking requires
+the listed wagons to remain coupled to the locomotive; delivery tasks still
+allow the detached, secured cuts needed for shunting.
+
 Stopping distance estimates full service braking with current temperature,
 mass-weighted grade and brake response delay. It is an estimate, not a promised
 stop point; changing grades ahead and coupler movement still matter. Curve
@@ -36,7 +42,7 @@ limits apply to every wagon, with sustained severe overspeed ending a run.
 
 ## Sound, warnings and a watchable run
 
-The train has filtered diesel rumble, distance-driven wheel joints, braking
+The train has filtered diesel rumble, distance-driven paired bogie clacks, braking
 noise, air release and mechanical coupling/point cues. Sound stops on pause,
 mute, departure changes and failure. Cue counts are bounded during accelerated
 playback. The shared horn remains available with H.
@@ -47,12 +53,11 @@ red begins at 120% of the limit, before the sustained 135% derailment threshold.
 Looking ahead does not reserve points. Junction lamps highlight both the common
 track and the selected branch. Reverse is always labeled as an action.
 
-5-01 has a fixed input recording available from **Watch run** in the briefing
-or `DeadSlow.watch("long-grade-1", 8)`. It completes in 590.408 seconds of
+5-01 has a fixed input recording available through the browser console:
+`DeadSlow.watch("long-grade-1", 8)`. It completes in 590.408 seconds of
 simulation time (about 74 seconds at 8×). No vehicle positions or objectives
-are changed during playback. **Take controls**, or retrying the demonstration,
-starts a fresh ranked attempt at 1×. Console playback keeps the existing
-console speed behavior. Regenerate with `node tools/record-rail-run.cjs`
+are changed during playback. `DeadSlow.normal()` starts a fresh ranked attempt at 1×. Replay controls stay
+out of the player UI. Regenerate with `node tools/record-rail-run.cjs`
 followed by `node tools/sync-replays.cjs`.
 
 ## Space for the remaining missions

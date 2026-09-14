@@ -6,7 +6,7 @@ function context(){
     const node=()=>({gain:param(),frequency:param(),Q:param(),connect(){},disconnect(){}});
     ctx.createGain=()=>{const g=node();ctx.gains.push(g);return g;};ctx.createBiquadFilter=node;
     ctx.createBuffer=(n,length)=>({getChannelData:()=>new Float32Array(length)});
-    ctx.createOscillator=ctx.createBufferSource=()=>{const s={...node(),start(){},stop(){s.stopped=true;},setPeriodicWave(){s.custom=true;}};ctx.sources.push(s);return s;};
+    ctx.createOscillator=ctx.createBufferSource=()=>{const s={...node(),start(time){s.startTime=time;},stop(time){s.stopped=true;s.stopTime=time;},setPeriodicWave(){s.custom=true;}};ctx.sources.push(s);return s;};
     return ctx;
 }
 const state=(distance=0,speed=3)=>({power:2,independent:0,stats:{distance},groups:[{cars:[{powered:true,v:speed,pressure:.5}]}]});
@@ -20,5 +20,16 @@ test('frozen distance creates no wheel-joint backlog and accelerated ticks stay 
     const ctx=context(),train=A.createTrain(ctx);train.tick(state(),true);const count=ctx.sources.length;
     for(let i=1;i<100;i++){ctx.currentTime=i*.01;train.tick(state(),true);}assert.equal(ctx.sources.length,count);
     for(let i=1;i<100;i++)train.tick(state(i*100),true);
-    assert.ok(ctx.sources.length<=count+2);train.dispose();
+    assert.ok(ctx.sources.length<=count+8);train.dispose();
+});
+test('wheel joints sound as two close axle pairs followed by a longer gap',()=>{
+    const ctx=context(),train=A.createTrain(ctx);train.tick(state(0,8),true);
+    const first=ctx.sources.slice(3).filter((_,i)=>i%2===0).map(s=>s.startTime);
+    assert.equal(first.length,4);assert.ok(Math.abs(first[1]-first[0]-.2)<1e-9);
+    assert.ok(Math.abs(first[3]-first[2]-.2)<1e-9);
+    assert.ok(first[2]-first[1]>.3);
+    ctx.currentTime=2.25;train.tick(state(18,8),true);
+    assert.ok(ctx.sources[11].startTime-first[3]>1.4);
+    ctx.currentTime=2.3;train.tick(state(18,0),true);
+    assert.ok(ctx.sources.slice(11).every(s=>s.stopTime<=2.315));train.dispose();
 });

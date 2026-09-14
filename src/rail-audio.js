@@ -16,12 +16,12 @@
         squeal.type='sine';squealFilter.type='lowpass';squealFilter.frequency.value=1700;
         squeal.connect(squealFilter);squealFilter.connect(squealGain);squealGain.connect(bus);squeal.start();
         const voices=new Set();let joint=null,nextJoint=0,disposed=false,active=false;
-        function impulse(kind) {
+        function impulse(kind,delay=0,accent=1) {
             if(disposed)return;
-            const now=ctx.currentTime,air=kind==='brake',heavy=kind==='couple'||kind==='uncouple';
+            const now=ctx.currentTime+delay,air=kind==='brake',heavy=kind==='couple'||kind==='uncouple';
             const duration=air?.48:heavy?.3:.11,env=ctx.createGain(),filter=ctx.createBiquadFilter(),source=ctx.createBufferSource();
             source.buffer=buffer;filter.type=air?'highpass':'lowpass';filter.frequency.value=air?1150:heavy?800:1400;filter.Q.value=.55;
-            env.gain.setValueAtTime(0,now);env.gain.linearRampToValueAtTime(air?.045:heavy?.13:.065,now+.006);
+            env.gain.setValueAtTime(0,now);env.gain.linearRampToValueAtTime((air?.045:heavy?.13:.065)*accent,now+.006);
             env.gain.exponentialRampToValueAtTime(.0001,now+duration);
             source.connect(filter);filter.connect(env);env.connect(bus);
             const sources=[source],nodes=[filter,env];
@@ -29,7 +29,7 @@
                 const ring=ctx.createOscillator(),level=ctx.createGain();ring.type='sine';ring.frequency.value=heavy?112:236;level.gain.value=.16;
                 ring.connect(level);level.connect(env);sources.push(ring);nodes.push(level);
             }
-            const voice={stop(){for(const s of sources)try{s.stop(ctx.currentTime+.015);}catch(_){/* ended */}}};
+            const voice={kind,stop(){for(const s of sources)try{s.stop(ctx.currentTime+.015);}catch(_){/* ended */}}};
             if(voices.size>=6){const oldest=voices.values().next().value;oldest.stop();voices.delete(oldest);}
             voices.add(voice);let ended=0;
             for(const s of sources){s.onended=()=>{s.disconnect();if(++ended===sources.length){nodes.forEach(n=>n.disconnect());voices.delete(voice);}};s.start(now);s.stop(now+duration+.015);}
@@ -49,8 +49,16 @@
                 rolling.gain.setTargetAtTime(.045*clamp(speed/12,0,1),now,.1);
                 squeal.frequency.setTargetAtTime(530+speed*23,now,.1);
                 squealGain.gain.setTargetAtTime(.008*braking*clamp(speed/5,0,1),now,.08);
-                const phase=Math.floor(st.stats.distance/6);
-                if(speed>.3&&phase!==joint&&now>=nextJoint){impulse('joint');nextJoint=now+.12;}
+                // Two axle pairs, then the long space to the next rail joint.
+                // Schedule a whole burst on the audio clock so even a sparse or
+                // accelerated frame cannot flatten it into evenly spaced clicks.
+                const phase=Math.floor(st.stats.distance/18);
+                if(speed>.3&&phase!==joint&&now>=nextJoint){
+                    const interval=clamp(1.6/speed,.045,.4);
+                    [0,1,2.7,3.7].forEach((offset,i)=>impulse('joint',offset*interval,[1,.72,.9,.65][i]));
+                    nextJoint=now+interval*7.8;
+                }
+                if(speed<=.3)for(const voice of voices)if(voice.kind==='joint'){voice.stop();voices.delete(voice);}
                 joint=phase;
             },
             event(kind) {if(active)impulse(kind);},

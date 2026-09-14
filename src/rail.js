@@ -1,6 +1,7 @@
 (function(root) {
     'use strict';
-    const clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),G=9.81,GAP=1.2;
+    const clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),G=9.81,GAP=1.2,COUPLING_SPEED=2/3.6;
+    const impactKey=hit=>[hit.a.car.id,hit.b.car.id].sort().join('|');
     const other=(edge,node)=>edge.a===node?edge.b:edge.a;
     function network(config) {
         const edges={};
@@ -122,7 +123,8 @@
         const group=engineGroup(st),hit=nearby(st,group);
         if(!hit){st.notice='Bring either end within 3 m of the waiting cut.';return false;}
         const {cut,a,b}=hit,orientation=Math.cos(a.a-b.a)>0?1:-1;
-        if(Math.abs(a.car.v-b.car.v*orientation)>.65){st.notice='Too fast to couple. Match speed below 2 km/h.';return false;}
+        if(st.bufferImpact?.key===impactKey(hit)&&st.bufferImpact.speed>COUPLING_SPEED){st.notice='Approach was too fast. Back away beyond 3 m, then approach below 2 km/h.';return false;}
+        if(Math.abs(a.car.v-b.car.v*orientation)>COUPLING_SPEED){st.notice='Too fast to couple. Match speed below 2 km/h.';return false;}
         const moved=cut.cars.map(c=>({...c,q:a.q+a.sign*GAP+(c.q-b.q)*orientation,v:c.v*orientation,face:c.face*orientation}));
         const low=Math.min(...moved.map(c=>c.q-c.length/2)),high=Math.max(...moved.map(c=>c.q+c.length/2));
         // Extend the receiving path, then verify that every donor wagon still
@@ -138,7 +140,7 @@
         if(!matches){group.path=saved;st.notice='Align the route with the waiting cut.';return false;}
         const total=[...group.cars,...moved],momentum=total.reduce((s,c)=>s+c.mass*c.v,0),mass=total.reduce((s,c)=>s+c.mass,0);
         total.forEach(c=>c.v=momentum/mass);group.cars=total.sort((a,b)=>b.q-a.q);st.groups=st.groups.filter(g=>g!==cut);
-        st.stats.couplings++;st.notice='Coupled. Check the handbrakes before pulling away.';return true;
+        st.bufferImpact=null;st.stats.couplings++;st.notice='Coupled. Check the handbrakes before pulling away.';return true;
     }
     function inside(st,car,group,zone) {
         return [-1,1].every(sign=>{const p=locate(st,group,car.q+sign*car.length/2);return p.edge===zone.edge&&p.s>=zone.from&&p.s<=zone.to;});
@@ -149,6 +151,7 @@
         if(task.type==='stop')return inside(st,engine,eg,zone)&&Math.abs(engine.v)<.08&&(!task.independent||st.independent>.3)&&st.power===0;
         if(task.type==='coupled')return task.cars.every(id=>eg.cars.some(c=>c.id===id));
         const cars=task.cars.map(id=>{const g=groupFor(st,id);return {g,c:g?.cars.find(c=>c.id===id)};});
+        if(task.type==='park'&&cars.some(({g})=>g!==eg))return false;
         return st.power===0&&cars.every(({c,g})=>c&&Math.abs(c.v)<.08&&c.hand&&inside(st,c,g,zone)&&
             (task.type!=='delivery'||!g.cars.some(c=>c.powered)))&&st.net.switches.every(s=>!occupied(st,s.node));
     }
@@ -205,9 +208,14 @@
             while(group.path.length>1&&b.hi<group.path[group.path.length-1].start-14)group.path.pop();
             for(const forward of [false,true]) {
                 const bound=forward?b.hi:b.lo,leg=forward?group.path[group.path.length-1]:group.path[0];
+                const contactKey=leg.id+':'+forward;
+                group.endContacts=group.endContacts||{};
+                if(forward?bound<leg.end-3:bound>leg.start+3)delete group.endContacts[contactKey];
                 if(forward?bound>leg.end-2:bound<leg.start+2) {
                     if(!extend(st,group,forward)) {
                         const speed=Math.max(...cars.map(c=>Math.abs(c.v)));
+                        if(!group.endContacts[contactKey]&&speed>.02)st.stats.contacts++;
+                        group.endContacts[contactKey]=true;
                         if(speed>1.4)st.failure='The train ran past a stop or into the buffers. Brake earlier.';
                         const shift=forward?Math.min(0,leg.end-2-bound):Math.max(0,leg.start+2-bound);
                         cars.forEach(c=>{c.q+=shift;c.v=0;});
@@ -221,11 +229,16 @@
         const eg=engineGroup(st),hit=nearby(st,eg,1.1);
         if(hit) {
             const rel=hit.a.car.v-hit.b.car.v*Math.cos(hit.a.a-hit.b.a);
+            const key=impactKey(hit),previous=st.bufferImpact?.key===key?st.bufferImpact:null;
+            if(!previous&&Math.abs(rel)>.02)st.stats.contacts++;
+            st.bufferImpact={key,speed:Math.max(previous?.speed||0,Math.abs(rel))};
             if(Math.abs(rel)>1.4)st.failure='A hard coupling damaged the wagons. Approach below 2 km/h.';
             const correction=1.2-Math.hypot(hit.a.x-hit.b.x,hit.a.y-hit.b.y);
             eg.cars.forEach(c=>{c.q-=hit.a.sign*Math.max(0,correction);c.v=0;});hit.cut.cars.forEach(c=>c.v=0);
-            st.power=0;st.notice='Buffers touching. Press F to couple.';
+            st.power=0;st.notice=st.bufferImpact.speed>COUPLING_SPEED?'Hard buffer contact. Back away beyond 3 m and approach slowly.':'Buffers touching. Press F to couple.';
         }
+        const approach=nearby(st,eg,3);
+        if(st.bufferImpact&&(!approach||impactKey(approach)!==st.bufferImpact.key))st.bufferImpact=null;
         for(const task of st.config.tasks) {
             const met=taskReady(st,task);
             st.taskHold[task.id]=met?(st.taskHold[task.id]||0)+dt:0;

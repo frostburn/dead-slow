@@ -14,7 +14,7 @@
             <div class="rail-actions"><button data-rail="reverse" id="rail-reverse" title="Change travel direction (X)">Reverse · X</button><button data-rail="stop">Full brake · Space</button><button data-rail="couple">Couple · F</button><button data-rail="hand" id="rail-hand">Handbrakes · B</button></div>
             <p class="rail-caption">Select a cut to set its handbrakes. Cut a link to uncouple.</p><div id="rail-consist" class="rail-consist"></div>
             <div id="rail-switches" class="rail-switches"></div><div id="rail-tasks" class="rail-tasks"></div><p id="rail-notice" role="status"></p>
-            <div class="rail-actions"><button data-rail="retry">Retry <kbd>Shift+R</kbd></button><button data-rail="help">Controls</button></div>${level.id==='long-grade-1'?'<button class="rail-watch" data-rail="watch">Watch run</button>':''}`;
+            <div class="rail-actions"><button data-rail="retry">Retry <kbd>Shift+R</kbd></button><button data-rail="help">Controls</button></div>`;
         $('rail-panel').onclick=e=>{const b=e.target.closest('[data-rail]');if(b&&b.tagName!=='INPUT')act(b.dataset.rail,b.dataset.value);};
         $('rail-panel').oninput=e=>{if(e.target.dataset.rail)act(e.target.dataset.rail,Number(e.target.value));};
         $('sea').onclick=e=>{
@@ -70,12 +70,11 @@
         $('rail-tasks').innerHTML=st.config.tasks.map(t=>`<div class="${st.completed.includes(t.id)?'done':''}">${st.completed.includes(t.id)?'✓':'○'} ${t.text}</div>`).join('');
         $('rail-notice').textContent=st.notice;
         $('clock-label').classList.toggle('practice',run.pausedUsed);
-        $('clock-label').textContent=run.watch?'WATCHING RUN':run.pausedUsed?'PRACTICE · UNRANKED':'RUN TIME';
-        const watch=$('rail-panel').querySelector('.rail-watch');
-        if(watch){watch.textContent=run.watch?'Take controls':'Watch run';watch.dataset.rail=run.watch?'drive':'watch';}$('clock').textContent=format(run.time);
+        $('clock-label').textContent=run.pausedUsed?'PRACTICE · UNRANKED':'RUN TIME';
+        $('clock').textContent=format(run.time);
         $('mission-name').textContent=level.name;$('brief').textContent=level.brief;
         $('weather-text').textContent='THE LONG GRADE';
-        $('rail-panel').querySelectorAll('button,input').forEach(b=>{if(!['help','retry','watch','drive'].includes(b.dataset.rail)&&b.dataset.rail!=='switch')b.disabled=status!=='running';});
+        $('rail-panel').querySelectorAll('button,input').forEach(b=>{if(!['help','retry'].includes(b.dataset.rail)&&b.dataset.rail!=='switch')b.disabled=status!=='running';});
     }
     function render(canvas,level,run,zoom=1) {
         const st=run.rail,ctx=canvas.getContext('2d'),rect=canvas.getBoundingClientRect(),dpr=root.devicePixelRatio||1;
@@ -169,10 +168,10 @@
     }
     function dialog(kind,level,run,format,hasNext=false) {
         const st=run.rail,actions=(primary,label)=>`<div class="dialog-actions"><button class="primary" data-action="${primary}" autofocus>${label}</button><button data-action="courses">World map</button>${kind!=='intro'?'<button data-action="retry">Retry · Shift+R</button>':'<button data-action="help">Controls</button>'}</div>`;
-        if(kind==='intro')return `<div class="eyebrow">${level.tag}</div><h1>${level.name}</h1><p>${level.brief}</p><p class="subtle">${level.tip}</p>${actions('begin','Take the controls')}${level.id==='long-grade-1'?'<button class="rail-watch" data-action="watch-rail">Watch run</button>':''}`;
+        if(kind==='intro')return `<div class="eyebrow">${level.tag}</div><h1>${level.name}</h1><p>${level.brief}</p><p class="subtle">${level.tip}</p>${actions('begin','Take the controls')}`;
         if(kind==='pause')return `<div class="eyebrow">PRACTICE</div><h1>Train held.</h1><p>Pausing makes this attempt unranked. Retry for a recorded run.</p>${actions('resume','Resume')}`;
         if(kind==='failed')return `<div class="eyebrow">RUN ENDED</div><h1>Freight stopped.</h1><p>${st.failure}</p>${actions('retry','Try again')}`;
-        if(kind==='result')return `<div class="eyebrow">${run.pausedUsed?'PRACTICE COMPLETE':run.pb?'PERSONAL BEST':'DELIVERY COMPLETE'}</div><h1>Every wagon accounted for.</h1><div class="result-time">${format(run.time)}</div><p>${Math.round(st.stats.distance)} m traveled · ${st.stats.couplings} couplings${level.rail.thermal?' · peak brakes '+Math.round(st.stats.peakTemperature)+'°C':''}</p>${actions(run.watch?'rail-drive':hasNext?'next':'courses',run.watch?'Take controls':hasNext?'Next assignment':'World map')}${!run.pausedUsed?'<p class="subtle">Time saved to your logbook.</p>':''}`;
+        if(kind==='result')return `<div class="eyebrow">${run.pausedUsed?'PRACTICE COMPLETE':run.pb?'PERSONAL BEST':'DELIVERY COMPLETE'}</div><h1>Every wagon accounted for.</h1><div class="result-time">${format(run.time)}</div><p>${Math.round(st.stats.distance)} m traveled · ${st.stats.couplings} couplings${level.rail.thermal?' · peak brakes '+Math.round(st.stats.peakTemperature)+'°C':''}</p>${actions(hasNext?'next':'courses',hasNext?'Next assignment':'World map')}${!run.pausedUsed?'<p class="subtle">Time saved to your logbook.</p>':''}`;
         return `<div class="eyebrow">RAILWAY CONTROLS</div><h1>Give the tail time.</h1><p>W / S changes power. A / D releases / applies the train brake. Q / E releases / applies the locomotive brake. Space cuts power and applies full train brake. Stop before reversing with X.</p><p>Click a signal or route button to change points. Occupied points are locked until the whole train clears.</p><p>Approach within 3 m at less than 2 km/h, then press F to couple. Stop with brakes applied and power off before cutting a link in the train strip. Select a cut and press B to set or release its handbrakes. Detached air brakes slowly leak away.</p><p>The grade strip shows which wagons are uphill. Stopping distance estimates full train braking, including brake delay and current temperature. Brake before a lower speed limit; it applies until the tail clears.</p><p>Shift+R retries. Escape pauses. Focus-loss pausing is optional in the logbook.</p>${actions('back','Back')}`;
     }
     const api={prepare,key,update,render,dialog};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.RailView=api;
