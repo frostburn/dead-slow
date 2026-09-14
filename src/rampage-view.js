@@ -300,24 +300,11 @@ ${context.archived48?.length?`<details><summary>48-stage Grand Tour (archived)</
                 if(!R.blocked(st,s,{x,y})){g.globalAlpha=(1-u)*.7;circle(g,x,y,4+u*12,i%2?'#ffbd56':'#e96e37');g.globalAlpha=1;}}
         }
         function volcanoes(g,st,time) {
-            // Banks and the vent apron are scenery. The translucent outer fill
-            // still marks the exact collision polygon; all moving texture is clipped.
-            function outline(poly,rounded=false) {
+            // Follow the shared high-resolution contour exactly, so the
+            // winding visible banks agree with the damaging footprint.
+            function outline(poly) {
                 g.beginPath();
-                if(!rounded) {
-                    poly.forEach((p,i)=>i?g.lineTo(p.x,p.y):g.moveTo(p.x,p.y));
-                } else {
-                    const cut=(p,q)=>{
-                        const f=Math.min(.18,10/Math.hypot(q.x-p.x,q.y-p.y));
-                        return {x:p.x+(q.x-p.x)*f,y:p.y+(q.y-p.y)*f};
-                    };
-                    poly.forEach((p,i)=>{
-                        const before=cut(p,poly[(i+poly.length-1)%poly.length]);
-                        const after=cut(p,poly[(i+1)%poly.length]);
-                        if(i)g.lineTo(before.x,before.y);else g.moveTo(before.x,before.y);
-                        g.quadraticCurveTo(p.x,p.y,after.x,after.y);
-                    });
-                }
+                poly.forEach((p,i)=>i?g.lineTo(p.x,p.y):g.moveTo(p.x,p.y));
                 g.closePath();
             }
             for(const v of st.volcanoes || []) {
@@ -331,16 +318,17 @@ ${context.archived48?.length?`<details><summary>48-stage Grand Tour (archived)</
                     const c=poly.reduce((a,p)=>({x:a.x+p.x/poly.length,y:a.y+p.y/poly.length}),{x:0,y:0});
                     // A cooled feeder joins the channel to the crater, including
                     // the safe gap on Muesli Furnace. It never glows like hot lava.
-                    g.beginPath();g.moveTo(v.x,v.y);g.lineTo(c.x,c.y);
+                    const mouth=poly.reduce((a,p)=>Math.hypot(p.x-v.x,p.y-v.y)<Math.hypot(a.x-v.x,a.y-v.y)?p:a);
+                    g.beginPath();g.moveTo(v.x,v.y);g.quadraticCurveTo(v.x,mouth.y,mouth.x,mouth.y);
                     g.strokeStyle='#8b796f90';g.lineWidth=v.r*1.5;g.stroke();
-                    outline(poly,true);g.strokeStyle='#ad98826b';g.lineWidth=22;g.stroke();
+                    outline(poly);g.strokeStyle='#ad98826b';g.lineWidth=22;g.stroke();
                     g.fillStyle='#776858';g.fill();g.strokeStyle='#706357';g.lineWidth=7;g.stroke();
                     outline(poly);g.fillStyle=hot?(v.steam?'#dedcccaa':'#d8683280'):warn?'#dcb44f55':'#a38b6328';g.fill();
                     g.save();g.clip();
                     const bed=g.createRadialGradient(v.x,v.y,0,v.x,v.y,Math.hypot(c.x-v.x,c.y-v.y)*2+v.r);
                     bed.addColorStop(0,hot?(v.steam?'#fff2d8':'#fff09a'):warn?'#dcb663':'#544d46');
                     bed.addColorStop(1,hot?(v.steam?'#abaeaa':'#9b3925'):warn?'#977341':'#897360');
-                    outline(poly,true);g.fillStyle=bed;g.fill();
+                    outline(poly);g.fillStyle=bed;g.fill();
                     const angle=Math.atan2(c.y-v.y,c.x-v.x),length=Math.max(...poly.map(p=>Math.hypot(p.x-v.x,p.y-v.y)));
                     g.translate(v.x,v.y);g.rotate(angle);
                     for(let lane=-2;lane<=2;lane++) {

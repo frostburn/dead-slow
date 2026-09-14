@@ -124,3 +124,36 @@ test('retrying a completed circuit stage leaves the circuit',()=>{
  assert.equal(t.cheats.progress().circuit.time,12);
  t.requestRetry();assert.equal(t.cheats.progress().circuit,null);assert.equal(t.state.run.time,0);
 });
+
+// Contour tests use geometry probes, not navigation shortcuts.
+test('volcano banks are densely sampled, simple concave contours with full-shell contact',()=>{
+ for(const l of R.levels)for(const v of l.rampage.volcanoes||[])for(const poly of v.zones){
+  assert.equal(poly.length,256);let left=0,right=0;
+  const cross=(a,b,c)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
+  for(let i=0;i<poly.length;i++){
+   const a=poly[i],b=poly[(i+1)%poly.length],c=poly[(i+2)%poly.length];
+   assert.ok(Number.isFinite(a.x)&&Number.isFinite(a.y));
+   assert.ok(Math.hypot(a.x-b.x,a.y-b.y)>0 && Math.hypot(a.x-b.x,a.y-b.y)<8);
+   if(cross(a,b,c)>0)left++;else right++;
+   assert.ok(R.volcanoContact(v,a,1));
+   for(let j=i+2;j<poly.length;j++){
+    if(i===0 && j===poly.length-1)continue;
+    const d=poly[j],e=poly[(j+1)%poly.length];
+    assert.ok(!(cross(a,b,d)*cross(a,b,e)<0 && cross(d,e,a)*cross(d,e,b)<0),'bank must not cross itself');
+   }
+  }
+  assert.ok(left>0&&right>0,'banks have both coves and lobes');
+ }
+});
+test('schema 14 preserves angular hazard records in separate, idempotent archives',()=>{
+ const d=S.fresh();d.version=13;
+ const stage={runs:[{time:90,contacts:1,clean:false},{time:100,contacts:0,clean:true}],ghost:[[0,1,2,3]],bestSplits:[30]};
+ for(const id of [...altered,'dead-slow'])d.stages[id]=stage;
+ for(const id of ['coast','gerbozilla','grand-tour'])d.races[id]=stage.runs;
+ const s=S.sanitize(d);assert.equal(s.version,14);
+ for(const id of altered){assert.equal(s.stages[id],undefined);assert.deepEqual(s.archivedStages[id+'-contour-v1'].ghost,stage.ghost);}
+ for(const id of ['gerbozilla','grand-tour']){assert.equal(s.races[id].length,0);assert.equal(s.archivedRaces[id+'-contour-v1'].length,2);}
+ assert.equal(s.stages['dead-slow'].runs.length,2);assert.equal(s.races.coast.length,2);
+ s.stages[altered[0]]=s.stages['dead-slow'];s.races.gerbozilla=stage.runs;
+ assert.deepEqual(S.sanitize(s),s);
+});

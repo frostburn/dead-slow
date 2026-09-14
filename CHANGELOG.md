@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Retry immediately with Shift+R or a retry button; remove the pause-inducing confirmation.
-- Blend volcanic channels into their vents with rounded basalt banks, shaded lava and drifting steam; preserve hazard geometry and timing.
+- Replace angular volcanic footprints with shared winding contours, rounded lobes and matching collision boundaries. Keep eruption timing; archive records from the angular layouts.
 
 ## 5.1.0 — The Eight-World Atlas
 

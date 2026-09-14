@@ -610,6 +610,8 @@
                 return { name, overall: rows[0]?.time, clean: rows.find(r => r.clean)?.time };
             })).filter(row => Number.isFinite(row.overall));
         return older.concat([
+            ['gerbozilla-contour-v1','World 4 · angular volcanic banks'],
+            ['grand-tour-contour-v1','Grand Tour · angular volcanic banks'],
             ['gerbozilla-volcano-v1','World 4 · before volcanic crossings'],
             ['grand-tour-order-v1','Grand Tour · earlier world order']
         ].map(([id,name])=>{
@@ -618,7 +620,7 @@
         }).filter(row=>Number.isFinite(row.overall)));
     }
     function showLog(filter = 'overall') {
-        if (level.rampage) { pauseForMenu(); return openDialog('log', G.dialog('log', level, run, format, store.stage(level.id).runs, settings, [level.id+'-volcano-v1',level.id+'-layout-v1',level.id+'-preview',level.id,level.rampage.retiredId].filter(Boolean).filter(id=>store.data.archivedStages[id]).map(id=>({id,...store.data.archivedStages[id]})), fieldContext(true))); }
+        if (level.rampage) { pauseForMenu(); return openDialog('log', G.dialog('log', level, run, format, store.stage(level.id).runs, settings, [level.id+'-contour-v1',level.id+'-volcano-v1',level.id+'-layout-v1',level.id+'-preview',level.id,level.rampage.retiredId].filter(Boolean).filter(id=>store.data.archivedStages[id]).map(id=>({id,...store.data.archivedStages[id]})), fieldContext(true))); }
         pauseForMenu();
         const s = store.stage(level.id), runs = s.runs.filter(r => filter !== 'clean' || r.clean).slice(0, 10);
         openDialog('log', `${topModal(wording('The captain’s logbook.', 'The flight logbook.'))}
