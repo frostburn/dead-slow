@@ -28,7 +28,7 @@
                 const upcoming = (bridge.levels.catalog || []).find(l => l.comingSoon &&
                     (typeof worldOrId === 'string' ? l.id === worldOrId : l.worldNumber === worldOrId && l.stageNumber === stage));
                 throw new RangeError(upcoming ? 'Coming soon: this assignment is not playable yet.' :
-                    'Unknown assignment. Worlds 1, 2, 3, 4 and 6 are playable; World 6 stage 13 is the separate bonus. DeadSlow.levels() lists the atlas.');
+                    'Unknown assignment. Worlds 1–4 and 6 are complete; World 5 stages 1–3 are playable; World 6 stage 13 is the separate bonus. DeadSlow.levels() lists the atlas.');
             }
             return i;
         }
@@ -85,6 +85,7 @@
             const p = playback;
             while (p.event < p.fixture.events.length && p.fixture.events[p.event].time <= p.tick * V.step + 1e-7) {
                 const e = p.fixture.events[p.event++];
+                if (e.rail) bridge.rail(...e.rail);
                 if (e.line) bridge.line();
                 if (e.throttle !== undefined) bridge.throttle(e.throttle - bridge.state().run.ship.throttle);
                 for (const key of ['rudder', 'thruster', 'winch']) if (e[key] !== undefined) p.controls[key] = e[key];
@@ -101,7 +102,7 @@
                 level: p.fixture.level, status: s.status, clean, time: s.run.time,
                 expectedTime: p.fixture.expectedTime, difference: error,
                 verified: s.status === 'complete' && clean && Math.abs(error) <= V.step + 1e-6,
-                contacts: s.run.contacts, lineBreaks: s.run.jobs.stats.lineBreaks, space: s.run.space ? copy(s.run.space.stats) : null, rampage: s.run.rampage ? copy(s.run.rampage.stats) : null,
+                contacts: s.run.contacts, lineBreaks: s.run.jobs.stats.lineBreaks, space: s.run.space ? copy(s.run.space.stats) : null, rampage: s.run.rampage ? copy(s.run.rampage.stats) : null, rail: s.run.rail ? copy(s.run.rail.stats) : null,
                 steps: p.tick, eventsApplied: p.event, ranked: false,
                 method: 'Fixed control inputs through the live game; no repositioning or objective shortcuts.'
             };
@@ -166,6 +167,7 @@
             controls,
             line() { live(); practice('line override'); bridge.line(); },
             warp(x, y, degrees = 0) {
+                if (bridge.state().run.rail) throw new Error('Rail vehicles stay on their track. Retry to reset the train.');
                 const [w, h] = bridge.state().level.world;
                 finite(x, -w, 2 * w, 'X'); finite(y, -h, 2 * h, 'Y'); finite(degrees, -36000, 36000, 'Heading');
                 live(); practice('repositioned hull'); playback = null;

@@ -15,6 +15,7 @@ function replay(fixture) {
     for (let tick = 0; tick < Math.ceil(fixture.duration * 120) && t.state.status === 'running'; tick++) {
         while (event < fixture.events.length && fixture.events[event].time <= tick / 120 + 1e-7) {
             const e = fixture.events[event++];
+            if (e.rail) t.railCommand(...e.rail);
             if (e.line)
                 t.lineAction();
             if (e.throttle !== undefined)

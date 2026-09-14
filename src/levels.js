@@ -549,14 +549,15 @@
     const islandLevels = typeof module !== 'undefined' && module.exports ? require('./archipelago.js') : root.HarborArchipelago;
     const spaceLevels = typeof module !== 'undefined' && module.exports ? require('./space-levels.js') : root.HarborSpaceLevels;
     const rampageLevels = typeof module !== 'undefined' && module.exports ? require('./rampage.js').levels : root.GerboRampage.levels;
+    const railLevels = typeof module !== 'undefined' && module.exports ? require('./rail-levels.js') : root.RailLevels;
     const sources = { coast: levels.slice(), northwatch: night, archipelago: islandLevels,
-        gerbozilla: rampageLevels, meridian: spaceLevels };
+        gerbozilla: rampageLevels, 'long-grade': railLevels, meridian: spaceLevels };
     const worlds = [
         { id:'coast', number:1, name:'The Sheltered Coast', subtitle:'DAY WATCH · ROOM TO LEARN', theme:'coast', description:'Twelve working harbors. Wavebreak basins protect the current-heavy moorings without taking the weight out of the ship.' },
         { id:'northwatch', number:2, name:'Northwatch', subtitle:'NIGHT SHIFT · NO EASY WATER', theme:'night', description:'Twelve exposed night-shift trials: sluice jets, double booms, convoys, tight locks and the final lighthouse run.' },
         { id:'archipelago', number:3, name:'The Archipelago', subtitle:'SUMMER SERVICE · EVERY ISLAND COUNTS', theme:'archipelago', description:'A long-light island service. Carry cars between village ramps, tow stranded vessels past granite skerries and relocate a floating sauna.' },
         { id:'gerbozilla', number:4, name:'Gerbozilla’s Rampage', subtitle:'GIANT PET · TWELVE FIELD COURSES', theme:'rampage', description:'Twelve championship field courses: momentum, forest orienteering, volcanic crossings, giant pets and Lady Whiskerdoom’s journey home. Green slows rolling; black boulders are impassable.' },
-        { id:'long-grade', number:5, name:'The Long Grade', subtitle:'HEAVY RAIL · COMING SOON', theme:'rail', comingSoon:true, description:'Coming soon: heavy freight, coupler slack, mountain grades and a train whose tail is still in the previous valley.' },
+        { id:'long-grade', number:5, name:'The Long Grade', subtitle:'HEAVY RAIL · FIRST THREE ASSIGNMENTS', theme:'rail', partial:true, description:'Quarry freight, a station run-around and a heavy descent. Track the tail, secure your cuts and give the brakes time to respond.' },
         { id:'meridian', number:6, name:'The Black Meridian', subtitle:'DEEP SPACE · NO FREE BRAKES', theme:'space', description:'Twelve spacecraft assignments: moving cradles, refuelling, assembly, recoil, beam rescue, stellar shadows and your own history. The Century Ship is a separate bonus, excluded from every circuit.' },
         { id:'pale-reach', number:7, name:'Race for the Pale Reach', subtitle:'ICE & CONFLICT · COMING SOON', theme:'polar', comingSoon:true, description:'Coming soon: icebreakers, supply convoys and submarine operations in a wholly fictional polar conflict. Keep the passage open.' },
         { id:'megastructures', number:8, name:'Tow the Impossible', subtitle:'BUILD SOMETHING BIGGER · COMING SOON', theme:'platform', comingSoon:true, description:'Coming soon: floating hospitals, bridge spans and entire terminals. End the journey by placing the harbor itself.' }
@@ -586,6 +587,12 @@
             for (const key of ['obstacles','buoys','gates','traffic','speedZones','shelters','currentZones','islands','jobs','towables']) l[key] = l[key] || [];
             levels.push(l); catalog.push(l);
         });
+        if (w.partial) {
+            w.stages = [...sources[w.id], ...planned[w.id].slice(sources[w.id].length).map((name, j) => Object.freeze({
+                id:`${w.id}-${j+sources[w.id].length+1}`, name, campaign:w.id, worldNumber:w.number,
+                stageNumber:j+sources[w.id].length+1, comingSoon:true, theme:w.theme, kind:'Coming soon' }))];
+            catalog.push(...w.stages.filter(l=>l.comingSoon));
+        }
     }
     levels.worlds = worlds;
     levels.catalog = catalog;

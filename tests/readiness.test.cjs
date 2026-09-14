@@ -42,8 +42,8 @@ test('actual fixed-step frames keep speed on retry and stop precisely on complet
  t.cheats.warp(289,121,0);t.cheats.step(3);assert.equal(t.state.status,'complete');const done=t.state.run.time;
  t.frame(5100);near(t.state.run.time,done);t.next();assert.equal(t.cheats.speed(),0);assert.ok(t.state.run.pausedUsed);
 });
-test('all 61 assignments load with finite clean initial state and usable objectives',()=>{
- const t=create();assert.equal(L.length,61);
+test('all 64 assignments load with finite clean initial state and usable objectives',()=>{
+ const t=create();assert.equal(L.length,64);
  for(let i=0;i<L.length;i++){
   t.load(i,false);const {run,level:l}=t.state;
   assert.equal(t.state.status,'ready',l.id);assert.ok([run.ship.x,run.ship.y,run.ship.vx,run.ship.vy].every(Number.isFinite));

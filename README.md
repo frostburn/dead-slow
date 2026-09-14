@@ -4,8 +4,8 @@
 Report [bugs and feature requests](https://github.com/frostburn/dead-slow/issues/).
 
 **Neutral is not a brake.** A top-down ship-handling game about arriving slowly,
-with enough room left to stop—at sea, in vacuum, or inside a giant hamster ball.
-Sixty circuit stages across five playable worlds in an eight-world atlas, a separate Century Ship bonus, local speedrun
+with enough room left to stop—at sea, in vacuum, inside a giant hamster ball, or along a freight railway.
+Sixty circuit stages across five playable worlds in an eight-world atlas, three railway assignments, a separate Century Ship bonus, local speedrun
 records, personal-best ghosts, keyboard controls and a multitouch helm.
 
 ## The eight-world atlas
@@ -16,15 +16,17 @@ records, personal-best ghosts, keyboard controls and a multitouch helm.
 | 2 | Northwatch | 12 playable stages |
 | 3 | The Archipelago | 12 playable stages |
 | 4 | Gerbozilla’s Rampage | 12 playable courses |
-| 5 | The Long Grade | Coming soon — 12 named placeholders |
+| 5 | The Long Grade | First 3 playable assignments; 9 planned |
 | 6 | The Black Meridian | 12 playable sectors + the Century Ship bonus |
 | 7 | Race for the Pale Reach | Coming soon — 12 named placeholders |
 | 8 | Tow the Impossible | Coming soon — 12 named placeholders |
 
-Gray chapters can be inspected but not launched. Their 36 placeholder missions
+Gray chapters can be inspected but not launched. The 33 placeholder missions
 are not counted as playable levels or included in circuits. The Grand Tour visits
 **1 → 2 → 3 → 4 → 6**, sixty assignments; the Century Ship remains separate.
-There are still **61 playable assignments and 38 author recordings**.
+There are **64 playable assignments and 39 author recordings**. The first three railway assignments are individual trials; World 5 joins circuits when its full campaign is ready.
+
+World 5 starts with collecting two quarry wagons, then a station run-around, then a heavy descent with a gentler branch and cooling loop. W/S changes power, A/D the train brake, Q/E the locomotive brake, X reverses at rest, F couples, and B sets or releases the selected cut’s handbrakes. Click a link in the train strip to uncouple. Point buttons lock while occupied. The map shows the head and tail; the strip shows each wagon’s grade. Enter `DeadSlow.watch("long-grade-1", 8)` in the browser console to watch the tutorial recording. `DeadSlow.normal()` starts a fresh attempt at normal speed. See [rail engine notes](docs/RAILWAY.md) for architecture and validation.
 
 **Window focus pausing is optional.** In Logbook & settings, turn off
 “Pause when window loses focus” to keep playing a ranked run while using
@@ -139,7 +141,7 @@ Run one at a time. All twelve courses have input-only reference recordings; the
 ten revised-map recordings are verified for version 5.0.0. They are not
 claimed optimal. Read the [field guide](docs/GERBOZILLA.md) for mechanics and tests.
 
-There are **38 recordings and 61 selectable assignments**. All five playable worlds
+There are **39 recordings and 64 selectable assignments**. All five playable worlds
 have twelve-stage circuits; the **Grand Tour has 60 stages**. The Century Ship
 is the single bonus, excluded from every circuit. Each route has separate
 overall and clean records. The World 4 HUD, result screen and field log show

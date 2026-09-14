@@ -13,6 +13,65 @@
   --sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif
 }
 
+/* Railway controls use the full sidebar; the map keeps room for the tail. */
+body[data-theme="rail"] { --bg:#263830; --panel:#304239; --line:#5b6a53; --green:#c2d59e; --amber:#efd18e; --ink:#f0ecd6; --muted:#b9c4ab; }
+body[data-theme="rail"] .app { grid-template-rows:66px minmax(0,1fr); }
+body[data-theme="rail"] .workspace { grid-template-columns:minmax(0,1fr)320px; }
+body[data-theme="rail"] .sidebar, body[data-theme="rail"] .helm,
+body[data-theme="rail"] .chart-meta, body[data-theme="rail"] .chart-bottom,
+body[data-theme="rail"] .mobile-instruments { display:none; }
+body[data-theme="rail"] .chart-heading { color:#334c3b; pointer-events:none; text-shadow:0 1px #e9e3c9; }
+body[data-theme="rail"] .chart-heading .eyebrow { color:#556546; }
+body[data-theme="rail"] .chart-zoom { bottom:84px; }
+.rail-panel { background:var(--panel); padding:18px 15px; overflow:auto; min-height:0; border-left:1px solid var(--line); font-size:13px; }
+.rail-panel[hidden] { display:none; }
+.rail-readings { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.rail-readings strong { font:36px var(--mono); }
+.rail-readings b { font:20px var(--mono); }
+.rail-readings span { display:block; color:var(--muted); font-size:11px; }
+.rail-summary { margin-top:9px; font:12px var(--mono); line-height:1.5; }
+.rail-danger { color:#ffac87; }
+.rail-alert { margin-top:10px; padding:9px; border:1px solid #d8a44d; border-radius:4px; background:#665122; color:#ffe4a8; font-weight:650; }
+.rail-alert.critical { background:#742e25; border-color:#ff9c7d; color:#fff0ce; }
+.rail-alert[hidden] { display:none; }
+.rail-cut button.at-risk { background:#742e25; border-color:#ff9c7d; color:#fff0ce; }
+.rail-levers { margin:16px 0; }
+.rail-levers label { display:flex; gap:10px; align-items:baseline; margin-top:10px; }
+.rail-levers label output { margin-left:auto; font:12px var(--mono); }
+.rail-levers small { color:var(--muted); width:40px; text-align:right; }
+.rail-levers input { width:100%; height:28px; accent-color:var(--amber); margin:0; }
+.rail-actions { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.rail-panel button { background:#394e40; border-color:#687358; font-size:12px; padding:9px 7px; min-height:36px; }
+.rail-actions button { display:flex; flex-wrap:wrap; gap:4px; justify-content:center; align-items:center; }
+.rail-actions kbd { white-space:nowrap; }
+.rail-caption { color:var(--muted); font-size:11px; line-height:1.5; margin:14px 0 6px; }
+.rail-cut { display:flex; flex-wrap:nowrap; overflow-x:auto; align-items:center; margin:5px 0; padding:4px; background:#25392f; border-radius:4px; }
+.rail-cut button { min-width:32px; padding:5px 2px; border-bottom-width:3px; }
+.rail-cut button span { display:block; font-size:11px; }
+.rail-cut .selected { background:#53684b; border-color:#d9d69e; }
+.rail-cut .secured { box-shadow:inset 0 -3px #e5c57a; }
+.rail-cut .rail-link { flex-shrink:0; min-width:32px; min-height:36px; border:1px solid #66785e; background:transparent; font-size:16px; }
+.rail-panel .rail-relevant, #rail-panel .rail-relevant { outline:2px solid #f2ce83; outline-offset:-2px; }
+#rail-panel button:disabled { opacity:.4; cursor:default; }
+#rail-cut-status, #rail-pickup { font-size:12px; overflow-wrap:anywhere; }
+.rail-switches { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:14px 0; }
+.rail-switches button { text-align:left; display:flex; flex-direction:column; gap:3px; }
+.rail-switches span,.rail-switches small { color:var(--muted); font-size:10px; }
+.rail-switches button:disabled { opacity:.6; }
+.rail-tasks { border-top:1px solid var(--line); padding-top:10px; line-height:1.6; }
+.rail-tasks div { margin-bottom:6px; }
+.rail-tasks .done { color:#c6dfa5; }
+#rail-notice { color:var(--amber); line-height:1.5; min-height:36px; }
+@media(max-width:760px) {
+  body[data-theme="rail"] .app { grid-template-rows:60px minmax(0,1fr); }
+  body[data-theme="rail"] .workspace { grid-template-columns:1fr; grid-template-rows:minmax(220px,1fr) minmax(160px,.85fr); }
+  .rail-panel { padding:12px 16px; border-left:0; border-top:1px solid var(--line); }
+  .rail-levers { display:grid; grid-template-columns:1fr 1fr 1fr; column-gap:12px; margin:8px 0; }
+  .rail-levers label { flex-wrap:wrap; gap:4px; margin:0; grid-row:1; }
+  .rail-levers small { display:none; }
+  .rail-levers input { grid-row:2; }
+}
+
 * {
   box-sizing:border-box
 }
