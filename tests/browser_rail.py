@@ -99,7 +99,9 @@ def check_railway(page, check, out):
     check('U commands the helper without changing front power',page.evaluate('DeadSlowTest.state.run.rail.helper===1 && DeadSlowTest.state.run.rail.power===0'))
     for width in [320,390,844]:
         page.set_viewport_size({'width':width,'height':844 if width<800 else 390})
-        check(f'Four train levers fit at {width}px',page.evaluate('document.documentElement.scrollWidth<=innerWidth && [...document.querySelectorAll(".rail-levers input")].every(e=>e.getBoundingClientRect().right<=innerWidth)'))
+        page.screenshot(path=str(out/f'rail-helper-{width}.png'))
+        bounds=page.evaluate('({page:document.documentElement.scrollWidth,viewport:innerWidth,levers:[...document.querySelectorAll(".rail-levers input")].map(e=>({id:e.id,right:e.getBoundingClientRect().right}))})')
+        check(f'Four train levers fit at {width}px: {bounds}',bounds['page']<=bounds['viewport'] and all(e['right']<=bounds['viewport'] for e in bounds['levers']))
     page.screenshot(path=str(out/'rail-helper-mobile.png'))
     page.set_viewport_size({'width':1440,'height':1000})
     for number,label in [(10,'balance reserve'),(11,'Low Crossing'),(12,'Coastal passenger')]:

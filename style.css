@@ -23,7 +23,7 @@ body[data-theme="rail"] .mobile-instruments { display:none; }
 body[data-theme="rail"] .chart-heading { color:#334c3b; pointer-events:none; text-shadow:0 1px #e9e3c9; }
 body[data-theme="rail"] .chart-heading .eyebrow { color:#556546; }
 body[data-theme="rail"] .chart-zoom { bottom:84px; }
-.rail-panel { background:var(--panel); padding:18px 15px; overflow:auto; min-height:0; border-left:1px solid var(--line); font-size:13px; }
+.rail-panel { background:var(--panel); padding:18px 15px; overflow:auto; min-height:0; min-width:0; border-left:1px solid var(--line); font-size:13px; }
 .rail-panel[hidden] { display:none; }
 .rail-readings { display:flex; align-items:center; justify-content:space-between; gap:16px; }
 .rail-readings strong { font:36px var(--mono); }
@@ -42,7 +42,8 @@ body[data-theme="rail"] .chart-zoom { bottom:84px; }
 .rail-levers label { display:flex; gap:10px; align-items:baseline; margin-top:10px; }
 .rail-levers label output { margin-left:auto; font:12px var(--mono); }
 .rail-levers small { color:var(--muted); width:40px; text-align:right; }
-.rail-levers input { width:100%; height:28px; accent-color:var(--amber); margin:0; }
+.rail-lever { min-width:0; }
+.rail-levers input { width:100%; min-width:0; height:28px; accent-color:var(--amber); margin:0; }
 .rail-actions { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
 .rail-panel button { background:#394e40; border-color:#687358; font-size:12px; padding:9px 7px; min-height:36px; }
 .rail-actions button { display:flex; flex-wrap:wrap; gap:4px; justify-content:center; align-items:center; }
@@ -70,10 +71,9 @@ body[data-theme="rail"] .chart-zoom { bottom:84px; }
   body[data-theme="rail"] .workspace { grid-template-columns:1fr; grid-template-rows:minmax(220px,1fr) minmax(160px,.85fr); }
   .rail-panel { padding:12px 16px; border-left:0; border-top:1px solid var(--line); }
   .rail-levers { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); column-gap:12px; margin:8px 0; }
-  .rail-levers:has(#rail-helper) { grid-template-columns:repeat(4,minmax(0,1fr)); }
-  .rail-levers label { flex-wrap:wrap; gap:4px; margin:0; grid-row:1; }
+  .rail-levers:has(#rail-helper) { grid-template-columns:repeat(2,minmax(0,1fr)); row-gap:10px; }
+  .rail-levers label { flex-wrap:wrap; gap:4px; margin:0; }
   .rail-levers small { display:none; }
-  .rail-levers input { grid-row:2; }
 }
 
 * {
