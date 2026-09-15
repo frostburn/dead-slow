@@ -40,7 +40,7 @@
     const engineGroup=st=>st.groups.find(g=>g.cars.some(c=>c.powered));
     const bounds=group=>({lo:Math.min(...group.cars.map(c=>c.q-c.length/2)),hi:Math.max(...group.cars.map(c=>c.q+c.length/2))});
     function occupied(st,node) {
-        return st.groups.some(group=>{
+        return [...st.groups,...st.traffic||[]].filter(g=>!g.finished).some(group=>{
             const {lo,hi}=bounds(group);
             return group.path.some(leg=>{
                 const edge=st.net.edges[leg.id];
@@ -64,9 +64,13 @@
     }
     function create(level) {
         const cfg=level.rail,net=network(cfg);
-        const groups=cfg.groups.map((g,i)=>({id:'cut-'+i,path:[entry(net,g.cars[0].edge,1)],brake:1,orders:[{t:-100,value:1}],
-            cars:g.cars.map(c=>({...c,q:c.s,v:0,face:1,pressure:1,temp:20,hand:!!g.secured,stress:0,curveTime:0}))}));
-        return {net,groups,config:cfg,time:0,power:0,reverser:1,independent:0,selected:'engine',
+        const groups=cfg.groups.map((g,i)=>({id:'cut-'+i,path:[entry(net,g.cars[0].edge,1)],brake:g.brake??1,orders:[{t:-100,value:g.brake??1}],
+            cars:g.cars.map(c=>({...c,q:c.s,v:g.speed||0,face:1,pressure:g.brake??1,temp:20,hand:!!g.secured,stress:0,curveTime:0}))}));
+        const traffic=(cfg.traffic||[]).map(t=>{
+            let q=0;const path=t.route.map(([id,dir])=>{const p=entry(net,id,dir,q);q=p.end;return p;});
+            return {...t,path,v:0,finished:false,waiting:'Scheduled',cars:Array.from({length:4},(_,i)=>({id:t.id+'-'+i,q:t.head-i*t.length/4,length:t.length/4-1.2,mass:40000,v:0}))};
+        });
+        return {net,groups,traffic,config:cfg,time:0,power:0,reverser:1,independent:0,selected:'engine',
             completed:[],taskHold:{},finishHold:0,failure:null,notice:'Release the train brake to move.',
             stats:{distance:0,couplings:0,uncouplings:0,peakTemperature:20,peakCoupler:0,contacts:0},nextCut:groups.length};
     }
@@ -136,6 +140,7 @@
         else if(name==='uncouple') {
             const id=typeof value==='object'?value?.after:value,g=groupFor(st,id),i=g?.cars.findIndex(c=>c.id===id);
             if(!g||i===g.cars.length-1||(typeof value==='object'&&g.cars[i+1].id!==value.before))reason='That link has changed. Choose the link again.';
+            else if(st.config.cargo?.cars.some(id=>g.cars.slice(0,i+1).some(c=>c.id===id))&&st.config.cargo.cars.some(id=>g.cars.slice(i+1).some(c=>c.id===id)))reason='The vessel spans these carriers. Keep them connected.';
             else if(st.power)reason='Cut power before uncoupling.';
             else if(g.cars.some(c=>Math.abs(c.v)>.12))reason='Stop the whole cut before uncoupling.';
             else if(g.cars.some(c=>!c.hand&&c.pressure<.3))reason='Apply the train brake and wait for the wagons to brake.';
@@ -147,6 +152,7 @@
         } else if(name==='switch') {
             if(!st.net.switches.some(s=>s.node===value))reason='Unknown points.';
             else if(occupied(st,value))reason='Clear the whole train from these points.';
+            else if(st.traffic?.some(t=>t.reserved?.includes(value)))reason='Passenger approaching — points reserved.';
         }
         return {enabled:!reason,reason};
     }
@@ -162,7 +168,14 @@
         const task=st.config.tasks.find(t=>!st.completed.includes(t.id)&&(!t.after||st.completed.includes(t.after)));
         if(!next&&task) {
             const zone=st.config.zones.find(z=>z.id===task.zone);
-            if(task.type==='coupled'){const a=availability(st,'couple');next=a.enabled?'Buffers in reach. Couple the waiting wagons.':hit&&hit.distance<=3?a.reason:pickup;action='couple';}
+            if(task.type==='traffic')next='Fit the whole freight into a loop, then wait for the passenger to pass.';
+            else if(task.type==='rescue'){
+                const wagons=groupFor(st,task.cars[0]);
+                if(st.caught&&wagons.cars.every(c=>Math.abs(c.v)<.08)){
+                    next='Secure the caught wagons with their handbrakes.';action=selected===wagons?'hand':'select';
+                } else {next=taskReady(st,task)?'Hold the rescued wagons here.':eg.cars.some(c=>task.cars.includes(c.id))?'Brake before the broken crossing. Secure the wagons once stopped.':'Match the rolling wagons, then couple within 3 m.';action=eg.cars.length===1?'couple':null;}
+            }
+            else if(task.type==='coupled'){const a=availability(st,'couple');next=a.enabled?'Buffers in reach. Couple the waiting wagons.':hit&&hit.distance<=3?a.reason:pickup;action='couple';}
             else {
                 const ids=task.type==='stop'?['engine']:task.cars;
                 const cars=ids.map(id=>{const g=groupFor(st,id);return {g,c:g?.cars.find(c=>c.id===id)};}).filter(({c})=>c);
@@ -174,6 +187,7 @@
                     next=missing!==null?`${c.id==='engine'?'Loco':c.id} needs ${Math.ceil(missing)} m more clearance inside ${zone.name}.`:`Bring ${c.id==='engine'?'the loco':c.id} into ${zone.name}.`;
                 } else if(st.power||cars.some(({c})=>Math.abs(c.v)>.08)){next='Cut power and stop in the marked track.';action='stop';}
                 else if(task.type==='stop'&&task.independent&&st.independent<=.3){next='Apply the loco brake to complete this stop.';action='independent';}
+                else if(task.type==='position'){next='Hold here until the whole load is clear. Then select Export spur and reverse.';}
                 else if(task.type==='delivery'&&cars.some(({g})=>g===eg)) {
                     const i=eg.cars.findIndex((c,i,a)=>i<a.length-1&&ids.includes(c.id)!==ids.includes(a[i+1].id));
                     if(i>=0){split={after:eg.cars[i].id,before:eg.cars[i+1].id};action='uncouple';next=`Release the delivery at ${split.after} / ${split.before}.`;const a=availability(st,'uncouple',split);if(!a.enabled)next=a.reason;}
@@ -182,7 +196,7 @@
                     next=`Set handbrakes on ${id}'s cut.`;action=groupFor(st,id)===selected?'hand':'select';
                 } else {
                     const blocked=st.net.switches.filter(s=>occupied(st,s.node));
-                    next=blocked.length?`Clear ${blocked.map(s=>s.label).join(', ')} with every wagon.`:'Hold here to complete the delivery.';
+                    next=blocked.length?`Clear ${blocked.map(s=>s.label).join(', ')} with every wagon.`:task.order&&!ordered(st,task)?`Order toward the buffers: ${task.order.join(' · ')}.`:'Hold here to complete the delivery.';
                 }
             }
         }
@@ -217,19 +231,121 @@
     function inside(st,car,group,zone) {
         return [-1,1].every(sign=>{const p=locate(st,group,car.q+sign*car.length/2);return p.edge===zone.edge&&p.s>=zone.from&&p.s<=zone.to;});
     }
+    function ordered(st,task) {
+        const zone=st.config.zones.find(z=>z.id===task.zone),g=engineGroup(st);
+        const ids=g.cars.filter(c=>task.order.includes(c.id)).sort((a,b)=>locate(st,g,b.q).s-locate(st,g,a.q).s).map(c=>c.id);
+        return !!zone&&ids.join('|')===task.order.join('|');
+    }
+    function segments(st,group) {
+        return group.cars.flatMap(car=>group.path.flatMap(leg=>{
+            const lo=Math.max(leg.start,car.q-car.length/2),hi=Math.min(leg.end,car.q+car.length/2);
+            if(lo>=hi)return [];
+            return [{edge:leg.id,from:leg.dir===1?lo-leg.start:leg.end-hi,to:leg.dir===1?hi-leg.start:leg.end-lo,car}];
+        }));
+    }
+    function updateTraffic(st,dt) {
+        const player=st.groups.flatMap(g=>segments(st,g));
+        for(const t of st.traffic) {
+            if(t.finished)continue;
+            t.reserved=[];
+            if(st.time<t.depart){t.waiting=`Departs in ${Math.ceil(t.depart-st.time)} s`;continue;}
+            const head=bounds(t).hi,horizon=t.v*t.v/.8+70;
+            let stop=t.path.at(-1).end+t.length+20;t.waiting='Running';
+            for(let i=0;i<t.path.length;i++) {
+                const leg=t.path[i],edge=st.net.edges[leg.id];
+                if(leg.end<head-12)continue;
+                // A whole edge is a signal block. A short refuge never makes
+                // its adjacent main block clear while a tail remains outside.
+                if(player.some(p=>p.edge===leg.id)) {stop=Math.min(stop,leg.start-22);t.waiting='Held at red signal';break;}
+                if(i===t.path.length-1||leg.end-head>horizon)continue;
+                const node=leg.dir===1?edge.b:edge.a,sw=st.net.switches.find(s=>s.node===node);
+                if(!sw)continue;
+                const branch=sw.branches.findIndex(id=>id===leg.id||id===t.path[i+1].id);
+                if(branch!==sw.selected&&occupied(st,node)){stop=Math.min(stop,leg.end-24);t.waiting='Waiting for points to clear';break;}
+                if(branch>=0){sw.selected=branch;t.reserved.push(node);}
+            }
+            const target=Math.min(t.speed,Math.sqrt(Math.max(0,stop-head)*.7));
+            t.v=clamp(target,t.v-.4*dt,t.v+.25*dt);
+            const travel=Math.min(t.v*dt,Math.max(0,stop-head));
+            t.cars.forEach(c=>{c.q+=travel;c.v=t.v;});
+            if(bounds(t).lo>t.path.at(-1).end){t.finished=true;t.waiting='Clear';t.reserved=[];}
+            const occupiedTrack=segments(st,t);
+            if(occupiedTrack.some(a=>player.some(b=>a.edge===b.edge&&a.from<b.to&&a.to>b.from)))st.failure='The trains collided. Wait behind a clear signal block.';
+        }
+    }
+    function bridges(st) {
+        const all=st.groups.flatMap(g=>segments(st,g));
+        return Object.values(st.net.edges).filter(e=>e.bridge).map(e=>{
+            const cars=[...new Set(all.filter(p=>p.edge===e.id).map(p=>p.car))];
+            const mass=cars.reduce((sum,c)=>sum+c.mass,0),loads=cars.filter(c=>c.heavy).length;
+            const unpaired=(e.bridge.pairs||[]).filter(([a,b])=>cars.some(c=>c.id===a||c.id===b)&&
+                (groupFor(st,a)!==groupFor(st,b)||Math.abs(groupFor(st,a)?.cars.findIndex(c=>c.id===a)-groupFor(st,b)?.cars.findIndex(c=>c.id===b))!==1));
+            return {edge:e.id,...e.bridge,mass,loads,unpaired,over:mass>e.bridge.maxMass||loads>e.bridge.maxLoads};
+        });
+    }
+    function cargoShape(st,group,shift=0) {
+        const spec=st.config.cargo;if(!spec)return null;
+        const carriers=spec.cars.map(id=>group.cars.find(c=>c.id===id));if(carriers.some(c=>!c))return null;
+        const a=locate(st,group,carriers[0].q+shift),b=locate(st,group,carriers.at(-1).q+shift);
+        const angle=Math.atan2(a.y-b.y,a.x-b.x),dx=Math.cos(angle),dy=Math.sin(angle),r=spec.width/2;
+        return [{x:a.x+dx*spec.overhang-dy*r,y:a.y+dy*spec.overhang+dx*r},
+            {x:a.x+dx*spec.overhang+dy*r,y:a.y+dy*spec.overhang-dx*r},
+            {x:b.x-dx*spec.overhang+dy*r,y:b.y-dy*spec.overhang-dx*r},
+            {x:b.x-dx*spec.overhang-dy*r,y:b.y-dy*spec.overhang+dx*r}];
+    }
+    function cargoHit(st,poly) {
+        if(!poly)return null;
+        return (st.config.obstacles||[]).find(o=>{
+            const box=[{x:o.x,y:o.y},{x:o.x+o.w,y:o.y},{x:o.x+o.w,y:o.y+o.h},{x:o.x,y:o.y+o.h}];
+            const axes=[{x:1,y:0},{x:0,y:1},...poly.slice(0,2).map((p,i)=>({x:poly[i+1].y-p.y,y:p.x-poly[i+1].x}))];
+            return axes.every(n=>{const a=poly.map(p=>p.x*n.x+p.y*n.y),b=box.map(p=>p.x*n.x+p.y*n.y);return Math.max(...a)>=Math.min(...b)&&Math.max(...b)>=Math.min(...a);});
+        })||null;
+    }
+    function clearance(st) {
+        if(!st.config.cargo)return null;
+        const original=groupFor(st,st.config.cargo.cars[0]),group={...original,path:original.path.map(p=>({...p}))};
+        const eg=engineGroup(st),engine=eg.cars.find(c=>c.powered),dir=st.reverser*engine.face;
+        for(let i=0;i<16;i++)if(!extend(st,group,dir>0))break;
+        const b=bounds(group),room=dir>0?group.path.at(-1).end-b.hi:b.lo-group.path[0].start,previews=[];
+        for(let distance=0;distance<=Math.min(2400,room);distance+=12){const polygon=cargoShape(st,group,dir*distance);if(polygon)previews.push({polygon,distance,hit:cargoHit(st,polygon)?.name||null});}
+        return {previews,collision:previews.find(p=>p.hit)||null};
+    }
+    function checkInfrastructure(st) {
+        for(const b of bridges(st)){
+            if(b.over)st.failure=`${b.name} overloaded. Cross with one transformer and its support wagon at a time.`;
+            else if(b.unpaired.length)st.failure=`Keep ${b.unpaired[0].join(' and ')} coupled beside each other while crossing the bridge.`;
+        }
+        for(const g of st.groups)for(const p of segments(st,g)) {
+            const edge=st.net.edges[p.edge];
+            if(edge.closedFrom!==undefined&&p.to>=edge.closedFrom)st.failure='The wagons reached the broken crossing.';
+        }
+        if(st.config.cargo) {
+            const g=groupFor(st,st.config.cargo.cars[0]),hit=cargoHit(st,cargoShape(st,g));
+            if(hit)st.failure=`The vessel struck ${hit.name.toLowerCase()}. Check the swept outline before taking the curve.`;
+        }
+    }
     function taskReady(st,task) {
         const eg=engineGroup(st),engine=eg.cars.find(c=>c.powered),zone=st.config.zones.find(z=>z.id===task.zone);
         if(task.after&&!st.completed.includes(task.after))return false;
+        if(task.type==='traffic')return st.traffic.some(t=>t.id===task.traffic&&t.finished);
         if(task.type==='stop')return inside(st,engine,eg,zone)&&Math.abs(engine.v)<.08&&(!task.independent||st.independent>.3)&&st.power===0;
         if(task.type==='coupled')return task.cars.every(id=>eg.cars.some(c=>c.id===id));
         const cars=task.cars.map(id=>{const g=groupFor(st,id);return {g,c:g?.cars.find(c=>c.id===id)};});
+        if(task.type==='position')return st.power===0&&cars.every(({c,g})=>c&&g===eg&&Math.abs(c.v)<.08&&inside(st,c,g,zone));
+        if(task.type==='rescue') {
+            const catchZone=st.config.zones.find(z=>z.id===task.alternative);
+            return st.power===0&&cars.every(({c,g})=>c&&Math.abs(c.v)<.08&&c.hand)&&
+                (cars.every(({c,g})=>g===eg&&inside(st,c,g,zone))||cars.every(({c,g})=>inside(st,c,g,catchZone)));
+        }
         if(task.type==='park'&&cars.some(({g})=>g!==eg))return false;
+        if(task.order&&!ordered(st,task))return false;
         return st.power===0&&cars.every(({c,g})=>c&&Math.abs(c.v)<.08&&c.hand&&inside(st,c,g,zone)&&
             (task.type!=='delivery'||!g.cars.some(c=>c.powered)))&&st.net.switches.every(s=>!occupied(st,s.node));
     }
     function update(st,dt) {
         if(st.failure)return;
-        st.time+=dt;st.slip=false;
+        st.time+=dt;st.slip=false;st.slide=false;
+        updateTraffic(st,dt);
         for(const group of st.groups) {
             const engine=group.cars.find(c=>c.powered),cars=group.cars,force=cars.map(c=>{
                 const p=locate(st,group,c.q);c.location=p;
@@ -255,13 +371,20 @@
                 const fade=1-clamp((c.temp-180)/270,0,.8);
                 let brake=c.mass*(c.powered?.85:.7)*c.pressure*fade;
                 if(c.powered) {
-                    const demand=st.power/4*210000,adhesion=p.adhesion*c.mass*G;
+                    const demand=st.power/4*(st.config.tractive||210000),adhesion=p.adhesion*c.mass*G;
                     force[i]+=Math.min(demand,adhesion)*st.reverser*c.face;
                     if(demand>adhesion*1.01)st.slip=true;
                     brake=Math.max(brake,c.mass*1.05*st.independent*fade);
                 }
-                brake=Math.min(brake,p.adhesion*c.mass*G);
+                c.sliding=brake>p.adhesion*c.mass*G*1.05&&Math.abs(c.v)>.2;
+                if(c.sliding)st.slide=true;
+                brake=Math.min(brake,p.adhesion*c.mass*G*(c.sliding?.72:1));
                 if(c.hand)brake=Math.max(brake,c.mass*1.5);
+                const track=st.net.edges[p.edge];
+                if(track.catchFrom!==undefined&&p.s>=track.catchFrom) {
+                    brake+=c.mass*1.6;
+                    if(!st.caught){st.caught=true;st.stats.contacts++;}
+                }
                 const resistance=c.mass*(.012+.00025*c.v*c.v),opposition=brake+resistance;
                 const sign=Math.abs(c.v)>.004?Math.sign(c.v):Math.sign(force[i]);
                 if(Math.abs(c.v)<.02&&Math.abs(force[i])<=opposition)c.v=0;
@@ -300,24 +423,28 @@
         }
         const eg=engineGroup(st),hit=nearby(st,eg,1.1);
         if(hit) {
-            const rel=hit.a.car.v-hit.b.car.v*Math.cos(hit.a.a-hit.b.a);
+            const rel=hit.a.car.v-hit.b.car.v*hit.a.dir*hit.b.dir;
             const key=impactKey(hit),previous=st.bufferImpact?.key===key?st.bufferImpact:null;
             if(!previous&&Math.abs(rel)>.02)st.stats.contacts++;
             st.bufferImpact={key,speed:Math.max(previous?.speed||0,Math.abs(rel))};
             if(Math.abs(rel)>1.4)st.failure='A hard coupling damaged the wagons. Approach below 2 km/h.';
             const correction=1.2-Math.hypot(hit.a.x-hit.b.x,hit.a.y-hit.b.y);
-            eg.cars.forEach(c=>{c.q-=hit.a.sign*Math.max(0,correction);c.v=0;});hit.cut.cars.forEach(c=>c.v=0);
+            const orientation=hit.a.dir*hit.b.dir,otherMoving=Math.abs(hit.b.car.v)>.08&&!hit.cut.cars.some(c=>c.hand);
+            const totalMass=eg.cars.reduce((s,c)=>s+c.mass,0)+hit.cut.cars.reduce((s,c)=>s+c.mass,0);
+            const velocity=otherMoving?(eg.cars.reduce((s,c)=>s+c.mass*c.v,0)+hit.cut.cars.reduce((s,c)=>s+c.mass*c.v*orientation,0))/totalMass:0;
+            eg.cars.forEach(c=>{c.q-=hit.a.sign*Math.max(0,correction);c.v=velocity;});hit.cut.cars.forEach(c=>c.v=velocity*orientation);
             st.power=0;st.notice=st.bufferImpact.speed>COUPLING_SPEED?'Hard buffer contact. Back away beyond 3 m and approach slowly.':'Buffers touching. Press F to couple.';
         }
         const approach=nearby(st,eg,3);
         if(st.bufferImpact&&(!approach||impactKey(approach)!==st.bufferImpact.key))st.bufferImpact=null;
+        checkInfrastructure(st);
         for(const task of st.config.tasks) {
             const met=taskReady(st,task);
             st.taskHold[task.id]=met?(st.taskHold[task.id]||0)+dt:0;
             if(met&&st.taskHold[task.id]>=1&&!st.completed.includes(task.id))st.completed.push(task.id);
             // Delivery/parking are live requirements; leaving the zone revokes
             // them. Tutorial milestones remain remembered.
-            if(!met&&['delivery','park'].includes(task.type))st.completed=st.completed.filter(id=>id!==task.id);
+            if(!met&&['delivery','park','rescue'].includes(task.type))st.completed=st.completed.filter(id=>id!==task.id);
         }
         st.finishHold=st.config.tasks.every(t=>st.completed.includes(t.id))?st.finishHold+dt:0;
     }
@@ -325,11 +452,12 @@
         const group=engineGroup(st),engine=group.cars.find(c=>c.powered),mass=group.cars.reduce((s,c)=>s+c.mass,0),b=bounds(group);
         const direction=Math.abs(engine.v)>.02?Math.sign(engine.v):st.reverser*engine.face;
         const gradient=group.cars.reduce((s,c)=>s+locate(st,group,c.q).grade*c.mass,0)/mass;
-        const braking=group.cars.reduce((s,c)=>s+c.mass*(c.powered?.85:.7)*(1-clamp((c.temp-180)/270,0,.8)),0)/mass;
+        const braking=group.cars.reduce((s,c)=>{const demand=(c.powered?.85:.7)*(1-clamp((c.temp-180)/270,0,.8)),grip=locate(st,group,c.q).adhesion*G;return s+c.mass*Math.min(demand,grip*(demand>grip*1.05?.72:1));},0)/mass;
         const decel=braking+gradient*G*direction+.012;
         const stopping=decel>.02?engine.v*engine.v/(2*decel)+Math.abs(engine.v)*(1.4+(b.hi-b.lo)*.022):Infinity;
-        return {mass,length:b.hi-b.lo,speed:engine.v,gradient,stopping,
-            head:locate(st,group,direction>0?b.hi:b.lo),tail:locate(st,group,direction>0?b.lo:b.hi),
+        const driving=st.reverser*engine.face;
+        return {mass,length:b.hi-b.lo,speed:engine.v,signedSpeed:engine.v*driving,gradient,stopping,
+            head:locate(st,group,driving>0?b.hi:b.lo),tail:locate(st,group,driving>0?b.lo:b.hi),
             temperature:Math.max(...group.cars.map(c=>c.temp)),limit:Math.min(...group.cars.map(c=>locate(st,group,c.q).limit))};
     }
     // Presentation-only lookahead. Extend a copy so inspecting an unoccupied
@@ -354,7 +482,7 @@
         }
         return {severity:Math.max(severity,ahead?1:0),cars,ahead};
     }
-    const api={network,at,locate,create,update,command,availability,assistance,occupied,engineGroup,groupFor,bounds,metrics,taskReady,danger};
+    const api={network,at,locate,create,update,command,availability,assistance,occupied,engineGroup,groupFor,bounds,metrics,taskReady,danger,segments,bridges,cargoShape,cargoHit,clearance};
     if(typeof module!=='undefined'&&module.exports)module.exports=api;
     root.Railway=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

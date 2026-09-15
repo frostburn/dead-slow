@@ -36,7 +36,7 @@ with sync_playwright() as p:
     check('Plain R leaves the result screen intact',page.evaluate('DeadSlowTest.state.status==="complete" && DeadSlowTest.state.modal==="result"'))
     check('Bug reporting and feature requests are discoverable',page.locator('.permanent-support a').get_attribute('href')=='https://github.com/frostburn/dead-slow/issues/' and 'Feature requests' in page.locator('#dialog').inner_text())
     page.evaluate('DeadSlowTest.courses(5)')
-    check('World 5 has three playable freight missions and nine future missions',page.locator('.level-card:not(:disabled)').count()==3 and page.locator('.level-card:disabled').count()==9)
+    check('World 5 has eight playable freight missions and four future missions',page.locator('.level-card:not(:disabled)').count()==8 and page.locator('.level-card:disabled').count()==4)
     check('World 5 cannot start an incomplete circuit',page.locator('[data-action=marathon]').is_disabled())
     for w in [7,8]:
         page.evaluate('(w)=>DeadSlowTest.courses(w)',w)

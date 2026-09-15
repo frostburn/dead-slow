@@ -1,7 +1,7 @@
 (function (root) {
     'use strict';
     // Keep the original key so same-origin upgrades discover the v1 logbook.
-    const KEY = 'dead-slow.records.v1', VERSION = 14;
+    const KEY = 'dead-slow.records.v1', VERSION = 15;
     // These routes now include an approach leg. Keep their earlier PBs/ghosts,
     // but never compare a dock-side departure against a midwater departure.
     const RESTARTED = ['milk-run', 'floating-sauna', 'market-day', 'granite-needle', 'last-bus', 'slackwater-salvage', 'island-exchange', 'two-calls', 'cars-and-casualty', 'midsummer-dispatch'];
@@ -37,7 +37,7 @@
     }
     function sanitize(data) {
         const result = fresh();
-        if (!data || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, VERSION].includes(data.version))
+        if (!data || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, VERSION].includes(data.version))
             return result;
         result.attempts = Math.max(0, Math.floor(Number(data.attempts) || 0));
         result.stages = sanitizeStages(data.stages);
@@ -191,6 +191,12 @@
                 result.races[id] = [];
             }
         }
+        if (data.version < 15) {
+            for(const [id,suffix] of [['long-grade-7','support-v1'],['long-grade-8','clearance-v1']]) {
+                if(!result.stages[id])continue;
+                result.archivedStages[id+'-'+suffix]=result.stages[id];delete result.stages[id];
+            }
+        }
         for (const k of ['ghost', 'sound', 'guide', 'pauseOnBlur'])
             if (typeof data.settings?.[k] === 'boolean')
                 result.settings[k] = data.settings[k];
@@ -261,7 +267,7 @@
             }, save, stage, best, attempt, record, recordRace, bestRace,
             import(text) {
                 const d = JSON.parse(text);
-                if (!d || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, VERSION].includes(d.version))
+                if (!d || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, VERSION].includes(d.version))
                     throw Error('This is not a compatible Dead Slow logbook.');
                 data = sanitize(d);
                 save();

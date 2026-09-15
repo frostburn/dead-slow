@@ -30,11 +30,14 @@ body[data-theme="rail"] .chart-zoom { bottom:84px; }
 .rail-readings b { font:20px var(--mono); }
 .rail-readings span { display:block; color:var(--muted); font-size:11px; }
 .rail-summary { margin-top:9px; font:12px var(--mono); line-height:1.5; }
+.rail-operations { white-space:pre-line; margin:12px 0; padding:10px; border:1px solid var(--line); border-radius:4px; line-height:1.55; font-size:12px; }
+.rail-operations[hidden] { display:none; }
 .rail-danger { color:#ffac87; }
 .rail-alert { margin-top:10px; padding:9px; border:1px solid #d8a44d; border-radius:4px; background:#665122; color:#ffe4a8; font-weight:650; }
 .rail-alert.critical { background:#742e25; border-color:#ff9c7d; color:#fff0ce; }
 .rail-alert[hidden] { display:none; }
 .rail-cut button.at-risk { background:#742e25; border-color:#ff9c7d; color:#fff0ce; }
+.rail-cut button.sliding { background:#685120; border-color:#e0b15b; color:#fff0ce; }
 .rail-levers { margin:16px 0; }
 .rail-levers label { display:flex; gap:10px; align-items:baseline; margin-top:10px; }
 .rail-levers label output { margin-left:auto; font:12px var(--mono); }
