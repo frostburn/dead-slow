@@ -13,6 +13,7 @@
     function prepare(level,command) {
         levelNow=level;stateNow=null;act=command;signature='';clearanceKey='';clearanceCache=null;
         $('rail-panel').hidden=!level.rail;
+        $('rail-info').hidden=!level.rail;
         $('rail-helm').innerHTML='';
         if(!level.rail)return;
         $('helm-controls').setAttribute('aria-label','Train controls');
@@ -25,14 +26,16 @@
             act(lever.name,clamp(current+Number(button.dataset.railStep)*lever.step,lever.min,lever.max));
         };
         $('sea').setAttribute('aria-label','Railway map. Head and tail markers show the moving ends. Change points using the route buttons.');
+        $('rail-info-body').innerHTML=`<div id="rail-alert" class="rail-alert"></div><p id="rail-notice" role="status"></p>
+            <div class="rail-summary" id="rail-summary"></div><div id="rail-heat" class="rail-summary"></div>
+            <details class="rail-details"><summary>Details</summary><div id="rail-operations" class="rail-operations"></div>
+            <p id="rail-cut-status" class="rail-caption"></p><p id="rail-pickup" class="rail-caption"></p><div id="rail-tasks" class="rail-tasks"></div></details>`;
         $('rail-panel').innerHTML=`<div class="rail-readings"><div><strong id="rail-speed">0.0</strong><span>km/h</span></div><div><b id="rail-stop">0 m</b><span>estimated stop</span></div></div>
-            <div class="rail-summary" id="rail-summary"></div><div id="rail-heat" class="rail-summary"></div><div id="rail-operations" class="rail-operations"></div>
             ${(level.rail.traffic||[]).map(t=>`<button class="rail-dispatch" data-rail="dispatch" data-value="${t.id}">Signal departure · H</button>`).join('')}
-            <div id="rail-alert" class="rail-alert"></div><p id="rail-notice" role="status"></p>
             <div class="rail-levers">${R.commands.levers(!!level.rail.helper).map(({name:id,label,keys,min,max,step})=>`<div class="rail-lever"><label for="rail-${id}">${label}<output id="rail-${id}-value"></output><small>${keys}</small></label><input id="rail-${id}" data-rail="${id}" type="range" min="${min}" max="${max}" step="${step}" value="${id==='brake'?1:0}" aria-label="${label}"></div>`).join('')}</div>
             <div class="rail-actions"><button data-rail="reverse" id="rail-reverse" title="Change travel direction (X)">Reverse · X</button><button data-rail="stop">Full brake · Space</button><button data-rail="couple">Couple · F</button><button data-rail="hand" id="rail-hand">Handbrakes · B</button></div>
-            <p class="rail-caption">Power and air brakes control the locomotive’s train. Select wagons below for handbrakes.</p><p id="rail-cut-status" class="rail-caption"></p><p id="rail-pickup" class="rail-caption"></p><div id="rail-consist" class="rail-consist"></div>
-            <div id="rail-switches" class="rail-switches"></div><div id="rail-tasks" class="rail-tasks"></div>
+            <div id="rail-consist" class="rail-consist"></div>
+            <div id="rail-switches" class="rail-switches"></div>
             <div class="rail-actions"><button data-rail="retry">Retry <kbd>Shift+R</kbd></button><button data-rail="help">Controls</button></div>`;
         $('rail-panel').onclick=e=>{const b=e.target.closest('[data-rail]');if(b&&!b.disabled&&b.tagName!=='INPUT')act(b.dataset.rail,b.dataset.rail==='uncouple'?{after:b.dataset.value,before:b.dataset.next}:b.dataset.value);};
         $('rail-panel').oninput=e=>{if(e.target.dataset.rail)act(e.target.dataset.rail,Number(e.target.value));};
@@ -91,6 +94,8 @@
         alert.hidden=false;alert.classList.toggle('critical',warning.severity===2||!!(coupling&&coupling.ratio>1));
         alert.classList.toggle('caution',!!warning.severity||!!coupling);
         alert.textContent=worst?.ratio>=1.2?'Derailment risk\nBrake now':coupling?`Coupler ${coupling.kind} · ${Math.round(Math.abs(coupling.force)/1000)} kN\n${coupling.kind==='push'?'Ease rear assistance.':'Share power; ease the front.'}`:worst?`${worst.id==='engine'?'Locomotive':worst.id} over ${Math.round(worst.limit*3.6)} km/h\nEase the train below the limit.`:warning.ahead?`Slow to ${Math.round(warning.ahead.limit*3.6)} km/h\n${Math.round(warning.ahead.distance)} m ahead`:st.config.helper?'Couplers within limits\nEase each engine over the crest.':'Speed within limit\nKeep room to stop.';
+        $('rail-info-title').textContent=alert.classList.contains('caution')||alert.classList.contains('critical')?alert.textContent.split('\n')[0]:'Train status';
+        $('rail-info-title').classList.toggle('rail-danger',alert.classList.contains('caution')||alert.classList.contains('critical'));
         $('rail-hand').textContent=(selected.cars.some(c=>c.hand)?'Release handbrakes':'Set handbrakes')+' · B';
         const sig=st.groups.map(cut=>cut.cars.map(c=>c.id).join(',')).join('|');
         if(sig!==signature) {
@@ -148,7 +153,7 @@
         const w=rect.width,h=rect.height;if(!w||!h)return;
         if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
         ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#d6d1b5';ctx.fillRect(0,0,w,h);
-        const warning=R.danger(st),m=R.metrics(st),mapHeight=h-75,scale=Math.min((w-42)/level.world[0],(mapHeight-25)/level.world[1])*zoom;
+        const warning=R.danger(st),m=R.metrics(st),mapHeight=h,scale=Math.min((w-42)/level.world[0],(mapHeight-25)/level.world[1])*zoom;
         const train=R.engineGroup(st),ends=R.bounds(train),direction=displayDirection(st,train.cars.find(c=>c.id==='engine'));
         m.head=R.locate(st,train,direction>0?ends.hi:ends.lo);m.tail=R.locate(st,train,direction>0?ends.lo:ends.hi);
         const x=zoom===1?(w-level.world[0]*scale)/2:w/2-m.head.x*scale,y=zoom===1?(mapHeight-level.world[1]*scale)/2:mapHeight/2-m.head.y*scale;
@@ -308,16 +313,23 @@
             ctx.strokeStyle='#d1dee33b';ctx.lineWidth=1;
             for(let i=0;i<85;i++){const rx=(i*137+st.time*25)%w,ry=(i*79+st.time*110)%mapHeight;ctx.beginPath();ctx.moveTo(rx,ry);ctx.lineTo(rx-4,ry+13);ctx.stroke();}
         }
-        // Elevation under the entire consist: the crest visibly travels through
-        // the wagons, rather than a single gradient readout at the locomotive.
-        ctx.fillStyle='#293b35';ctx.fillRect(0,h-72,w,72);
-        const cars=R.engineGroup(st).cars,heights=cars.map(c=>R.locate(st,R.engineGroup(st),c.q).z),low=Math.min(...heights)-.8,high=Math.max(...heights)+.8;
-        ctx.fillStyle='#d6ddca';ctx.font='11px sans-serif';ctx.textAlign='left';ctx.fillText('GRADE UNDER TRAIN',14,h-54);
-        const step=Math.min(34,(w-35)/cars.length),start=w/2-step*(cars.length-1)/2;
-        const pts=cars.map((c,i)=>({x:start+i*step,y:h-12-(heights[i]-low)/(high-low)*27}));stroke(pts,'#90b59a',2);
-        pts.forEach((p,i)=>{ctx.fillStyle=cars[i].powered?'#edcd88':'#b87b60';ctx.fillRect(p.x-5,p.y-5,10,6);});
-        ctx.textAlign='right';ctx.fillStyle='#d6ddca';ctx.fillText(`${Math.abs(m.gradient*100).toFixed(1)}% average`,w-14,h-54);
+        renderGrade(st,m);
     }
+    function renderGrade(st,m) {
+        const canvas=$('rail-grade'),rect=canvas.getBoundingClientRect(),w=rect.width,h=rect.height;
+        if(!w||!h)return;
+        const dpr=root.devicePixelRatio||1,ctx=canvas.getContext('2d');
+        if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
+        ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+        const train=R.engineGroup(st),cars=train.cars,heights=cars.map(c=>R.locate(st,train,c.q).z),low=Math.min(...heights)-.8,high=Math.max(...heights)+.8;
+        ctx.fillStyle='#d6ddca';ctx.font='11px sans-serif';ctx.textAlign='left';ctx.fillText('GRADE UNDER TRAIN',8,14);
+        const step=Math.min(34,(w-24)/cars.length),start=w/2-step*(cars.length-1)/2;
+        const pts=cars.map((c,i)=>({x:start+i*step,y:h-8-(heights[i]-low)/(high-low)*(h-32)}));
+        ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.strokeStyle='#90b59a';ctx.lineWidth=2;ctx.stroke();
+        pts.forEach((p,i)=>{ctx.fillStyle=cars[i].powered?'#edcd88':'#b87b60';ctx.fillRect(p.x-5,p.y-5,10,6);});
+        ctx.textAlign='right';ctx.fillStyle='#d6ddca';ctx.fillText(`${Math.abs(m.gradient*100).toFixed(1)}% average`,w-8,14);
+    }
+
     function dialog(kind,level,run,format,hasNext=false,race=null) {
         const st=run.rail,actions=(primary,label)=>`<div class="dialog-actions"><button class="primary" data-action="${primary}" autofocus>${label}</button><button data-action="courses">World map</button>${kind!=='intro'?'<button data-action="retry">Retry · Shift+R</button>':'<button data-action="help">Controls</button>'}</div>`;
         if(kind==='intro')return `<div class="eyebrow">${level.tag}</div><h1>${level.name}</h1><p>${level.brief}</p><p class="subtle">${level.tip}</p>${actions('begin','Take the controls')}`;

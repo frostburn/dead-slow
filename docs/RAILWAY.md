@@ -181,3 +181,5 @@ keeps warning persistence out of the physics state and supplies one HUD snapshot
 `npm run check` now checks command/adapter types and all twelve typed level
 definitions, then validates track, vehicle, zone and task references. Transition
 invariants and save compatibility are covered in `tests/architecture.test.cjs`.
+
+Rail guidance lives in a collapsible map panel, with optional operational and wagon details. Speed and stopping distance remain beside the controls. The grade profile shares the footer with compact telegraphs on wide screens and stacks above them on phones. Changing notices never shift the sidebar controls.

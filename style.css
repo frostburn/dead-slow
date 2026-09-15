@@ -15,24 +15,33 @@
 
 /* Railway controls use the full sidebar; the map keeps room for the tail. */
 body[data-theme="rail"] { --bg:#263830; --panel:#304239; --line:#5b6a53; --green:#c2d59e; --amber:#efd18e; --ink:#f0ecd6; --muted:#b9c4ab; }
-body[data-theme="rail"] .app { grid-template-columns:minmax(0,1fr); grid-template-rows:66px minmax(0,1fr)100px; }
+body[data-theme="rail"] .app { grid-template-columns:minmax(0,1fr); grid-template-rows:66px minmax(0,1fr)84px; }
 body[data-theme="rail"] .workspace { grid-template-columns:minmax(0,1fr)320px; }
 body[data-theme="rail"] .sidebar,
 body[data-theme="rail"] .chart-meta, body[data-theme="rail"] .chart-bottom,
 body[data-theme="rail"] .mobile-instruments { display:none; }
 body[data-theme="rail"] .chart-heading { color:#334c3b; pointer-events:none; text-shadow:0 1px #e9e3c9; }
 body[data-theme="rail"] .chart-heading .eyebrow { color:#556546; }
-body[data-theme="rail"] .chart-zoom { bottom:84px; }
+body[data-theme="rail"] .chart-zoom { bottom:14px; }
 .rail-panel { background:var(--panel); padding:18px 15px; overflow:auto; min-height:0; min-width:0; border-left:1px solid var(--line); font-size:13px; }
 .rail-panel[hidden] { display:none; }
-.rail-helm { display:none; }
-body[data-theme="rail"] .helm { display:block; background:var(--panel); padding:10px 18px; }
+.rail-helm, .rail-grade { display:none; }
+body[data-theme="rail"] .rail-grade { display:block; flex:1; min-width:0; height:64px; }
+.rail-info { position:absolute; z-index:3; top:70px; right:12px; width:288px; max-width:calc(100% - 24px); max-height:calc(100% - 125px); overflow:auto; overscroll-behavior:contain; background:#304239f2; color:var(--ink); border:1px solid var(--line); border-radius:6px; box-shadow:0 3px 12px #17271d30; font-size:12px; }
+.rail-info[hidden] { display:none; }
+.rail-info>summary { padding:10px 12px; cursor:pointer; font-weight:650; }
+.rail-info-body { padding:0 12px 10px; }
+.rail-info .rail-alert { margin-top:0; }
+.rail-info #rail-notice { margin:10px 0; }
+.rail-details { margin-top:10px; }
+.rail-details>summary { cursor:pointer; padding:4px 0; color:var(--muted); }
+body[data-theme="rail"] .helm { display:flex; align-items:center; gap:20px; background:var(--panel); padding:10px 18px; }
 body[data-theme="rail"] .helm>.helm-group, body[data-theme="rail"] .helm>.utility { display:none; }
-body[data-theme="rail"] .rail-helm { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; max-width:960px; margin:auto; }
+body[data-theme="rail"] .rail-helm { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; width:312px; flex-shrink:0; margin:0; }
 .rail-telegraph { min-width:0; }
 .rail-telegraph>span { display:block; font-size:12px; margin-bottom:6px; }
 .rail-telegraph>div { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.rail-telegraph button { min-width:0; height:44px; padding:4px; font-size:24px; }
+.rail-telegraph button { min-width:0; height:40px; padding:2px; font-size:22px; }
 #rail-helm .rail-relevant { outline:2px solid var(--amber); outline-offset:-2px; }
 #rail-helm button:disabled { opacity:.4; cursor:default; }
 .rail-readings { display:flex; align-items:center; justify-content:space-between; gap:16px; }
@@ -80,8 +89,11 @@ body[data-theme="rail"] .rail-helm { display:grid; grid-template-columns:repeat(
 .rail-tasks .done { color:#c6dfa5; }
 #rail-notice { color:var(--amber); line-height:1.5; min-height:36px; }
 @media(max-width:760px) {
-  body[data-theme="rail"] .app { grid-template-rows:60px minmax(0,1fr)88px; }
-  body[data-theme="rail"] .helm { padding:8px 10px; }
+  body[data-theme="rail"] .app { grid-template-rows:60px minmax(0,1fr)148px; }
+  body[data-theme="rail"] .helm { padding:6px 10px; flex-wrap:wrap; gap:4px; }
+  body[data-theme="rail"] .rail-grade { flex-basis:100%; height:60px; }
+  body[data-theme="rail"] .rail-helm { width:100%; }
+  .rail-info { top:54px; max-height:calc(100% - 100px); }
   body[data-theme="rail"] .rail-helm { gap:10px; }
   body[data-theme="rail"] .workspace { grid-template-columns:1fr; grid-template-rows:minmax(220px,1fr) minmax(160px,.85fr); }
   .rail-panel { padding:12px 16px; border-left:0; border-top:1px solid var(--line); }
