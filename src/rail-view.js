@@ -3,6 +3,21 @@
     const R=typeof module!=='undefined'&&module.exports?require('./rail.js'):root.Railway;
     const $=id=>document.getElementById(id), clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
     let act=null,signature='',levelNow=null,transform=null,clearanceCache=null,clearanceKey='';
+    const indicatorStates=new WeakMap();
+    function indicators(st) {
+        let state=indicatorStates.get(st);
+        if(!state){state={slideUntil:new Map(),slipUntil:-Infinity};indicatorStates.set(st,state);}
+        // Clear warnings only after a quiet interval. Never feed display
+        // persistence back into adhesion or braking forces.
+        if(st.slip)state.slipUntil=st.time+.45;
+        const sliding=new Set();
+        for(const g of st.groups)for(const c of g.cars) {
+            if(c.sliding)state.slideUntil.set(c.id,st.time+.45);
+            if(st.time<(state.slideUntil.get(c.id)??-Infinity))sliding.add(c.id);
+        }
+        return {sliding,slip:st.time<state.slipUntil};
+    }
+    const displayDirection=(st,c)=>Math.abs(c.v)>.15?Math.sign(c.v):st.reverser*c.face;
     function swept(st) {
         const key=Math.floor(st.time*4)+':'+st.reverser+':'+st.net.switches.map(s=>s.selected).join();
         if(key!==clearanceKey){clearanceKey=key;clearanceCache=R.clearance(st);}
@@ -35,16 +50,17 @@
     }
     function update(level,run,status,format) {
         const st=run.rail,m=R.metrics(st),g=R.engineGroup(st),selected=R.groupFor(st,st.selected)||g;
+        const signals=indicators(st);
         $('rail-speed').textContent=(Math.abs(m.speed)*3.6).toFixed(1);
         $('rail-speed').classList.toggle('rail-danger',Math.abs(m.speed)>m.limit);
         $('rail-stop').textContent=Number.isFinite(m.stopping)?Math.ceil(m.stopping)+' m':'No reserve';
         $('rail-summary').textContent=`${Math.round(m.length)} m · ${Math.round(m.mass/1000)} t · limit ${Math.round(m.limit*3.6)} km/h`;
-        $('rail-heat').textContent=level.rail.thermal?`Brakes ${Math.round(m.temperature)}°C${m.temperature>180?' · fading':''} · couplers ${Math.round(Math.max(...g.cars.map(c=>Math.abs(c.coupler||0)))/1000)} kN`:st.slip?'Wheelspin — ease power':'';
+        $('rail-heat').textContent=level.rail.thermal?`Brakes ${Math.round(m.temperature)}°C${m.temperature>180?' · fading':''} · couplers ${Math.round(Math.max(...g.cars.map(c=>Math.abs(c.coupler||0)))/1000)} kN`:signals.slip?'Wheelspin — ease power':'';
         $('rail-heat').classList.toggle('rail-danger',m.temperature>180);
         const operations=[];
         for(const t of st.traffic)operations.push(`${t.name} · ${t.finished?'Clear':t.waiting} · ${Math.round(t.v*3.6)} km/h`,t.timetable);
         if(st.traffic.length)operations.push('Blocks: amber freight · blue passenger · green clear');
-        if(st.config.weather==='rain')operations.push(st.slide?'Wheels sliding — ease the train brake.':st.slip?'Wheelspin — reduce power.':'Rain · wet leaves in the shaded cutting');
+        if(st.config.weather==='rain')operations.push(signals.sliding.size?'Wheels sliding — ease the train brake.':signals.slip?'Wheelspin — reduce power.':'Rain · wet leaves in the shaded cutting');
         for(const b of R.bridges(st))operations.push(`${b.name}: ${Math.round(b.mass/1000)} / ${b.maxMass/1000} t · ${b.loads} / ${b.maxLoads} transformers`);
         const envelope=swept(st);
         if(envelope)operations.push(envelope.collision?`${envelope.collision.hit} fouled in ${Math.round(envelope.collision.distance)} m`:'Selected route clears the vessel');
@@ -54,7 +70,7 @@
         }
         $('rail-operations').textContent=operations.join('\n');
         $('rail-operations').hidden=!operations.length;
-        $('rail-operations').classList.toggle('rail-danger',!!envelope?.collision||st.slide);
+        $('rail-operations').classList.toggle('rail-danger',!!envelope?.collision||signals.sliding.size>0);
         for(const name of ['power','brake','independent']) {
             const value=name==='brake'?g.brake:st[name];$('rail-'+name).value=value;
             $('rail-'+name+'-value').textContent=name==='power'?`${value} / 4`:Math.round(value*100)+'%';
@@ -71,10 +87,10 @@
             $('rail-consist').innerHTML=st.groups.map(cut=>`<div class="rail-cut">${cut.cars.map((c,i)=>`<button data-rail="select" data-value="${c.id}" id="rail-car-${c.id}" title="${c.powered?'Locomotive':c.id+' · '+Math.round(c.mass/1000)+' t'}">${c.powered?'Loco':c.id}<span></span></button>${i<cut.cars.length-1?`<button class="rail-link" data-rail="uncouple" data-value="${c.id}" data-next="${cut.cars[i+1].id}" aria-label="Uncouple between ${c.id} and ${cut.cars[i+1].id}" title="Uncouple">✂</button>`:''}`).join('')}</div>`).join('');
         }
         for(const cut of st.groups)for(const c of cut.cars) {
-            const b=$('rail-car-'+c.id),p=R.locate(st,cut,c.q),grade=p.grade*(Math.abs(c.v)>.02?Math.sign(c.v):st.reverser*c.face);
+            const b=$('rail-car-'+c.id),p=R.locate(st,cut,c.q),grade=p.grade*displayDirection(st,c);
             b.classList.toggle('selected',cut===selected);b.classList.toggle('secured',c.hand);
-            b.classList.toggle('at-risk',c.sliding||warning.cars.some(v=>v.id===c.id));
-            b.classList.toggle('sliding',c.sliding||(c.powered&&st.slip));
+            b.classList.toggle('at-risk',signals.sliding.has(c.id)||warning.cars.some(v=>v.id===c.id));
+            b.classList.toggle('sliding',signals.sliding.has(c.id)||(c.powered&&signals.slip));
             b.style.borderBottomColor=c.destination==='mill'?'#8cbccf':c.destination==='foundry'?'#e7a25d':'';
             b.querySelector('span').textContent=(grade>.003?'↗':grade<-.003?'↘':'→')+(c.hand?' P':'');
             b.title=`${c.powered?'Locomotive':c.id}: ${Math.abs(grade*100).toFixed(1)}% ${grade>=0?'uphill':'downhill'}${c.hand?', handbrakes set':''}`;
@@ -108,10 +124,13 @@
     }
     function render(canvas,level,run,zoom=1) {
         const st=run.rail,ctx=canvas.getContext('2d'),rect=canvas.getBoundingClientRect(),dpr=root.devicePixelRatio||1;
+        const signals=indicators(st);
         const w=rect.width,h=rect.height;if(!w||!h)return;
         if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
         ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#d6d1b5';ctx.fillRect(0,0,w,h);
         const warning=R.danger(st),m=R.metrics(st),mapHeight=h-75,scale=Math.min((w-42)/level.world[0],(mapHeight-25)/level.world[1])*zoom;
+        const train=R.engineGroup(st),ends=R.bounds(train),direction=displayDirection(st,train.cars.find(c=>c.powered));
+        m.head=R.locate(st,train,direction>0?ends.hi:ends.lo);m.tail=R.locate(st,train,direction>0?ends.lo:ends.hi);
         const x=zoom===1?(w-level.world[0]*scale)/2:w/2-m.head.x*scale,y=zoom===1?(mapHeight-level.world[1]*scale)/2:mapHeight/2-m.head.y*scale;
         transform={x,y,s:scale};ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);
         const stroke=(points,color,width)=>{ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();};
@@ -195,7 +214,7 @@
                 ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Math.atan2(front.y-back.y,front.x-back.x));
                 const danger=warning.cars.find(v=>v.id===c.id);
                 if(danger){ctx.strokeStyle=danger.ratio>=1.2?'#d33124':'#df852c';ctx.lineWidth=2.5/scale;ctx.strokeRect(-c.length/2-3,-8,c.length+6,16);}
-                else if(c.sliding||(c.powered&&st.slip)){ctx.strokeStyle='#dfa342';ctx.lineWidth=2/scale;ctx.strokeRect(-c.length/2-3,-8,c.length+6,16);}
+                else if(signals.sliding.has(c.id)||(c.powered&&signals.slip)){ctx.strokeStyle='#dfa342';ctx.lineWidth=2/scale;ctx.strokeRect(-c.length/2-3,-8,c.length+6,16);}
                 ctx.fillStyle='#454338';ctx.fillRect(-c.length/2, -5.5,c.length,11);
                 ctx.fillStyle=group.route?'#507f9d':c.powered?'#486b61':c.heavy?'#756c82':c.id[0]==='E'?'#b6a57e':c.destination==='mill'?'#7d9eae':c.destination==='foundry'?'#be824b':'#a45f48';ctx.fillRect(-c.length/2+1,-4.5,c.length-2,9);
                 if(c.powered){ctx.fillStyle='#e5d398';ctx.fillRect(c.face>0?2:-8,-3,6,6);}else{ctx.fillStyle='#514e41';ctx.fillRect(-c.length/2+3,-2.5,c.length-6,5);}
@@ -238,5 +257,5 @@
         if(kind==='result')return `<div class="eyebrow">${run.pausedUsed?'PRACTICE COMPLETE':run.pb?'PERSONAL BEST':'DELIVERY COMPLETE'}</div><h1>Every wagon accounted for.</h1><div class="result-time">${format(run.time)}</div><p>${Math.round(st.stats.distance)} m traveled · ${st.stats.couplings} couplings${level.rail.thermal?' · peak brakes '+Math.round(st.stats.peakTemperature)+'°C':''}</p>${actions(hasNext?'next':'courses',hasNext?'Next assignment':'World map')}${!run.pausedUsed?'<p class="subtle">Time saved to your logbook.</p>':''}`;
         return `<div class="eyebrow">RAILWAY CONTROLS</div><h1>Give the tail time.</h1><p>W / S changes power. A / D releases / applies the train brake. Q / E releases / applies the locomotive brake. Space cuts power and applies full train brake. Stop before reversing with X.</p><p>Click a signal or route button to change points. Occupied points are locked until the whole train clears.</p><p>Approach within 3 m at less than 2 km/h, then press F to couple. Stop with brakes applied and power off before cutting a link in the train strip. Select a cut and press B to set or release its handbrakes. Detached air brakes slowly leak away.</p><p>The grade strip shows which wagons are uphill. Stopping distance estimates full train braking, including brake delay and current temperature. Brake before a lower speed limit; it applies until the tail clears.</p><p>Shift+R retries. Escape pauses. Focus-loss pausing is optional in the logbook.</p>${actions('back','Back')}`;
     }
-    const api={prepare,key,update,render,dialog};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.RailView=api;
+    const api={prepare,key,update,render,dialog,indicators,displayDirection};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.RailView=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
