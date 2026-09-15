@@ -23,7 +23,7 @@ test('published recordings have unique known levels and input-only timelines', (
                 if (key === 'rail') {
                     assert.ok(L.find(l=>l.id===f.level).rail);
                     assert.ok(Array.isArray(value) && value.length>=1 && value.length<=2);
-                    assert.ok(['power','helper','brake','independent','stop','reverse','switch','select','hand','uncouple','couple'].includes(value[0]));
+                    assert.ok(['power','helper','brake','independent','stop','reverse','switch','select','hand','uncouple','couple','dispatch'].includes(value[0]));
                 }
                 if (key === 'throttle') assert.ok(Number.isInteger(value) && value >= -3 && value <= 4);
                 if (['rudder', 'thruster', 'winch'].includes(key)) assert.ok(Number.isFinite(value) && value >= -1 && value <= 1);

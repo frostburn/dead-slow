@@ -22,17 +22,17 @@ test('an unpowered ball rolls down a quiet volcano in production physics',()=>{
     assert.ok(ship.vx>.5);assert.ok(ship.x>v.x+50.2);
 });
 test('main-engine identity survives a detached powered helper and helper commands are guarded',()=>{
-    const st=R.create(L.find(l=>l.id==='long-grade-9'));
+    const st=R.create(L.find(l=>l.id==='long-grade-12'));
     st.groups.reverse();assert.equal(R.drivingEngine(st).id,'engine');assert.equal(R.command(st,'helper',4),false);
     assert.ok(R.command(st,'couple'));assert.ok(R.command(st,'hand'));assert.ok(R.command(st,'helper',2));
-    assert.equal(R.command(st,'uncouple','O8'),false);
-    R.command(st,'stop');assert.equal(st.helper,0);assert.ok(R.command(st,'uncouple','O8'));
+    assert.equal(R.command(st,'uncouple','S10'),false);
+    R.command(st,'stop');assert.equal(st.helper,0);assert.ok(R.command(st,'uncouple','S10'));
     assert.equal(R.command(st,'helper',4),false);
 });
 test('sharing the climb protects couplers; front-only pull and rear-only curve pushing fail',()=>{
     function probe(front,rear,limit=8) {
-        const level=structuredClone(L.find(l=>l.id==='long-grade-9'));
-        Object.assign(level.rail,{nodes:{a:[0,0,0],b:[1400,0,42]},tracks:[{id:'grade',a:'a',b:'b',limit,points:Array.from({length:15},(_,i)=>[i*100,0,i*3])}],switches:[],tasks:[],zones:[]});
+        const level=structuredClone(L.find(l=>l.id==='long-grade-12'));
+        Object.assign(level.rail,{nodes:{a:[0,0,0],b:[1400,0,42]},tracks:[{id:'grade',a:'a',b:'b',limit,points:Array.from({length:15},(_,i)=>[i*100,0,i*3])}],switches:[],traffic:[],tasks:[],zones:[]});
         level.rail.groups=[{brake:0,speed:.5,cars:level.rail.groups.flatMap(g=>g.cars).map((c,i)=>({...c,edge:'grade',s:650-i*25.2}))}];
         const st=R.create(level);R.command(st,'power',front);R.command(st,'helper',rear);
         for(let i=0;i<2400&&!st.failure;i++)R.update(st,1/120);
@@ -61,7 +61,7 @@ test('version 6 archives changed hills and the old tour while preserving railway
     const d=S.fresh(),record={time:123,contacts:0,clean:true};d.version=15;
     d.stages['gerbo-downhill']={runs:[record],ghost:[[0,1,2,3]]};d.stages['long-grade-7']={runs:[record]};
     d.races['grand-tour']=[{...record,stages:60}];d.races.gerbozilla=[record];
-    const n=S.sanitize(d);assert.equal(n.version,16);assert.equal(n.races['grand-tour'].length,0);
+    const n=S.sanitize(d);assert.equal(n.version,S.VERSION);assert.equal(n.races['grand-tour'].length,0);
     assert.equal(n.archivedRaces['grand-tour-60'][0].stages,60);assert.equal(n.archivedRaces['gerbozilla-topography-v1'].length,1);
     assert.deepEqual(n.archivedStages['gerbo-downhill-topography-v1'].ghost,[[0,1,2,3]]);
     assert.equal(n.stages['long-grade-7'].runs.length,1);assert.deepEqual(S.sanitize(n),n);

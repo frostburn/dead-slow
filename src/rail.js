@@ -69,7 +69,9 @@
             cars:g.cars.map(c=>({...c,q:c.s,v:g.speed||0,face:1,pressure:g.brake??1,temp:20,hand:!!g.secured,stress:0,curveTime:0}))}));
         const traffic=(cfg.traffic||[]).map(t=>{
             let q=0;const path=t.route.map(([id,dir])=>{const p=entry(net,id,dir,q);q=p.end;return p;});
-            return {...t,path,v:0,finished:false,waiting:'Scheduled',cars:Array.from({length:4},(_,i)=>({id:t.id+'-'+i,q:t.head-i*t.length/4,length:t.length/4-1.2,mass:40000,v:0}))};
+            const last=path.at(-1),tunnel=net.edges[last.id].tunnel;
+            const exitQ=tunnel&&last.dir===1?last.start+tunnel.from:last.end;
+            return {...t,path,exitQ,v:0,released:false,finished:false,waiting:'Awaiting your signal · H',cars:Array.from({length:4},(_,i)=>({id:t.id+'-'+i,q:t.head-i*t.length/4,length:t.length/4-1.2,mass:40000,v:0}))};
         });
         return {net,groups,traffic,config:cfg,time:0,power:0,helper:0,reverser:1,independent:0,selected:'engine',crew:[],
             completed:[],taskHold:{},finishHold:0,failure:null,notice:'Release the train brake to move.',
@@ -87,6 +89,10 @@
         if(name==='helper'){st.helper=clamp(value,0,4);return true;}
         if(name==='brake'){setBrake(st,group,value);return true;}
         if(name==='independent'){st.independent=clamp(value,0,1);return true;}
+        if(name==='dispatch') {
+            const t=st.traffic.find(t=>!t.released&&!t.finished&&(!value||t.id===value));
+            t.released=true;t.waiting='Signal received';st.notice=t.name+' signalled. Track signals still protect the route.';return true;
+        }
         if(name==='stop'){st.power=0;st.helper=0;setBrake(st,group,1);return true;}
         if(name==='reverse') {
             if(Math.abs(engine.v)>.12){st.notice='Stop before changing direction.';return false;}
@@ -137,6 +143,8 @@
         let reason='';
         if(st.failure)reason='Retry to begin again.';
         else if(name==='helper'&&!eg.cars.some(c=>c.helper))reason='Couple the helper before requesting assistance.';
+        else if(name==='independent'&&st.config.helper&&value!==0)reason='Use the train brake with a helper.';
+        else if(name==='dispatch'&&!st.traffic.some(t=>!t.released&&!t.finished&&(!value||t.id===value)))reason='No passenger awaiting a departure signal.';
         else if(name==='select'&&!groupFor(st,value))reason='That cut has changed. Select it again.';
         else if(name==='reverse'&&eg.cars.some(c=>Math.abs(c.v)>.12))reason='Stop the whole train before reversing.';
         else if(name==='hand'&&selected.cars.some(c=>Math.abs(c.v)>.15))reason='Stop the selected cut before changing handbrakes.';
@@ -171,7 +179,10 @@
         const task=st.config.tasks.find(t=>!st.completed.includes(t.id)&&(!t.after||st.completed.includes(t.after)));
         if(!next&&task) {
             const zone=st.config.zones.find(z=>z.id===task.zone);
-            if(task.type==='traffic')next='Fit the whole freight into a loop, then wait for the passenger to pass.';
+            if(task.type==='traffic') {
+                const passenger=st.traffic.find(t=>t.id===task.traffic);
+                next=passenger?.released?'Keep the passenger route clear. '+passenger.waiting+'.':'Fit the whole freight in the loop, set the passenger route, then signal with H.';
+            }
             else if(task.type==='crew')next=`Stop beside ${zone.name} for ${task.dwell||5} seconds to board the crew.`;
             else if(task.type==='rescue'){
                 const wagons=groupFor(st,task.cars[0]);
@@ -252,7 +263,7 @@
         for(const t of st.traffic) {
             if(t.finished)continue;
             t.reserved=[];
-            if(st.time<t.depart){t.waiting=`Departs in ${Math.ceil(t.depart-st.time)} s`;continue;}
+            if(!t.released){t.waiting='Awaiting your signal · H';continue;}
             const head=bounds(t).hi,horizon=t.v*t.v/.8+70;
             let stop=t.path.at(-1).end+t.length+20;t.waiting='Running';
             for(let i=0;i<t.path.length;i++) {
@@ -265,14 +276,17 @@
                 const node=leg.dir===1?edge.b:edge.a,sw=st.net.switches.find(s=>s.node===node);
                 if(!sw)continue;
                 const branch=sw.branches.findIndex(id=>id===leg.id||id===t.path[i+1].id);
-                if(branch!==sw.selected&&occupied(st,node)){stop=Math.min(stop,leg.end-24);t.waiting='Waiting for points to clear';break;}
-                if(branch>=0){sw.selected=branch;t.reserved.push(node);}
+                if(route(st,node,leg.id)!==t.path[i+1].id) {
+                    stop=Math.min(stop,leg.end-24);
+                    t.waiting=occupied(st,node)?'Waiting for points to clear':`Set ${sw.label} → ${sw.names[branch]}`;break;
+                }
+                t.reserved.push(node);
             }
             const target=Math.min(t.speed,Math.sqrt(Math.max(0,stop-head)*.7));
             t.v=clamp(target,t.v-.4*dt,t.v+.25*dt);
             const travel=Math.min(t.v*dt,Math.max(0,stop-head));
             t.cars.forEach(c=>{c.q+=travel;c.v=t.v;});
-            if(bounds(t).lo>t.path.at(-1).end){t.finished=true;t.waiting='Clear';t.reserved=[];}
+            if(bounds(t).lo>t.exitQ){t.finished=true;t.waiting='Clear';t.reserved=[];}
             const occupiedTrack=segments(st,t);
             if(occupiedTrack.some(a=>player.some(b=>a.edge===b.edge&&a.from<b.to&&a.to>b.from)))st.failure='The trains collided. Wait behind a clear signal block.';
         }
@@ -384,11 +398,11 @@
                 st.stats.peakCoupler=Math.max(st.stats.peakCoupler,Math.abs(load));
                 a.stress=Math.abs(load)>(st.config.couplerLimit||650000)?a.stress+dt:Math.max(0,a.stress-dt);
                 if(a.stress>.6)st.failure='A coupler parted. Ease power and brake changes across the crest.';
-                a.workStress=engine&&st.config.helper&&load>120000?(a.workStress||0)+dt:Math.max(0,(a.workStress||0)-dt*2);
-                if(a.workStress>8)st.failure='A coupler could not sustain the pull. Share the climb with the rear helper.';
+                a.workStress=engine&&st.config.helper&&load>(st.config.helper.workingPull||120000)?(a.workStress||0)+dt:Math.max(0,(a.workStress||0)-dt*2);
+                if(a.workStress>(st.config.helper?.pullGrace||8))st.failure='A coupler could not sustain the pull. Share the climb with the rear helper.';
                 const tight=a.location.limit<=6;
                 a.bunchTime=tight&&engine&&cars.some(c=>c.helper)&&load<-(st.config.compressionLimit||Infinity)?(a.bunchTime||0)+dt:0;
-                if(a.bunchTime>1.5)st.failure='The helper bunched the wagons on a curve. Reduce rear assistance before the head descends.';
+                if(a.bunchTime>(st.config.helper?.compressionGrace||1.5))st.failure='The helper bunched the wagons on a curve. Reduce rear assistance before the head descends.';
             }
             for(let i=0;i<cars.length;i++) {
                 const c=cars[i],p=c.location,old=c.q;
@@ -511,7 +525,7 @@
         if(st.config.helper) {
             const helper=g.cars.some(c=>c.helper);
             for(const c of g.cars) {
-                const force=c.coupler||0,limit=force>=0?120000:helper?st.config.compressionLimit:st.config.couplerLimit;
+                const force=c.coupler||0,limit=force>=0?(st.config.helper.workingPull||120000):helper?st.config.compressionLimit:st.config.couplerLimit;
                 const ratio=Math.abs(force)/limit;
                 if(ratio>.8&&(!coupling||ratio>coupling.ratio))coupling={id:c.id,ratio,force,kind:force>=0?'pull':'push'};
             }

@@ -250,6 +250,7 @@
     }
     function signal() {
         if (run.rampage) return lineAction();
+        if (run.rail && R.availability(run.rail,'dispatch').enabled) return railCommand('dispatch');
         if (!run.space) return audio.horn();
         if (status !== 'running') return false;
         const now = performance.now() / 1000;
@@ -287,6 +288,7 @@
         if (status !== 'running' || !run.rail) return false;
         const oldBrake = R.engineGroup(run.rail).brake;
         const ok = R.command(run.rail, name, value);
+        if (ok && name === 'dispatch') audio.horn();
         if (ok && ['couple','uncouple','switch','hand','reverse'].includes(name)) audio.railEvent(name);
         if (ok && name === 'brake' && Math.abs(oldBrake-value)>=.25) audio.railEvent('brake');
         if (name === 'power' && ok) run.throttleOrders++;
@@ -643,6 +645,8 @@
                 return { name, overall: rows[0]?.time, clean: rows.find(r => r.clean)?.time };
             })).filter(row => Number.isFinite(row.overall));
         return older.concat([
+            ['long-grade-dispatch-v1','World 5 · earlier helper and passenger routes'],
+            ['grand-tour-dispatch-v1','Grand Tour · earlier helper and passenger routes'],
             ['gerbozilla-topography-v1','World 4 · before volcanic hills'],
             ['grand-tour-60','Grand Tour · earlier 60-stage route'],
             ['gerbozilla-contour-v1','World 4 · angular volcanic banks'],
@@ -667,7 +671,8 @@
                 <p>Best ${format(store.best(level.id)?.time)} · clean ${format(store.best(level.id,true)?.time)}</p>
                 <p>${stage.runs.slice(0,10).map(r=>format(r.time)).join(' · ')||'No recorded deliveries yet.'}</p>
                 ${circuitRecords(['long-grade','grand-tour'])}
-                ${layoutRaceArchives().filter(a=>a.name.startsWith('Grand Tour')).map(a=>`<p class="subtle">${esc(a.name)} (archived): overall ${format(a.overall)} · clean ${format(a.clean)}</p>`).join('')}
+                ${store.data.archivedStages[level.id+'-dispatch-v1']?.runs.length?`<p class="subtle">Earlier route (archived): ${store.data.archivedStages[level.id+'-dispatch-v1'].runs.map(r=>format(r.time)).join(' · ')}</p>`:''}
+                ${layoutRaceArchives().filter(a=>a.name.startsWith('Grand Tour')||a.name.startsWith('World 5')).map(a=>`<p class="subtle">${esc(a.name)} (archived): overall ${format(a.overall)} · clean ${format(a.clean)}</p>`).join('')}
                 <div class="dialog-actions"><button data-action="toggle-focus-pause">Pause on window blur: ${settings.pauseOnBlur?'on':'off'}</button><button data-action="toggle-sound">Sound: ${settings.sound?'on':'off'}</button><button data-action="export">Export records</button><button data-action="import">Import records</button><button data-action="back">Back</button></div>
                 <p class="subtle">Pausing makes a run practice. Hiding the tab always pauses.</p>`);
         }

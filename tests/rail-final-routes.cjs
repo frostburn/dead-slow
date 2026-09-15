@@ -3,7 +3,14 @@ const R=require('../src/rail.js'),assert=require('node:assert/strict');
 const {step,move,distance}=require('./rail-driver.cjs');
 const cmd=(st,name,value)=>assert.ok(R.command(st,name,value),st.notice);
 function assisted(st,target=400) {
+    if(!R.availability(st,'couple').enabled) {
+        const last=R.engineGroup(st).cars.at(-1),cut=R.groupFor(st,'helper'),helper=cut.cars[0],p=R.locate(st,cut,helper.q);
+        const buffers=p.s+(last.length+helper.length)/2+1.2;
+        move(st,last.id,p.edge,buffers+25,-1,1.5);
+        move(st,last.id,p.edge,buffers,-1,.2);
+    }
     cmd(st,'couple');cmd(st,'hand');step(st,2);
+    if(st.reverser<0)cmd(st,'reverse');
     for(let i=0;i<18000;i++) {
         const remaining=distance(st,'engine','summit-yard',target,1),g=R.engineGroup(st),m=R.metrics(st);
         if(remaining<1.6){cmd(st,'stop');step(st,10);return;}
@@ -54,10 +61,11 @@ function flood(st) {
     move(st,'Q1','upland',660,1,3,2);cmd(st,'hand');step(st,4);
 }
 function finale(st) {
-    cmd(st,'switch','a');cmd(st,'switch','b');
+    cmd(st,'switch','a');cmd(st,'dispatch','coastal');
     assisted(st,440);retire(st,'S10');
     move(st,'engine','lantern-loop',570,1,3);cmd(st,'hand');
-    for(let i=0;i<2600&&!st.traffic[0].finished;i++)step(st,1);
+    cmd(st,'switch','a');cmd(st,'switch','yard');
+    for(let i=0;i<900&&!st.traffic[0].finished;i++)step(st,1);
     assert.ok(st.traffic[0].finished);cmd(st,'hand');
     if(st.net.switches.find(s=>s.node==='b').selected===0)cmd(st,'switch','b');
     move(st,'engine','coastal-road',990,1,3);cmd(st,'hand');step(st,4);

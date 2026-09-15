@@ -17,7 +17,7 @@ function distance(st,id,target,s,direction) {
     throw Error('Route does not reach '+target);
 }
 function move(st,id,edge,s,direction,max=3,power=1) {
-    const group=R.engineGroup(st),engine=group.cars.find(c=>c.powered);
+    const engine=R.drivingEngine(st);
     R.command(st,'power',0);R.command(st,'independent',0);
     if(st.reverser*engine.face!==direction){R.command(st,'stop');step(st,8);assert.ok(R.command(st,'reverse'));}
     let count=0;

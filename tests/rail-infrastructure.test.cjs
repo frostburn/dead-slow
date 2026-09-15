@@ -47,6 +47,7 @@ test('passenger is held by an uncleared freight tail and cannot throw occupied p
     R.command(st,'switch','a');R.command(st,'switch','b');
     g.path.push({id:'hollow-loop',dir:1,start:a,end:a+st.net.edges['hollow-loop'].length});
     g.cars.forEach(c=>c.q+=300);g.cars.forEach(c=>c.hand=true);
+    R.command(st,'switch','b');R.command(st,'dispatch');
     for(let i=0;i<650*120;i++)R.update(st,1/120);
     assert.equal(st.failure,null);assert.equal(st.traffic[0].finished,false);
     assert.ok(R.occupied(st,'a'));assert.equal(st.net.switches.find(s=>s.node==='a').selected,1);

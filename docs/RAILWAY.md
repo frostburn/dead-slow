@@ -1,8 +1,8 @@
 # The Long Grade: twelve assignments
 
 Version 6 completes World 5. All twelve assignments join the railway circuit
-and the 72-stage Grand Tour. Schema 16 archives the earlier tour separately;
-records for the first eight railway missions remain active.
+and the 72-stage Grand Tour. Schema 17 separately archives earlier 5-04, 5-09
+and 5-12 routes and their circuits. Other railway records remain active.
 
 ## Engine boundaries
 
@@ -64,7 +64,7 @@ followed by `node tools/sync-replays.cjs`.
 
 | Assignment | Handling problem and reusable mechanic |
 | --- | --- |
-| Meet at Rook’s Hollow | A scheduled passenger follows a surveyed route with acceleration, braking, edge-sized signal blocks and point reservations. The full freight fits Rook’s loop; the short refuge requires splitting. |
+| Meet at Rook’s Hollow | Signal the passenger with H when ready. Fit the whole freight in Rook’s loop and set both junctions back to Main line. The short refuge requires splitting. The passenger follows clear blocks into Rook tunnel. |
 | Three Wagons Going Somewhere | Detached cuts may start with speed and empty air reservoirs. Both service connections permit interception; coupling conserves the moving cuts’ longitudinal momentum. The gravel bed adds resistance and counts one rough contact. Secure the caught wagons manually. |
 | Leaves on the Line | Low track adhesion limits tractive effort. Excess brake demand slides the wheels and reduces effective grip; brake estimates include that reduction. Rain and shaded ballast show the affected track. |
 | One Bridge, Two Loads | Bridge capacity counts the full mass of every vehicle whose body overlaps the span. The locomotive begins between the loads. A receiving pocket and engine return loop allow ordered reassembly without teleporting or trapping the locomotive. |
@@ -73,8 +73,13 @@ followed by `node tools/sync-replays.cjs`.
 Traffic uses a separate autonomous consist representation with a prescribed
 route, bounded acceleration/deceleration, body occupancy and collision checks
 against player cuts. Its current route uses whole track edges as signal
-blocks. Timetable holds cost elapsed time, without an additional score penalty.
-Passenger vehicles do not participate in the player's coupling controls.
+blocks. Passengers wait indefinitely for a player departure signal (H or the
+Signal departure button). Releasing a passenger does not clear its track signals
+or throw points: a blocked or incorrectly aligned route holds it at red. Aligned
+points are reserved within braking distance and cannot be changed underneath it.
+Passenger vehicles do not participate in the player's coupling controls. Tunnel
+portals cover entering carriages individually; the route clears only after the
+last carriage is inside. The finale's Summit Junction must be set to Ridge tunnel.
 
 Bridge ratings and cargo clearance are physical requirements, not mission
 checkpoints. Cargo carrier links cannot be split while the vessel spans them.
@@ -96,18 +101,24 @@ the locomotive's position within the completed train.
 
 | Assignment | Route and handling problem |
 | --- | --- |
-| A Push from Behind | Couple No. 42 at the rear. Share a 24 m climb between front power and rear assistance, then reduce each as its end crosses the crest. Leave the helper in the marked summit berth and deliver the ore freight without it. |
+| A Push from Behind | Back the freight across a curved, flat approach to No. 42, initially 78.4 m from the last wagon's buffers. Share a 20 m climb between front power and rear assistance, then reduce each as its end crosses the crest. Leave the helper in the marked summit berth and deliver the ore freight without it. |
 | The Railway Ends Here | Split the rear pair before pushing the first pair aboard with the reach wagon. Retrieve the second pair, use the quay loop to get behind it, and push it onto the other deck. Park the locomotive and reach wagon ashore. |
 | The Last Working Line | Retrieve the lowland cut before Low Crossing floods, then enter the dead-end quarry spur, collect its wagons and stop at the crew platform. Reverse clear of the junction and climb to the upland refuge. Every route remains physically usable until its forecast closure. |
-| The Long Grade | Couple the helper, cross the mountain, retire it, descend with cool brakes, meet the coastal passenger in Lantern loop, then bring every supply wagon into the terminal. All deliveries and helper retirement remain live requirements. |
+| The Long Grade | Couple the helper, cross the mountain, retire it, descend with cool brakes and meet the coastal passenger in Lantern loop. Signal its departure and align both viaduct points and the Ridge tunnel exit. Deliver every supply wagon. All deliveries and helper retirement remain live requirements. |
 
 The main engine is identified by its persistent `engine` ID, independently of
-the group order or other powered vehicles. U / J controls rear assistance;
+the group order or other powered vehicles. E / Q raises / lowers rear assistance
+in place of the locomotive brake, leaving three levers in helper missions;
 Space cuts both engines and applies the train brake. Detached helpers cannot
 receive power. Brakes still propagate from the main locomotive. A sustained
-pull above 120 kN overloads the mountain couplers after eight seconds; excessive
+pull above 120 kN overloads the finale's mountain couplers after eight seconds.
+The helper introduction has lighter wagons, a gentler climb, a 130 kN sustained
+pull limit with sixteen seconds to react, and three seconds of excessive
+compression before failure (the finale allows 1.5 seconds). Excessive
 rear compression on restrictive curves has its own visible warning and limit.
-The grade strip shows the crest moving through the whole train.
+The grade strip shows the crest moving through the whole train. A persistent
+status panel defaults to “Couplers within limits”; warnings retain their space
+and clear after a quiet interval, so the controls do not jump around.
 
 Ferry balance counts each body's fraction actually aboard, including the reach
 wagon. A 65 t side-to-side difference uses the full four-degree ramp envelope.
@@ -119,8 +130,9 @@ a vehicle entering a closed interval ends the run. The forecast is visible
 from departure; no collection order or revisits are prohibited by script.
 The crew boards after a stopped, five-second platform dwell.
 
-`DeadSlow.watch("long-grade-12", 16)` plays the complete finale in about 160
-seconds (2557.808 simulated seconds). Regenerate it with
+`DeadSlow.watch("long-grade-12", 16)` plays the complete finale. Its passenger
+is signalled at departure, then waits at Lantern until the freight clears the
+points and sets the tunnel route. Regenerate it with
 `node tools/record-rail-run.cjs 12`, then `node tools/sync-replays.cjs`.
 
 ## Validation

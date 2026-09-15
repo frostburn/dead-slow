@@ -39,9 +39,9 @@ two opportunities to intercept runaway wagons, a slippery wooded saddle,
 transformer shuttles across a weight-limited bridge, and an oversized vessel
 with a visible swept-clearance preview. The emergency gravel catch is a valid,
 non-clean rescue. Passenger schedules, bridge occupancy and wheel sliding are
-shown during play. The final four assignments add a rear helper, balanced train-ferry loading, a flood evacuation and the winter-supply journey to the coast. U / J changes rear assistance independently of front power. Watch the complete finale with `DeadSlow.watch("long-grade-12", 16)`.
+shown during play. The final four assignments add a rear helper, balanced train-ferry loading, a flood evacuation and the winter-supply journey to the coast. In helper missions, E / Q raises / lowers rear assistance in place of the locomotive brake. Press H or Signal departure to release passenger trains; set their junctions before they can pass. Watch the complete finale with `DeadSlow.watch("long-grade-12", 16)`.
 
-Volcanoes now have real slopes: an unpowered ball rolls away from their summits. The visible apron and the physical hill have the same footprint. Schema 16 archives the earlier volcanic courses and 60-stage Grand Tour without clearing existing railway records.
+Volcanoes now have real slopes: an unpowered ball rolls away from their summits. The visible apron and the physical hill have the same footprint. Earlier volcanic courses, railway layouts and circuits remain archived in the logbook.
 
 **Window focus pausing is optional.** In Logbook & settings, turn off
 “Pause when window loses focus” to keep playing a ranked run while using
@@ -406,7 +406,7 @@ leaderboard. Export the logbook before moving between files, browsers or hosts;
 then import it through **Logbook**. Import replaces the current local logbook.
 Storage denial or quota failure leaves the session playable and exportable.
 
-Logbooks using schemas 1–16 are accepted. Schema 16 archives the courses before volcanic hills, their World 4 circuit and the earlier 60-stage Grand Tour. Schema 13 archives the three pre-volcano
+Logbooks using schemas 1–17 are accepted. Schema 17 archives the earlier routes for 5-04, 5-09 and 5-12 and their railway and Grand Tour circuits. Schema 16 archives the courses before volcanic hills, their World 4 circuit and the earlier 60-stage Grand Tour. Schema 13 archives the three pre-volcano
 field routes, the corresponding Gerbozilla circuit, and the earlier Grand Tour
 order. Other individual stages remain comparable after the display renumbering.
 Schema 12 separately archives the
