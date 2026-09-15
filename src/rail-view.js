@@ -29,13 +29,13 @@
         $('rail-info-body').innerHTML=`<div id="rail-alert" class="rail-alert"></div><p id="rail-notice" role="status"></p>
             <div class="rail-summary" id="rail-summary"></div><div id="rail-heat" class="rail-summary"></div>
             <details class="rail-details"><summary>Details</summary><div id="rail-operations" class="rail-operations"></div>
-            <p id="rail-cut-status" class="rail-caption"></p><p id="rail-pickup" class="rail-caption"></p><div id="rail-tasks" class="rail-tasks"></div></details>`;
+            <p id="rail-cut-status" class="rail-caption"></p><p id="rail-pickup" class="rail-caption"></p></details>`;
         $('rail-panel').innerHTML=`<div class="rail-readings"><div><strong id="rail-speed">0.0</strong><span>km/h</span></div><div><b id="rail-stop">0 m</b><span>estimated stop</span></div></div>
             ${(level.rail.traffic||[]).map(t=>`<button class="rail-dispatch" data-rail="dispatch" data-value="${t.id}">Signal departure · H</button>`).join('')}
             <div class="rail-levers">${R.commands.levers(!!level.rail.helper).map(({name:id,label,keys,min,max,step})=>`<div class="rail-lever"><label for="rail-${id}">${label}<output id="rail-${id}-value"></output><small>${keys}</small></label><input id="rail-${id}" data-rail="${id}" type="range" min="${min}" max="${max}" step="${step}" value="${id==='brake'?1:0}" aria-label="${label}"></div>`).join('')}</div>
             <div class="rail-actions"><button data-rail="reverse" id="rail-reverse" title="Change travel direction (X)">Reverse · X</button><button data-rail="stop">Full brake · Space</button><button data-rail="couple">Couple · F</button><button data-rail="hand" id="rail-hand">Handbrakes · B</button></div>
             <div id="rail-consist" class="rail-consist"></div>
-            <div id="rail-switches" class="rail-switches"></div>
+            <div id="rail-switches" class="rail-switches"></div><div class="section-label">SECTOR SPLITS</div><div id="rail-tasks" class="splits rail-tasks"></div>
             <div class="rail-actions"><button data-rail="retry">Retry <kbd>Shift+R</kbd></button><button data-rail="help">Controls</button></div>`;
         $('rail-panel').onclick=e=>{const b=e.target.closest('[data-rail]');if(b&&!b.disabled&&b.tagName!=='INPUT')act(b.dataset.rail,b.dataset.rail==='uncouple'?{after:b.dataset.value,before:b.dataset.next}:b.dataset.value);};
         $('rail-panel').oninput=e=>{if(e.target.dataset.rail)act(e.target.dataset.rail,Number(e.target.value));};
@@ -119,7 +119,10 @@
                 return `<button data-rail="switch" data-value="${sw.node}" ${R.occupied(st,sw.node)?'disabled':''}><span>${sw.label}</span><b>${sw.names[sw.selected]}</b>${level.rail.thermal?`<small>${Math.round(edge.length)} m · ${grade.toFixed(1)}% max grade</small>`:''}${R.occupied(st,sw.node)?'<small>occupied</small>':''}</button>`;
             }).join('');
         }
-        $('rail-tasks').innerHTML=st.config.tasks.map(t=>`<div class="${st.completed.includes(t.id)?'done':''}">${st.completed.includes(t.id)?'✓':'○'} ${t.text}</div>`).join('');
+        $('rail-tasks').innerHTML=st.config.tasks.map(t=>{
+            const done=st.completed.includes(t.id),split=done?run.splits?.find(s=>s.name===t.text):null;
+            return `<div class="split-row ${done?'done':''}"><span>${t.text}</span><span>${split?format(split.time):'—'}</span></div>`;
+        }).join('');
         const help=projection.help;
         const recommendation=projection.recommendation;
         $('rail-cut-status').textContent=help.cut;
@@ -321,13 +324,24 @@
         const dpr=root.devicePixelRatio||1,ctx=canvas.getContext('2d');
         if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
         ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
-        const train=R.engineGroup(st),cars=train.cars,heights=cars.map(c=>R.locate(st,train,c.q).z),low=Math.min(...heights)-.8,high=Math.max(...heights)+.8;
-        ctx.fillStyle='#d6ddca';ctx.font='11px sans-serif';ctx.textAlign='left';ctx.fillText('GRADE UNDER TRAIN',8,14);
-        const step=Math.min(34,(w-24)/cars.length),start=w/2-step*(cars.length-1)/2;
-        const pts=cars.map((c,i)=>({x:start+i*step,y:h-8-(heights[i]-low)/(high-low)*(h-32)}));
-        ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.strokeStyle='#90b59a';ctx.lineWidth=2;ctx.stroke();
-        pts.forEach((p,i)=>{ctx.fillStyle=cars[i].powered?'#edcd88':'#b87b60';ctx.fillRect(p.x-5,p.y-5,10,6);});
-        ctx.textAlign='right';ctx.fillStyle='#d6ddca';ctx.fillText(`${Math.abs(m.gradient*100).toFixed(1)}% average`,w-8,14);
+        const profile=Presentation.profile(st),{lo,hi,samples,cars}=profile;
+        const low=Math.floor(Math.min(...samples.map(p=>p.z))/5)*5-2,high=Math.max(low+8,Math.ceil(Math.max(...samples.map(p=>p.z))/5)*5+2);
+        const x=q=>8+(q-lo)/(hi-lo)*(w-16),y=z=>h-14-(z-low)/(high-low)*(h-32);
+        ctx.save();ctx.beginPath();ctx.rect(0,18,w,h-18);ctx.clip();
+        ctx.beginPath();ctx.moveTo(x(samples[0].q),h-10);samples.forEach(p=>ctx.lineTo(x(p.q),y(p.z)));ctx.lineTo(x(samples.at(-1).q),h-10);ctx.closePath();ctx.fillStyle='#60765b55';ctx.fill();
+        ctx.beginPath();samples.forEach((p,i)=>i?ctx.lineTo(x(p.q),y(p.z)):ctx.moveTo(x(p.q),y(p.z)));ctx.strokeStyle='#a6b89a';ctx.lineWidth=2;ctx.stroke();
+        for(const p of profile.junctions){ctx.fillStyle='#edd18e';ctx.beginPath();ctx.arc(x(p.q),y(p.z),3,0,Math.PI*2);ctx.fill();}
+        for(const c of cars){
+            const width=Math.max(3,c.length/(hi-lo)*(w-16)),height=c.powered?9:6;
+            ctx.fillStyle=c.powered?'#edcd88':c.attached?'#b87b60':'#91c9d2';
+            ctx.fillRect(x(c.q)-width/2,y(c.z)-height-2,width,height);
+            ctx.fillStyle='#182b24';for(const offset of [-.3,.3]){ctx.beginPath();ctx.arc(x(c.q)+width*offset,y(c.z)-1,1.5,0,Math.PI*2);ctx.fill();}
+            if(c.secured){ctx.strokeStyle='#e8cb83';ctx.strokeRect(x(c.q)-width/2,y(c.z)-height-2,width,height);}
+        }
+        ctx.restore();ctx.fillStyle='#d6ddca';ctx.font='11px sans-serif';ctx.textAlign='left';ctx.fillText('TRACK PROFILE',8,13);
+        ctx.textAlign='right';ctx.fillText(`${Math.round(hi-lo)} m · height exaggerated`,w-8,13);
+        ctx.font='10px sans-serif';ctx.textAlign='left';ctx.fillText(`${Math.round(lo-profile.engine)} m`,8,h-1);ctx.textAlign='right';ctx.fillText(`+${Math.round(hi-profile.engine)} m`,w-8,h-1);
+
     }
 
     function dialog(kind,level,run,format,hasNext=false,race=null) {
@@ -336,7 +350,7 @@
         if(kind==='pause')return `<div class="eyebrow">PRACTICE</div><h1>Train held.</h1><p>Pausing makes this attempt unranked. Retry for a recorded run.</p>${actions('resume','Resume')}`;
         if(kind==='failed')return `<div class="eyebrow">RUN ENDED</div><h1>Freight stopped.</h1><p>${st.failure}</p>${actions('retry','Try again')}`;
         if(kind==='result')return `<div class="eyebrow">${run.pausedUsed?'PRACTICE COMPLETE':run.pb?'PERSONAL BEST':'DELIVERY COMPLETE'}</div><h1>${race&&!hasNext?'The whole line delivered.':'Every wagon accounted for.'}</h1><div class="result-time">${format(run.time)}</div>${race?`<p>${race.name} · ${race.stages} / ${race.route.length} · total ${format(race.total)} · ${race.retries} retries</p>`:''}<p>${Math.round(st.stats.distance)} m traveled · ${st.stats.couplings} couplings${level.rail.thermal?' · peak brakes '+Math.round(st.stats.peakTemperature)+'°C':''}</p>${actions(hasNext?'next':'courses',hasNext?'Next assignment':'World map')}${!run.pausedUsed?'<p class="subtle">Time saved to your logbook.</p>':''}`;
-        return `<div class="eyebrow">RAILWAY CONTROLS</div><h1>Give the tail time.</h1><p>W / S changes ${st.config.helper?'front ':''}power. A / D releases / applies the train brake. ${st.config.helper?'E / Q raises / lowers rear assistance.':'Q / E releases / applies the locomotive brake.'} Space cuts power and applies full train brake. Stop before reversing with X.</p><p>Click points or a route button to change the connection. Occupied points stay locked until the whole train clears.${st.traffic.length?' Press H or Signal departure to release the passenger. Set its route yourself; red signals hold it until the track and points are clear.':''}</p><p>Approach within 3 m at less than 2 km/h, then press F to couple. Stop with brakes applied and power off before cutting a link in the train strip. Select a cut and press B to set or release its handbrakes. Detached air brakes slowly leak away.</p><p>The grade strip shows which wagons are uphill. Stopping distance estimates full train braking, including brake delay and current temperature. Brake before a lower speed limit; it applies until the tail clears.</p><p>Shift+R retries. Escape pauses. Focus-loss pausing is optional in the logbook.</p>${actions('back','Back')}`;
+        return `<div class="eyebrow">RAILWAY CONTROLS</div><h1>Give the tail time.</h1><p>W / S changes ${st.config.helper?'front ':''}power. A / D releases / applies the train brake. ${st.config.helper?'E / Q raises / lowers rear assistance.':'Q / E releases / applies the locomotive brake.'} Space cuts power and applies full train brake. Stop before reversing with X.</p><p>Click points or a route button to change the connection. Occupied points stay locked until the whole train clears.${st.traffic.length?' Press H or Signal departure to release the passenger. Set its route yourself; red signals hold it until the track and points are clear.':''}</p><p>Approach within 3 m at less than 2 km/h, then press F to couple. Stop with brakes applied and power off before cutting a link in the train strip. Select a cut and press B to set or release its handbrakes. Detached air brakes slowly leak away.</p><p>The track profile shows elevation and wagons along the selected route. Blue wagons are detached or belong to another train; gold outlines indicate handbrakes. Height is exaggerated. Stopping distance estimates full train braking, including brake delay and current temperature. Brake before a lower speed limit; it applies until the tail clears.</p><p>Shift+R retries. Escape pauses. Focus-loss pausing is optional in the logbook.</p>${actions('back','Back')}`;
     }
     const api={prepare,key,update,render,dialog,indicators,displayDirection,signedSpeed,actionEnabled};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.RailView=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

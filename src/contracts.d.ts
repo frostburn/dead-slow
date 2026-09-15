@@ -16,12 +16,13 @@ export interface Focus { x:number; y:number; a:number }
 export interface RailState {
     time:number;
     stats: {contacts:number; distance:number; [name:string]:number};
-    config: {tasks: {id:string}[]};
+    config: {tasks: {id:string;text:string}[]};
     completed:string[];
     failure:string|null;
     finishHold:number;
 }
 export interface RailRun {
+    splits:{name:string;time:number}[];
     rail:RailState;
     time:number;
     contacts:number;

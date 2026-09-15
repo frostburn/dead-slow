@@ -64,6 +64,15 @@
         const part=entry(st.net,next,dir,forward?leg.end:leg.start-e.length);
         if(forward)path.push(part);else path.unshift(part);return true;
     }
+    // Read-only route window for maps and other lookahead displays.
+    function previewPath(st,group,lo,hi) {
+        const copy={path:group.path.map(leg=>({...leg}))};
+        for(const forward of [false,true])for(let i=0;i<40;i++) {
+            if(forward?copy.path.at(-1).end>=hi:copy.path[0].start<=lo)break;
+            if(!extend(st,copy,forward))break;
+        }
+        return copy;
+    }
     function create(level) {
         const cfg=level.rail,net=network(cfg);
         const groups=cfg.groups.map((g,i)=>({id:'cut-'+i,path:[entry(net,g.cars[0].edge,1)],brake:g.brake??1,orders:[{t:-100,value:g.brake??1}],
@@ -602,7 +611,7 @@
         if(st.helper&&!engineGroup(st).cars.some(c=>c.helper))throw Error('A detached helper cannot receive power.');
         return true;
     }
-    const api={network,at,locate,create,update,command,availability,assistance,occupied,engineGroup,drivingEngine,groupFor,bounds,metrics,taskReady,danger,segments,bridges,cargoShape,cargoHit,clearance,ferry,forecast,assertInvariants,commands:Commands};
+    const api={network,at,locate,previewPath,create,update,command,availability,assistance,occupied,engineGroup,drivingEngine,groupFor,bounds,metrics,taskReady,danger,segments,bridges,cargoShape,cargoHit,clearance,ferry,forecast,assertInvariants,commands:Commands};
     if(typeof module!=='undefined'&&module.exports)module.exports=api;
     root.Railway=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
