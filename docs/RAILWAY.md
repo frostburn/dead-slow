@@ -54,7 +54,9 @@ Looking ahead does not reserve points. Junction lamps highlight both the common
 track and the selected branch. Reverse is always labeled as an action.
 
 5-01 has a fixed input recording available through the browser console:
-`DeadSlow.watch("long-grade-1", 8)`. It completes in 590.408 seconds of
+`DeadSlow.watch("long-grade-1", 8)`. The transformer shuttle is available as
+`DeadSlow.watch("long-grade-7", 16)` (3212.208 simulated seconds). Regenerate
+that recording with `node tools/record-rail-run.cjs 7` and `node tools/sync-replays.cjs`. It completes in 590.408 seconds of
 simulation time (about 74 seconds at 8×). No vehicle positions or objectives
 are changed during playback. `DeadSlow.normal()` starts a fresh ranked attempt at 1×. Replay controls stay
 out of the player UI. Regenerate with `node tools/record-rail-run.cjs`
@@ -78,6 +80,17 @@ Passenger vehicles do not participate in the player's coupling controls.
 
 Bridge ratings and cargo clearance are physical requirements, not mission
 checkpoints. Cargo carrier links cannot be split while the vessel spans them.
+The cargo assignment now uses a full-load headshunt stop followed by a reverse
+push into the export spur. A route ribbon, four spaced silhouettes and one
+collision outline replace the dense overlapping preview rectangles.
+
+Head and tail always follow the selected reverser. UI speed is signed against
+that direction, so rollback reads negative. Warning entry ignores tiny stopping
+vibrations; action buttons require a quiet eligibility interval before relighting.
+These display filters do not change physics or relax command validation.
+
+Schema 15 archives the earlier bridge and cargo results. Bridge support pairs
+must remain adjacent in the same cut whenever either vehicle occupies the span.
 Assembly tasks can require wagon order toward the siding's buffers, ignoring
 the locomotive's position within the completed train.
 

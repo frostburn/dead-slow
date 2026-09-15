@@ -1,6 +1,15 @@
 """Focused railway presentation and audio checks, using the release-atlas page."""
 def check_railway(page, check, out):
     page.set_viewport_size({'width':1440,'height':1000})
+    page.evaluate('DeadSlow.level(5,6);DeadSlow.speed(0)')
+    stable=page.evaluate('''() => {
+        const st=DeadSlowTest.state.run.rail,c=Railway.engineGroup(st).cars[0];
+        for(let i=0;i<20;i++){st.time+=.08;c.v=i%2?0:.2;DeadSlowTest.hud();if(!document.getElementById('rail-hand').disabled)return false;}
+        c.v=0;st.time+=.5;DeadSlowTest.hud();return !document.getElementById('rail-hand').disabled;
+    }''')
+    check('Action icons stay disabled through stopping jitter and recover after settling',stable)
+    page.evaluate('''() => {const st=DeadSlowTest.state.run.rail;st.reverser=-1;Railway.engineGroup(st).cars[0].v=.7;DeadSlowTest.hud();}''')
+    check('Rollback speed is signed against the selected driving end',page.locator('#rail-speed').inner_text()=='-2.5')
     page.evaluate('DeadSlow.level(5,4);DeadSlow.speed(0)')
     check('Passenger timetable is visible before departure','Rook’s Hollow due 5:55' in page.locator('#rail-operations').inner_text())
     page.evaluate('DeadSlow.level(5,5);DeadSlow.speed(0)')

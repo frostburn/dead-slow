@@ -12,12 +12,33 @@
         if(st.slip)state.slipUntil=st.time+.45;
         const sliding=new Set();
         for(const g of st.groups)for(const c of g.cars) {
-            if(c.sliding)state.slideUntil.set(c.id,st.time+.45);
+            const alreadyLit=st.time<(state.slideUntil.get(c.id)??-Infinity);
+            if(c.sliding&&Math.abs(c.v)>(alreadyLit?.1:.5))state.slideUntil.set(c.id,st.time+.45);
             if(st.time<(state.slideUntil.get(c.id)??-Infinity))sliding.add(c.id);
         }
         return {sliding,slip:st.time<state.slipUntil};
     }
-    const displayDirection=(st,c)=>Math.abs(c.v)>.15?Math.sign(c.v):st.reverser*c.face;
+    const displayDirection=(st,c)=>st.reverser*c.face;
+    const signedSpeed=st=>{const c=R.engineGroup(st).cars.find(c=>c.powered);const speed=c.v*displayDirection(st,c)*3.6;return Math.abs(speed)<.05?'0.0':speed.toFixed(1);};
+    const actionStates=new WeakMap();
+    const adviceStates=new WeakMap();
+    function stableAdvice(st,help) {
+        const key=help.action+':'+JSON.stringify(help.split);let state=adviceStates.get(st);
+        if(!state){state={key,since:st.time,help};adviceStates.set(st,state);}
+        if(key!==state.key){state.key=key;state.since=st.time;}
+        if(st.time-state.since>=.4)state.help=help;
+        return state.help;
+    }
+    function actionEnabled(st,name,value,raw) {
+        let state=actionStates.get(st);
+        const topology=st.groups.map(g=>g.cars.map(c=>c.id).join(',')).join('|')+':'+st.selected;
+        if(!state||state.topology!==topology){state={topology,buttons:new Map()};actionStates.set(st,state);}
+        const key=name+':'+JSON.stringify(value);let button=state.buttons.get(key);
+        if(!button){button={ready:raw,since:st.time};state.buttons.set(key,button);}
+        if(!raw){button.ready=false;button.since=st.time;}
+        else if(st.time-button.since>=.4)button.ready=true;
+        return raw&&button.ready;
+    }
     function swept(st) {
         const key=Math.floor(st.time*4)+':'+st.reverser+':'+st.net.switches.map(s=>s.selected).join();
         if(key!==clearanceKey){clearanceKey=key;clearanceCache=R.clearance(st);}
@@ -51,7 +72,7 @@
     function update(level,run,status,format) {
         const st=run.rail,m=R.metrics(st),g=R.engineGroup(st),selected=R.groupFor(st,st.selected)||g;
         const signals=indicators(st);
-        $('rail-speed').textContent=(Math.abs(m.speed)*3.6).toFixed(1);
+        $('rail-speed').textContent=signedSpeed(st);
         $('rail-speed').classList.toggle('rail-danger',Math.abs(m.speed)>m.limit);
         $('rail-stop').textContent=Number.isFinite(m.stopping)?Math.ceil(m.stopping)+' m':'No reserve';
         $('rail-summary').textContent=`${Math.round(m.length)} m · ${Math.round(m.mass/1000)} t · limit ${Math.round(m.limit*3.6)} km/h`;
@@ -105,6 +126,7 @@
         }
         $('rail-tasks').innerHTML=st.config.tasks.map(t=>`<div class="${st.completed.includes(t.id)?'done':''}">${st.completed.includes(t.id)?'✓':'○'} ${t.text}</div>`).join('');
         const help=R.assistance(st);
+        const recommendation=stableAdvice(st,help);
         $('rail-cut-status').textContent=help.cut;
         $('rail-pickup').textContent=help.pickup;
         $('rail-notice').textContent=help.next;
@@ -117,9 +139,10 @@
             const name=b.dataset.rail;if(['help','retry'].includes(name))return;
             const value=name==='uncouple'?{after:b.dataset.value,before:b.dataset.next}:b.dataset.value;
             const state=R.availability(st,name,value);
-            b.disabled=status!=='running'||!state.enabled;
+            const enabled=['uncouple','hand','reverse'].includes(name)?actionEnabled(st,name,value,state.enabled):state.enabled;
+            b.disabled=status!=='running'||!enabled;
             if(['uncouple','couple','hand'].includes(name))b.title=state.reason||(name==='uncouple'?b.getAttribute('aria-label'):name==='hand'?help.cut:'Couple the adjacent cut');
-            b.classList.toggle('rail-relevant',!b.disabled&&name===help.action&&(name!=='uncouple'||(value.after===help.split?.after&&value.before===help.split?.before)));
+            b.classList.toggle('rail-relevant',!b.disabled&&name===recommendation.action&&(name!=='uncouple'||(value.after===recommendation.split?.after&&value.before===recommendation.split?.before)));
         });
     }
     function render(canvas,level,run,zoom=1) {
@@ -187,7 +210,14 @@
         }
         const polygon=(pts,fill,color,width)=>{ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();};
         const envelope=swept(st);
-        if(envelope)for(const p of envelope.previews)polygon(p.polygon,p.hit?'#ba48321a':'#dfc37908',p.hit?'#b6402a99':'#987c4138',1/scale);
+        if(envelope) {
+            // A route ribbon and a few silhouettes are readable at map scale;
+            // overlapping rectangles at every sample obscure the actual cargo.
+            const centers=envelope.previews.map(p=>({x:p.polygon.reduce((n,v)=>n+v.x,0)/4,y:p.polygon.reduce((n,v)=>n+v.y,0)/4}));
+            stroke(centers,'#aa914766',8);
+            for(const p of envelope.previews.filter(p=>p.distance>0&&p.distance<=480&&p.distance%120===0))polygon(p.polygon,'#e6d5a622','#9a7d4588',1/scale);
+            if(envelope.collision)polygon(envelope.collision.polygon,'#c34e3944','#b6402a',2/scale);
+        }
         for(const z of st.config.zones) {
             const pts=[];for(let s=z.from;s<=z.to;s+=3)pts.push(R.at(st.net,z.edge,s));
             ctx.globalAlpha=.38;stroke(pts,z.color||'#679a83',28);ctx.globalAlpha=1;
@@ -257,5 +287,5 @@
         if(kind==='result')return `<div class="eyebrow">${run.pausedUsed?'PRACTICE COMPLETE':run.pb?'PERSONAL BEST':'DELIVERY COMPLETE'}</div><h1>Every wagon accounted for.</h1><div class="result-time">${format(run.time)}</div><p>${Math.round(st.stats.distance)} m traveled · ${st.stats.couplings} couplings${level.rail.thermal?' · peak brakes '+Math.round(st.stats.peakTemperature)+'°C':''}</p>${actions(hasNext?'next':'courses',hasNext?'Next assignment':'World map')}${!run.pausedUsed?'<p class="subtle">Time saved to your logbook.</p>':''}`;
         return `<div class="eyebrow">RAILWAY CONTROLS</div><h1>Give the tail time.</h1><p>W / S changes power. A / D releases / applies the train brake. Q / E releases / applies the locomotive brake. Space cuts power and applies full train brake. Stop before reversing with X.</p><p>Click a signal or route button to change points. Occupied points are locked until the whole train clears.</p><p>Approach within 3 m at less than 2 km/h, then press F to couple. Stop with brakes applied and power off before cutting a link in the train strip. Select a cut and press B to set or release its handbrakes. Detached air brakes slowly leak away.</p><p>The grade strip shows which wagons are uphill. Stopping distance estimates full train braking, including brake delay and current temperature. Brake before a lower speed limit; it applies until the tail clears.</p><p>Shift+R retries. Escape pauses. Focus-loss pausing is optional in the logbook.</p>${actions('back','Back')}`;
     }
-    const api={prepare,key,update,render,dialog,indicators,displayDirection};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.RailView=api;
+    const api={prepare,key,update,render,dialog,indicators,displayDirection,signedSpeed,actionEnabled};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.RailView=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

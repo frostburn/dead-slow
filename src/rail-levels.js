@@ -147,7 +147,7 @@
                 river:[[680,0],[745,190],[720,470],[660,680],[720,950]],
                 nodes:{west:[80,470,20],w:[650,470,20],e:[790,470,20],end:[1490,470,20],pocket:[1190,800,20]},
                 tracks:[{id:'west-yard',a:'west',b:'w',limit:7},
-                    {id:'bridge',a:'w',b:'e',limit:3,bridge:{name:'Temporary bridge',maxMass:205000,maxLoads:1}},
+                    {id:'bridge',a:'w',b:'e',limit:3,bridge:{name:'Temporary bridge',maxMass:205000,maxLoads:1,pairs:[['T1','E1'],['T2','E2']]}},
                     {id:'receiving',a:'e',b:'end',limit:6},
                     {id:'pocket',a:'e',b:'pocket',points:[[790,470,20],[940,680,20],[1190,800,20]],limit:5},
                     {id:'return',a:'end',b:'e',points:[[1490,470,20],[1470,290,20],[1100,250,20],[890,310,20],[790,470,20]],limit:5}],
@@ -158,23 +158,26 @@
                 tasks:[{id:'transformers',type:'park',zone:'final',cars:['engine','T1','E1','T2','E2'],order:['T2','E2','T1','E1'],text:'Complete train secured; load 2 and support ahead of load 1'}]
             },[900,1350,1900]),
         level('long-grade-8','The Corners Are the Cargo',
-            'Move the long industrial vessel into the export terminal. Its carrier wagons fit the rails; its ends swing far beyond them on curves.',
-            'The translucent outline previews the vessel along your selected route. Red outlines mark a clearance collision. Choose both ends of the broad route before moving.',
+            'Take the vessel around the loading platform, pull the whole load into the headshunt, then reverse into the export spur. The vessel swings outside its carrier wagons on tight bends.',
+            'Red outlines show where the vessel would strike an obstacle. Use the broad road, stop with both carriers beyond the headshunt mark, then select Export spur and reverse. Watch the leading cargo end during the final push.',
             [2000,1100],{
                 scenery:'yard',thermal:false,
-                nodes:{start:[70,450,10],fork:[560,450,10],join:[1260,450,10],end:[1900,450,10]},
+                nodes:{start:[70,450,10],fork:[560,450,10],join:[1260,450,10],head:[1780,150,10],end:[1850,910,10]},
                 tracks:[{id:'arrival',a:'start',b:'fork',limit:7},
                     {id:'tight',a:'fork',b:'join',points:[[560,450,10],[680,320,10],[740,470,10],[900,560,10],[1060,330,10],[1260,450,10]],limit:4},
                     {id:'broad',a:'fork',b:'join',points:[[560,450,10],[650,740,10],[910,850,10],[1170,740,10],[1260,450,10]],limit:5},
-                    {id:'terminal',a:'join',b:'end',limit:4}],
+                    {id:'headshunt',a:'join',b:'head',limit:4},
+                    {id:'terminal',a:'join',b:'end',points:[[1260,450,10],[1510,510,10],[1750,690,10],[1850,910,10]],limit:4}],
                 switches:[{node:'fork',label:'Terminal west',stem:'arrival',branches:['tight','broad'],names:['Platform road','Broad freight road']},
-                    {node:'join',label:'Terminal east',stem:'terminal',branches:['tight','broad'],names:['Platform road','Broad freight road']}],
+                    {node:'join',label:'Export points',stem:'headshunt',branches:['tight','broad','terminal'],names:['Platform road','Broad freight road','Export spur']}],
                 groups:[{cars:[loco('arrival',310),wagon('C1','arrival',278.8,{length:40,mass:65000}),wagon('C2','arrival',237.6,{length:40,mass:65000})]}],
                 cargo:{cars:['C1','C2'],overhang:28,width:11},
                 obstacles:[{name:'Loading platform',x:689,y:328,w:23,h:26},{name:'Signal cabin',x:1070,y:348,w:24,h:22}],
-                zones:[{id:'terminal',name:'Export terminal',edge:'terminal',from:60,to:530}],
-                tasks:[{id:'vessel',type:'park',zone:'terminal',cars:['engine','C1','C2'],text:'Vessel and carriers secured in the terminal'}]
-            },[500,750,1100])
+                zones:[{id:'turn',name:'Whole load beyond this mark · stop and reverse',edge:'headshunt',from:140,to:450},
+                    {id:'terminal',name:'Export berth',edge:'terminal',from:340,to:670}],
+                tasks:[{id:'clear-load',type:'position',zone:'turn',cars:['engine','C1','C2'],text:'Stop with the whole load inside the headshunt mark'},
+                    {id:'vessel',type:'park',after:'clear-load',zone:'terminal',cars:['engine','C1','C2'],text:'Reverse into the export berth and secure the carriers'}]
+            },[700,1000,1400])
     ];
     if(typeof module!=='undefined'&&module.exports)module.exports=levels;
     root.RailLevels=levels;

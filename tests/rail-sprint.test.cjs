@@ -63,23 +63,16 @@ test('5-05: routing loose wagons into the gravel catch gives a survivable non-cl
 
 test('5-07: pocket, two bridge shuttles and ordered reassembly use actual coupling operations',()=>{
     const st=R.create(L[6]);
-    cmd(st,'uncouple','engine');cmd(st,'hand');cmd(st,'switch','e');
-    move(st,'T1','pocket',310,1,2);cmd(st,'uncouple','E1');cmd(st,'hand');
-    move(st,'engine','west-yard',360,-1,2);move(st,'engine','west-yard',309.3,-1,.4);cmd(st,'couple');cmd(st,'hand');cmd(st,'switch','e');cmd(st,'switch','e');
-    move(st,'engine','receiving',450,1,2);cmd(st,'uncouple','engine');cmd(st,'hand');
-    cmd(st,'switch','e');cmd(st,'switch','e');
-    move(st,'engine','west-yard',490,1,2);cmd(st,'switch','e');cmd(st,'switch','e');
-    let cut=R.groupFor(st,'E1'),target=R.locate(st,cut,cut.cars.find(c=>c.id==='E1').q).s-19;
-    move(st,'engine','pocket',target,-1,.4);cmd(st,'couple');cmd(st,'hand');
-    move(st,'T1','west-yard',490,1,2);cmd(st,'switch','e');cmd(st,'switch','e');
-    cut=R.groupFor(st,'E2');target=R.locate(st,cut,cut.cars.find(c=>c.id==='E2').q).s-21;
-    move(st,'T1','receiving',target,-1,.4);cmd(st,'couple');cmd(st,'hand');cmd(st,'hand');step(st,4);
+    require('./rail-routes.cjs').bridge(st);
     assert.ok(st.finishHold>=2);assert.equal(st.groups.length,1);
 });
 
-test('5-08: visible clearance preview rejects the platform road; broad route delivers the vessel',()=>{
+test('5-08: clear the load into the headshunt and reverse into the export spur',()=>{
     const st=R.create(L[7]);assert.ok(R.clearance(st).collision);
     cmd(st,'switch','fork');cmd(st,'switch','join');assert.equal(R.clearance(st).collision,null);
-    move(st,'engine','terminal',370,1,2.5);cmd(st,'hand');step(st,4);
+    move(st,'engine','headshunt',350,1,2.5);step(st,2);
+    assert.ok(st.completed.includes('clear-load'));assert.equal(st.completed.includes('vessel'),false);
+    cmd(st,'switch','join');
+    move(st,'C2','terminal',590,-1,2);cmd(st,'hand');step(st,4);
     assert.ok(st.finishHold>=2);
 });

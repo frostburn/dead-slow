@@ -152,7 +152,7 @@ test('schema 14 preserves angular hazard records in separate, idempotent archive
  const stage={runs:[{time:90,contacts:1,clean:false},{time:100,contacts:0,clean:true}],ghost:[[0,1,2,3]],bestSplits:[30]};
  for(const id of [...altered,'dead-slow'])d.stages[id]=stage;
  for(const id of ['coast','gerbozilla','grand-tour'])d.races[id]=stage.runs;
- const s=S.sanitize(d);assert.equal(s.version,14);
+ const s=S.sanitize(d);assert.equal(s.version,S.fresh().version);
  for(const id of altered){assert.equal(s.stages[id],undefined);assert.deepEqual(s.archivedStages[id+'-contour-v1'].ghost,stage.ghost);}
  for(const id of ['gerbozilla','grand-tour']){assert.equal(s.races[id].length,0);assert.equal(s.archivedRaces[id+'-contour-v1'].length,2);}
  assert.equal(s.stages['dead-slow'].runs.length,2);assert.equal(s.races.coast.length,2);

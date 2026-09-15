@@ -187,6 +187,7 @@
                     next=missing!==null?`${c.id==='engine'?'Loco':c.id} needs ${Math.ceil(missing)} m more clearance inside ${zone.name}.`:`Bring ${c.id==='engine'?'the loco':c.id} into ${zone.name}.`;
                 } else if(st.power||cars.some(({c})=>Math.abs(c.v)>.08)){next='Cut power and stop in the marked track.';action='stop';}
                 else if(task.type==='stop'&&task.independent&&st.independent<=.3){next='Apply the loco brake to complete this stop.';action='independent';}
+                else if(task.type==='position'){next='Hold here until the whole load is clear. Then select Export spur and reverse.';}
                 else if(task.type==='delivery'&&cars.some(({g})=>g===eg)) {
                     const i=eg.cars.findIndex((c,i,a)=>i<a.length-1&&ids.includes(c.id)!==ids.includes(a[i+1].id));
                     if(i>=0){split={after:eg.cars[i].id,before:eg.cars[i+1].id};action='uncouple';next=`Release the delivery at ${split.after} / ${split.before}.`;const a=availability(st,'uncouple',split);if(!a.enabled)next=a.reason;}
@@ -277,7 +278,9 @@
         return Object.values(st.net.edges).filter(e=>e.bridge).map(e=>{
             const cars=[...new Set(all.filter(p=>p.edge===e.id).map(p=>p.car))];
             const mass=cars.reduce((sum,c)=>sum+c.mass,0),loads=cars.filter(c=>c.heavy).length;
-            return {edge:e.id,...e.bridge,mass,loads,over:mass>e.bridge.maxMass||loads>e.bridge.maxLoads};
+            const unpaired=(e.bridge.pairs||[]).filter(([a,b])=>cars.some(c=>c.id===a||c.id===b)&&
+                (groupFor(st,a)!==groupFor(st,b)||Math.abs(groupFor(st,a)?.cars.findIndex(c=>c.id===a)-groupFor(st,b)?.cars.findIndex(c=>c.id===b))!==1));
+            return {edge:e.id,...e.bridge,mass,loads,unpaired,over:mass>e.bridge.maxMass||loads>e.bridge.maxLoads};
         });
     }
     function cargoShape(st,group,shift=0) {
@@ -301,14 +304,17 @@
     function clearance(st) {
         if(!st.config.cargo)return null;
         const original=groupFor(st,st.config.cargo.cars[0]),group={...original,path:original.path.map(p=>({...p}))};
-        const eg=engineGroup(st),engine=eg.cars.find(c=>c.powered),dir=Math.abs(engine.v)>.02?Math.sign(engine.v):st.reverser*engine.face;
+        const eg=engineGroup(st),engine=eg.cars.find(c=>c.powered),dir=st.reverser*engine.face;
         for(let i=0;i<16;i++)if(!extend(st,group,dir>0))break;
         const b=bounds(group),room=dir>0?group.path.at(-1).end-b.hi:b.lo-group.path[0].start,previews=[];
         for(let distance=0;distance<=Math.min(2400,room);distance+=12){const polygon=cargoShape(st,group,dir*distance);if(polygon)previews.push({polygon,distance,hit:cargoHit(st,polygon)?.name||null});}
         return {previews,collision:previews.find(p=>p.hit)||null};
     }
     function checkInfrastructure(st) {
-        for(const b of bridges(st))if(b.over)st.failure=`${b.name} overloaded. Cross with one transformer and its support wagon at a time.`;
+        for(const b of bridges(st)){
+            if(b.over)st.failure=`${b.name} overloaded. Cross with one transformer and its support wagon at a time.`;
+            else if(b.unpaired.length)st.failure=`Keep ${b.unpaired[0].join(' and ')} coupled beside each other while crossing the bridge.`;
+        }
         for(const g of st.groups)for(const p of segments(st,g)) {
             const edge=st.net.edges[p.edge];
             if(edge.closedFrom!==undefined&&p.to>=edge.closedFrom)st.failure='The wagons reached the broken crossing.';
@@ -325,6 +331,7 @@
         if(task.type==='stop')return inside(st,engine,eg,zone)&&Math.abs(engine.v)<.08&&(!task.independent||st.independent>.3)&&st.power===0;
         if(task.type==='coupled')return task.cars.every(id=>eg.cars.some(c=>c.id===id));
         const cars=task.cars.map(id=>{const g=groupFor(st,id);return {g,c:g?.cars.find(c=>c.id===id)};});
+        if(task.type==='position')return st.power===0&&cars.every(({c,g})=>c&&g===eg&&Math.abs(c.v)<.08&&inside(st,c,g,zone));
         if(task.type==='rescue') {
             const catchZone=st.config.zones.find(z=>z.id===task.alternative);
             return st.power===0&&cars.every(({c,g})=>c&&Math.abs(c.v)<.08&&c.hand)&&
@@ -448,8 +455,9 @@
         const braking=group.cars.reduce((s,c)=>{const demand=(c.powered?.85:.7)*(1-clamp((c.temp-180)/270,0,.8)),grip=locate(st,group,c.q).adhesion*G;return s+c.mass*Math.min(demand,grip*(demand>grip*1.05?.72:1));},0)/mass;
         const decel=braking+gradient*G*direction+.012;
         const stopping=decel>.02?engine.v*engine.v/(2*decel)+Math.abs(engine.v)*(1.4+(b.hi-b.lo)*.022):Infinity;
-        return {mass,length:b.hi-b.lo,speed:engine.v,gradient,stopping,
-            head:locate(st,group,direction>0?b.hi:b.lo),tail:locate(st,group,direction>0?b.lo:b.hi),
+        const driving=st.reverser*engine.face;
+        return {mass,length:b.hi-b.lo,speed:engine.v,signedSpeed:engine.v*driving,gradient,stopping,
+            head:locate(st,group,driving>0?b.hi:b.lo),tail:locate(st,group,driving>0?b.lo:b.hi),
             temperature:Math.max(...group.cars.map(c=>c.temp)),limit:Math.min(...group.cars.map(c=>locate(st,group,c.q).limit))};
     }
     // Presentation-only lookahead. Extend a copy so inspecting an unoccupied
