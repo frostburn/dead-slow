@@ -165,6 +165,13 @@ every source module and the stylesheet inlined. Generated builds are not committ
 
 ## Integration boundaries
 
+The lower helm offers +/− steps for power, train brake and loco brake (rear
+assistance on helper missions); values remain in the sidebar. Clicking a slider
+keeps game shortcuts active, while arrow keys still adjust the focused slider.
+The next-step hint identifies required brakes and overshot stopping positions.
+Hard buffer contact keeps coupling locked until the cuts separate beyond 3 m;
+the hint explains this recovery even before the first tutorial stop is complete.
+
 The shared shell selects `rail-adapter.js` through the simulation registry. Rail
 runs contain their own vehicles and a presentation focus, with no marine ship or
 job placeholders. Commands from keys, buttons, the console and recordings share
@@ -174,3 +181,7 @@ keeps warning persistence out of the physics state and supplies one HUD snapshot
 `npm run check` now checks command/adapter types and all twelve typed level
 definitions, then validates track, vehicle, zone and task references. Transition
 invariants and save compatibility are covered in `tests/architecture.test.cjs`.
+
+Rail guidance lives in a collapsible map panel, with optional operational and wagon details. Speed and stopping distance remain beside the controls. The grade profile shares the footer with compact telegraphs on wide screens and stacks above them on phones. Changing notices never shift the sidebar controls.
+
+Mission splits live in the railway sidebar and show simulation timestamps. Reversible delivery objectives lose their time if invalidated and get a fresh time when completed again. The side-view profile uses a read-only selected-route window with real longitudinal distances, exaggerated elevation, vehicle lengths, detached wagons and junction markers. It does not reserve track or alter routing.

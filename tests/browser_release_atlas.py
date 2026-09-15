@@ -102,6 +102,28 @@ with sync_playwright() as p:
     check('Restart buttons and text fit a portrait viewport',page.evaluate('document.documentElement.scrollWidth<=innerWidth'))
     page.screenshot(path=str(OUT/'restart-mobile.png'))
     check_railway(page,check,OUT)
+    # Return to the same CSS size after another renderer changes the bitmap.
+    page.set_viewport_size({'width':1440,'height':1000})
+    for world in [1,2,3,4,6]:
+        for destination in [world,5,world]:
+            page.evaluate('(w)=>{DeadSlow.level(w,1);DeadSlow.speed(0)}',destination)
+            page.wait_for_timeout(60)
+        check(f'Train to World {world} restores the canvas bitmap',page.evaluate("""(()=>{const c=document.querySelector('#sea'),r=c.getBoundingClientRect(),d=Math.min(devicePixelRatio,2);return c.width===Math.round(r.width*d)&&c.height===Math.round(r.height*d)})()"""))
+        check(f'Train-only panels disappear in World {world}',not page.locator('#rail-info').is_visible() and not page.locator('#rail-grade').is_visible() and not page.locator('#rail-panel').is_visible())
+    page.screenshot(path=str(OUT/'rail-to-marine.png'))
+    for world in [1,2,3,4,5,6]:
+        page.evaluate('(w)=>{DeadSlow.level(w,1);DeadSlow.speed(0);const r=DeadSlowTest.state.run;r.time=12.5;DeadSlowTest.finish();const s=DeadSlowTest.state;s.storage.stages[s.level.id].runs=[{time:10,contacts:0,clean:true},{time:15,contacts:1,clean:false}]}',world)
+        check(f'World {world} completion offers consistent actions',page.locator('#dialog [data-action="log"]').count()==1 and page.locator('#dialog [data-action="retry"]').count()==1 and page.locator('#dialog [data-action="courses"]').count()==1 and page.locator('#dialog .primary').get_attribute('data-action')=='next')
+        page.locator('#dialog [data-action="log"]').click()
+        check(f'World {world} log has a run comparison table',page.locator('#dialog .run-comparison').is_visible() and page.locator('#dialog [data-filter="clean"]').is_visible() and '00:10.00' in page.locator('.run-comparison').inner_text() and '00:15.00' in page.locator('.run-comparison').inner_text())
+        page.locator('#dialog [data-filter="clean"]').click()
+        check(f'World {world} clean filter works',page.locator('#dialog [data-filter="clean"]').get_attribute('class').find('primary')>=0 and 'OPEN' not in page.locator('.run-comparison').inner_text())
+        page.locator('#dialog .dialog-actions [data-action="back"]').click()
+        check(f'World {world} log returns to completion',page.evaluate('DeadSlowTest.state.modal==="result"'))
+        if world==5:
+            page.screenshot(path=str(OUT/'rail-result.png'))
+            page.locator('#dialog [data-action="log"]').click()
+            page.screenshot(path=str(OUT/'rail-logbook.png'))
     check('No page errors',not errors)
     browser.close()
 (OUT/'browser-atlas.json').write_text(json.dumps({'passed':len(checks),'checks':checks},indent=2))

@@ -19,7 +19,7 @@
         let width = 1, height = 1, dpr = 1, scale = 1, ox = 0, oy = 0;
         function resize() {
             const r = canvas.getBoundingClientRect(), p = Math.min(root.devicePixelRatio || 1, 2);
-            if (r.width !== width || r.height !== height || p !== dpr) {
+            if (r.width !== width || r.height !== height || p !== dpr || canvas.width !== Math.round(r.width*p) || canvas.height !== Math.round(r.height*p)) {
                 width = r.width;
                 height = r.height;
                 dpr = p;

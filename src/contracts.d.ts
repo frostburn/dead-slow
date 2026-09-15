@@ -16,12 +16,13 @@ export interface Focus { x:number; y:number; a:number }
 export interface RailState {
     time:number;
     stats: {contacts:number; distance:number; [name:string]:number};
-    config: {tasks: {id:string}[]};
+    config: {tasks: {id:string;text:string}[]};
     completed:string[];
     failure:string|null;
     finishHold:number;
 }
 export interface RailRun {
+    splits:{name:string;time:number}[];
     rail:RailState;
     time:number;
     contacts:number;
@@ -48,7 +49,7 @@ export interface RailViewPort {
     prepare(level:Level,command:(name:Name,value?:Value)=>unknown):void;
     update(level:Level,run:RailRun,status:string,format:Format,race?:unknown):void;
     render(canvas:HTMLCanvasElement,level:Level,run:RailRun,zoom:number):void;
-    dialog(kind:string,level:Level,run:RailRun,format:Format,hasNext?:boolean,race?:unknown):string;
+    dialog(kind:string,level:Level,run:RailRun,format:Format,hasNext?:boolean,race?:unknown,completionActions?:string):string;
 }
 export interface RailAdapter extends Adapter<RailRun> {
     command(run:RailRun,name:Name,value?:Value):boolean;

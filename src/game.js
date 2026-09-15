@@ -50,7 +50,7 @@
     }
     function applyTheme() {
         document.body.dataset.theme = level.theme;
-        $('world-label').textContent = `WORLD ${level.worldNumber} · ${level.rail ? 'THE LONG GRADE' : level.theme === 'night' ? 'NIGHT SHIFT' : level.theme === 'archipelago' ? 'SUMMER SERVICE' : 'DAY WATCH'}`;
+        $('world-label').textContent = `WORLD ${level.worldNumber} · ${level.rail ? 'THE LONG GRADE' : level.rampage ? 'GERBOZILLA’S RAMPAGE' : level.space ? 'THE BLACK MERIDIAN' : level.theme === 'night' ? 'NIGHT SHIFT' : level.theme === 'archipelago' ? 'SUMMER SERVICE' : 'DAY WATCH'}`;
     }
     function hasNext() {
         return marathon ? marathon.position + 1 < marathon.route.length : LEVELS[index + 1]?.campaign === level.campaign && !LEVELS[index + 1]?.bonus;
@@ -526,6 +526,7 @@
     }
     function openDialog(type, html, wide = false) {
         if(type==='log')html+=revisionArchives();
+        if(['log','result'].includes(type)&&!store.available&&!html.includes('storage-warning'))html+='<div class="storage-warning">Persistent storage is unavailable. Export your logbook to preserve these records.</div>';
         focusBeforeModal = document.activeElement;
         modal = type;
         $('dialog').dataset.theme = level.theme;
@@ -565,10 +566,19 @@
  <div class="eyebrow">PAUSED · PRACTICE RUN</div><h1>${reason}</h1><p>${wording('Your ship and the harbor clock are stopped.', 'Your spacecraft and the mission clock are suspended.')} This attempt is now practice and will not overwrite your records. A retry starts a record-eligible attempt.</p>
  <div class="result-time">${format(run.time)}</div><div class="dialog-actions"><button class="primary" data-action="resume" autofocus>Resume practice</button><button data-action="retry">Retry fresh · Shift+R</button><button class="secondary" data-action="courses">${wording("Harbors", "Sectors")}</button></div>`);
     }
+    function completionActions() {
+        const next=hasNext(),label=level.rail?'Next assignment →':level.rampage?'Next course →':run.space?'Next sector →':'Next harbor →';
+        return `<div class="dialog-actions"><button class="primary" data-action="${next?'next':'courses'}" autofocus>${next?label:'World map'}</button><button data-action="retry">Retry · Shift+R</button><button class="secondary small" data-action="log">Logbook</button>${next?'<button class="secondary small" data-action="courses">World map</button>':''}</div>`;
+    }
+    function runComparison(runs,filter) {
+        const rows=runs.filter(r=>filter!=='clean'||r.clean).slice(0,10);
+        return `<div class="dialog-actions"><button class="${filter==='overall'?'primary':'secondary'} small" data-filter="overall">Overall</button><button class="${filter==='clean'?'primary':'secondary'} small" data-filter="clean">Clean only</button></div>
+            <table class="log-table run-comparison"><thead><tr><th>#</th><th>TIME / IGT</th><th>${level.rampage?'DAMAGE EVENTS':'CONTACTS'}</th><th>CLASS</th></tr></thead><tbody>${rows.length?rows.map((r,i)=>`<tr><td>${i+1}</td><td>${format(r.time)}</td><td>${r.contacts}</td><td class="${r.clean?'clean':''}">${r.clean?'CLEAN':'OPEN'}</td></tr>`).join(''):'<tr><td colspan="4">No ranked runs in this category yet.</td></tr>'}</tbody></table>`;
+    }
     function showResult() {
         const r = run.result;
-        if (r && simulation.dialog) return openDialog('result', simulation.dialog('result', level, run, format, hasNext(), marathon));
-        if (r && run.rampage) return openDialog('result', G.dialog('result', level, run, format, [], settings, null, fieldContext()));
+        if (r && simulation.dialog) return openDialog('result', simulation.dialog('result', level, run, format, hasNext(), marathon, completionActions()));
+        if (r && run.rampage) return openDialog('result', G.dialog('result', level, run, format, [], settings, null, {...fieldContext(),completionActions:completionActions()}));
         if (!r)
             return;
         const rank = r.time <= level.pace[0] ? 'GOLD PACE' : r.time <= level.pace[1] ? 'SILVER PACE' : r.time <= level.pace[2] ? 'BRONZE PACE' : wording('SAFELY MOORED', 'CAPTURE SECURED');
@@ -581,7 +591,7 @@
  ${run.space ? `<div class="work-summary">${r.space.fuelUsed.toFixed(2)} Δv propellant expended · ${r.space.burnTime.toFixed(1)} s burning<br>${r.space.shots} shots · ${r.space.hits} hits · ${r.space.captures} captures · ${r.space.jumps} temporal insertions</div>` : ''}
  ${level.jobs.length ? `<div class="work-summary">${r.work.vehiclesDelivered} vehicles delivered · ${r.work.vesselsDelivered} vessels secured · ${r.work.lineBreaks} lines parted<br>${Math.round(r.work.towDistance)} m towed · ${r.work.lineChanges} line operations · ${r.work.winchTime.toFixed(1)} s winch</div>` : ''}
  ${marathon ? `<div class="race-banner">${esc(raceLabel().toUpperCase())} ${marathon.stages}/${marathon.route.length} · ${format(marathon.total)} · ${marathon.retries} retries${marathon.practice ? ' · PRACTICE' : ''}</div>` : ''}
- <div class="dialog-actions"><button class="primary" data-action="${hasNext() ? 'next' : 'courses'}" autofocus>${hasNext() ? wording('Next harbor →', 'Next sector →') : 'World chart'}</button><button data-action="retry">Retry · Shift+R</button><button class="secondary small" data-action="log">Logbook</button></div>
+ ${completionActions()}
  ${!store.available ? '<div class="storage-warning">Save failed: export your logbook to keep these records.</div>' : ''}`);
     }
     function showFailure() {
@@ -679,20 +689,19 @@
             const stage=store.stage(level.id);
             return openDialog('log', `${topModal('Railway logbook','THE LONG GRADE')}<p>${level.name} · ${stage.attempts} attempts</p>
                 <p>Best ${format(store.best(level.id)?.time)} · clean ${format(store.best(level.id,true)?.time)}</p>
-                <p>${stage.runs.slice(0,10).map(r=>format(r.time)).join(' · ')||'No recorded deliveries yet.'}</p>
+                ${runComparison(stage.runs,filter)}
                 ${circuitRecords(['long-grade','grand-tour'])}
                 ${store.data.archivedStages[level.id+'-dispatch-v1']?.runs.length?`<p class="subtle">Earlier route (archived): ${store.data.archivedStages[level.id+'-dispatch-v1'].runs.map(r=>format(r.time)).join(' · ')}</p>`:''}
                 ${layoutRaceArchives().filter(a=>a.name.startsWith('Grand Tour')||a.name.startsWith('World 5')).map(a=>`<p class="subtle">${esc(a.name)} (archived): overall ${format(a.overall)} · clean ${format(a.clean)}</p>`).join('')}
-                <div class="dialog-actions"><button data-action="toggle-focus-pause">Pause on window blur: ${settings.pauseOnBlur?'on':'off'}</button><button data-action="toggle-sound">Sound: ${settings.sound?'on':'off'}</button><button data-action="export">Export records</button><button data-action="import">Import records</button><button data-action="back">Back</button></div>
+                <div class="dialog-actions"><button data-action="toggle-focus-pause" aria-pressed="${settings.pauseOnBlur}">Pause when window loses focus: ${settings.pauseOnBlur?'ON':'OFF'}</button><button data-action="toggle-sound">Sound: ${settings.sound?'ON':'OFF'}</button><button data-action="export">Export records</button><button data-action="import">Import records</button><button data-action="back">Back</button></div>
                 <p class="subtle">Pausing makes a run practice. Hiding the tab always pauses.</p>`);
         }
-        if (level.rampage) { pauseForMenu(); return openDialog('log', G.dialog('log', level, run, format, store.stage(level.id).runs, settings, [level.id+'-topography-v1',level.id+'-contour-v1',level.id+'-volcano-v1',level.id+'-layout-v1',level.id+'-preview',level.id,level.rampage.retiredId].filter(Boolean).filter(id=>store.data.archivedStages[id]).map(id=>({id,...store.data.archivedStages[id]})), fieldContext(true))); }
+        if (level.rampage) { pauseForMenu(); return openDialog('log', G.dialog('log', level, run, format, store.stage(level.id).runs, settings, [level.id+'-topography-v1',level.id+'-contour-v1',level.id+'-volcano-v1',level.id+'-layout-v1',level.id+'-preview',level.id,level.rampage.retiredId].filter(Boolean).filter(id=>store.data.archivedStages[id]).map(id=>({id,...store.data.archivedStages[id]})), {...fieldContext(true),comparison:runComparison(store.stage(level.id).runs,filter)})); }
         pauseForMenu();
-        const s = store.stage(level.id), runs = s.runs.filter(r => filter !== 'clean' || r.clean).slice(0, 10);
+        const s = store.stage(level.id);
         openDialog('log', `${topModal(wording('The captain’s logbook.', 'The flight logbook.'))}
  <p>World ${level.worldNumber} / ${level.bonus ? "BONUS" : level.stageNumber} · ${level.name} · ${s.attempts} ${wording("departures", "launches")} · ${s.clears} ranked ${wording("arrivals", "captures")}</p>
- <div class="dialog-actions" style="margin-top:8px"><button class="${filter === 'overall' ? 'primary' : 'secondary'} small" data-filter="overall">Overall</button><button class="${filter === 'clean' ? 'primary' : 'secondary'} small" data-filter="clean">Clean only</button></div>
- <table class="log-table"><thead><tr><th>#</th><th>TIME / IGT</th><th>CONTACTS</th><th>CLASS</th></tr></thead><tbody>${runs.length ? runs.map((r, i) => `<tr><td>${String(i + 1).padStart(2, '0')}</td><td>${format(r.time)}</td><td>${r.contacts}</td><td class="${r.clean ? 'clean' : ''}">${r.clean ? 'CLEAN' : 'OPEN'}</td></tr>`).join('') : `<tr><td colspan="4">${wording('No ranked arrival yet. The harbor is waiting.', 'No ranked capture yet. Your sector is waiting.')}</td></tr>`}</tbody></table>
+ ${runComparison(s.runs,filter)}
  ${circuitRecords()}<p class="subtle">${store.data.archivedRaces?.['grand-tour-48']?.length ? '48-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-48'][0].time) + '<br>' : ''}${store.data.archivedRaces?.['grand-tour-24']?.length ? '24-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-24'][0].time) + '<br>' : ''}${store.data.archivedRaces?.['grand-tour-36']?.length ? '36-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-36'][0].time) + '<br>' : ''}${store.data.marathon.length ? '12-stage circuit (archived): ' + format(store.data.marathon[0].time) + '<br>' : ''}Paused runs are unranked. Beat the course targets to earn gold, silver or bronze.</p>
  ${store.data.archivedStages[level.id+'-layout-v1']?.runs.length ? `<details><summary>Earlier layout records (archived)</summary><p class="subtle">The barge now starts broadside. Earlier inline-tow times, ghosts and splits remain in exports, not on this route’s board.</p><table class="log-table"><thead><tr><th>TIME / IGT</th><th>CONTACTS</th><th>CLASS</th></tr></thead><tbody>${store.data.archivedStages[level.id+'-layout-v1'].runs.map(r => `<tr><td>${format(r.time)}</td><td>${r.contacts}</td><td>${r.clean ? 'CLEAN' : 'OPEN'}</td></tr>`).join('')}</tbody></table></details>` : ''}
  ${store.data.archivedStages[level.id + '-approach-v1']?.runs.length ? `<details><summary>Earlier straight-approach records (archived)</summary><p class="subtle">These times belong to the earlier approach. Its ghost and splits remain in exports.</p>${store.data.archivedStages[level.id + '-approach-v1'].runs.map(r => `<p>${format(r.time)} · ${r.clean ? 'CLEAN' : 'OPEN'}</p>`).join('')}</details>` : ''}
@@ -1022,8 +1031,11 @@
         if (e.ctrlKey || e.metaKey || e.altKey)
             return;
         if (e.code === 'Enter' && e.target?.tagName === 'A') return;
-        // The speed selector is a native input, not an alternative helm.
-        if (e.target?.matches?.('select, input, textarea')) return;
+        // Railway sliders are also game controls. Keep WASD/QE, Space and
+        // Escape alive after a click, while preserving native slider arrows.
+        const railSlider=!!run.rail&&e.target?.matches?.('#rail-panel input[type="range"][data-rail]');
+        if(railSlider&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','PageUp','PageDown'].includes(e.code))return;
+        if(!railSlider&&(e.target?.matches?.('select, input, textarea')||e.target?.isContentEditable))return;
         if (status === 'running' && simulation.key?.(e, run)) return;
         if (developer?.unlocked && ['BracketLeft', 'BracketRight', 'Backslash'].includes(e.code)) {
             e.preventDefault();

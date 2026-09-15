@@ -28,7 +28,7 @@
         return st.time<state.until?state.warning:null;
     }
     function stableAdvice(st,help) {
-        const key=help.action+':'+JSON.stringify(help.split);let state=adviceStates.get(st);
+        const key=help.action+':'+help.direction+':'+JSON.stringify(help.split);let state=adviceStates.get(st);
         if(!state){state={key,since:st.time,help};adviceStates.set(st,state);}
         if(key!==state.key){state.key=key;state.since=st.time;}
         if(st.time-state.since>=.4)state.help=help;
@@ -62,7 +62,27 @@
             coupling:couplingWarning(st,warning.coupling),speed:signedSpeed(st),levers,
             action(name,value){return actions.get(name+':'+JSON.stringify(value))||{enabled:false,reason:'Unknown action.'};}};
     }
-    const api={snapshot,indicators,displayDirection,signedSpeed,actionEnabled};
+    function profile(st) {
+        const train=R.engineGroup(st),engine=R.drivingEngine(st),bounds=R.bounds(train);
+        const span=Math.max(400,bounds.hi-bounds.lo+240),center=(bounds.lo+bounds.hi)/2;
+        const lo=center-span/2,hi=center+span/2,path=R.previewPath(st,train,lo,hi);
+        const from=Math.max(lo,path.path[0].start),to=Math.min(hi,path.path.at(-1).end);
+        const samples=Array.from({length:101},(_,i)=>{const q=from+(to-from)*i/100;return {q,z:R.locate(st,path,q).z};});
+        const cars=[];
+        for(const group of [...st.groups,...st.traffic.filter(t=>!t.finished)])for(const car of group.cars) {
+            const position=R.locate(st,group,car.q);
+            const candidates=path.path.filter(leg=>leg.id===position.edge).map(leg=>leg.dir===1?leg.start+position.s:leg.end-position.s);
+            const q=group===train?car.q:candidates.sort((a,b)=>Math.abs(a-engine.q)-Math.abs(b-engine.q))[0];
+            if(q===undefined||q+car.length/2<lo||q-car.length/2>hi)continue;
+            cars.push({id:car.id,q,z:position.z,length:car.length,powered:!!car.powered,attached:group===train,secured:car.hand});
+        }
+        const junctions=path.path.flatMap(leg=>{
+            const edge=st.net.edges[leg.id],node=leg.dir===1?edge.a:edge.b;
+            return st.net.switches.some(sw=>sw.node===node)&&leg.start>=lo&&leg.start<=hi?[{q:leg.start,z:R.locate(st,path,leg.start).z}]:[];
+        });
+        return {lo,hi,engine:engine.q,samples,cars,junctions};
+    }
+    const api={profile,snapshot,indicators,displayDirection,signedSpeed,actionEnabled};
     if(typeof module!=='undefined'&&module.exports)module.exports=api;
     root.RailPresentation=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
