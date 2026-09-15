@@ -1,6 +1,18 @@
 """Focused railway presentation and audio checks, using the release-atlas page."""
 def check_railway(page, check, out):
     page.set_viewport_size({'width':1440,'height':1000})
+    page.evaluate('DeadSlow.level(5,7);DeadSlow.speed(0)')
+    stable_colors=page.evaluate('''() => {
+        DeadSlowTest.railCommand('uncouple','engine');DeadSlowTest.railCommand('hand');
+        const wagons=[...document.querySelectorAll('[data-rail="select"]')].filter(b=>b.dataset.value!=='engine');
+        const snapshots=[];
+        for(let i=0;i<12;i++){
+            DeadSlowTest.hud();snapshots.push(wagons.map(b=>b.className).join('|'));
+            if(wagons.some(b=>b.classList.contains('sliding')))return false;
+        }
+        return new Set(snapshots).size===1;
+    }''')
+    check('Stationary wagon colors remain unchanged across repeated HUD updates',stable_colors)
     page.evaluate('DeadSlow.level(5,6);DeadSlow.speed(0)')
     stable=page.evaluate('''() => {
         const st=DeadSlowTest.state.run.rail,c=Railway.engineGroup(st).cars[0];

@@ -1,5 +1,25 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const R=require('../src/rail.js'),V=require('../src/rail-view.js'),L=require('../src/rail-levels.js');
+test('actual HUD updates never toggle stationary unpowered wagons into sliding colors',()=>{
+    const previous=global.document,nodes=new Map();
+    const node=id=>{
+        if(!nodes.has(id)){
+            const classes=new Set();
+            nodes.set(id,{dataset:{},style:{},textContent:'',setAttribute(){},
+                classList:{toggle(name,force){const on=force===undefined?!classes.has(name):!!force;if(on)classes.add(name);else classes.delete(name);},contains:name=>classes.has(name)},
+                querySelector:selector=>node(id+selector),querySelectorAll:()=>[]});
+        }
+        return nodes.get(id);
+    };
+    global.document={getElementById:node};
+    try {
+        const st=R.create(L[6]);R.command(st,'uncouple','engine');R.command(st,'hand');V.prepare(L[6],()=>{});
+        for(let i=0;i<12;i++){
+            V.update(L[6],{rail:st,time:0,pausedUsed:false},'running',()=> '0:00');
+            for(const id of ['T1','E1','T2','E2'])assert.equal(node('rail-car-'+id).classList.contains('sliding'),false,id);
+        }
+    } finally {global.document=previous;}
+});
 test('sliding warnings appear immediately and survive intermittent physics samples',()=>{
     const st=R.create(L[5]),c=R.engineGroup(st).cars[1];
     c.v=1;

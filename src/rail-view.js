@@ -111,7 +111,7 @@
             const b=$('rail-car-'+c.id),p=R.locate(st,cut,c.q),grade=p.grade*displayDirection(st,c);
             b.classList.toggle('selected',cut===selected);b.classList.toggle('secured',c.hand);
             b.classList.toggle('at-risk',signals.sliding.has(c.id)||warning.cars.some(v=>v.id===c.id));
-            b.classList.toggle('sliding',signals.sliding.has(c.id)||(c.powered&&signals.slip));
+            b.classList.toggle('sliding',signals.sliding.has(c.id)||(!!c.powered&&signals.slip));
             b.style.borderBottomColor=c.destination==='mill'?'#8cbccf':c.destination==='foundry'?'#e7a25d':'';
             b.querySelector('span').textContent=(grade>.003?'↗':grade<-.003?'↘':'→')+(c.hand?' P':'');
             b.title=`${c.powered?'Locomotive':c.id}: ${Math.abs(grade*100).toFixed(1)}% ${grade>=0?'uphill':'downhill'}${c.hand?', handbrakes set':''}`;
