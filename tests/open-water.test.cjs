@@ -4,6 +4,20 @@ const P = require('../src/physics.js'), N = require('../src/navigation.js'), J =
 const L = require('../src/levels.js'), S = require('../src/storage.js');
 const { create } = require('./headless.cjs');
 for (const l of L) {
+    if(l.rail) {
+        test(`${l.id}: every starting vehicle has an occupied track and finite motion`,()=>{
+            const t=create();t.load(L.indexOf(l));
+            const R=require('../src/rail.js'),st=t.state.run.rail;
+            assert.ok(R.assertInvariants(st));
+            for(const group of st.groups)for(const car of group.cars) {
+                const point=R.locate(st,group,car.q);
+                assert.ok(st.net.edges[point.edge]);
+                assert.ok([point.x,point.y,point.z].every(Number.isFinite));
+            }
+            assert.equal(st.stats.contacts,0);
+        });
+        continue;
+    }
     test(`${l.id}: open approach and collision-free departure`, () => {
         assert.deepEqual(l.openSides, l.worldNumber >= 3 ? ['n', 'e', 's', 'w'] : ['w']);
         const t = create(); t.load(L.indexOf(l));

@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const V = require('../src/verification.js');
 const L = require('../src/levels.js');
+const Commands = require('../src/rail-commands.js');
 
 test('published recordings have unique known levels and input-only timelines', () => {
     assert.equal(new Set(V.runs.map(f => f.level)).size, V.runs.length);
@@ -23,7 +24,7 @@ test('published recordings have unique known levels and input-only timelines', (
                 if (key === 'rail') {
                     assert.ok(L.find(l=>l.id===f.level).rail);
                     assert.ok(Array.isArray(value) && value.length>=1 && value.length<=2);
-                    assert.ok(['power','helper','brake','independent','stop','reverse','switch','select','hand','uncouple','couple','dispatch'].includes(value[0]));
+                    assert.ok(Commands.valid(value[0],value[1]), f.level+': '+value[0]);
                 }
                 if (key === 'throttle') assert.ok(Number.isInteger(value) && value >= -3 && value <= 4);
                 if (['rudder', 'thruster', 'winch'].includes(key)) assert.ok(Number.isFinite(value) && value >= -1 && value <= 1);

@@ -580,6 +580,9 @@
         }
         sources[w.id].forEach((l, i) => {
             l.campaign = w.id; l.worldNumber = w.number; l.stageNumber = i + 1; l.theme = w.theme;
+            l.simulation ??= l.rail ? 'rail' : l.rampage ? 'rolling' : l.space ? 'space' : 'marine';
+            l.courseRevision ??= 1;
+            l.rulesRevision ??= 1;
             l.openSides = l.openSides || (w.number >= 3 ? ['n','e','s','w'] : ['w']);
             const oldTag = l.tag?.split(' / ')[1] || l.kind.toUpperCase();
             l.tag = `W${w.number} · ${l.bonus ? 'BONUS' : String(l.stageNumber).padStart(2,'0')} / ${oldTag}`;

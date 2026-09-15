@@ -1,7 +1,8 @@
 # Contributing
 
-Use Node.js 22 or newer. The core project has no npm dependencies. Run
-`npm run build` and `npm run serve`, then open the local URL. Source modules are
+Use Node.js 22 or newer. Run `npm ci --ignore-scripts` for the pinned TypeScript
+checker, then `npm run build` and `npm run serve`. The game has no runtime
+dependencies. Source modules are
 plain JavaScript, wrapped so the same physics and job logic load in Node tests
 and in a browser without transpilation.
 
@@ -35,3 +36,10 @@ A useful issue includes the stage ID, browser/device, input sequence, expected
 result and actual behavior. Please review exported logbooks before attaching
 them. Pull requests should explain handling, scoring and migration changes,
 not just show screenshots.
+
+Shared boundaries and railway level data use strict TypeScript checking of JS
+with JSDoc. Add new boundary modules to `tsconfig.json`; expand coverage when
+extracting legacy code. Keep the existing recordings and expected times unchanged
+for refactors. Bump course/rules revisions on affected levels for intentional
+handling or route changes; save-schema versions describe only data format changes.
+See [Architecture](docs/ARCHITECTURE.md) for the adapter and command contracts.

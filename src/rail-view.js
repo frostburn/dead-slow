@@ -3,49 +3,8 @@
     const R=typeof module!=='undefined'&&module.exports?require('./rail.js'):root.Railway;
     const $=id=>document.getElementById(id), clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
     let act=null,signature='',levelNow=null,transform=null,clearanceCache=null,clearanceKey='';
-    const indicatorStates=new WeakMap();
-    function indicators(st) {
-        let state=indicatorStates.get(st);
-        if(!state){state={slideUntil:new Map(),slipUntil:-Infinity};indicatorStates.set(st,state);}
-        // Clear warnings only after a quiet interval. Never feed display
-        // persistence back into adhesion or braking forces.
-        if(st.slip)state.slipUntil=st.time+.45;
-        const sliding=new Set();
-        for(const g of st.groups)for(const c of g.cars) {
-            const alreadyLit=st.time<(state.slideUntil.get(c.id)??-Infinity);
-            if(c.sliding&&Math.abs(c.v)>(alreadyLit?.1:.5))state.slideUntil.set(c.id,st.time+.45);
-            if(st.time<(state.slideUntil.get(c.id)??-Infinity))sliding.add(c.id);
-        }
-        return {sliding,slip:st.time<state.slipUntil};
-    }
-    const displayDirection=(st,c)=>st.reverser*c.face;
-    const signedSpeed=st=>{const c=R.engineGroup(st).cars.find(c=>c.id==='engine');const speed=c.v*displayDirection(st,c)*3.6;return Math.abs(speed)<.05?'0.0':speed.toFixed(1);};
-    const actionStates=new WeakMap();
-    const adviceStates=new WeakMap();
-    const couplingStates=new WeakMap();
-    function couplingWarning(st,current) {
-        let state=couplingStates.get(st);
-        if(!state){state={warning:null,until:0};couplingStates.set(st,state);}
-        if(current){state.warning=current;state.until=st.time+.6;}
-        return st.time<state.until?state.warning:null;
-    }
-    function stableAdvice(st,help) {
-        const key=help.action+':'+JSON.stringify(help.split);let state=adviceStates.get(st);
-        if(!state){state={key,since:st.time,help};adviceStates.set(st,state);}
-        if(key!==state.key){state.key=key;state.since=st.time;}
-        if(st.time-state.since>=.4)state.help=help;
-        return state.help;
-    }
-    function actionEnabled(st,name,value,raw) {
-        let state=actionStates.get(st);
-        const topology=st.groups.map(g=>g.cars.map(c=>c.id).join(',')).join('|')+':'+st.selected;
-        if(!state||state.topology!==topology){state={topology,buttons:new Map()};actionStates.set(st,state);}
-        const key=name+':'+JSON.stringify(value);let button=state.buttons.get(key);
-        if(!button){button={ready:raw,since:st.time};state.buttons.set(key,button);}
-        if(!raw){button.ready=false;button.since=st.time;}
-        else if(st.time-button.since>=.4)button.ready=true;
-        return raw&&button.ready;
-    }
+    const Presentation=typeof module!=='undefined'&&module.exports?require('./rail-presentation.js'):root.RailPresentation;
+    const {indicators,displayDirection,signedSpeed,actionEnabled}=Presentation;
     function swept(st) {
         const key=Math.floor(st.time*4)+':'+st.reverser+':'+st.net.switches.map(s=>s.selected).join();
         if(key!==clearanceKey){clearanceKey=key;clearanceCache=R.clearance(st);}
@@ -60,7 +19,7 @@
             <div class="rail-summary" id="rail-summary"></div><div id="rail-heat" class="rail-summary"></div><div id="rail-operations" class="rail-operations"></div>
             ${(level.rail.traffic||[]).map(t=>`<button class="rail-dispatch" data-rail="dispatch" data-value="${t.id}">Signal departure · H</button>`).join('')}
             <div id="rail-alert" class="rail-alert"></div>
-            <div class="rail-levers">${[['power',level.rail.helper?'Front power':'Power','S / W',0,4,1],['brake','Train brake','A / D',0,1,.25],level.rail.helper?['helper','Rear assistance','Q / E',0,4,1]:['independent','Loco brake','Q / E',0,1,.25]].map(([id,label,keys,min,max,step])=>`<div class="rail-lever"><label for="rail-${id}">${label}<output id="rail-${id}-value"></output><small>${keys}</small></label><input id="rail-${id}" data-rail="${id}" type="range" min="${min}" max="${max}" step="${step}" value="${id==='brake'?1:0}" aria-label="${label}"></div>`).join('')}</div>
+            <div class="rail-levers">${R.commands.levers(!!level.rail.helper).map(({name:id,label,keys,min,max,step})=>`<div class="rail-lever"><label for="rail-${id}">${label}<output id="rail-${id}-value"></output><small>${keys}</small></label><input id="rail-${id}" data-rail="${id}" type="range" min="${min}" max="${max}" step="${step}" value="${id==='brake'?1:0}" aria-label="${label}"></div>`).join('')}</div>
             <div class="rail-actions"><button data-rail="reverse" id="rail-reverse" title="Change travel direction (X)">Reverse · X</button><button data-rail="stop">Full brake · Space</button><button data-rail="couple">Couple · F</button><button data-rail="hand" id="rail-hand">Handbrakes · B</button></div>
             <p class="rail-caption">Power and air brakes control the locomotive’s train. Select wagons below for handbrakes.</p><p id="rail-cut-status" class="rail-caption"></p><p id="rail-pickup" class="rail-caption"></p><div id="rail-consist" class="rail-consist"></div>
             <div id="rail-switches" class="rail-switches"></div><div id="rail-tasks" class="rail-tasks"></div><p id="rail-notice" role="status"></p>
@@ -75,15 +34,14 @@
         };
     }
     function key(e,st) {
-        const g=R.engineGroup(st),commands={KeyW:['power',st.power+1],KeyS:['power',st.power-1],KeyA:['brake',g.brake-.25],KeyD:['brake',g.brake+.25],KeyQ:['independent',st.independent-.25],KeyE:['independent',st.independent+.25],KeyX:['reverse'],KeyF:['couple'],KeyB:['hand'],Space:['stop']};
-        if(st.config.helper){commands.KeyE=['helper',st.helper+1];commands.KeyQ=['helper',st.helper-1];}
-        if(st.traffic.some(t=>!t.released&&!t.finished))commands.KeyH=['dispatch'];
-        if(!commands[e.code])return false;e.preventDefault();if(!e.repeat)act(...commands[e.code]);return true;
+        const command=R.commands.keyboard(e.code,{power:st.power,helper:st.helper,brake:R.engineGroup(st).brake,independent:st.independent},!!st.config.helper,st.traffic.some(t=>!t.released&&!t.finished));
+        if(!command)return false;
+        e.preventDefault();if(!e.repeat)act(...command);return true;
     }
     function update(level,run,status,format,race=null) {
-        const st=run.rail,m=R.metrics(st),g=R.engineGroup(st),selected=R.groupFor(st,st.selected)||g;
-        const signals=indicators(st);
-        $('rail-speed').textContent=signedSpeed(st);
+        const st=run.rail,projection=Presentation.snapshot(st),m=projection.metrics,g=R.engineGroup(st),selected=R.groupFor(st,st.selected)||g;
+        const signals=projection.signals;
+        $('rail-speed').textContent=projection.speed;
         $('rail-speed').classList.toggle('rail-danger',Math.abs(m.speed)>m.limit);
         $('rail-stop').textContent=Number.isFinite(m.stopping)?Math.ceil(m.stopping)+' m':'No reserve';
         $('rail-summary').textContent=`${Math.round(m.length)} m · ${Math.round(m.mass/1000)} t · limit ${Math.round(m.limit*3.6)} km/h`;
@@ -111,14 +69,14 @@
         $('rail-operations').textContent=operations.join('\n');
         $('rail-operations').hidden=!operations.length;
         $('rail-operations').classList.toggle('rail-danger',!!envelope?.collision||signals.sliding.size>0);
-        for(const name of ['power','brake',st.config.helper?'helper':'independent']) {
+        for(const {name} of projection.levers) {
             const value=name==='brake'?g.brake:st[name];$('rail-'+name).value=value;
             $('rail-'+name+'-value').textContent=['power','helper'].includes(name)?`${value} / 4`:Math.round(value*100)+'%';
         }
         $('rail-reverse').textContent='Reverse · X';
         $('rail-reverse').title='Change direction · currently '+(st.reverser===1?'forward':'reverse');
-        const warning=R.danger(st),alert=$('rail-alert'),worst=warning.cars.reduce((a,c)=>!a||c.ratio>a.ratio?c:a,null);
-        const coupling=couplingWarning(st,warning.coupling);
+        const warning=projection.warning,alert=$('rail-alert'),worst=warning.cars.reduce((a,c)=>!a||c.ratio>a.ratio?c:a,null);
+        const coupling=projection.coupling;
         alert.hidden=false;alert.classList.toggle('critical',warning.severity===2||!!(coupling&&coupling.ratio>1));
         alert.classList.toggle('caution',!!warning.severity||!!coupling);
         alert.textContent=worst?.ratio>=1.2?'Derailment risk\nBrake now':coupling?`Coupler ${coupling.kind} · ${Math.round(Math.abs(coupling.force)/1000)} kN\n${coupling.kind==='push'?'Ease rear assistance.':'Share power; ease the front.'}`:worst?`${worst.id==='engine'?'Locomotive':worst.id} over ${Math.round(worst.limit*3.6)} km/h\nEase the train below the limit.`:warning.ahead?`Slow to ${Math.round(warning.ahead.limit*3.6)} km/h\n${Math.round(warning.ahead.distance)} m ahead`:st.config.helper?'Couplers within limits\nEase each engine over the crest.':'Speed within limit\nKeep room to stop.';
@@ -146,8 +104,8 @@
             }).join('');
         }
         $('rail-tasks').innerHTML=st.config.tasks.map(t=>`<div class="${st.completed.includes(t.id)?'done':''}">${st.completed.includes(t.id)?'✓':'○'} ${t.text}</div>`).join('');
-        const help=R.assistance(st);
-        const recommendation=stableAdvice(st,help);
+        const help=projection.help;
+        const recommendation=projection.recommendation;
         $('rail-cut-status').textContent=help.cut;
         $('rail-pickup').textContent=help.pickup;
         $('rail-notice').textContent=help.next;
@@ -159,7 +117,7 @@
         $('rail-panel').querySelectorAll('button,input').forEach(b=>{
             const name=b.dataset.rail;if(['help','retry'].includes(name))return;
             const value=name==='uncouple'?{after:b.dataset.value,before:b.dataset.next}:b.dataset.value;
-            const state=R.availability(st,name,value);
+            const state=projection.action(name,value);
             const enabled=['uncouple','hand','reverse'].includes(name)?actionEnabled(st,name,value,state.enabled):state.enabled;
             b.disabled=status!=='running'||!enabled;
             if(name==='dispatch')b.textContent=st.traffic.find(t=>t.id===value)?.released?'Departure signalled':'Signal departure · H';

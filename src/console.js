@@ -2,6 +2,8 @@
 (function (root) {
     'use strict';
     const V = typeof module !== 'undefined' && module.exports ? require('./verification.js') : root.HarborVerification;
+    const C = typeof module !== 'undefined' && module.exports ? require('./compatibility.js') : root.CourseCompatibility;
+    const Commands = typeof module !== 'undefined' && module.exports ? require('./rail-commands.js') : root.RailCommands;
     function create(bridge, logger = root.console) {
         const copy = value => JSON.parse(JSON.stringify(value));
         let unlocked = false, rate = 1, playback = null, launching = false, lastReport = null;
@@ -57,6 +59,7 @@
         }
         function controls(values) {
             if (!values || typeof values !== 'object' || Array.isArray(values)) throw new TypeError('Supply a controls object.');
+            if (bridge.state().run.rail) throw new Error('Use DeadSlow.rail(name, value) for railway commands.');
             // Validate the entire command before applying any part of it.
             for (const [key, v] of Object.entries(values)) {
                 if (!['throttle', 'rudder', 'thruster', 'winch'].includes(key)) throw new TypeError('Unknown control: ' + key);
@@ -70,6 +73,7 @@
         function watch(id, speed = 8) {
             const f = fixture(id), i = findLevel(id);
             finite(speed, 0, 32, 'Speed');
+            if(f.compatibility!==C.stamp(bridge.levels[i]))throw new Error('This recording belongs to an earlier course or rules revision.');
             unlocked = true; rate = speed;
             load(i);
             playback = { fixture: f, tick: 0, event: 0, controls: { rudder: 0, thruster: 0, winch: 0 } };
@@ -102,7 +106,7 @@
                 level: p.fixture.level, status: s.status, clean, time: s.run.time,
                 expectedTime: p.fixture.expectedTime, difference: error,
                 verified: s.status === 'complete' && clean && Math.abs(error) <= V.step + 1e-6,
-                contacts: s.run.contacts, lineBreaks: s.run.jobs.stats.lineBreaks, space: s.run.space ? copy(s.run.space.stats) : null, rampage: s.run.rampage ? copy(s.run.rampage.stats) : null, rail: s.run.rail ? copy(s.run.rail.stats) : null,
+                contacts: s.run.contacts, lineBreaks: s.run.jobs?.stats.lineBreaks || 0, space: s.run.space ? copy(s.run.space.stats) : null, rampage: s.run.rampage ? copy(s.run.rampage.stats) : null, rail: s.run.rail ? copy(s.run.rail.stats) : null,
                 steps: p.tick, eventsApplied: p.event, ranked: false,
                 method: 'Fixed control inputs through the live game; no repositioning or objective shortcuts.'
             };
@@ -125,6 +129,7 @@
                     ['DeadSlow.step(30)', 'Advance up to 600 simulated seconds, including replay controls.'],
                     ['DeadSlow.controls({throttle: 4})', 'Persistent controls: throttle −3…4; rudder/thruster/winch −1…1. World 4: rudder = east, thruster = south; winch > 0 holds fire breath.'],
                     ['DeadSlow.line()', 'Make fast / cast off at sea; lock / release the rescue beam in space; activate Gerbozilla’s shield.'],
+                    ['DeadSlow.rail("power", 2)', 'Issue the same railway command as the keyboard or buttons; unranked.'],
                     ['DeadSlow.warp(150, 200, 0)', 'Reposition the player only, stop motion; heading in degrees.'],
                     ['DeadSlow.repair()', 'Restore the hulls; does not erase contacts or failure.'],
                     ['DeadSlow.state()', 'A detached snapshot; inspecting it never taints a normal run.'],
@@ -165,6 +170,12 @@
                 return menu.state();
             },
             controls,
+            rail(name, value) {
+                if(!Commands.valid(name,value))throw new TypeError('Invalid railway command.');
+                live();
+                if(!bridge.state().run.rail)throw new Error('Select a railway assignment first.');
+                practice('railway command');return bridge.rail(name,value);
+            },
             line() { live(); practice('line override'); bridge.line(); },
             warp(x, y, degrees = 0) {
                 if (bridge.state().run.rail) throw new Error('Rail vehicles stay on their track. Retry to reset the train.');
@@ -179,7 +190,10 @@
                 return copy({ level: s.level.id, status: s.status, timeScale: rate, replay: playback?.fixture.level || null, input: s.input, run: s.run });
             },
             runs() {
-                const rows = V.runs.map(f => {
+                const rows = V.runs.filter(f=>{
+                    const l=bridge.levels.find(l=>l.id===f.level);
+                    return l&&f.compatibility===C.stamp(l);
+                }).map(f => {
                     const l = bridge.levels.find(l => l.id === f.level);
                     return { id: f.level, world: l.worldNumber, stage: l.stageNumber, name: l.name, bonus: !!l.bonus,
                         authorTime: f.expectedTime, method: 'control-only', source: f.source };
@@ -190,7 +204,7 @@
                 const rows = (bridge.levels.catalog || bridge.levels).map(l => ({
                     comingSoon: !!l.comingSoon,
                     world: l.worldNumber, stage: l.stageNumber, id: l.id, bonus: !!l.bonus,
-                    verifiedAuthorTime: V.runs.find(f => f.level === l.id)?.expectedTime ?? null,
+                    verifiedAuthorTime: V.runs.find(f => f.level === l.id && f.compatibility===C.stamp(l))?.expectedTime ?? null,
                     goldTarget: l.pace?.[0] ?? null, silverTarget: l.pace?.[1] ?? null, bronzeTarget: l.pace?.[2] ?? null
                 }));
                 catalog(rows); log('info', 'null means no control-only author recording. Medal targets are design goals, not verified completion times.');

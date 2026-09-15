@@ -1,7 +1,15 @@
+// @ts-check
 (function(root) {
     'use strict';
+    /** @param {string} id @param {string} edge @param {number} s
+     * @param {Partial<import('./rail-level-types.js').Vehicle>} [extra]
+     * @returns {import('./rail-level-types.js').Vehicle} */
     const wagon=(id,edge,s,extra={})=>({id,edge,s,length:16,mass:42000,...extra});
+    /** @param {string} edge @param {number} s */
     const loco=(edge,s)=>wagon('engine',edge,s,{length:20,mass:80000,powered:true,name:'No. 17'});
+    /** @param {string} id @param {string} name @param {string} brief @param {string} tip
+     * @param {[number,number]} world @param {import('./rail-level-types.js').RailConfig} rail
+     * @param {[number,number,number]} pace */
     const level=(id,name,brief,tip,world,rail,pace)=>({id,name,brief,tip,world,rail,pace,
         kind:'Freight railway',start:[100,100,0],berth:{x:100,y:100,a:0,l:50,w:20,angle:10,speed:.2},
         spec:{name:'No. 17',length:20,beam:4,mass:80000}});

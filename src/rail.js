@@ -1,5 +1,6 @@
 (function(root) {
     'use strict';
+    const Commands = typeof module !== 'undefined' && module.exports ? require('./rail-commands.js') : root.RailCommands;
     const clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),G=9.81,GAP=1.2,COUPLING_SPEED=2/3.6;
     const impactKey=hit=>[hit.a.car.id,hit.b.car.id].sort().join('|');
     const other=(edge,node)=>edge.a===node?edge.b:edge.a;
@@ -82,6 +83,7 @@
         group.brake=value;group.orders.push({t:st.time,value});
     }
     function command(st,name,value) {
+        if(!Commands.valid(name,value)){st.notice='Invalid railway command.';return false;}
         const allowed=availability(st,name,value);
         if(!allowed.enabled){st.notice=allowed.reason;return false;}
         const group=engineGroup(st),engine=drivingEngine(st);
@@ -111,18 +113,31 @@
             st.notice=apply?'Handbrakes set on this cut.':'Handbrakes released on this cut.';return true;
         }
         if(name==='uncouple') {
-            value=typeof value==='object'?value.after:value;
-            const cut=groupFor(st,value),i=cut?.cars.findIndex(c=>c.id===value);
-            if(!cut||i<0||i===cut.cars.length-1)return false;
-            if(st.power||st.helper||cut.cars.some(c=>Math.abs(c.v)>.12||(!c.hand&&c.pressure<.3))){st.notice='Stop, cut power and apply brakes before uncoupling.';return false;}
-            const detached={id:'cut-'+st.nextCut++,path:cut.path.map(e=>({...e})),cars:cut.cars.splice(i+1),brake:1,orders:[{t:st.time-100,value:1}]};
-            setBrake(st,cut,1);st.groups.push(detached);
-            const wagons=cut.cars.some(c=>c.id==='engine')?detached:cut;
-            st.selected=wagons.cars[0].id;st.stats.uncouplings++;
-            st.notice='Cut detached. Set its handbrakes before leaving it.';return true;
+            return uncouple(st,typeof value==='object'?value.after:value);
         }
         if(name==='couple')return couple(st);
         return false;
+    }
+    // Called only after command eligibility has checked the current link,
+    // movement and brakes. Publish the new topology and selection together.
+    function uncouple(st,after) {
+        const cut=groupFor(st,after),index=cut.cars.findIndex(car=>car.id===after);
+        const retained=cut.cars.slice(0,index+1);
+        const detached={
+            id:'cut-'+st.nextCut,
+            path:cut.path.map(leg=>({...leg})),
+            cars:cut.cars.slice(index+1),
+            brake:1,
+            orders:[{t:st.time-100,value:1}]
+        };
+        cut.cars=retained;
+        setBrake(st,cut,1);
+        st.groups.push(detached);
+        st.selected=(retained.some(car=>car.id==='engine')?detached:cut).cars[0].id;
+        st.nextCut++;
+        st.stats.uncouplings++;
+        st.notice='Cut detached. Set its handbrakes before leaving it.';
+        return true;
     }
     function endpoints(st,group) {
         const b=bounds(group);
@@ -141,7 +156,8 @@
     function availability(st,name,value) {
         const eg=engineGroup(st),selected=groupFor(st,st.selected)||eg;
         let reason='';
-        if(st.failure)reason='Retry to begin again.';
+        if(!Commands.valid(name,value,true))reason='Invalid railway command.';
+        else if(st.failure)reason='Retry to begin again.';
         else if(name==='helper'&&!eg.cars.some(c=>c.helper))reason='Couple the helper before requesting assistance.';
         else if(name==='independent'&&st.config.helper&&value!==0)reason='Use the train brake with a helper.';
         else if(name==='dispatch'&&!st.traffic.some(t=>!t.released&&!t.finished&&(!value||t.id===value)))reason='No passenger awaiting a departure signal.';
@@ -229,17 +245,22 @@
         const low=Math.min(...moved.map(c=>c.q-c.length/2)),high=Math.max(...moved.map(c=>c.q+c.length/2));
         // Extend the receiving path, then verify that every donor wagon still
         // occupies its actual track. Parallel rails cannot be joined by proximity.
-        const saved=group.path.map(e=>({...e}));
-        for(let i=0;i<30&&(low<group.path[0].start||high>group.path[group.path.length-1].end);i++) {
-            if(!extend(st,group,high>group.path[group.path.length-1].end)){group.path=saved;st.notice='The route between the cuts is blocked.';return false;}
+        const candidate={...group,path:group.path.map(leg=>({...leg}))};
+        for(let i=0;i<30&&(low<candidate.path[0].start||high>candidate.path.at(-1).end);i++) {
+            if(!extend(st,candidate,high>candidate.path.at(-1).end)){st.notice='The route between the cuts is blocked.';return false;}
         }
         const matches=moved.every((c,i)=>{
-            const target=locate(st,cut,cut.cars[i].q),actual=locate(st,group,c.q);
+            const target=locate(st,cut,cut.cars[i].q),actual=locate(st,candidate,c.q);
             return target.edge===actual.edge&&Math.hypot(target.x-actual.x,target.y-actual.y)<5;
         });
-        if(!matches){group.path=saved;st.notice='Align the route with the waiting cut.';return false;}
-        const total=[...group.cars,...moved],momentum=total.reduce((s,c)=>s+c.mass*c.v,0),mass=total.reduce((s,c)=>s+c.mass,0);
-        total.forEach(c=>c.v=momentum/mass);group.cars=total.sort((a,b)=>b.q-a.q);st.groups=st.groups.filter(g=>g!==cut);
+        if(!matches){st.notice='Align the route with the waiting cut.';return false;}
+        const total=[...group.cars,...moved];
+        const momentum=total.reduce((sum,car)=>sum+car.mass*car.v,0);
+        const mass=total.reduce((sum,car)=>sum+car.mass,0);
+        total.forEach(car=>car.v=momentum/mass);
+        group.path=candidate.path;
+        group.cars=total.sort((a,b)=>b.q-a.q);
+        st.groups=st.groups.filter(g=>g!==cut);
         st.selected='engine';
         st.bufferImpact=null;st.stats.couplings++;st.notice='Coupled. Check the handbrakes before pulling away.';return true;
     }
@@ -532,7 +553,21 @@
         }
         return {severity:Math.max(severity,ahead?1:0,coupling?(coupling.ratio>1?2:1):0),cars,ahead,coupling};
     }
-    const api={network,at,locate,create,update,command,availability,assistance,occupied,engineGroup,drivingEngine,groupFor,bounds,metrics,taskReady,danger,segments,bridges,cargoShape,cargoHit,clearance,ferry,forecast};
+    function assertInvariants(st) {
+        const ids = new Set();
+        for(const group of st.groups) {
+            if(!group.cars.length || !group.path.length)throw Error('A cut must contain vehicles and a route.');
+            for(const car of group.cars) {
+                if(ids.has(car.id))throw Error('Vehicle belongs to multiple cuts: '+car.id);
+                if(!Number.isFinite(car.q)||!Number.isFinite(car.v))throw Error('Non-finite vehicle motion: '+car.id);
+                ids.add(car.id);
+            }
+        }
+        if(!ids.has('engine')||!ids.has(st.selected))throw Error('Driving engine or selected cut is missing.');
+        if(st.helper&&!engineGroup(st).cars.some(c=>c.helper))throw Error('A detached helper cannot receive power.');
+        return true;
+    }
+    const api={network,at,locate,create,update,command,availability,assistance,occupied,engineGroup,drivingEngine,groupFor,bounds,metrics,taskReady,danger,segments,bridges,cargoShape,cargoHit,clearance,ferry,forecast,assertInvariants,commands:Commands};
     if(typeof module!=='undefined'&&module.exports)module.exports=api;
     root.Railway=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

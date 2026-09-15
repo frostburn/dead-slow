@@ -1,182 +1,125 @@
 # Architecture
 
-## One simulation, two environments
+## Runtime and build
 
-The physics, navigation, jobs, level, storage, console and verification modules
-expose CommonJS exports for Node and named globals for the browser. `archipelago.js` supplies level data to
-`levels.js`. The source page loads sixteen scripts in a fixed order; `build.cjs`
-inlines the same files, without transforming the mechanics or fetching assets.
+The game remains plain JavaScript with CommonJS exports for Node tests and
+named browser globals. `index.html` is the ordered source manifest;
+`tools/build.cjs` inlines its modules and stylesheet without transpiling physics.
+The resulting `dist/index.html` runs offline with no runtime dependencies.
+Duplicate modules and external code assets fail the build.
 
-`game.js` owns the current level, run, inputs, modal state and optional circuit.
-`requestAnimationFrame` advances a 1/120-second accumulator and draws the latest
-state. Simulation time, not frame count or wall-clock time, drives every hazard.
-Long frame gaps pause into practice rather than granting ranked catch-up time.
+TypeScript is a pinned development dependency. `npm run typecheck` checks JS
+with JSDoc under strict settings, without emitting files. The first checked
+boundaries are commands, simulation adapters, compatibility and railway level
+data. `contracts.d.ts` describes the adapter's ports; `rail-level-types.d.ts`
+describes the railway's mission variants. `tsconfig.json` is an explicit list,
+so unchecked legacy internals are visible rather than hidden behind `any`.
+`tests/contracts.ts` guards against accidentally weakening these contracts.
 
-`console.js` publishes the small, frozen `DeadSlow` menu on ordinary launches.
-Inspection returns detached data; mutations mark the attempt and any circuit as
-practice. Animated acceleration feeds the same fixed-step loop, capped at 480
-ticks per frame with backlog retained. Manual stepping and replay also go
-through `simulationStep()`; there is no alternate fast physics implementation.
-`verification.js` is generated from the checked-in JSON input recordings, with
-its reproducibility tested. See `CONSOLE.md` for the public commands.
+## Shared shell and domain state
 
-The raw test harness is exposed only with the `?test` query parameter. Normal
-launches have no `DeadSlowTest` global. This is not an anti-cheat boundary: local
-code and records are intentionally inspectable and editable.
+`game.js` owns input lifetime, modal state, the fixed-step clock, circuits,
+records and the current adapter. `simulations.js` resolves the level's explicit
+`simulation` ID and rejects missing or duplicate registrations.
 
-## Tick responsibilities
+Every adapter creates its domain state and supplies `step`, `ready` and `clean`.
+The railway adapter in `rail-adapter.js` also owns its command/audio integration,
+presentation delegates, ghost sampling and result details. It receives narrow
+services rather than reaching into the shell's globals. A railway run has a
+`rail` state and a camera/ghost `focus`; it has no placeholder ship, marine jobs,
+water environment or dock. Its vehicles remain an articulated network object.
 
-The orchestrator takes the player’s local water sample, integrates the player,
-updates gate state, integrates free towable bodies and applies the tow
-constraint, then resolves solid/body contacts. It advances ordered pilot,
-lock and island-job objectives, recomputes mooring readiness, adds splits and
-samples the player ghost. See `advance()` for the exact ordering.
+Marine, space and rolling registrations still delegate to their established
+functions in `game.js`. Their engines are separate modules, but their shell
+integration is not yet fully extracted. Move those adapters when their next
+substantial change needs it. Do not add a universal vehicle object merely to
+make incompatible domains look alike. A future campaign should register an
+adapter and declare its own state and commands.
 
-`navigation.js` supplies the same coast rectangles to physics and rendering.
-Levels have explicit `openSides`: all four in the archipelago, west in the
-other worlds. Whole-hull containment is checked for the player and all
-casualties before and after contact resolution, before objective completion.
-An exit immediately fails the attempt; no clamp, collision penalty or rebound
-is applied. The renderer shows only a local warning near an open edge.
+## Time and commands
 
-Menus freeze all hulls, ramps, winches and clocks. Input state is cleared on
-pause, lost focus and pointer cancellation. Retry reconstructs the entire run,
-including anchored casualties, traffic phase and job manifest. In a circuit,
-time and cleanliness costs from the failed attempt carry forward.
+`requestAnimationFrame` feeds a 1/120-second accumulator. Simulation time drives
+hazards, passenger movement, brake propagation and objectives. Manual stepping,
+recording playback and accelerated watching use that same path. Acceleration
+adds ticks; it never increases the timestep. Long frame gaps and hidden tabs
+pause into practice. Window-focus pausing is optional; held inputs are cleared
+on focus loss. Shift+R retries immediately without a confirmation dialog.
 
-## Ship physics
+`rail-commands.js` is the shared definition of railway command payloads, lever
+metadata and keyboard mappings. UI buttons, keys, `DeadSlow.rail()` and recorded
+commands all reach the adapter and then `Railway.command()`. The engine validates
+the payload and current eligibility before applying it. The UI may explain or
+disable an action; it cannot authorize one. Numeric lever commands retain their
+existing clamping behavior. Invalid commands do not mutate train state beyond
+a notice. Uncoupling identifies both neighboring vehicles; old recording strings
+remain supported and resolve against the current topology.
 
-State includes position, heading, ground velocity, yaw rate, engine output,
-rudder, hull integrity, length, beam, relative mass and draft. Throttle is a
-persistent signed notch; actual engine output approaches its command over time.
-Drag uses water-relative longitudinal and transverse motion. Rudder force
-responds to the direction of water flow; bow thrust has force and a yaw moment.
-No command directly zeroes velocity.
+Coupling prepares a candidate route and verifies every donor vehicle before
+publishing the merged consist, conserved momentum and selection. Uncoupling
+publishes both cuts and the selected detached cut in one synchronous transition.
+No render, callback or async work runs in the middle. `assertInvariants()` checks
+unique vehicle ownership, finite motion, a valid selected cut and attached
+helper power. Bounded mixed-command tests exercise those invariants.
 
-`environmentAt()` samples along a hull. Spatial current zones, deterministic
-pulses, wind and feathered shelter are shared by the physics, instruments and
-renderer. Irregular islands are convex polygons. Static and dynamic collision
-use the same hull geometry; ferry hulls are double-ended. A collision applies
-separation and contact impulses rather than merely reducing a score.
+The console exposes detached inspection data. Mutations mark attempts and
+circuits as practice; replay cannot write ranked records. `?test` exposes the
+raw harness only for tests. This is an inspectable local game, not an anti-cheat
+system. See [CONSOLE.md](CONSOLE.md).
 
-The numerical coefficients are designed for readable slow handling, not matched
-to a measured real vessel. Relative mass and line force are not tonnes/kN.
+## Simulation and presentation
 
-## Towline and casualty lifecycle
+`rail.js` owns track sampling, switch occupancy, per-car grade and adhesion,
+brake response and heat, coupler forces, coupling and objectives. Rendering uses
+the same geometry. `tools/validate-rail.cjs` checks references, switch connections,
+passenger route continuity and task dependencies before a release. Structural
+types alone cannot detect a misspelled track or vehicle ID.
 
-A casualty begins `moored` at its designated anchor. F attaches only the active
-job’s target, within 44 m and low relative attachment-point speed, with an
-unobstructed segment. Attachment releases the anchor and sets `wasTowed`.
+`rail-presentation.js` produces one HUD snapshot of metrics, warnings, assistance
+and action eligibility. Warning holds and action hysteresis live in WeakMaps
+outside physics state. Snapshot creation never changes the simulated train.
+Topology changes reset action history. Head/tail follow the selected driving end;
+speed can be negative during rollback. `rail-view.js` consumes this projection
+and draws the chart; procedural audio is another consumer, never a clock source.
 
-The stern-to-bow tow constraint is a damped, implicitly stepped unilateral
-spring. Extension generates equal-and-opposite impulses at attachment points,
-including yaw moments. A slack line generates no compressive push. Winching
-changes its rest length at a bounded rate, not the position of either hull.
-Large bodies carry their own drag scaling and water sample.
+The established marine engines retain water-relative drag, whole-hull collision,
+open chart boundaries and real tow momentum. Space uses its own forces while
+sharing geometry helpers. Rolling terrain and hazards share surveyed geometry
+with their renderer. Preserve these domain rules during later extractions.
 
-Continuous overload or obstacle chafe parts the line. It can be recovered;
-`lineBreaks` marks the run unclean. Releasing a line preserves body velocities.
-Towlines do not wrap around land or collide with traffic as physical ropes.
-Their straight obstruction segment is authoritative; the curved slack drawing
-is visual only. Gates include hulls and the connected segment in safety checks.
+## Records, courses and recordings
 
-A target must have towing history, whole-hull containment, matching heading,
-low translation/yaw and an uninterrupted two-second berth hold. Shore crew then
-secure it and release the line. This terminal mooring state fixes it in place;
-it is the only deliberate transition from a free casualty to a fixed body.
-It remains solid. Completing the rescue does not complete the player’s arrival.
+The storage key remains `dead-slow.records.v1`. Schema **18** changes the JSON
+format to carry compatibility metadata; schemas 1–17 still pass through their
+historical migrations. A frozen schema-17 route manifest supplies legacy signatures,
+so future additions and reordered circuits cannot adopt old results. This refactor keeps all current course/rule revisions at
+1, so existing version-17 records remain comparable.
 
-## Ferry jobs
+`compatibility.js` derives a stage signature from `simulation`, `courseRevision`
+and `rulesRevision`. Circuit signatures include the ordered stage IDs and their
+signatures. Change a course revision for geometry/start/objective changes; change
+rules revisions on affected levels for handling/scoring changes. Neither requires
+a new save schema. Text, layout and sound edits normally change neither.
 
-`jobs.js` has no DOM access. It maintains the active job index, settle timer,
-ramp fraction, transfer timer, committed transfer count, manifest and base mass.
-A low-speed, aligned, whole-hull fit in neutral allows the ramp to open. Each
-completed transfer moves exactly one manifest entry and updates the ship mass.
+On import/load, incompatible active results, ghosts and splits move into named
+archives; compatible records stay active. Full archived signatures accompany
+compact archive keys, and hash collisions cannot merge unrelated records. The
+logbook exposes archived results and exports preserve them. Sanitizing an already
+migrated save is idempotent. Imported data is filtered JSON, never executable.
 
-An interrupted call resets the transient transfer timer, not the committed
-vehicle count. Completed vehicles are never generated again on re-entry. After
-the required count is reached, the ramp closes before the next job begins.
-The orchestrator inhibits propulsion while the ramp is down, but drag/current
-can still move the ferry. There is no magic positional clamp at a vehicle ramp.
+`verification.js` is generated from checked-in JSON control recordings. Legacy
+recordings receive baseline compatibility metadata during synchronization; later
+recordings must declare their course signature when it differs. `watch` rejects
+incompatible recordings before loading a run. Do not regenerate input sequences
+to conceal refactor drift: existing recordings must keep their completion times,
+cleanliness and outcomes. See [TESTING.md](TESTING.md).
 
-Tow and ferry completion emit job events. The orchestrator creates a real split
-at each event. Prerequisites require all jobs, an empty deck and no connected
-line before the final green-berth hold can finish.
+## Scope of the next campaigns
 
-## Presentation and persistence
+The atlas has eight worlds, six complete campaigns, 72 circuit missions and one
+separate bonus. Stable IDs identify stages and campaigns; world numbers are
+presentation. The remaining 24 cards are disabled placeholders.
 
-`renderer.js` draws charts, islands, ferries, deck vehicles, hulls and towlines
-from simulation state. Seeded scenery varies by island without consuming any
-simulation randomness. The twelve-second neutral guide clones the ship and its
-attached tow; it is deliberately not collision prediction. The best-run ghost
-tracks the player only. Ghost density is lower in longer archipelago stages;
-the retained sample cap is 12,000.
-
-`audio.js` is procedural and optional. Sound does not drive physics or clocks.
-The horn uses four detuned, harmonic-rich periodic waves, soft saturation,
-high/low-pass filtering and a sustained envelope. Voices cannot stack through
-repeated H presses; completed nodes disconnect. Mute fades the current envelope
-to zero. The browser suite renders the actual graph in an OfflineAudioContext.
-
-`storage.js` contains all local record filtering and migrations. The unchanged
-storage key is `dead-slow.records.v1`, even though the schema is version 5.
-Version-2 Grand Tours move to `archivedRaces['grand-tour-24']`. Ten changed island
-departures move into `archivedStages`, preserving their ghosts and splits.
-Pre-schema-4 World 3/Grand Tour records move to the `archipelago-dock-starts`
-and `grand-tour-dock-starts` archives. The tutorials and World 1/2 stay active.
-Re-importing older data cannot revive incompatible current PBs, and the
-migration is idempotent. Imported text is JSON, not
-executable content. The UI rejects files over 5 MiB and renders imported fields
-as data. Local logbooks are not trusted evidence of competitive rankings.
-
-## Keeping changes reviewable
-
-Add new world jobs to `archipelago.js`; keep shared physics out of level data.
-Change loading/rope behavior in `jobs.js`, not in drawing code. Changes to global
-physics can invalidate old times even when geometry remains the same; treat
-that as a record-compatibility decision. The fixed-input fixtures detect
-unintentional handling drift in both an exposed berth and the island tutorials.
-
-## World 6 separation
-
-`space-levels.js` defines thirteen data-only assignments. `space.js` owns pure
-spacecraft physics and mission state; it shares hull/SAT/contact helpers, not
-water integration or rudder forces. `space-renderer.js` consumes simulation
-state without changing it. `space-ui.js` maps the shared helm to flight labels
-and restores marine labels on return. The offline builder now inlines sixteen
-modules in explicit source-page order.
-
-The game dispatches each fixed tick to `advanceSpace` for space sectors, keeping
-clocks, console playback, result/ranking rules, keyboard and touch input common.
-No accumulator fast-forward changes physics step size. Propellant is a scalar
-reference-mass impulse reserve; spacecraft mass is held constant rather than
-implementing a rocket-equation mass-flow model. Beams conserve pair momentum.
-Terminal captures dissipate only the permitted small relative motion.
-
-Time travel records the actual first leg at 30 Hz plus explicit start/end
-samples, interpolates its solid echo, and never rewinds the score clock.
-Control transfers and the chronogate jump are excluded from travelled distance.
-The Century Ship reduces ghost sampling to one second; all simulation still
-runs at 120 Hz. `bonus` is data, not an assumed last-array index. Schema 5 adds
-Meridian records and archives incompatible 36-stage Grand Tour times while
-retaining all established sea-world records.
-
-
-## Eight-world atlas (5.1)
-
-`HarborLevels` contains only playable stages, ordered by the visible campaign.
-`HarborLevels.catalog` additionally contains 36 disabled coming-soon cards.
-`HarborWorlds` holds all eight chapters; `comingSoon` gates launching and circuit
-availability. Stable stage and campaign IDs, not numeric world positions, key
-logbooks and author replays. The complete active route is worlds 1–2–3–4–6.
-
-Restart confirmation owns a temporary `confirming` state and a snapshot of the
-previous dialog/status; it does not reset mission data. Only confirmation calls
-the internal reset. Cancelling a running attempt invokes the existing practice
-policy because the simulation was paused. Readouts use the previous terminal
-state when showing a completed circuit stage's clock during confirmation.
-
-Geothermal zones are convex polygons and vent circles shared between field
-rendering and whole-ball damage. Their states use fixed in-game time; no timers,
-randomness, fluid solver or new dependencies are involved. The translucent
-hamster ghost is a single composite of a fully rendered opaque sprite.
+Build new mechanics inside their domain engine, with a small command contract,
+validated level data and a presentation projection. Share the shell's clock,
+practice policy, input cleanup, circuits and records. Extract another abstraction
+only when two domains need the same behavior; preserve the offline HTML deliverable.
