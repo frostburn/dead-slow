@@ -1,5 +1,5 @@
 // @ts-check
-(function (root) {
+(function (/** @type {typeof globalThis} */ root) {
     'use strict';
     /** @typedef {import('./contracts.js').Name} Name */
     /** @typedef {import('./contracts.js').Command} Command */
@@ -57,4 +57,4 @@
     const api = Object.freeze({definitions, valid, levers, keyboard});
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     root.RailCommands = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this);
+})(globalThis);
