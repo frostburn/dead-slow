@@ -49,7 +49,7 @@ export interface RailViewPort {
     prepare(level:Level,command:(name:Name,value?:Value)=>unknown):void;
     update(level:Level,run:RailRun,status:string,format:Format,race?:unknown):void;
     render(canvas:HTMLCanvasElement,level:Level,run:RailRun,zoom:number):void;
-    dialog(kind:string,level:Level,run:RailRun,format:Format,hasNext?:boolean,race?:unknown):string;
+    dialog(kind:string,level:Level,run:RailRun,format:Format,hasNext?:boolean,race?:unknown,completionActions?:string):string;
 }
 export interface RailAdapter extends Adapter<RailRun> {
     command(run:RailRun,name:Name,value?:Value):boolean;
