@@ -1,4 +1,12 @@
 """Focused railway presentation and audio checks, using the release-atlas page."""
+def rail_detail(page, selector):
+    if not page.locator('#rail-info').evaluate('(e)=>e.open'):
+        page.locator('#rail-info > summary').click()
+    if not page.locator('.rail-details').evaluate('(e)=>e.open'):
+        page.locator('.rail-details > summary').click()
+    return page.locator(selector).inner_text()
+
+
 def check_railway(page, check, out):
     page.set_viewport_size({'width':1440,'height':1000})
     page.evaluate('DeadSlow.level(1,1);DeadSlow.speed(0)')
@@ -58,19 +66,19 @@ def check_railway(page, check, out):
     page.evaluate('''() => {const st=DeadSlowTest.state.run.rail;st.reverser=-1;Railway.engineGroup(st).cars[0].v=.7;DeadSlowTest.hud();}''')
     check('Rollback speed is signed against the selected driving end',page.locator('#rail-speed').inner_text()=='-2.5')
     page.evaluate('DeadSlow.level(5,4);DeadSlow.speed(0)')
-    check('Passenger waits for a visible departure signal','Awaiting your signal' in page.locator('#rail-operations').inner_text() and page.locator('[data-rail="dispatch"]').is_enabled())
+    check('Passenger waits for a visible departure signal','Awaiting your signal' in rail_detail(page, '#rail-operations') and page.locator('[data-rail="dispatch"]').is_enabled())
     page.keyboard.press('h')
     check('H signals the passenger and disables repeated dispatch',page.evaluate('DeadSlowTest.state.run.rail.traffic[0].released') and page.locator('[data-rail="dispatch"]').is_disabled())
     page.evaluate('DeadSlow.level(5,5);DeadSlow.speed(0)')
-    check('Runaway wagons start moving independently',page.evaluate('Railway.groupFor(DeadSlowTest.state.run.rail,"R1").cars.every(c=>c.v>0)') and 'rolling free' in page.locator('#rail-operations').inner_text())
+    check('Runaway wagons start moving independently',page.evaluate('Railway.groupFor(DeadSlowTest.state.run.rail,"R1").cars.every(c=>c.v>0)') and 'rolling free' in rail_detail(page, '#rail-operations'))
     page.evaluate('DeadSlow.level(5,7);DeadSlow.speed(0)')
-    check('Bridge rating is visible before entering','205 t' in page.locator('#rail-operations').inner_text())
+    check('Bridge rating is visible before entering','205 t' in rail_detail(page, '#rail-operations'))
     page.evaluate('DeadSlow.level(5,8);DeadSlow.speed(0)')
-    check('Cargo clearance warning appears before moving','fouled' in page.locator('#rail-operations').inner_text())
+    check('Cargo clearance warning appears before moving','fouled' in rail_detail(page, '#rail-operations'))
     page.screenshot(path=str(out/'rail-cargo-clearance.png'))
     page.locator('[data-rail="switch"][data-value="fork"]').click()
     page.locator('[data-rail="switch"][data-value="join"]').click()
-    check('Selecting both broad-route points clears the vessel preview','clears the vessel' in page.locator('#rail-operations').inner_text())
+    check('Selecting both broad-route points clears the vessel preview','clears the vessel' in rail_detail(page, '#rail-operations'))
     page.evaluate("DeadSlowTest.load(HarborLevels.findIndex(l=>l.id==='long-grade-1'),false)")
     check('Replay controls stay out of the player UI',page.locator('[data-action=watch-rail], [data-rail=watch], .rail-watch').count()==0 and 'Watch run' not in page.locator('#dialog').inner_text())
     page.evaluate('DeadSlow.watch("long-grade-1",8)')
@@ -90,7 +98,7 @@ def check_railway(page, check, out):
     page.evaluate('DeadSlowTest.railCommand("power",1)')
     check('Powered train cannot be split from the UI',page.locator('[data-rail="uncouple"]:disabled').count()==6)
     page.evaluate('DeadSlowTest.railCommand("stop");DeadSlowTest.state.run.rail.groups[0].cars.at(-1).pressure=.1;DeadSlowTest.hud()')
-    check('Split controls wait for wagon brake pressure',page.locator('[data-rail="uncouple"]:disabled').count()==6 and '10%' in page.locator('#rail-cut-status').inner_text())
+    check('Split controls wait for wagon brake pressure',page.locator('[data-rail="uncouple"]:disabled').count()==6 and '10%' in rail_detail(page, '#rail-cut-status'))
     page.evaluate('DeadSlow.level(5,3);DeadSlow.speed(0)')
     page.click('#rail-reverse')
     check('Reverse is an action label in either direction',page.locator('#rail-reverse').inner_text()=='Reverse · X' and page.evaluate('DeadSlowTest.state.run.rail.reverser===-1'))
@@ -131,7 +139,7 @@ def check_railway(page, check, out):
     page.evaluate('DeadSlow.level(5,9);DeadSlow.speed(0)')
     check('Helper control waits for a connected helper',page.locator('#rail-helper').is_disabled())
     check('Lower helper telegraph also waits for coupling',page.locator('#rail-helm [data-rail="helper"][data-rail-step="1"]').is_disabled())
-    check('The helper needs a real reverse approach',page.locator('[data-rail="couple"]').is_disabled() and '78.4 m' in page.locator('#rail-pickup').inner_text())
+    check('The helper needs a real reverse approach',page.locator('[data-rail="couple"]').is_disabled() and '78.4 m' in rail_detail(page, '#rail-pickup'))
     page.evaluate('DeadSlow.level(5,12);DeadSlow.speed(0)')
     page.locator('[data-rail="couple"]').click()
     check('Coupling enables rear assistance',page.locator('#rail-helper').is_enabled())
@@ -166,7 +174,7 @@ def check_railway(page, check, out):
     check('Railway logbook shows railway and tour records',all(label in page.locator('#dialog').inner_text() for label in ['World 5 · The Long Grade','Grand Tour · 72','02:03.00','02:15.00','07:36.00']))
     for number,label in [(10,'balance reserve'),(11,'Low Crossing'),(12,'Coastal passenger')]:
         page.evaluate('(n)=>{DeadSlow.level(5,n);DeadSlow.speed(0)}',number)
-        check(f'5-{number} shows its operating constraint',label in page.locator('#rail-operations').inner_text())
+        check(f'5-{number} shows its operating constraint',label in rail_detail(page, '#rail-operations'))
         page.wait_for_timeout(50);page.screenshot(path=str(out/f'rail-{number}.png'))
     page.evaluate('DeadSlow.watch("long-grade-12",0)')
     check('Finale recording remains console-accessible',page.evaluate('DeadSlow.state().replay==="long-grade-12"'))
