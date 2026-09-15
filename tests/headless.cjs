@@ -38,6 +38,7 @@ function create({fieldDialog=()=>''}={}) {
     const noop = () => {
     };
     const ctx = {
+        DeadSlowSimulations: require('../src/simulations.js'), RailSimulation: require('../src/rail-adapter.js'),
         Railway: require('../src/rail.js'), RailView: {prepare:noop, update:noop, key:()=>false, dialog:()=>''},
         GerboRampage: require('../src/rampage.js'), GerboView: {prepare:noop, update:noop, dialog:fieldDialog},
         HarborSpace: require('../src/space.js'), HarborSpaceUI: { prepare: noop, update: noop },

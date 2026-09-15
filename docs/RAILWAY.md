@@ -161,4 +161,16 @@ layout and touch QA remain for CI/review: browser access to the cloud preview
 was blocked in this Work chat. No localhost permission request was repeated.
 
 `npm run build` produces the complete offline game in `dist/index.html`, with
-all 23 modules and the stylesheet inlined. Generated builds are not committed.
+every source module and the stylesheet inlined. Generated builds are not committed.
+
+## Integration boundaries
+
+The shared shell selects `rail-adapter.js` through the simulation registry. Rail
+runs contain their own vehicles and a presentation focus, with no marine ship or
+job placeholders. Commands from keys, buttons, the console and recordings share
+`rail-commands.js` and the engine's eligibility checks. `rail-presentation.js`
+keeps warning persistence out of the physics state and supplies one HUD snapshot.
+
+`npm run check` now checks command/adapter types and all twelve typed level
+definitions, then validates track, vehicle, zone and task references. Transition
+invariants and save compatibility are covered in `tests/architecture.test.cjs`.

@@ -160,3 +160,21 @@ These do not autoplay or overwrite ranked departures, PBs, ghosts or circuit tim
 `DeadSlow.progress()` returns a compact detached clock/retry/split summary.
 The new speed controls remain available through retries and mode changes, including
 World 4. See [PLAYTEST.md](PLAYTEST.md) for key bindings and limitations.
+
+## Railway commands and recording compatibility
+
+```js
+DeadSlow.rail("brake", 1)
+DeadSlow.rail("power", 0)
+DeadSlow.rail("uncouple", {after: "engine", before: "Q1"})
+DeadSlow.rail("switch", "throat")
+```
+
+Use the actual vehicle and junction IDs from `DeadSlow.state()`. These commands
+use the same eligibility checks as the controls, and mark the attempt as practice.
+`DeadSlow.controls()` is for the non-railway helm; it rejects railway attempts.
+
+Author recordings carry a course/rules signature. `watch` checks compatibility
+before changing the current run, so an obsolete recording cannot silently play
+on a redesigned course. Synchronization adds baseline metadata to legacy inputs;
+it does not rewrite the recorded commands or their expected completion times.

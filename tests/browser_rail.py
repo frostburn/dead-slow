@@ -1,6 +1,12 @@
 """Focused railway presentation and audio checks, using the release-atlas page."""
 def check_railway(page, check, out):
     page.set_viewport_size({'width':1440,'height':1000})
+    page.evaluate('DeadSlow.level(5,1);DeadSlow.speed(0)')
+    check('Railway adapter runs without marine placeholders',page.evaluate('!DeadSlowTest.state.run.ship && !DeadSlowTest.state.run.jobs'))
+    page.keyboard.press('w')
+    check('Keyboard command reaches the train and its HUD',page.evaluate('DeadSlowTest.state.run.rail.power===1') and page.locator('#rail-power-value').inner_text()=='1 / 4')
+    page.evaluate('DeadSlow.rail("power",2)')
+    check('Console command uses the same train and HUD',page.evaluate('DeadSlowTest.state.run.rail.power===2') and page.locator('#rail-power-value').inner_text()=='2 / 4')
     page.evaluate('DeadSlow.level(5,7);DeadSlow.speed(0)')
     stable_colors=page.evaluate('''() => {
         DeadSlowTest.railCommand('uncouple','engine');DeadSlowTest.railCommand('hand');

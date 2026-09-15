@@ -14,17 +14,19 @@ function readAsset(root, file) {
 function bundle(root = ROOT) {
     root = path.resolve(root);
     let html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-    let sheets = 0, scripts = 0;
+    let sheets = 0;
+    const scripts = new Set();
     html = html.replace(/<link\s+rel="stylesheet"\s+href="([^"]+)"\s*\/?\s*>/g, (_, file) => {
         sheets++;
         return '<style>\n' + readAsset(root, file) + '\n</style>';
     });
     html = html.replace(/<script\s+src="([^"]+)"\s*>\s*<\/script>/g, (_, file) => {
-        scripts++;
+        if (scripts.has(file)) throw new Error(`Duplicate source module: ${file}`);
+        scripts.add(file);
         return '<script>\n' + readAsset(root, file).replace(/<\/script/gi, '<\\/script') + '\n</script>';
     });
-    if (sheets !== 1 || scripts !== 23)
-        throw new Error(`Expected 1 stylesheet and 23 modules; found ${sheets} and ${scripts}. Update build checks when adding modules.`);
+    if (sheets !== 1 || [...scripts].at(-1) !== 'src/game.js')
+        throw new Error('Expected one stylesheet and the game entry point as the last module.');
     if (/<script\b[^>]*\bsrc\s*=|<link\b[^>]*\brel=["']stylesheet/i.test(html))
         throw new Error('Build still has external code assets.');
     return html;

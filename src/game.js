@@ -9,6 +9,26 @@
     let index = 0, level = LEVELS[0], run, status = 'ready', modal = 'intro', zoom = 1, accumulator = 0, lastFrame = null, lastHud = 0, marathon = null, selectedWorld = 1;
     let toastUntil = 0, focusBeforeModal = null, pressed = new Map(), pointers = new Map(), hiddenAt = 0;
     const input = { rudder: 0, thruster: 0, winch: 0 };
+    const railSimulation = RailSimulation.create({railway:R, audio, view:V, finish,
+        fail() { status='failed'; clearInput(); audio.tick(null,false); showFailure(); }});
+    const simulations = DeadSlowSimulations.registry([
+        {id:'marine', create:createMarineState, step:(_run,dt)=>advanceMarine(dt),
+            ready:()=>run.buoyIndex===level.buoys.length&&(!level.lock||run.lock.phase==='exit')&&J.ready(level,run.jobs),
+            clean:()=>run.contacts===0&&run.wakes===0&&run.groundings===0&&run.jobs.stats.lineBreaks===0},
+        {id:'space', create(l) { const state=createMarineState(l); state.space=X.create(l,state.ship);
+            state.space.activeDock=X.activeTarget(l,state); state.dock=X.dock(state.ship,state.space.port,false); return state; },
+            step:(_run,dt)=>advanceSpace(dt), ready:()=>X.ready(run.space,level.space),
+            clean:()=>run.contacts===0&&run.wakes===0&&run.groundings===0&&run.jobs.stats.lineBreaks===0},
+        {id:'rolling', create(l) { const state=createMarineState(l); state.rampage=B.create(l,state.ship); return state; },
+            step:(_run,dt)=>advanceRampage(dt), ready:()=>B.ready(run), clean:()=>run.rampage.stats.damage===0},
+        railSimulation
+    ]);
+    let simulation;
+    function createMarineState(l) {
+        const ship=P.ship(...l.start,l.spec);
+        return {ship,jobs:J.create(l,ship),env:P.environmentAt(l,ship,0),
+            dock:P.docking(ship,l.berth,false),static:staticObstacles()};
+    }
     const format = t => {
         if (!Number.isFinite(t))
             return '—';
@@ -38,17 +58,8 @@
     function raceLabel() {
         return marathon?.name || 'World run';
     }
-    function clean() {
-        if (run.rail) return run.rail.stats.contacts === 0;
-        if (run.rampage) return run.rampage.stats.damage === 0;
-        return run.contacts === 0 && run.wakes === 0 && run.groundings === 0 && run.jobs.stats.lineBreaks === 0;
-    }
-    function objectiveReady() {
-        if (run.rail) return run.rail.config.tasks.every(t=>run.rail.completed.includes(t.id));
-        if (run.rampage) return B.ready(run);
-        if (run.space) return X.ready(run.space, level.space);
-        return run.buoyIndex === level.buoys.length && (!level.lock || run.lock.phase === 'exit') && J.ready(level, run.jobs);
-    }
+    function clean() { return simulation.clean(run); }
+    function objectiveReady() { return simulation.ready(run); }
     function clearInput() {
         pressed.clear();
         pointers.clear();
@@ -104,20 +115,20 @@
         lastFrame = null;
         zoom = 1;
         $('zoom-btn').textContent = '1×';
-        const s = P.ship(...level.start, level.spec);
+        simulation = simulations.forLevel(level);
+        const [x,y,a] = level.start;
         run = {
-            radarPulse: null, ship: s, jobs: J.create(level, s), env: P.environmentAt(level, s, 0), time: 0, contacts: 0, wakes: 0, groundings: 0, grounded: false, dockHold: 0, buoyIndex: 0, buoyHold: 0, splits: [], sampleAt: 0, trailAt: 0, ghost: [[0, s.x, s.y, s.a]], trail: [], effects: [], gateStates: {}, lock: { phase: 'entry', hold: 0, clock: 0 }, wakeTimers: {}, wakeActive: {}, lastHits: {}, pausedUsed: false, practiceReason: '', loaded: false, throttleOrders: 0, thrusterTime: 0, distance: 0, maxSpeed: 0, dock: P.docking(s, level.berth, false), static: staticObstacles(), pb: false, result: null
+            time:0, contacts:0, wakes:0, groundings:0, grounded:false,
+            dockHold:0, buoyIndex:0, buoyHold:0, splits:[], sampleAt:0, trailAt:0,
+            ghost:[[0,x,y,a]], trail:[], effects:[], focus:{x,y,a},
+            gateStates:{}, lock:{phase:'entry',hold:0,clock:0}, wakeTimers:{}, wakeActive:{}, lastHits:{},
+            pausedUsed:false, practiceReason:'', loaded:false, throttleOrders:0, thrusterTime:0,
+            distance:0, maxSpeed:0, pb:false, result:null, radarPulse:null,
+            ...simulation.create(level)
         };
-        if (level.space) {
-            run.space = X.create(level, s);
-            run.space.activeDock = X.activeTarget(level, run);
-            run.dock = X.dock(s, run.space.port, false);
-        }
-        if (level.rampage) run.rampage = B.create(level, s);
-        if (level.rail) run.rail = R.create(level);
         HarborSpaceUI.prepare(level);
         G.prepare(level);
-        V.prepare(level, railCommand);
+        (simulation.prepare || V.prepare)(level, railCommand);
         // An assisted circuit stays assisted at 1× too, before begin() records
         // a departure. Otherwise later individual PBs could leak out of a tour.
         if (marathon?.practice) markPractice('Practice circuit');
@@ -125,7 +136,7 @@
         toastUntil = 0;
         $('toast').classList.remove('visible');
         document.body.dataset.work = level.jobs.length || level.space || level.rampage ? 'true' : 'false';
-        $('ship-name').textContent = s.name || 'MV LONG PAUSE';
+        $('ship-name').textContent = run.ship?.name || level.spec?.name || 'MV LONG PAUSE';
         $('work-panel').hidden = !level.jobs.length && !level.space && !level.rampage;
         status = 'ready';
         $('stage-tag').textContent = level.tag;
@@ -190,7 +201,7 @@
             marathon.contacts += run.contacts;
             marathon.wakes += run.wakes;
             marathon.groundings += run.groundings;
-            marathon.lineBreaks += run.jobs.stats.lineBreaks;
+            marathon.lineBreaks += (run.jobs?.stats.lineBreaks || 0);
             marathon.retries++;
             if (run.pausedUsed)
                 marathon.practice = true;
@@ -202,7 +213,7 @@
         loadStage(index, true);
     }
     function throttle(delta, neutral = false) {
-        if (status !== 'running' || run.rampage)
+        if (status !== 'running' || run.rampage || !run.ship)
             return;
         const prev = run.ship.throttle;
         run.ship.throttle = neutral ? 0 : P.clamp(prev + delta, -3, 4);
@@ -261,6 +272,7 @@
         return true;
     }
     function lineAction() {
+        if (!run.jobs) return false;
         if (status !== 'running')
             return;
         if (run.rampage) {
@@ -286,31 +298,15 @@
         if (name === 'help') return showHelp();
         if (name === 'retry') return retry();
         if (status !== 'running' || !run.rail) return false;
-        const oldBrake = R.engineGroup(run.rail).brake;
-        const ok = R.command(run.rail, name, value);
-        if (ok && name === 'dispatch') audio.horn();
-        if (ok && ['couple','uncouple','switch','hand','reverse'].includes(name)) audio.railEvent(name);
-        if (ok && name === 'brake' && Math.abs(oldBrake-value)>=.25) audio.railEvent('brake');
-        if (name === 'power' && ok) run.throttleOrders++;
+        const ok = simulation.command(run,name,value);
         updateHud(); return ok;
-    }
-    function advanceRail(dt) {
-        R.update(run.rail, dt);
-        if (run.rail.stats.contacts>run.contacts) audio.railEvent('couple');
-        run.time = run.rail.time; run.distance = run.rail.stats.distance; run.contacts = run.rail.stats.contacts;
-        const g = R.engineGroup(run.rail), c = g.cars.find(c=>c.id==='engine'), p = R.locate(run.rail,g,c.q);
-        Object.assign(run.ship,{x:p.x,y:p.y,a:p.a,vx:c.v*Math.cos(p.a),vy:c.v*Math.sin(p.a)});
-        run.maxSpeed = Math.max(run.maxSpeed,Math.abs(c.v));
-        if (run.rail.failure) { status='failed'; clearInput(); audio.tick(run.ship,false); showFailure(); return; }
-        if (run.time>=run.sampleAt) { run.ghost.push([run.time,p.x,p.y,p.a]); run.sampleAt=run.time+.2; }
-        if (run.rail.finishHold>=2) finish();
     }
     function advance(dt) {
         if (status !== 'running')
             return;
-        if (run.rail) return advanceRail(dt);
-        if (run.rampage) return advanceRampage(dt);
-        if (run.space) return advanceSpace(dt);
+        simulation.step(run,dt);
+    }
+    function advanceMarine(dt) {
         run.time += dt;
         const s = run.ship, oldX = s.x, oldY = s.y;
         let grounded = false;
@@ -479,9 +475,9 @@
         clearInput();
         run.dockHold = 2;
         const result = {
-            time: Math.round(run.time * 120) / 120, contacts: run.contacts, wakes: run.wakes, groundings: run.groundings, clean: clean(), hull: Math.round(run.ship.hull), commands: run.throttleOrders, thruster: Math.round(run.thrusterTime * 10) / 10, distance: Math.round(run.distance), work: { ...run.jobs.stats }, space: run.space ? { ...run.space.stats } : undefined, rampage: run.rampage ? { ...run.rampage.stats } : undefined, lineBreaks: run.jobs.stats.lineBreaks, date: new Date().toISOString()
+            time: Math.round(run.time * 120) / 120, contacts: run.contacts, wakes: run.wakes, groundings: run.groundings, clean: clean(), hull: Math.round(run.ship?.hull ?? 100), commands: run.throttleOrders, thruster: Math.round(run.thrusterTime * 10) / 10, distance: Math.round(run.distance), work: { ...run.jobs?.stats }, space: run.space ? { ...run.space.stats } : undefined, rampage: run.rampage ? { ...run.rampage.stats } : undefined, lineBreaks: run.jobs?.stats.lineBreaks || 0, date: new Date().toISOString()
         };
-        if (run.rail) result.rail = { ...run.rail.stats };
+        Object.assign(result,simulation.result?.(run));
         run.result = result;
         if (!run.pausedUsed)
             run.pb = store.record(level.id, result, run.ghost, run.splits.map(s => s.time));
@@ -490,7 +486,7 @@
             marathon.contacts += run.contacts;
             marathon.wakes += run.wakes;
             marathon.groundings += run.groundings;
-            marathon.lineBreaks += run.jobs.stats.lineBreaks;
+            marathon.lineBreaks += (run.jobs?.stats.lineBreaks || 0);
             marathon.splits.push({ name: level.name, time: marathon.total, sector: marathon.sectorTime + run.time });
             marathon.sectorTime = 0;
             marathon.stages++;
@@ -529,6 +525,7 @@
         }
     }
     function openDialog(type, html, wide = false) {
+        if(type==='log')html+=revisionArchives();
         focusBeforeModal = document.activeElement;
         modal = type;
         $('dialog').dataset.theme = level.theme;
@@ -544,7 +541,7 @@
         return `<div class="modal-top"><div><div class="eyebrow">${eyebrow}</div><h2>${title}</h2></div><button data-action="back" aria-label="Close dialog">×</button></div>`;
     }
     function showIntro() {
-        if (level.rail) return openDialog('intro', V.dialog('intro', level, run, format));
+        if (simulation.dialog) return openDialog('intro', simulation.dialog('intro', level, run, format));
         if (level.rampage) return openDialog('intro', G.dialog('intro', level, run, format));
         if (level.space) {
             openDialog('intro', `<div class="eyebrow">WORLD 6 · THE BLACK MERIDIAN · ${level.bonus ? 'BONUS / OUTSIDE MARATHONS' : level.stageNumber + ' / 12'}</div><h1>${level.name}</h1><p>${level.brief}</p><div class="intro-details"><div><strong>${run.ship.length} m</strong><span>${esc(run.ship.name)}</span></div><div><strong>${level.space.fuel} Δv</strong><span>INITIAL PROPELLANT</span></div><div><strong>02 sec</strong><span>RELATIVE CAPTURE HOLD</span></div></div><p class="subtle">${level.tip}</p><div class="control-summary"><kbd>W</kbd><kbd>S</kbd> fore/aft thrust · <kbd>Space</kbd> cut thrust<br><kbd>A</kbd><kbd>D</kbd> rotational jets · <kbd>Q</kbd><kbd>E</kbd> sideways jets<br>${level.space.friendly ? '<kbd>F</kbd> lock / release beam · hold <kbd>J</kbd> attract / <kbd>K</kbd> repel<br>' : ''}Counterfire to stop rotation. Cutting thrust does not brake. Touch controls support simultaneous holds.</div><p class="subtle">Keep every free spacecraft inside the navigation sector. Space is open; the assignment is not infinite.</p><div class="dialog-actions"><button class="primary" data-action="begin" autofocus>Release clamps →</button><button data-action="courses">Choose sector</button><button data-action="help">Flight manual</button></div>`);
@@ -562,7 +559,7 @@
     }
     function showPause(reason = wording('The harbor can wait.', 'Flight control on standby.')) {
         pauseForMenu();
-        if (level.rail) return openDialog('pause', V.dialog('pause', level, run, format));
+        if (simulation.dialog) return openDialog('pause', simulation.dialog('pause', level, run, format));
         if (level.rampage) return openDialog('pause', G.dialog('pause', level, run, format));
         openDialog('pause', `
  <div class="eyebrow">PAUSED · PRACTICE RUN</div><h1>${reason}</h1><p>${wording('Your ship and the harbor clock are stopped.', 'Your spacecraft and the mission clock are suspended.')} This attempt is now practice and will not overwrite your records. A retry starts a record-eligible attempt.</p>
@@ -570,7 +567,7 @@
     }
     function showResult() {
         const r = run.result;
-        if (r && run.rail) return openDialog('result', V.dialog('result', level, run, format, hasNext(), marathon));
+        if (r && simulation.dialog) return openDialog('result', simulation.dialog('result', level, run, format, hasNext(), marathon));
         if (r && run.rampage) return openDialog('result', G.dialog('result', level, run, format, [], settings, null, fieldContext()));
         if (!r)
             return;
@@ -588,7 +585,7 @@
  ${!store.available ? '<div class="storage-warning">Save failed: export your logbook to keep these records.</div>' : ''}`);
     }
     function showFailure() {
-        if (run.rail) return openDialog('failed', V.dialog('failed', level, run, format));
+        if (simulation.dialog) return openDialog('failed', simulation.dialog('failed', level, run, format));
         audio.tick(run.ship, false);
         if (run.rampage) return openDialog('failed', G.dialog('failed', level, run, format));
         if (run.space) {
@@ -658,6 +655,19 @@
             return {name,overall:rows[0]?.time,clean:rows.find(r=>r.clean)?.time};
         }).filter(row=>Number.isFinite(row.overall)));
     }
+    function revisionArchives() {
+        const stages=Object.entries(store.data.archivedStages)
+            .filter(([id,stage])=>id.startsWith(level.id+'-rev-')&&stage.runs.length)
+            .map(([,stage])=>`<p>${esc(level.name)} · ${stage.runs.map(row=>format(row.time)).join(' · ')}</p>`);
+        const races=Object.entries(store.data.archivedRaces)
+            .filter(([id,rows])=>/-rev-[a-f0-9]{8}$/.test(id)&&rows.length)
+            .map(([id,rows])=>{
+                const route=id.replace(/-rev-[a-f0-9]{8}$/,'');
+                const name=route==='grand-tour'?'Grand Tour':WORLDS.find(w=>w.id===route)?.name||route;
+                return `<p>${esc(name)} · overall ${format(rows[0].time)} · clean ${format(rows.find(r=>r.clean)?.time)}</p>`;
+            });
+        return stages.length||races.length?`<details><summary>Earlier course records</summary>${stages.join('')}${races.join('')}</details>`:'';
+    }
     function circuitRecords(ids=null) {
         const routes=[...WORLDS.filter(w=>!w.comingSoon&&!w.partial).map(w=>[w.id,`World ${w.number} · ${w.name}`]),
             ['grand-tour',`Grand Tour · ${LEVELS.filter(l=>!l.bonus&&!l.standalone).length}`]].filter(([id])=>!ids||ids.includes(id));
@@ -696,7 +706,7 @@
  <p class="subtle" style="margin-top:13px">Records are local, not tamper-proof. File copies and browsers can have separate storage. Export before moving the game. Earlier logbooks are accepted. Existing stage records stay with their courses; circuits of different lengths are kept separate.</p>${!store.available ? '<div class="storage-warning">Persistent storage is unavailable. Export to preserve this session’s records.</div>' : ''}`);
     }
     function showHelp() {
-        if (level.rail) { pauseForMenu(); return openDialog('help', V.dialog('help', level, run, format)); }
+        if (simulation.dialog) { pauseForMenu(); return openDialog('help', simulation.dialog('help', level, run, format)); }
         if (level.rampage) { pauseForMenu(); return openDialog('help', G.dialog('help', level, run, format)); }
         if (level.space) {
             pauseForMenu();
@@ -839,7 +849,7 @@
             $('review-rate').value = String(developer.rate);
             $('review-freeze').textContent = developer.rate === 0 ? 'Resume time' : 'Freeze';
         }
-        if (run?.rail) { V.update(level, run, status, format, marathon); return; }
+        if (run && simulation.update) { simulation.update(level, run, status, format, marathon); return; }
         if (run?.rampage) {
             const label = (developer?.rate === 0 ? 'FROZEN' : developer?.rate !== 1 ? developer?.rate + '× PRACTICE' : 'PRACTICE') + ' · UNRANKED';
             G.update(level, run, status, format, label, store.stage(level.id).bestSplits, store.best(level.id), fieldContext().race); return;
@@ -1014,7 +1024,7 @@
         if (e.code === 'Enter' && e.target?.tagName === 'A') return;
         // The speed selector is a native input, not an alternative helm.
         if (e.target?.matches?.('select, input, textarea')) return;
-        if (run.rail && status === 'running' && V.key(e, run.rail)) return;
+        if (status === 'running' && simulation.key?.(e, run)) return;
         if (developer?.unlocked && ['BracketLeft', 'BracketRight', 'Backslash'].includes(e.code)) {
             e.preventDefault();
             if (e.repeat) return;
@@ -1213,7 +1223,7 @@
         }
         if (now > toastUntil)
             $('toast').classList.remove('visible');
-        if (run.rail) V.render($('sea'),level,run,zoom);
+        if (simulation.render) simulation.render($('sea'),level,run,zoom);
         else renderer.render({
             level, run, index, status, input, zoom, settings, ghost: store.stage(level.id).ghost, visualTime: now / 1000
         });
@@ -1246,7 +1256,7 @@
             Object.assign(run.ship, { x, y, a: P.wrap(a), vx: 0, vy: 0, r: 0, engine: 0, throttle: 0, rudder: 0 });
             run.dockHold = 0; run.buoyHold = 0;
         },
-        repair() { for (const body of [run.ship, ...run.jobs.bodies, run.space?.friendly, run.space?.mother, run.space?.second].filter(Boolean)) body.hull = 100; }
+        repair() { for (const body of [run.ship, ...(run.jobs?.bodies || []), run.space?.friendly, run.space?.mother, run.space?.second].filter(Boolean)) body.hull = 100; }
     });
     window.DeadSlow = developer.menu;
     requestAnimationFrame(frame);

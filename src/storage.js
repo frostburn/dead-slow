@@ -1,7 +1,10 @@
 (function (root) {
     'use strict';
     // Keep the original key so same-origin upgrades discover the v1 logbook.
-    const KEY = 'dead-slow.records.v1', VERSION = 17;
+    const KEY = 'dead-slow.records.v1', VERSION = 18;
+    const Compatibility = typeof module !== 'undefined' && module.exports ? require('./compatibility.js') : root.CourseCompatibility;
+    const levels = typeof module !== 'undefined' && module.exports ? require('./levels.js') : root.HarborLevels;
+    const CURRENT = Compatibility.manifest(levels), BASELINE = Compatibility.baseline;
     // These routes now include an approach leg. Keep their earlier PBs/ghosts,
     // but never compare a dock-side departure against a midwater departure.
     const RESTARTED = ['milk-run', 'floating-sauna', 'market-day', 'granite-needle', 'last-bus', 'slackwater-salvage', 'island-exchange', 'two-calls', 'cars-and-casualty', 'midsummer-dispatch'];
@@ -12,7 +15,7 @@
     ARCHIVES.push('gerbozilla-topography-v1','grand-tour-60','long-grade-dispatch-v1','grand-tour-dispatch-v1');
     const RACES = ['coast', 'northwatch', 'archipelago', 'meridian', 'gerbozilla', 'long-grade', 'grand-tour'];
     const fresh = () => ({
-        version: VERSION, stages: {}, marathon: [], races: Object.fromEntries(RACES.map(id=>[id,[]])), archivedStages: {}, archivedRaces: Object.fromEntries(ARCHIVES.map(id => [id, []])), settings: { ghost: true, sound: true, guide: true, pauseOnBlur: true }, attempts: 0
+        version: VERSION, compatibility:{stages:{...CURRENT.stages},races:{...CURRENT.races}}, archivedCompatibility:{stages:{},races:{}}, stages: {}, marathon: [], races: Object.fromEntries(RACES.map(id=>[id,[]])), archivedStages: {}, archivedRaces: Object.fromEntries(ARCHIVES.map(id => [id, []])), settings: { ghost: true, sound: true, guide: true, pauseOnBlur: true }, attempts: 0
     });
     function validRun(r) {
         return r && Number.isFinite(r.time) && r.time >= 0 && r.time < 86400 && Number.isInteger(r.contacts) && r.contacts >= 0 && typeof r.clean === 'boolean';
@@ -36,9 +39,9 @@
         }
         return result;
     }
-    function sanitize(data) {
+    function sanitize(data, manifest = CURRENT) {
         const result = fresh();
-        if (!data || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, VERSION].includes(data.version))
+        if (!data || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, VERSION].includes(data.version))
             return result;
         result.attempts = Math.max(0, Math.floor(Number(data.attempts) || 0));
         result.stages = sanitizeStages(data.stages);
@@ -217,6 +220,47 @@
                 result.archivedRaces[archive]=retain([...result.archivedRaces[archive],...result.races[id]]);result.races[id]=[];
             }
         }
+        // Save format and handling compatibility are independent. Historical
+        // format migrations above run once; future course edits only bump revisions.
+        for(const [id,rows] of Object.entries(data.archivedRaces||{})) {
+            if(/^[a-z0-9-]{1,40}-rev-[a-f0-9]{8}$/.test(id))result.archivedRaces[id]=retain((Array.isArray(rows)?rows:[]).filter(validRun).slice(0,100));
+        }
+        if(Compatibility.valid(data.archivedCompatibility)) {
+            for(const kind of ['stages','races'])for(const [id,signature] of Object.entries(data.archivedCompatibility[kind])) {
+                if(/^[a-z0-9-]{1,40}-rev-[a-f0-9]{8}$/.test(id))result.archivedCompatibility[kind][id]=signature;
+            }
+        }
+        // A hash is only an index. Compare full signatures before merging records.
+        function archiveKey(kind,id,signature) {
+            const signatures=result.archivedCompatibility[kind];
+            const records=kind==='stages'?result.archivedStages:result.archivedRaces;
+            let key=Compatibility.archiveKey(id,signature),salt=0;
+            while(Object.hasOwn(records,key)&&signatures[key]!==signature)key=Compatibility.archiveKey(id,signature+'#'+(++salt));
+            signatures[key]=signature;
+            return key;
+        }
+        const previous = Compatibility.valid(data.compatibility) ? data.compatibility : data.version<18 ? BASELINE : {stages:{},races:{}};
+        for(const [id,signature] of Object.entries(manifest.stages)) {
+            if(result.stages[id] && previous.stages[id]!==signature) {
+                const key=archiveKey('stages',id,previous.stages[id]||'unknown');
+                const stage=result.stages[id],older=result.archivedStages[key];
+                if(older) {
+                    const olderBest=older.runs[0]&&(!stage.runs[0]||older.runs[0].time<stage.runs[0].time);
+                    stage.runs=retain([...older.runs,...stage.runs]);
+                    if(olderBest){stage.ghost=older.ghost;stage.bestSplits=older.bestSplits;}
+                    stage.clears+=older.clears;
+                    stage.attempts+=older.attempts;
+                }
+                result.archivedStages[key]=stage;delete result.stages[id];
+            }
+        }
+        for(const [id,signature] of Object.entries(manifest.races)) {
+            if(result.races[id]?.length && previous.races[id]!==signature) {
+                const key=archiveKey('races',id,previous.races[id]||'unknown');
+                result.archivedRaces[key]=retain([...(result.archivedRaces[key]||[]),...result.races[id]]);result.races[id]=[];
+            }
+        }
+        result.compatibility={stages:{...manifest.stages},races:{...manifest.races}};
         for (const k of ['ghost', 'sound', 'guide', 'pauseOnBlur'])
             if (typeof data.settings?.[k] === 'boolean')
                 result.settings[k] = data.settings[k];
@@ -287,7 +331,7 @@
             }, save, stage, best, attempt, record, recordRace, bestRace,
             import(text) {
                 const d = JSON.parse(text);
-                if (!d || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, VERSION].includes(d.version))
+                if (!d || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, VERSION].includes(d.version))
                     throw Error('This is not a compatible Dead Slow logbook.');
                 data = sanitize(d);
                 save();

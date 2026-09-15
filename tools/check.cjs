@@ -4,6 +4,8 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { bundle } = require('./build.cjs');
 const root = path.resolve(__dirname, '..');
+const {validateRail}=require('./validate-rail.cjs');
+for(const level of require('../src/rail-levels.js'))validateRail(level.rail,level.id);
 let total = 0;
 for (const directory of ['src', 'tools', 'tests']) {
     for (const file of fs.readdirSync(path.join(root, directory))) {

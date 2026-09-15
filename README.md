@@ -201,14 +201,15 @@ browser; a static web host or the local server below avoids that restriction.
 For source development, use Node.js 22 or newer:
 
 ```sh
+npm ci --ignore-scripts
 npm run build
 npm run serve
 ```
 
 Open `http://127.0.0.1:8080` for the source version, or
 `http://127.0.0.1:8080/dist/` for the standalone build. No npm packages are needed
-for the game, build, server or Node tests. `npm ci` is optional and uses the
-included dependency-free lockfile. Set `PORT` to change the local port; set
+for the game, build, server or Node tests. `npm ci --ignore-scripts` installs
+the pinned TypeScript checker used by `npm run check`; it is development-only. Set `PORT` to change the local port; set
 `HOST=0.0.0.0` only when intentionally exposing the server to your local network.
 
 ## Other playable campaigns
@@ -406,7 +407,7 @@ leaderboard. Export the logbook before moving between files, browsers or hosts;
 then import it through **Logbook**. Import replaces the current local logbook.
 Storage denial or quota failure leaves the session playable and exportable.
 
-Logbooks using schemas 1–17 are accepted. Schema 17 archives the earlier routes for 5-04, 5-09 and 5-12 and their railway and Grand Tour circuits. Schema 16 archives the courses before volcanic hills, their World 4 circuit and the earlier 60-stage Grand Tour. Schema 13 archives the three pre-volcano
+Logbooks using schemas 1–18 are accepted. Schema 18 adds independent course/rules compatibility; this architecture update retains current records. Schema 17 archives the earlier routes for 5-04, 5-09 and 5-12 and their railway and Grand Tour circuits. Schema 16 archives the courses before volcanic hills, their World 4 circuit and the earlier 60-stage Grand Tour. Schema 13 archives the three pre-volcano
 field routes, the corresponding Gerbozilla circuit, and the earlier Grand Tour
 order. Other individual stages remain comparable after the display renumbering.
 Schema 12 separately archives the
@@ -464,7 +465,7 @@ bundle is ignored by git and rebuilt by the deployment workflow.
 ## Checks
 
 ```sh
-npm run check              # Parse every JS module and check reproducible bundling
+npm run check              # Parse JS, validate levels, check types and reproducible bundling
 npm run build
 npm test                   # Physics, jobs, records, control replays and local server
 npm run verify:runs        # All published author runs, using timed inputs only
