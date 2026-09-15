@@ -118,7 +118,7 @@ with sync_playwright() as p:
         check(f'World {world} log has a run comparison table',page.locator('#dialog .run-comparison').is_visible() and page.locator('#dialog [data-filter="clean"]').is_visible() and '00:10.00' in page.locator('.run-comparison').inner_text() and '00:15.00' in page.locator('.run-comparison').inner_text())
         page.locator('#dialog [data-filter="clean"]').click()
         check(f'World {world} clean filter works',page.locator('#dialog [data-filter="clean"]').get_attribute('class').find('primary')>=0 and 'OPEN' not in page.locator('.run-comparison').inner_text())
-        page.locator('#dialog .primary[data-action="back"]').click()
+        page.locator('#dialog .dialog-actions [data-action="back"]').click()
         check(f'World {world} log returns to completion',page.evaluate('DeadSlowTest.state.modal==="result"'))
         if world==5:
             page.screenshot(path=str(OUT/'rail-result.png'))
