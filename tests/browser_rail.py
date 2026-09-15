@@ -104,6 +104,12 @@ def check_railway(page, check, out):
         check(f'Four train levers fit at {width}px: {bounds}',bounds['page']<=bounds['viewport'] and all(e['right']<=bounds['viewport'] for e in bounds['levers']))
     page.screenshot(path=str(out/'rail-helper-mobile.png'))
     page.set_viewport_size({'width':1440,'height':1000})
+    page.evaluate('''() => {
+        DeadSlowTest.state.storage.races['long-grade']=[{time:123,clean:false},{time:135,clean:true}];
+        DeadSlowTest.state.storage.races['grand-tour']=[{time:456,clean:true}];
+    }''')
+    page.click('#log-btn')
+    check('Railway logbook shows railway and tour records',all(label in page.locator('#dialog').inner_text() for label in ['World 5 · The Long Grade','Grand Tour · 72','02:03.00','02:15.00','07:36.00']))
     for number,label in [(10,'balance reserve'),(11,'Low Crossing'),(12,'Coastal passenger')]:
         page.evaluate('(n)=>{DeadSlow.level(5,n);DeadSlow.speed(0)}',number)
         check(f'5-{number} shows its operating constraint',label in page.locator('#rail-operations').inner_text())

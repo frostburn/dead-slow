@@ -15,7 +15,7 @@
 
 /* Railway controls use the full sidebar; the map keeps room for the tail. */
 body[data-theme="rail"] { --bg:#263830; --panel:#304239; --line:#5b6a53; --green:#c2d59e; --amber:#efd18e; --ink:#f0ecd6; --muted:#b9c4ab; }
-body[data-theme="rail"] .app { grid-template-rows:66px minmax(0,1fr); }
+body[data-theme="rail"] .app { grid-template-columns:minmax(0,1fr); grid-template-rows:66px minmax(0,1fr); }
 body[data-theme="rail"] .workspace { grid-template-columns:minmax(0,1fr)320px; }
 body[data-theme="rail"] .sidebar, body[data-theme="rail"] .helm,
 body[data-theme="rail"] .chart-meta, body[data-theme="rail"] .chart-bottom,
@@ -2390,6 +2390,16 @@ body[data-theme="rampage"] .toast { background:#e4ead5; color:#2c443a; border-co
   body[data-theme="rampage"] .clock-block { min-width:95px; padding-left:5px; }
   body[data-theme="rampage"] .top-actions .icon { width:25px; }
   body[data-theme="rampage"] .top-actions button { padding:6px 4px; }
+  body[data-theme="rail"] .brand-symbol { display:none; }
+  body[data-theme="rail"] .brand { min-width:65px; }
+  body[data-theme="rail"] .brand-sub { font-size:5px; letter-spacing:0; }
+  body[data-theme="rail"] .brand-name { font-size:10px; }
+  body[data-theme="rail"] .topbar { padding:0 6px; gap:3px; }
+  body[data-theme="rail"] .main-clock { font-size:20px; }
+  body[data-theme="rail"] .clock-block { min-width:95px; padding-left:5px; }
+  body[data-theme="rail"] .clock-label { font-size:6px; letter-spacing:.5px; }
+  body[data-theme="rail"] .top-actions .icon { width:25px; }
+  body[data-theme="rail"] .top-actions button { padding:6px 4px; }
 }
 body[data-theme="rampage"] .brief { color:#546951; }
 body[data-theme="rampage"] .chart-title { text-shadow:none; }
