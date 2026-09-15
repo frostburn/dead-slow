@@ -2,13 +2,13 @@
 const test=require('node:test'), assert=require('node:assert/strict');
 const L=require('../src/levels.js'),R=require('../src/rampage.js'),S=require('../src/storage.js');
 const {create}=require('./headless.cjs'),{replay}=require('../tools/verify-island-runs.cjs');
-const active=['coast','northwatch','archipelago','gerbozilla','meridian'];
+const active=['coast','northwatch','archipelago','gerbozilla','long-grade','meridian'];
 const altered=['gerbo-downhill','gerbo-forest-slalom','gerbo-prickly-business'];
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-7,`${a} != ${b}`);
 
-test('eight-world catalog separates 69 playable assignments from 28 locked plans',()=>{
+test('eight-world catalog separates 73 playable assignments from 24 locked plans',()=>{
  assert.deepEqual(L.worlds.map(w=>w.id),['coast','northwatch','archipelago','gerbozilla','long-grade','meridian','pale-reach','megastructures']);
- assert.equal(L.length,69);assert.equal(L.catalog.length,97);assert.equal(new Set(L.catalog.map(l=>l.id)).size,97);
+ assert.equal(L.length,73);assert.equal(L.catalog.length,97);assert.equal(new Set(L.catalog.map(l=>l.id)).size,97);
  for(const w of L.worlds) {
   const rows=L.catalog.filter(l=>l.campaign===w.id && !l.bonus);
   assert.equal(rows.length,12);assert.deepEqual(rows.map(l=>l.stageNumber),Array.from({length:12},(_,i)=>i+1));
@@ -24,21 +24,21 @@ test('console rejects future missions/circuits without disturbing the current at
   assert.throws(()=>t.cheats.circuit(w),/unavailable/);
   assert.equal(t.state.run,r);
  }
- assert.throws(()=>t.cheats.level(5,9),/Coming soon/);
- assert.throws(()=>t.cheats.circuit(5),/unavailable/);
- assert.equal(t.cheats.levels().filter(l=>l.comingSoon).length,28);
+ assert.equal(t.cheats.level(5,9).level,'long-grade-9');
+ assert.equal(t.cheats.circuit(5).circuit.length,12);
+ assert.equal(t.cheats.levels().filter(l=>l.comingSoon).length,24);
  assert.ok(t.cheats.times().filter(l=>l.comingSoon).every(l=>l.goldTarget===null && l.verifiedAuthorTime===null));
 });
-test('60-stage tour skips future chapters and bonus, and crosses field-to-space boundary',()=>{
+test('72-stage tour skips future chapters and bonus, and crosses field-to-rail-to-space boundary',()=>{
  const t=create();t.cheats.tour(0);const route=t.state.marathon.route.map(i=>L[i]);
- assert.equal(route.length,60);assert.ok(route.every(l=>!l.bonus && !l.comingSoon));
+ assert.equal(route.length,72);assert.ok(route.every(l=>!l.bonus && !l.comingSoon));
  assert.deepEqual([...new Set(route.map(l=>l.campaign))],active);
  // Completion isolation tests progression, not a navigation recording.
- for(let i=0;i<60;i++){
+ for(let i=0;i<72;i++){
   assert.equal(t.state.level.id,route[i].id);t.finish();
-  if(i<59)t.next();
+  if(i<71)t.next();
  }
- assert.equal(t.state.level.id,'perihelion-dispatch');assert.equal(t.state.marathon.stages,60);
+ assert.equal(t.state.level.id,'perihelion-dispatch');assert.equal(t.state.marathon.stages,72);
  assert.ok(t.state.marathon.practice);
 });
 test('only a fresh Shift+R resets; plain R, repeats and modified or form input preserve the run',()=>{

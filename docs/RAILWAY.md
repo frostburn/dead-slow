@@ -1,10 +1,8 @@
-# The Long Grade: eight assignments
+# The Long Grade: twelve assignments
 
-World 5 now has eight playable missions. The other four retain their named,
-disabled catalog entries. These eight are standalone trials until the full
-campaign is ready, so the existing 60-stage Grand Tour and its records retain
-their meaning. New stage IDs are the previously unused `long-grade-1` through
-`long-grade-8`; existing save schemas and record imports remain compatible.
+Version 6 completes World 5. All twelve assignments join the railway circuit
+and the 72-stage Grand Tour. Schema 16 archives the earlier tour separately;
+records for the first eight railway missions remain active.
 
 ## Engine boundaries
 
@@ -56,7 +54,7 @@ track and the selected branch. Reverse is always labeled as an action.
 5-01 has a fixed input recording available through the browser console:
 `DeadSlow.watch("long-grade-1", 8)`. The transformer shuttle is available as
 `DeadSlow.watch("long-grade-7", 16)` (3212.208 simulated seconds). Regenerate
-that recording with `node tools/record-rail-run.cjs 7` and `node tools/sync-replays.cjs`. It completes in 590.408 seconds of
+that recording with `node tools/record-rail-run.cjs 7` and `node tools/sync-replays.cjs`. The tutorial completes in 590.408 seconds of
 simulation time (about 74 seconds at 8×). No vehicle positions or objectives
 are changed during playback. `DeadSlow.normal()` starts a fresh ranked attempt at 1×. Replay controls stay
 out of the player UI. Regenerate with `node tools/record-rail-run.cjs`
@@ -94,10 +92,36 @@ must remain adjacent in the same cut whenever either vehicle occupies the span.
 Assembly tasks can require wagon order toward the siding's buffers, ignoring
 the locomotive's position within the completed train.
 
-Future helper locomotives can build on per-vehicle force, facing and coupler
-state. Ferry deck balance can build on body-based edge occupancy and mass
-aggregation. Flood closures can extend the existing visible closed-track
-boundary. Missions 5-09 through 5-12 remain disabled.
+## Assignments 5-09 through 5-12
+
+| Assignment | Route and handling problem |
+| --- | --- |
+| A Push from Behind | Couple No. 42 at the rear. Share a 24 m climb between front power and rear assistance, then reduce each as its end crosses the crest. Leave the helper in the marked summit berth and deliver the ore freight without it. |
+| The Railway Ends Here | Split the rear pair before pushing the first pair aboard with the reach wagon. Retrieve the second pair, use the quay loop to get behind it, and push it onto the other deck. Park the locomotive and reach wagon ashore. |
+| The Last Working Line | Retrieve the lowland cut before Low Crossing floods, then enter the dead-end quarry spur, collect its wagons and stop at the crew platform. Reverse clear of the junction and climb to the upland refuge. Every route remains physically usable until its forecast closure. |
+| The Long Grade | Couple the helper, cross the mountain, retire it, descend with cool brakes, meet the coastal passenger in Lantern loop, then bring every supply wagon into the terminal. All deliveries and helper retirement remain live requirements. |
+
+The main engine is identified by its persistent `engine` ID, independently of
+the group order or other powered vehicles. U / J controls rear assistance;
+Space cuts both engines and applies the train brake. Detached helpers cannot
+receive power. Brakes still propagate from the main locomotive. A sustained
+pull above 120 kN overloads the mountain couplers after eight seconds; excessive
+rear compression on restrictive curves has its own visible warning and limit.
+The grade strip shows the crest moving through the whole train.
+
+Ferry balance counts each body's fraction actually aboard, including the reach
+wagon. A 65 t side-to-side difference uses the full four-degree ramp envelope.
+Loading all freight onto one deck overloads it; the locomotive is prohibited
+from crossing the shore boundary. The boat and ramp display the current load.
+
+Flood closures use surveyed track intervals and simulation time. Any part of
+a vehicle entering a closed interval ends the run. The forecast is visible
+from departure; no collection order or revisits are prohibited by script.
+The crew boards after a stopped, five-second platform dwell.
+
+`DeadSlow.watch("long-grade-12", 16)` plays the complete finale in about 160
+seconds (2557.808 simulated seconds). Regenerate it with
+`node tools/record-rail-run.cjs 12`, then `node tools/sync-replays.cjs`.
 
 ## Validation
 
@@ -107,11 +131,17 @@ the complete run-around/delivery sequence in 5-02, and both descent routes in
 brake, reverser, coupling and switch commands without moving vehicles directly.
 It is a conservative smoke driver, not an authored pace or optimal solution.
 
-`tests/rail-sprint.test.cjs` completes all five new assignments using ordinary\ncontrols, including both interception routes, the emergency catch, and the\nfull pocket/shuttle/return-loop sequence. `tests/rail-infrastructure.test.cjs`\nuses isolated geometry and force probes for bridge overlap, sliding, cargo\npreview purity and a passenger held by an uncleared tail.\n\nSeparate tests cover tail occupancy, air-brake delay, temperature-dependent
+`tests/rail-sprint.test.cjs` completes assignments 4–8 using ordinary controls,
+including both interception routes, the emergency catch, and the complete
+pocket/shuttle/return-loop sequence. `tests/rail-final.test.cjs` completes all
+four final missions. `tests/version-six.test.cjs` probes helper command guards,
+balanced and unbalanced coupler loading, partial ferry boarding, flood
+boundaries, volcanic gravity and record migration.
+
+Separate tests cover tail occupancy, air-brake delay, temperature-dependent
 stopping estimates, detached handbrakes, shared records and pause/retry rules.
 Those geometry/objective fixtures are explicitly distinguished from routes.
-The existing suite was run; its marine-only spawn filter was updated to exclude
-railway assignments. No existing circuit or physics recording changes.
+Circuit tests check the railway route and the field-to-rail-to-space transitions.
 
 The actual renderer was inspected through native canvas, and all source scripts
 were exercised against a DOM to check controls and stage loading. Full browser

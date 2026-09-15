@@ -78,7 +78,7 @@ def check_railway(page, check, out):
     page.screenshot(path=str(out/'rail-mobile.png'))
     audio=page.evaluate('''async()=>{
         const rate=22050,ctx=new OfflineAudioContext(1,rate*5,rate),train=RailAudio.createTrain(ctx);
-        const st={power:0,independent:0,stats:{distance:0},groups:[{cars:[{powered:true,v:0,pressure:0}]}]};
+        const st={power:0,independent:0,stats:{distance:0},groups:[{cars:[{id:'engine',powered:true,v:0,pressure:0}]}]};
         train.tick(st,true);
         const tasks=[ctx.suspend(1).then(()=>{st.power=3;st.groups[0].cars[0].v=8;st.stats.distance=12;train.tick(st,true);return ctx.resume()}),
             ctx.suspend(2).then(()=>{train.event('couple');return ctx.resume()}),
@@ -91,3 +91,20 @@ def check_railway(page, check, out):
     }''')
     check('Train audio renders finite unclipped engine and rolling sound',audio['finite'] and audio['peak']<.8 and audio['moving']>audio['idle']>0)
     check('Train audio falls silent after stopping',audio['paused']<.00001)
+    page.evaluate('DeadSlow.level(5,9);DeadSlow.speed(0)')
+    check('Helper control waits for a connected helper',page.locator('#rail-helper').is_disabled())
+    page.locator('[data-rail="couple"]').click()
+    check('Coupling enables rear assistance',page.locator('#rail-helper').is_enabled())
+    page.keyboard.press('u')
+    check('U commands the helper without changing front power',page.evaluate('DeadSlowTest.state.run.rail.helper===1 && DeadSlowTest.state.run.rail.power===0'))
+    for width in [320,390,844]:
+        page.set_viewport_size({'width':width,'height':844 if width<800 else 390})
+        check(f'Four train levers fit at {width}px',page.evaluate('document.documentElement.scrollWidth<=innerWidth && [...document.querySelectorAll(".rail-levers input")].every(e=>e.getBoundingClientRect().right<=innerWidth)'))
+    page.screenshot(path=str(out/'rail-helper-mobile.png'))
+    page.set_viewport_size({'width':1440,'height':1000})
+    for number,label in [(10,'balance reserve'),(11,'Low Crossing'),(12,'Coastal passenger')]:
+        page.evaluate('(n)=>{DeadSlow.level(5,n);DeadSlow.speed(0)}',number)
+        check(f'5-{number} shows its operating constraint',label in page.locator('#rail-operations').inner_text())
+        page.wait_for_timeout(50);page.screenshot(path=str(out/f'rail-{number}.png'))
+    page.evaluate('DeadSlow.watch("long-grade-12",0)')
+    check('Finale recording remains console-accessible',page.evaluate('DeadSlow.state().replay==="long-grade-12"'))

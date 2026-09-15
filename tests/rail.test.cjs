@@ -78,5 +78,5 @@ test('railway completion uses shared records and respects pause/retry practice r
     assert.equal(t.state.storage.stages['long-grade-3'].clears,1);
     t.keydown({code:'KeyR'});assert.equal(t.state.status,'complete');
     t.keydown({code:'KeyR',shiftKey:true});assert.equal(t.state.status,'running');
-    assert.throws(()=>t.marathon('long-grade'),/coming soon/);
+    t.marathon('long-grade');assert.equal(t.state.marathon.route.length,12);
 });

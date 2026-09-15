@@ -172,7 +172,7 @@ with sync_playwright() as p:
     page.evaluate('DeadSlowTest.marathon("archipelago");DeadSlowTest.advance(3);DeadSlowTest.retry()')
     check('World 3 circuit starts at its own first island and retains retry time',page.evaluate('DeadSlowTest.state.index===24 && DeadSlowTest.state.marathon.total>=2.99 && DeadSlowTest.state.marathon.route.length===12'))
     page.evaluate('DeadSlowTest.marathon("grand-tour")')
-    check('Grand Tour uses the complete 60-stage route',page.evaluate('DeadSlowTest.state.marathon.route.length===60'))
+    check('Grand Tour uses the complete 72-stage route',page.evaluate('DeadSlowTest.state.marathon.route.length===72'))
     page.evaluate('DeadSlowTest.load(27);DeadSlowTest.lineAction()')
     shot(page,'sauna-desktop.png')
     page.evaluate('DeadSlowTest.load(24);DeadSlowTest.advance(8);DeadSlowTest.throttle(2);DeadSlowTest.advance(30)')

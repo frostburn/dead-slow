@@ -296,7 +296,7 @@
         R.update(run.rail, dt);
         if (run.rail.stats.contacts>run.contacts) audio.railEvent('couple');
         run.time = run.rail.time; run.distance = run.rail.stats.distance; run.contacts = run.rail.stats.contacts;
-        const g = R.engineGroup(run.rail), c = g.cars.find(c=>c.powered), p = R.locate(run.rail,g,c.q);
+        const g = R.engineGroup(run.rail), c = g.cars.find(c=>c.id==='engine'), p = R.locate(run.rail,g,c.q);
         Object.assign(run.ship,{x:p.x,y:p.y,a:p.a,vx:c.v*Math.cos(p.a),vy:c.v*Math.sin(p.a)});
         run.maxSpeed = Math.max(run.maxSpeed,Math.abs(c.v));
         if (run.rail.failure) { status='failed'; clearInput(); audio.tick(run.ship,false); showFailure(); return; }
@@ -568,14 +568,14 @@
     }
     function showResult() {
         const r = run.result;
-        if (r && run.rail) return openDialog('result', V.dialog('result', level, run, format, hasNext()));
+        if (r && run.rail) return openDialog('result', V.dialog('result', level, run, format, hasNext(), marathon));
         if (r && run.rampage) return openDialog('result', G.dialog('result', level, run, format, [], settings, null, fieldContext()));
         if (!r)
             return;
         const rank = r.time <= level.pace[0] ? 'GOLD PACE' : r.time <= level.pace[1] ? 'SILVER PACE' : r.time <= level.pace[2] ? 'BRONZE PACE' : wording('SAFELY MOORED', 'CAPTURE SECURED');
         const marathonDone = marathon && !hasNext();
         openDialog('result', `<div class="eyebrow">${run.pausedUsed ? 'PRACTICE COMPLETE' : run.pb ? 'NEW PERSONAL BEST' : wording('LINES ASHORE', 'CAPTURE CONFIRMED')} · ${level.name.toUpperCase()}</div>
- <h1>${marathonDone ? (marathon.id === 'grand-tour' ? 'Five worlds. One captain.' : wording('One world. All fast.', 'Twelve sectors. Mission complete.')) : run.space ? 'Capture confirmed.' : 'All fast. At last.'}</h1><div class="result-badge">${run.pausedUsed ? 'UNRANKED PRACTICE' : rank}${r.clean ? ' · CLEAN' : ''}</div><div class="result-time">${format(r.time)}</div>
+ <h1>${marathonDone ? (marathon.id === 'grand-tour' ? 'Six worlds. Every load home.' : wording('One world. All fast.', 'Twelve sectors. Mission complete.')) : run.space ? 'Capture confirmed.' : 'All fast. At last.'}</h1><div class="result-badge">${run.pausedUsed ? 'UNRANKED PRACTICE' : rank}${r.clean ? ' · CLEAN' : ''}</div><div class="result-time">${format(r.time)}</div>
  <p class="subtle">${run.pausedUsed ? esc(run.practiceReason || 'Practice attempt') + '. This time was not saved to the leaderboards.' : run.pb ? wording('Your new best line is saved as the ghost for this harbor.', 'Your best flight is saved as the ghost for this sector.') : wording('A harbor conquered. A braking point learned.', 'Rendezvous complete. Counterburn mastered.')}</p>
  <div class="result-grid"><div><strong>${r.contacts}</strong><span>HULL CONTACTS</span></div><div><strong>${r.hull}%</strong><span>HULL REMAINING</span></div><div><strong>${r.commands}</strong><span>ENGINE ORDERS</span></div></div>
  <p class="subtle">${r.space ? `${r.distance} m traveled · ${r.space.fuelUsed.toFixed(2)} Δv propellant used · ${r.space.shots} shots · ${r.space.captures} captures<br>Clean = no hull contacts. Moving cradles require relative rest, not absolute rest.` : `${r.distance} m traveled · ${r.thruster.toFixed(1)} s bow thrust · ${r.wakes} wake violations · ${r.groundings} groundings<br>Clean = no contacts, wake violations, grounding or parted towlines.`}</p>
@@ -627,7 +627,7 @@
                 total: marathon.total, stages: marathon.stages, length: marathon.route.length,
                 retries: marathon.retries, practice: marathon.practice, done: !hasNext(), hasNext: hasNext() } : null,
             boards: log ? [...WORLDS.filter(w=>!w.comingSoon && !w.partial).map(w=>[w.id,`World ${w.number} · ${w.name}`]),
-                ['grand-tour','Grand Tour · 60 stages']].map(([id,name])=>({ name,
+                ['grand-tour','Grand Tour · 72 stages']].map(([id,name])=>({ name,
                     overall:store.bestRace(id)?.time, clean:store.bestRace(id,true)?.time })) : [],
             archived48: log ? store.data.archivedRaces['grand-tour-48'] : [],
             layoutRaces: log ? layoutRaceArchives() : []
@@ -643,6 +643,8 @@
                 return { name, overall: rows[0]?.time, clean: rows.find(r => r.clean)?.time };
             })).filter(row => Number.isFinite(row.overall));
         return older.concat([
+            ['gerbozilla-topography-v1','World 4 · before volcanic hills'],
+            ['grand-tour-60','Grand Tour · earlier 60-stage route'],
             ['gerbozilla-contour-v1','World 4 · angular volcanic banks'],
             ['grand-tour-contour-v1','Grand Tour · angular volcanic banks'],
             ['gerbozilla-volcano-v1','World 4 · before volcanic crossings'],
@@ -686,7 +688,7 @@
         if (level.rampage) { pauseForMenu(); return openDialog('help', G.dialog('help', level, run, format)); }
         if (level.space) {
             pauseForMenu();
-            openDialog('help', `${topModal('Flight manual.', 'MERIDIAN FLIGHT AUTHORITY')}<div class="help-grid"><div><h3>No free brakes</h3><p>W/S select persistent fore/aft thrust, from full retro to full forward. Space cuts main thrust. Velocity persists when engines stop. A/D fire rotational jets: rotation also persists after release, so counterfire. H (or RADAR PULSE) sends a visual scan with an electronic ping; M mutes the audio but not the scan. Q/E translate sideways without turning. The controls and touch buttons work simultaneously.</p><h3>Capture is relative</h3><p>Fit the whole hull in the cradle, match its nose arrow and velocity, reduce relative spin below 0.69°/s, cut every jet, and hold for two seconds. Fuel and assembly collars show their own progress. Moving cradles do not stop while you dock.</p><h3>Propellant</h3><p>All jets and the rescue beam share your fuel supply. Heavier craft need more fuel to change speed. Solar craft cannot fire jets in full shadow; scanners also inhibit power. Leave enough fuel to slow down.</p></div><div><h3>Special assignments</h3><p>F acquires/releases a rescue beam within 170 m and with clear line of sight. J attracts; K repels. Forces are equal and opposite. Friendly craft must settle in their own capture cradle; then dock the tug.</p><p>For gunnery, move into the firing box, face the lead diamond and hold still with all jets off for three seconds. Firing and projectile flight are automatic; recoil pushes your ship backward. A confirmed hit unlocks the home cradle.</p><p>Stellar radiation heats exposed hulls. Use asteroids for shade; cover the whole hull for full protection. The solar assignment reverses that rule: darkness removes thrust, not momentum.</p><p>Two chronogates send you to their marked destinations and add each recorded leg as a repeating solid history. Use the station’s passing bays to avoid your past selves. Your clock never rewinds. The Century Ship is a separate 30+ minute bonus, excluded from the 60-stage Grand Tour.</p></div></div><div class="dialog-actions"><button class="primary" data-action="back" autofocus>Back to flight</button></div>`, true); return;
+            openDialog('help', `${topModal('Flight manual.', 'MERIDIAN FLIGHT AUTHORITY')}<div class="help-grid"><div><h3>No free brakes</h3><p>W/S select persistent fore/aft thrust, from full retro to full forward. Space cuts main thrust. Velocity persists when engines stop. A/D fire rotational jets: rotation also persists after release, so counterfire. H (or RADAR PULSE) sends a visual scan with an electronic ping; M mutes the audio but not the scan. Q/E translate sideways without turning. The controls and touch buttons work simultaneously.</p><h3>Capture is relative</h3><p>Fit the whole hull in the cradle, match its nose arrow and velocity, reduce relative spin below 0.69°/s, cut every jet, and hold for two seconds. Fuel and assembly collars show their own progress. Moving cradles do not stop while you dock.</p><h3>Propellant</h3><p>All jets and the rescue beam share your fuel supply. Heavier craft need more fuel to change speed. Solar craft cannot fire jets in full shadow; scanners also inhibit power. Leave enough fuel to slow down.</p></div><div><h3>Special assignments</h3><p>F acquires/releases a rescue beam within 170 m and with clear line of sight. J attracts; K repels. Forces are equal and opposite. Friendly craft must settle in their own capture cradle; then dock the tug.</p><p>For gunnery, move into the firing box, face the lead diamond and hold still with all jets off for three seconds. Firing and projectile flight are automatic; recoil pushes your ship backward. A confirmed hit unlocks the home cradle.</p><p>Stellar radiation heats exposed hulls. Use asteroids for shade; cover the whole hull for full protection. The solar assignment reverses that rule: darkness removes thrust, not momentum.</p><p>Two chronogates send you to their marked destinations and add each recorded leg as a repeating solid history. Use the station’s passing bays to avoid your past selves. Your clock never rewinds. The Century Ship is a separate 30+ minute bonus, excluded from the 72-stage Grand Tour.</p></div></div><div class="dialog-actions"><button class="primary" data-action="back" autofocus>Back to flight</button></div>`, true); return;
         }
         pauseForMenu();
         openDialog('help', `${topModal('It handles like a ship.')}
@@ -825,7 +827,7 @@
             $('review-rate').value = String(developer.rate);
             $('review-freeze').textContent = developer.rate === 0 ? 'Resume time' : 'Freeze';
         }
-        if (run?.rail) { V.update(level, run, status, format); return; }
+        if (run?.rail) { V.update(level, run, status, format, marathon); return; }
         if (run?.rampage) {
             const label = (developer?.rate === 0 ? 'FROZEN' : developer?.rate !== 1 ? developer?.rate + '× PRACTICE' : 'PRACTICE') + ' · UNRANKED';
             G.update(level, run, status, format, label, store.stage(level.id).bestSplits, store.best(level.id), fieldContext().race); return;

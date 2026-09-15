@@ -5,7 +5,7 @@ Report [bugs and feature requests](https://github.com/frostburn/dead-slow/issues
 
 **Neutral is not a brake.** A top-down ship-handling game about arriving slowly,
 with enough room left to stop—at sea, in vacuum, inside a giant hamster ball, or along a freight railway.
-Sixty circuit stages across five playable worlds in an eight-world atlas, eight railway assignments, a separate Century Ship bonus, local speedrun
+Version 6 has seventy-two circuit stages across six playable worlds in an eight-world atlas, a separate Century Ship bonus, local speedrun
 records, personal-best ghosts, keyboard controls and a multitouch helm.
 
 ## The eight-world atlas
@@ -16,15 +16,15 @@ records, personal-best ghosts, keyboard controls and a multitouch helm.
 | 2 | Northwatch | 12 playable stages |
 | 3 | The Archipelago | 12 playable stages |
 | 4 | Gerbozilla’s Rampage | 12 playable courses |
-| 5 | The Long Grade | 8 playable assignments; 4 planned |
+| 5 | The Long Grade | 12 playable assignments |
 | 6 | The Black Meridian | 12 playable sectors + the Century Ship bonus |
 | 7 | Race for the Pale Reach | Coming soon — 12 named placeholders |
 | 8 | Tow the Impossible | Coming soon — 12 named placeholders |
 
-Gray chapters can be inspected but not launched. The 28 placeholder missions
+Gray chapters can be inspected but not launched. The 24 placeholder missions
 are not counted as playable levels or included in circuits. The Grand Tour visits
-**1 → 2 → 3 → 4 → 6**, sixty assignments; the Century Ship remains separate.
-There are **69 playable assignments and 40 author recordings**. The eight railway assignments are individual trials; World 5 joins circuits when its full campaign is ready.
+**1 → 2 → 3 → 4 → 5 → 6**, seventy-two assignments; the Century Ship remains separate.
+There are **73 playable assignments and 41 author recordings**. Every complete world has its own twelve-stage circuit.
 
 World 5 starts with collecting two quarry wagons, then a station run-around, then a heavy descent with a gentler branch and cooling loop. W/S changes power, A/D the train brake, Q/E the locomotive brake, X reverses at rest, F couples, and B sets or releases the selected cut’s handbrakes. Click a link in the train strip to uncouple. Point buttons lock while occupied. The map shows the head and tail; the strip shows each wagon’s grade. Enter `DeadSlow.watch("long-grade-1", 8)` in the browser console to watch the tutorial recording. `DeadSlow.normal()` starts a fresh attempt at normal speed. See [rail engine notes](docs/RAILWAY.md) for architecture and validation.
 
@@ -39,7 +39,9 @@ two opportunities to intercept runaway wagons, a slippery wooded saddle,
 transformer shuttles across a weight-limited bridge, and an oversized vessel
 with a visible swept-clearance preview. The emergency gravel catch is a valid,
 non-clean rescue. Passenger schedules, bridge occupancy and wheel sliding are
-shown during play. Missions 5-09 through 5-12 remain planned.
+shown during play. The final four assignments add a rear helper, balanced train-ferry loading, a flood evacuation and the winter-supply journey to the coast. U / J changes rear assistance independently of front power. Watch the complete finale with `DeadSlow.watch("long-grade-12", 16)`.
+
+Volcanoes now have real slopes: an unpowered ball rolls away from their summits. The visible apron and the physical hill have the same footprint. Schema 16 archives the earlier volcanic courses and 60-stage Grand Tour without clearing existing railway records.
 
 **Window focus pausing is optional.** In Logbook & settings, turn off
 “Pause when window loses focus” to keep playing a ranked run while using
@@ -154,8 +156,8 @@ Run one at a time. All twelve courses have input-only reference recordings; the
 ten revised-map recordings are verified for version 5.0.0. They are not
 claimed optimal. Read the [field guide](docs/GERBOZILLA.md) for mechanics and tests.
 
-There are **40 recordings and 69 selectable assignments**. All five playable worlds
-have twelve-stage circuits; the **Grand Tour has 60 stages**. The Century Ship
+There are **41 recordings and 73 selectable assignments**. All six playable worlds
+have twelve-stage circuits; the **Grand Tour has 72 stages**. The Century Ship
 is the single bonus, excluded from every circuit. Each route has separate
 overall and clean records. The World 4 HUD, result screen and field log show
 the circuit clock and records, including failed-attempt time and retries.
@@ -178,7 +180,7 @@ all sea/space course records remain active. Export before moving HTML files.
 ## Accelerated playtest
 
 ```js
-DeadSlow.tour(8)          // Start the 60-stage Grand Tour as manual 8× practice.
+DeadSlow.tour(8)          // Start the 72-stage Grand Tour as manual 8× practice.
 DeadSlow.circuit(3, 8)    // Or play a single world's circuit.
 DeadSlow.progress()      // Mission, total clock, retries and completed splits.
 ```
@@ -251,7 +253,7 @@ reach their first ramp; tugs start outside line-passing range and must approach
 the casualty. The positioning leg is part of the clock, not skipped setup.
 
 Every stage is selectable immediately. World circuits each cover twelve stages;
-the **Grand Tour** visits all forty-eight non-bonus stages. Each route has its own record table.
+the **Grand Tour** visits all seventy-two non-bonus stages. Each route has its own record table.
 
 ![Borderless archipelago chart, with the tug departing away from its tow](docs/images/open-archipelago.webp)
 
@@ -382,7 +384,7 @@ Complete all clearance and service jobs. Fit your own hull inside the final
 order neutral, let engine output drop below 15%, and hold for two seconds. In
 space, match the cradle's velocity, keep relative spin below 0.012 rad/s and
 cut all jets (main output below 2%). Each world has a twelve-stage circuit; the
-Grand Tour has 60 stages. The Century Ship never enters either route.
+Grand Tour has 72 stages. The Century Ship never enters either route.
 
 The clock is fixed-step **in-game time (120 Hz)**. Gates, traffic, tides and
 current pulses reset to identical phases on retry. Circuit clocks retain failed
@@ -404,7 +406,7 @@ leaderboard. Export the logbook before moving between files, browsers or hosts;
 then import it through **Logbook**. Import replaces the current local logbook.
 Storage denial or quota failure leaves the session playable and exportable.
 
-Logbooks using schemas 1–15 are accepted. Schema 13 archives the three pre-volcano
+Logbooks using schemas 1–16 are accepted. Schema 16 archives the courses before volcanic hills, their World 4 circuit and the earlier 60-stage Grand Tour. Schema 13 archives the three pre-volcano
 field routes, the corresponding Gerbozilla circuit, and the earlier Grand Tour
 order. Other individual stages remain comparable after the display renumbering.
 Schema 12 separately archives the
@@ -419,7 +421,7 @@ Hairpin; schema 8 retains superseded Banking/Lake District routes separately. Sc
 splits for the five redesigned missions (`vacuum`, `umbra`, `perihelion-dispatch`,
 `yesterday`, `century-ship`), plus their affected Meridian and Grand Tour circuits.
 These are not comparable routes. Unchanged stages and circuits retain active records. Archives remain visible in the logbook and exports.
-The earlier **36-stage Grand Tour** also remains separate from the 60-stage route.
+The earlier **36-stage Grand Tour** also remains separate from the current 72-stage route.
 
 Older schema migrations still preserve dock-side island departure records and
 24-stage circuits in their existing archives; none are deleted. The logbook

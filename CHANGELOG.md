@@ -1,5 +1,13 @@
 # Changelog
 
+## 6.0.0 — The Long Grade
+
+- Complete World 5 with rear-helper handling, two-track ferry loading, timed flood evacuation and the winter-supply finale. The railway circuit has twelve stages; the Grand Tour now visits all six complete worlds in 72 stages.
+- Make volcanic cones real hills, with smooth height and downhill gravity matching their visible aprons. Update the Prickly Business recording for the changed terrain. Fixes #34.
+- Add front/rear power controls, sustained coupler-load warnings, a ferry balance/ramp display and visible flood forecasts. Keep the main locomotive as the controlled engine when a helper detaches.
+- Add a console-only finale recording: `DeadSlow.watch("long-grade-12", 16)`.
+- Schema 16 preserves earlier volcanic-course and 60-stage tour records in separate archives; existing railway records remain active.
+
 ## Unreleased
 
 - Keep shortcut badges inside their buttons when controls wrap; remove the tiny berth BOW label and simplify player-facing help and status copy.

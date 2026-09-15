@@ -37,7 +37,8 @@
         p.a+=leg.dir===1?0:Math.PI;p.grade*=leg.dir;p.dir=leg.dir;return p;
     }
     const groupFor=(st,id)=>st.groups.find(g=>g.cars.some(c=>c.id===id));
-    const engineGroup=st=>st.groups.find(g=>g.cars.some(c=>c.powered));
+    const engineGroup=st=>groupFor(st,'engine');
+    const drivingEngine=st=>engineGroup(st).cars.find(c=>c.id==='engine');
     const bounds=group=>({lo:Math.min(...group.cars.map(c=>c.q-c.length/2)),hi:Math.max(...group.cars.map(c=>c.q+c.length/2))});
     function occupied(st,node) {
         return [...st.groups,...st.traffic||[]].filter(g=>!g.finished).some(group=>{
@@ -70,7 +71,7 @@
             let q=0;const path=t.route.map(([id,dir])=>{const p=entry(net,id,dir,q);q=p.end;return p;});
             return {...t,path,v:0,finished:false,waiting:'Scheduled',cars:Array.from({length:4},(_,i)=>({id:t.id+'-'+i,q:t.head-i*t.length/4,length:t.length/4-1.2,mass:40000,v:0}))};
         });
-        return {net,groups,traffic,config:cfg,time:0,power:0,reverser:1,independent:0,selected:'engine',
+        return {net,groups,traffic,config:cfg,time:0,power:0,helper:0,reverser:1,independent:0,selected:'engine',crew:[],
             completed:[],taskHold:{},finishHold:0,failure:null,notice:'Release the train brake to move.',
             stats:{distance:0,couplings:0,uncouplings:0,peakTemperature:20,peakCoupler:0,contacts:0},nextCut:groups.length};
     }
@@ -81,14 +82,15 @@
     function command(st,name,value) {
         const allowed=availability(st,name,value);
         if(!allowed.enabled){st.notice=allowed.reason;return false;}
-        const group=engineGroup(st),engine=group.cars.find(c=>c.powered);
+        const group=engineGroup(st),engine=drivingEngine(st);
         if(name==='power'){st.power=clamp(value,0,4);return true;}
+        if(name==='helper'){st.helper=clamp(value,0,4);return true;}
         if(name==='brake'){setBrake(st,group,value);return true;}
         if(name==='independent'){st.independent=clamp(value,0,1);return true;}
-        if(name==='stop'){st.power=0;setBrake(st,group,1);return true;}
+        if(name==='stop'){st.power=0;st.helper=0;setBrake(st,group,1);return true;}
         if(name==='reverse') {
             if(Math.abs(engine.v)>.12){st.notice='Stop before changing direction.';return false;}
-            st.power=0;st.reverser*=-1;st.notice=st.reverser===1?'Forward selected.':'Reverse selected.';return true;
+            st.power=0;st.helper=0;st.reverser*=-1;st.notice=st.reverser===1?'Forward selected.':'Reverse selected.';return true;
         }
         if(name==='switch') {
             const sw=st.net.switches.find(s=>s.node===value);if(!sw)return false;
@@ -106,10 +108,10 @@
             value=typeof value==='object'?value.after:value;
             const cut=groupFor(st,value),i=cut?.cars.findIndex(c=>c.id===value);
             if(!cut||i<0||i===cut.cars.length-1)return false;
-            if(st.power||cut.cars.some(c=>Math.abs(c.v)>.12||(!c.hand&&c.pressure<.3))){st.notice='Stop, cut power and apply brakes before uncoupling.';return false;}
+            if(st.power||st.helper||cut.cars.some(c=>Math.abs(c.v)>.12||(!c.hand&&c.pressure<.3))){st.notice='Stop, cut power and apply brakes before uncoupling.';return false;}
             const detached={id:'cut-'+st.nextCut++,path:cut.path.map(e=>({...e})),cars:cut.cars.splice(i+1),brake:1,orders:[{t:st.time-100,value:1}]};
             setBrake(st,cut,1);st.groups.push(detached);
-            const wagons=cut.cars.some(c=>c.powered)?detached:cut;
+            const wagons=cut.cars.some(c=>c.id==='engine')?detached:cut;
             st.selected=wagons.cars[0].id;st.stats.uncouplings++;
             st.notice='Cut detached. Set its handbrakes before leaving it.';return true;
         }
@@ -134,6 +136,7 @@
         const eg=engineGroup(st),selected=groupFor(st,st.selected)||eg;
         let reason='';
         if(st.failure)reason='Retry to begin again.';
+        else if(name==='helper'&&!eg.cars.some(c=>c.helper))reason='Couple the helper before requesting assistance.';
         else if(name==='select'&&!groupFor(st,value))reason='That cut has changed. Select it again.';
         else if(name==='reverse'&&eg.cars.some(c=>Math.abs(c.v)>.12))reason='Stop the whole train before reversing.';
         else if(name==='hand'&&selected.cars.some(c=>Math.abs(c.v)>.15))reason='Stop the selected cut before changing handbrakes.';
@@ -141,7 +144,7 @@
             const id=typeof value==='object'?value?.after:value,g=groupFor(st,id),i=g?.cars.findIndex(c=>c.id===id);
             if(!g||i===g.cars.length-1||(typeof value==='object'&&g.cars[i+1].id!==value.before))reason='That link has changed. Choose the link again.';
             else if(st.config.cargo?.cars.some(id=>g.cars.slice(0,i+1).some(c=>c.id===id))&&st.config.cargo.cars.some(id=>g.cars.slice(i+1).some(c=>c.id===id)))reason='The vessel spans these carriers. Keep them connected.';
-            else if(st.power)reason='Cut power before uncoupling.';
+            else if(st.power||st.helper)reason='Cut front and helper power before uncoupling.';
             else if(g.cars.some(c=>Math.abs(c.v)>.12))reason='Stop the whole cut before uncoupling.';
             else if(g.cars.some(c=>!c.hand&&c.pressure<.3))reason='Apply the train brake and wait for the wagons to brake.';
         } else if(name==='couple') {
@@ -159,7 +162,7 @@
     function assistance(st) {
         const eg=engineGroup(st),selected=groupFor(st,st.selected)||eg,hit=nearby(st,eg,Infinity);
         const hands=selected.cars.filter(c=>c.hand).length,air=Math.min(...selected.cars.map(c=>c.pressure));
-        const label=selected.cars.map(c=>c.powered?'Loco':c.id).join(' · ');
+        const label=selected.cars.map(c=>c.helper?'Helper':c.powered?'Loco':c.id).join(' · ');
         const cut=`${label} — handbrakes ${hands}/${selected.cars.length} · air brake ${Math.round(air*100)}%`;
         const pickup=hit?`${hit.b.car.id} · ${hit.distance.toFixed(1)} m to buffers · relative speed ${(Math.abs(hit.a.car.v-hit.b.car.v*hit.a.dir*hit.b.dir)*3.6).toFixed(1)} km/h`:'No waiting cut on this stretch of track.';
         let next='',action=null,split=null;
@@ -169,6 +172,7 @@
         if(!next&&task) {
             const zone=st.config.zones.find(z=>z.id===task.zone);
             if(task.type==='traffic')next='Fit the whole freight into a loop, then wait for the passenger to pass.';
+            else if(task.type==='crew')next=`Stop beside ${zone.name} for ${task.dwell||5} seconds to board the crew.`;
             else if(task.type==='rescue'){
                 const wagons=groupFor(st,task.cars[0]);
                 if(st.caught&&wagons.cars.every(c=>Math.abs(c.v)<.08)){
@@ -188,7 +192,7 @@
                 } else if(st.power||cars.some(({c})=>Math.abs(c.v)>.08)){next='Cut power and stop in the marked track.';action='stop';}
                 else if(task.type==='stop'&&task.independent&&st.independent<=.3){next='Apply the loco brake to complete this stop.';action='independent';}
                 else if(task.type==='position'){next='Hold here until the whole load is clear. Then select Export spur and reverse.';}
-                else if(task.type==='delivery'&&cars.some(({g})=>g===eg)) {
+                else if(['delivery','retire','ferry'].includes(task.type)&&cars.some(({g})=>g===eg)) {
                     const i=eg.cars.findIndex((c,i,a)=>i<a.length-1&&ids.includes(c.id)!==ids.includes(a[i+1].id));
                     if(i>=0){split={after:eg.cars[i].id,before:eg.cars[i+1].id};action='uncouple';next=`Release the delivery at ${split.after} / ${split.before}.`;const a=availability(st,'uncouple',split);if(!a.enabled)next=a.reason;}
                 } else if(cars.some(({c})=>!c.hand)) {
@@ -225,7 +229,7 @@
         if(!matches){group.path=saved;st.notice='Align the route with the waiting cut.';return false;}
         const total=[...group.cars,...moved],momentum=total.reduce((s,c)=>s+c.mass*c.v,0),mass=total.reduce((s,c)=>s+c.mass,0);
         total.forEach(c=>c.v=momentum/mass);group.cars=total.sort((a,b)=>b.q-a.q);st.groups=st.groups.filter(g=>g!==cut);
-        st.selected=group.cars.find(c=>c.powered).id;
+        st.selected='engine';
         st.bufferImpact=null;st.stats.couplings++;st.notice='Coupled. Check the handbrakes before pulling away.';return true;
     }
     function inside(st,car,group,zone) {
@@ -304,7 +308,7 @@
     function clearance(st) {
         if(!st.config.cargo)return null;
         const original=groupFor(st,st.config.cargo.cars[0]),group={...original,path:original.path.map(p=>({...p}))};
-        const eg=engineGroup(st),engine=eg.cars.find(c=>c.powered),dir=st.reverser*engine.face;
+        const eg=engineGroup(st),engine=eg.cars.find(c=>c.id==='engine'),dir=st.reverser*engine.face;
         for(let i=0;i<16;i++)if(!extend(st,group,dir>0))break;
         const b=bounds(group),room=dir>0?group.path.at(-1).end-b.hi:b.lo-group.path[0].start,previews=[];
         for(let distance=0;distance<=Math.min(2400,room);distance+=12){const polygon=cargoShape(st,group,dir*distance);if(polygon)previews.push({polygon,distance,hit:cargoHit(st,polygon)?.name||null});}
@@ -318,18 +322,34 @@
         for(const g of st.groups)for(const p of segments(st,g)) {
             const edge=st.net.edges[p.edge];
             if(edge.closedFrom!==undefined&&p.to>=edge.closedFrom)st.failure='The wagons reached the broken crossing.';
+            const closure=(st.config.floods||[]).find(f=>f.edge===p.edge&&st.time>=f.at&&p.to>f.from&&p.from<f.to);
+            if(closure)st.failure=`Floodwater has closed ${closure.name}. Clear the crossing before the forecast time.`;
+            if(st.config.ferry?.decks.includes(p.edge)&&p.car.powered&&p.to>st.config.ferry.start)st.failure='Keep the locomotive ashore. Use the reach wagon to push the loads aboard.';
         }
+        const deck=ferry(st);
+        if(deck&&!st.failure&&Math.abs(deck.balance)>deck.maxDifference)st.failure='The ferry heeled beyond the ramp limit. Alternate loads between deck tracks.';
         if(st.config.cargo) {
             const g=groupFor(st,st.config.cargo.cars[0]),hit=cargoHit(st,cargoShape(st,g));
             if(hit)st.failure=`The vessel struck ${hit.name.toLowerCase()}. Check the swept outline before taking the curve.`;
         }
     }
+    function ferry(st) {
+        const spec=st.config.ferry;if(!spec)return null;
+        const all=st.groups.flatMap(g=>segments(st,g));
+        const loads=spec.decks.map(edge=>all.filter(p=>p.edge===edge).reduce((sum,p)=>sum+p.car.mass*Math.max(0,p.to-Math.max(spec.start,p.from))/p.car.length,0));
+        const balance=loads[0]-loads[1];
+        return {...spec,loads,balance,heel:balance/spec.maxDifference*4};
+    }
+    function forecast(st) {
+        return (st.config.floods||[]).map(f=>({...f,remaining:Math.max(0,f.at-st.time),closed:st.time>=f.at}));
+    }
     function taskReady(st,task) {
-        const eg=engineGroup(st),engine=eg.cars.find(c=>c.powered),zone=st.config.zones.find(z=>z.id===task.zone);
+        const eg=engineGroup(st),engine=drivingEngine(st),zone=st.config.zones.find(z=>z.id===task.zone);
         if(task.after&&!st.completed.includes(task.after))return false;
         if(task.type==='traffic')return st.traffic.some(t=>t.id===task.traffic&&t.finished);
         if(task.type==='stop')return inside(st,engine,eg,zone)&&Math.abs(engine.v)<.08&&(!task.independent||st.independent>.3)&&st.power===0;
         if(task.type==='coupled')return task.cars.every(id=>eg.cars.some(c=>c.id===id));
+        if(task.type==='crew')return st.power===0&&st.helper===0&&eg.cars.every(c=>Math.abs(c.v)<.08)&&eg.cars.some(c=>inside(st,c,eg,zone));
         const cars=task.cars.map(id=>{const g=groupFor(st,id);return {g,c:g?.cars.find(c=>c.id===id)};});
         if(task.type==='position')return st.power===0&&cars.every(({c,g})=>c&&g===eg&&Math.abs(c.v)<.08&&inside(st,c,g,zone));
         if(task.type==='rescue') {
@@ -338,8 +358,10 @@
                 (cars.every(({c,g})=>g===eg&&inside(st,c,g,zone))||cars.every(({c,g})=>inside(st,c,g,catchZone)));
         }
         if(task.type==='park'&&cars.some(({g})=>g!==eg))return false;
+        if(task.exclude?.some(id=>eg.cars.some(c=>c.id===id)))return false;
         if(task.order&&!ordered(st,task))return false;
-        return st.power===0&&cars.every(({c,g})=>c&&Math.abs(c.v)<.08&&c.hand&&inside(st,c,g,zone)&&
+        return st.power===0&&st.helper===0&&cars.every(({c,g})=>c&&Math.abs(c.v)<.08&&c.hand&&inside(st,c,g,zone)&&
+            (!['delivery','retire','ferry'].includes(task.type)||g!==eg)&&
             (task.type!=='delivery'||!g.cars.some(c=>c.powered)))&&st.net.switches.every(s=>!occupied(st,s.node));
     }
     function update(st,dt) {
@@ -347,7 +369,7 @@
         st.time+=dt;st.slip=false;st.slide=false;
         updateTraffic(st,dt);
         for(const group of st.groups) {
-            const engine=group.cars.find(c=>c.powered),cars=group.cars,force=cars.map(c=>{
+            const engine=group.cars.find(c=>c.id==='engine'),cars=group.cars,force=cars.map(c=>{
                 const p=locate(st,group,c.q);c.location=p;
                 return -c.mass*G*p.grade;
             });
@@ -360,8 +382,13 @@
                 const load=stretch*180000+(a.v-b.v)*(stretch?55000:4000);
                 force[i]-=load;force[i+1]+=load;a.coupler=load;
                 st.stats.peakCoupler=Math.max(st.stats.peakCoupler,Math.abs(load));
-                a.stress=Math.abs(load)>650000?a.stress+dt:Math.max(0,a.stress-dt);
+                a.stress=Math.abs(load)>(st.config.couplerLimit||650000)?a.stress+dt:Math.max(0,a.stress-dt);
                 if(a.stress>.6)st.failure='A coupler parted. Ease power and brake changes across the crest.';
+                a.workStress=engine&&st.config.helper&&load>120000?(a.workStress||0)+dt:Math.max(0,(a.workStress||0)-dt*2);
+                if(a.workStress>8)st.failure='A coupler could not sustain the pull. Share the climb with the rear helper.';
+                const tight=a.location.limit<=6;
+                a.bunchTime=tight&&engine&&cars.some(c=>c.helper)&&load<-(st.config.compressionLimit||Infinity)?(a.bunchTime||0)+dt:0;
+                if(a.bunchTime>1.5)st.failure='The helper bunched the wagons on a curve. Reduce rear assistance before the head descends.';
             }
             for(let i=0;i<cars.length;i++) {
                 const c=cars[i],p=c.location,old=c.q;
@@ -370,11 +397,11 @@
                 c.pressure+=(order-c.pressure)*Math.min(1,dt/(c.powered?.5:1.4));
                 const fade=1-clamp((c.temp-180)/270,0,.8);
                 let brake=c.mass*(c.powered?.85:.7)*c.pressure*fade;
-                if(c.powered) {
-                    const demand=st.power/4*(st.config.tractive||210000),adhesion=p.adhesion*c.mass*G;
-                    force[i]+=Math.min(demand,adhesion)*st.reverser*c.face;
+                if(c.powered&&engine) {
+                    const demand=(c.helper?st.helper:st.power)/4*(c.helper?(st.config.helper?.tractive||190000):(st.config.tractive||210000)),adhesion=p.adhesion*c.mass*G;
+                    force[i]+=Math.min(demand,adhesion)*st.reverser*engine.face;
                     if(demand>adhesion*1.01)st.slip=true;
-                    brake=Math.max(brake,c.mass*1.05*st.independent*fade);
+                    if(!c.helper)brake=Math.max(brake,c.mass*1.05*st.independent*fade);
                 }
                 c.sliding=brake>p.adhesion*c.mass*G*1.05&&Math.abs(c.v)>.2;
                 if(c.sliding)st.slide=true;
@@ -390,7 +417,7 @@
                 if(Math.abs(c.v)<.02&&Math.abs(force[i])<=opposition)c.v=0;
                 else {const next=c.v+(force[i]-sign*opposition)/c.mass*dt;c.v=c.v*next<0&&Math.abs(force[i])<=opposition?0:next;}
                 c.q+=c.v*dt;
-                if(c.powered)st.stats.distance+=Math.abs(c.q-old);
+                if(c.id==='engine')st.stats.distance+=Math.abs(c.q-old);
                 if(st.config.thermal)c.temp=clamp(c.temp+(brake*Math.abs(c.v)/c.mass*.9-(c.temp-20)*(.005+Math.abs(c.v)*.0003))*dt,20,650);
                 st.stats.peakTemperature=Math.max(st.stats.peakTemperature,c.temp);
                 c.curveTime=Math.abs(c.v)>p.limit*1.35?c.curveTime+dt:Math.max(0,c.curveTime-dt);
@@ -414,7 +441,7 @@
                         if(speed>1.4)st.failure='The train ran past a stop or into the buffers. Brake earlier.';
                         const shift=forward?Math.min(0,leg.end-2-bound):Math.max(0,leg.start+2-bound);
                         cars.forEach(c=>{c.q+=shift;c.v=0;});
-                        if(engine){st.power=0;st.notice='End of available track. Check the points or reverse.';}
+                        if(engine){st.power=0;st.helper=0;st.notice='End of available track. Check the points or reverse.';}
                     }
                 }
             }
@@ -433,7 +460,7 @@
             const totalMass=eg.cars.reduce((s,c)=>s+c.mass,0)+hit.cut.cars.reduce((s,c)=>s+c.mass,0);
             const velocity=otherMoving?(eg.cars.reduce((s,c)=>s+c.mass*c.v,0)+hit.cut.cars.reduce((s,c)=>s+c.mass*c.v*orientation,0))/totalMass:0;
             eg.cars.forEach(c=>{c.q-=hit.a.sign*Math.max(0,correction);c.v=velocity;});hit.cut.cars.forEach(c=>c.v=velocity*orientation);
-            st.power=0;st.notice=st.bufferImpact.speed>COUPLING_SPEED?'Hard buffer contact. Back away beyond 3 m and approach slowly.':'Buffers touching. Press F to couple.';
+            st.power=0;st.helper=0;st.notice=st.bufferImpact.speed>COUPLING_SPEED?'Hard buffer contact. Back away beyond 3 m and approach slowly.':'Buffers touching. Press F to couple.';
         }
         const approach=nearby(st,eg,3);
         if(st.bufferImpact&&(!approach||impactKey(approach)!==st.bufferImpact.key))st.bufferImpact=null;
@@ -441,15 +468,15 @@
         for(const task of st.config.tasks) {
             const met=taskReady(st,task);
             st.taskHold[task.id]=met?(st.taskHold[task.id]||0)+dt:0;
-            if(met&&st.taskHold[task.id]>=1&&!st.completed.includes(task.id))st.completed.push(task.id);
+            if(met&&st.taskHold[task.id]>=(task.dwell||1)&&!st.completed.includes(task.id))st.completed.push(task.id);
             // Delivery/parking are live requirements; leaving the zone revokes
             // them. Tutorial milestones remain remembered.
-            if(!met&&['delivery','park','rescue'].includes(task.type))st.completed=st.completed.filter(id=>id!==task.id);
+            if(!met&&['delivery','park','rescue','retire','ferry'].includes(task.type))st.completed=st.completed.filter(id=>id!==task.id);
         }
         st.finishHold=st.config.tasks.every(t=>st.completed.includes(t.id))?st.finishHold+dt:0;
     }
     function metrics(st) {
-        const group=engineGroup(st),engine=group.cars.find(c=>c.powered),mass=group.cars.reduce((s,c)=>s+c.mass,0),b=bounds(group);
+        const group=engineGroup(st),engine=group.cars.find(c=>c.id==='engine'),mass=group.cars.reduce((s,c)=>s+c.mass,0),b=bounds(group);
         const direction=Math.abs(engine.v)>.02?Math.sign(engine.v):st.reverser*engine.face;
         const gradient=group.cars.reduce((s,c)=>s+locate(st,group,c.q).grade*c.mass,0)/mass;
         const braking=group.cars.reduce((s,c)=>{const demand=(c.powered?.85:.7)*(1-clamp((c.temp-180)/270,0,.8)),grip=locate(st,group,c.q).adhesion*G;return s+c.mass*Math.min(demand,grip*(demand>grip*1.05?.72:1));},0)/mass;
@@ -463,7 +490,7 @@
     // Presentation-only lookahead. Extend a copy so inspecting an unoccupied
     // junction never reserves its route or alters subsequent train movement.
     function danger(st) {
-        const g=engineGroup(st),m=metrics(st),engine=g.cars.find(c=>c.powered);
+        const g=engineGroup(st),m=metrics(st),engine=g.cars.find(c=>c.id==='engine');
         const direction=Math.abs(engine.v)>.02?Math.sign(engine.v):st.reverser*engine.face,b=bounds(g);
         const cars=g.cars.map(c=>{const p=locate(st,g,c.q);return {id:c.id,ratio:Math.abs(c.v)/p.limit,limit:p.limit,edge:p.edge,s:p.s};}).filter(c=>c.ratio>1);
         const severity=cars.some(c=>c.ratio>=1.2)?2:cars.length?1:0;
@@ -480,9 +507,18 @@
             const p=locate(st,path,q);
             if(Math.abs(m.speed)>p.limit*1.02){ahead={edge:p.edge,s:p.s,limit:p.limit,distance:d};break;}
         }
-        return {severity:Math.max(severity,ahead?1:0),cars,ahead};
+        let coupling=null;
+        if(st.config.helper) {
+            const helper=g.cars.some(c=>c.helper);
+            for(const c of g.cars) {
+                const force=c.coupler||0,limit=force>=0?120000:helper?st.config.compressionLimit:st.config.couplerLimit;
+                const ratio=Math.abs(force)/limit;
+                if(ratio>.8&&(!coupling||ratio>coupling.ratio))coupling={id:c.id,ratio,force,kind:force>=0?'pull':'push'};
+            }
+        }
+        return {severity:Math.max(severity,ahead?1:0,coupling?(coupling.ratio>1?2:1):0),cars,ahead,coupling};
     }
-    const api={network,at,locate,create,update,command,availability,assistance,occupied,engineGroup,groupFor,bounds,metrics,taskReady,danger,segments,bridges,cargoShape,cargoHit,clearance};
+    const api={network,at,locate,create,update,command,availability,assistance,occupied,engineGroup,drivingEngine,groupFor,bounds,metrics,taskReady,danger,segments,bridges,cargoShape,cargoHit,clearance,ferry,forecast};
     if(typeof module!=='undefined'&&module.exports)module.exports=api;
     root.Railway=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

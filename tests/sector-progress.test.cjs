@@ -20,7 +20,7 @@ for (const [sectors, bonus] of [[0, false], [0, true], [7, false], [7, true], [1
         assert.ok(html.includes(`${sectors} / 12 SECTORS CLEARED`));
         assert.ok(html.includes(`${bonus ? 1 : 0} / 1 BONUS CLEARED`));
         assert.equal((html.match(/class="level-card /g) || []).length, 13);
-        assert.ok(html.includes('Grand Tour · all 60'));
+        assert.ok(html.includes('Grand Tour · all 72'));
         assert.ok(html.includes('The Century Ship is a separate bonus, excluded from every circuit.'));
     });
 }

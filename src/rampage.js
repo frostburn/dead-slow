@@ -300,6 +300,15 @@
             add(h, h.x, h.y, h.angle || 0);
             for (const l of h.lobes || []) add(l, h.x + l.x, h.y + l.y, (h.angle || 0) + (l.angle || 0));
         }
+        for (const v of c.volcanoes || []) {
+            // A compact, smooth hill matches the visible apron. Its gradient
+            // reaches zero at the summit and foot, with no invisible far slope.
+            const radius=v.r+65,ex=x-v.x,ey=y-v.y,u=(ex*ex+ey*ey)/(radius*radius);
+            if(u>=1)continue;
+            const h=v.r*.28,t=1-u;
+            height+=h*t*t*t;
+            dx-=6*h*t*t*ex/(radius*radius);dy-=6*h*t*t*ey/(radius*radius);
+        }
         for (const rim of c.rims || []) {
             const ex=x-rim.x, ey=y-rim.y, d=Math.hypot(ex,ey);
             if (d < 1e-6) continue; // Interior center is flat to numerical precision.
