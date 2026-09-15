@@ -1,5 +1,5 @@
 // @ts-check
-(function (root) {
+(function (/** @type {typeof globalThis} */ root) {
     'use strict';
     /** @typedef {import('./contracts.js').Level} Level */
     /** @template Run @typedef {import('./contracts.js').Adapter<Run>} Adapter */
@@ -21,4 +21,4 @@
     const api = Object.freeze({registry});
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     root.DeadSlowSimulations = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this);
+})(globalThis);

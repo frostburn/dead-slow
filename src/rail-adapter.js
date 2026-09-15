@@ -1,5 +1,5 @@
 // @ts-check
-(function (root) {
+(function (/** @type {typeof globalThis} */ root) {
     'use strict';
     /** Shell-facing railway integration. No marine physics or job constructors.
      * @param {import('./contracts.js').RailServices} services
@@ -51,4 +51,4 @@
     const api = {create};
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     root.RailSimulation = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this);
+})(globalThis);

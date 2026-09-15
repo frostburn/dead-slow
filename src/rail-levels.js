@@ -1,5 +1,5 @@
 // @ts-check
-(function(root) {
+(function (/** @type {typeof globalThis} */ root) {
     'use strict';
     /** @param {string} id @param {string} edge @param {number} s
      * @param {Partial<import('./rail-level-types.js').Vehicle>} [extra]
@@ -279,4 +279,4 @@
     ];
     if(typeof module!=='undefined'&&module.exports)module.exports=levels;
     root.RailLevels=levels;
-})(typeof globalThis!=='undefined'?globalThis:this);
+})(globalThis);

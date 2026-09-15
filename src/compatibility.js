@@ -1,5 +1,5 @@
 // @ts-check
-(function (root) {
+(function (/** @type {typeof globalThis} */ root) {
     'use strict';
     /** @typedef {{id:string,campaign:string,simulation:string,courseRevision?:number,rulesRevision?:number,bonus?:boolean,standalone?:boolean}} Course */
     /** @typedef {{stages:Record<string,string>,races:Record<string,string>}} Manifest */
@@ -132,4 +132,4 @@
     const api = Object.freeze({stamp,manifest,archiveKey,valid,baseline});
     if(typeof module!=='undefined'&&module.exports)module.exports=api;
     root.CourseCompatibility=api;
-})(typeof globalThis!=='undefined'?globalThis:this);
+})(globalThis);
