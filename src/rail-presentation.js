@@ -28,7 +28,7 @@
         return st.time<state.until?state.warning:null;
     }
     function stableAdvice(st,help) {
-        const key=help.action+':'+JSON.stringify(help.split);let state=adviceStates.get(st);
+        const key=help.action+':'+help.direction+':'+JSON.stringify(help.split);let state=adviceStates.get(st);
         if(!state){state={key,since:st.time,help};adviceStates.set(st,state);}
         if(key!==state.key){state.key=key;state.since=st.time;}
         if(st.time-state.since>=.4)state.help=help;

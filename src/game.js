@@ -1022,8 +1022,11 @@
         if (e.ctrlKey || e.metaKey || e.altKey)
             return;
         if (e.code === 'Enter' && e.target?.tagName === 'A') return;
-        // The speed selector is a native input, not an alternative helm.
-        if (e.target?.matches?.('select, input, textarea')) return;
+        // Railway sliders are also game controls. Keep WASD/QE, Space and
+        // Escape alive after a click, while preserving native slider arrows.
+        const railSlider=e.target?.matches?.('#rail-panel input[type="range"][data-rail]');
+        if(railSlider&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','PageUp','PageDown'].includes(e.code))return;
+        if(!railSlider&&(e.target?.matches?.('select, input, textarea')||e.target?.isContentEditable))return;
         if (status === 'running' && simulation.key?.(e, run)) return;
         if (developer?.unlocked && ['BracketLeft', 'BracketRight', 'Backslash'].includes(e.code)) {
             e.preventDefault();

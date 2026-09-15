@@ -188,8 +188,9 @@
         const hands=selected.cars.filter(c=>c.hand).length,air=Math.min(...selected.cars.map(c=>c.pressure));
         const label=selected.cars.map(c=>c.helper?'Helper':c.powered?'Loco':c.id).join(' · ');
         const cut=`${label} — handbrakes ${hands}/${selected.cars.length} · air brake ${Math.round(air*100)}%`;
-        const pickup=hit?`${hit.b.car.id} · ${hit.distance.toFixed(1)} m to buffers · relative speed ${(Math.abs(hit.a.car.v-hit.b.car.v*hit.a.dir*hit.b.dir)*3.6).toFixed(1)} km/h`:'No waiting cut on this stretch of track.';
-        let next='',action=null,split=null;
+        const coupling=availability(st,'couple');
+        const pickup=hit?`${hit.b.car.id} · ${hit.distance.toFixed(1)} m to buffers · relative speed ${(Math.abs(hit.a.car.v-hit.b.car.v*hit.a.dir*hit.b.dir)*3.6).toFixed(1)} km/h${hit.distance<=3?'\n'+(coupling.enabled?'Ready to couple · F':coupling.reason):''}`:'No waiting cut on this stretch of track.';
+        let next='',action=null,split=null,direction=null,needsMovement=false;
         // A newly released cut needs attention regardless of mission order.
         if(selected!==eg&&hands<selected.cars.length){next='Secure this cut before leaving it.';action='hand';}
         const task=st.config.tasks.find(t=>!st.completed.includes(t.id)&&(!t.after||st.completed.includes(t.after)));
@@ -206,7 +207,10 @@
                     next='Secure the caught wagons with their handbrakes.';action=selected===wagons?'hand':'select';
                 } else {next=taskReady(st,task)?'Hold the rescued wagons here.':eg.cars.some(c=>task.cars.includes(c.id))?'Brake before the broken crossing. Secure the wagons once stopped.':'Match the rolling wagons, then couple within 3 m.';action=eg.cars.length===1?'couple':null;}
             }
-            else if(task.type==='coupled'){const a=availability(st,'couple');next=a.enabled?'Buffers in reach. Couple the waiting wagons.':hit&&hit.distance<=3?a.reason:pickup;action='couple';}
+            else if(task.type==='coupled') {
+                if(task.cars.every(id=>eg.cars.some(c=>c.id===id)))next='Coupled. Collection being confirmed.';
+                else {next=coupling.enabled?'Buffers in reach. Couple the waiting wagons.':hit&&hit.distance<=3?coupling.reason:pickup;action='couple';needsMovement=!hit||hit.distance>3;}
+            }
             else {
                 const ids=task.type==='stop'?['engine']:task.cars;
                 const cars=ids.map(id=>{const g=groupFor(st,id);return {g,c:g?.cars.find(c=>c.id===id)};}).filter(({c})=>c);
@@ -214,10 +218,18 @@
                 if(task.type==='park'&&cars.some(({g})=>g!==eg)){next='Reconnect every wagon before parking the complete train.';action='couple';}
                 else if(outside.length) {
                     const {g,c}=outside.at(-1),p=locate(st,g,c.q);
-                    const missing=p.edge===zone.edge?Math.max(zone.from-(p.s-c.length/2),p.s+c.length/2-zone.to,0):null;
-                    next=missing!==null?`${c.id==='engine'?'Loco':c.id} needs ${Math.ceil(missing)} m more clearance inside ${zone.name}.`:`Bring ${c.id==='engine'?'the loco':c.id} into ${zone.name}.`;
-                } else if(st.power||cars.some(({c})=>Math.abs(c.v)>.08)){next='Cut power and stop in the marked track.';action='stop';}
-                else if(task.type==='stop'&&task.independent&&st.independent<=.3){next='Apply the loco brake to complete this stop.';action='independent';}
+                    const missing=p.edge===zone.edge?clamp(p.s,zone.from+c.length/2,zone.to-c.length/2)-p.s:null;
+                    const behind=missing!==null&&g===eg&&missing*p.dir*st.reverser*drivingEngine(st).face<0;
+                    next=missing!==null?`${c.id==='engine'?'Loco':c.id} needs ${Math.ceil(Math.abs(missing))} m ${behind?'back':'more'} to fit inside ${zone.name}.${behind?' Stop and reverse (X).':''}`:`Bring ${c.id==='engine'?'the loco':c.id} into ${zone.name}.`;
+                    if(task.type==='stop'&&task.independent)next+=' Stop with the loco brake (E / Q).';
+                    needsMovement=true;
+                } else if(st.power||cars.some(({c})=>Math.abs(c.v)>.08)) {
+                    next=task.type==='stop'&&task.independent?'Cut power and stop with the loco brake (E / Q).':'Cut power and stop in the marked track.';
+                    action=st.power?'power':task.type==='stop'&&task.independent?'independent':'stop';direction=st.power?-1:1;
+                } else if(task.type==='stop') {
+                    if(task.independent&&st.independent<=.3){next='Increase the loco brake to at least 50% (E) to confirm this stop.';action='independent';direction=1;}
+                    else next='Hold here until the stop is confirmed.';
+                }
                 else if(task.type==='position'){next='Hold here until the whole load is clear. Then select Export spur and reverse.';}
                 else if(['delivery','retire','ferry'].includes(task.type)&&cars.some(({g})=>g===eg)) {
                     const i=eg.cars.findIndex((c,i,a)=>i<a.length-1&&ids.includes(c.id)!==ids.includes(a[i+1].id));
@@ -231,9 +243,22 @@
                 }
             }
         }
+        // A latched hard contact needs recovery even if the player skipped the
+        // preceding tutorial stop. Never hide its reason behind the next task.
+        if(hit&&hit.distance<=3&&st.bufferImpact?.key===impactKey(hit)&&st.bufferImpact.speed>COUPLING_SPEED) {
+            const away=st.reverser*drivingEngine(st).face*hit.a.sign<0;
+            const moving=eg.cars.some(c=>Math.abs(c.v)>.12);
+            next='Hard buffer contact. '+(away?'Back away beyond 3 m.':moving?'Stop, then reverse (X) and back away beyond 3 m.':'Reverse (X) and back away beyond 3 m.')+' Return below 2 km/h.';
+            action=away?(st.power===0?'power':null):moving?'stop':'reverse';
+            direction=away?1:null;needsMovement=away;
+        }
         if(!next)next='Keep all delivered wagons secured.';
         if(eg.cars.some(c=>c.hand)&&!['hand','uncouple'].includes(action)){next+=' Release the attached handbrakes before moving.';}
-        return {cut,pickup,next,action,split};
+        if(needsMovement&&!eg.cars.some(c=>c.hand)) {
+            if(st.independent>.05){next+=' Release the loco brake (Q) to move.';action='independent';direction=-1;}
+            else if(eg.brake>.05){next+=' Release the train brake (A) to move.';action='brake';direction=-1;}
+        }
+        return {cut,pickup,next,action,split,direction};
     }
     function couple(st) {
         const group=engineGroup(st),hit=nearby(st,group);

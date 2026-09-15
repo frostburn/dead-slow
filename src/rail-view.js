@@ -2,7 +2,7 @@
     'use strict';
     const R=typeof module!=='undefined'&&module.exports?require('./rail.js'):root.Railway;
     const $=id=>document.getElementById(id), clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-    let act=null,signature='',levelNow=null,transform=null,clearanceCache=null,clearanceKey='';
+    let act=null,signature='',levelNow=null,stateNow=null,transform=null,clearanceCache=null,clearanceKey='';
     const Presentation=typeof module!=='undefined'&&module.exports?require('./rail-presentation.js'):root.RailPresentation;
     const {indicators,displayDirection,signedSpeed,actionEnabled}=Presentation;
     function swept(st) {
@@ -11,18 +11,27 @@
         return clearanceCache;
     }
     function prepare(level,command) {
-        levelNow=level;act=command;signature='';clearanceKey='';clearanceCache=null;
+        levelNow=level;stateNow=null;act=command;signature='';clearanceKey='';clearanceCache=null;
         $('rail-panel').hidden=!level.rail;
+        $('rail-helm').innerHTML='';
         if(!level.rail)return;
+        $('rail-helm').innerHTML=R.commands.levers(!!level.rail.helper).map(({name,label})=>`<div class="rail-telegraph"><span>${label}</span><div><button data-rail="${name}" data-rail-step="-1" aria-label="Decrease ${label.toLowerCase()}">−</button><button data-rail="${name}" data-rail-step="1" aria-label="Increase ${label.toLowerCase()}">+</button></div></div>`).join('');
+        $('rail-helm').onclick=e=>{
+            const button=e.target.closest('[data-rail-step]');
+            if(!button||button.disabled||!stateNow)return;
+            const lever=R.commands.levers(!!level.rail.helper).find(l=>l.name===button.dataset.rail);
+            const current=lever.name==='brake'?R.engineGroup(stateNow).brake:stateNow[lever.name];
+            act(lever.name,clamp(current+Number(button.dataset.railStep)*lever.step,lever.min,lever.max));
+        };
         $('sea').setAttribute('aria-label','Railway map. Head and tail markers show the moving ends. Change points using the route buttons.');
         $('rail-panel').innerHTML=`<div class="rail-readings"><div><strong id="rail-speed">0.0</strong><span>km/h</span></div><div><b id="rail-stop">0 m</b><span>estimated stop</span></div></div>
             <div class="rail-summary" id="rail-summary"></div><div id="rail-heat" class="rail-summary"></div><div id="rail-operations" class="rail-operations"></div>
             ${(level.rail.traffic||[]).map(t=>`<button class="rail-dispatch" data-rail="dispatch" data-value="${t.id}">Signal departure · H</button>`).join('')}
-            <div id="rail-alert" class="rail-alert"></div>
+            <div id="rail-alert" class="rail-alert"></div><p id="rail-notice" role="status"></p>
             <div class="rail-levers">${R.commands.levers(!!level.rail.helper).map(({name:id,label,keys,min,max,step})=>`<div class="rail-lever"><label for="rail-${id}">${label}<output id="rail-${id}-value"></output><small>${keys}</small></label><input id="rail-${id}" data-rail="${id}" type="range" min="${min}" max="${max}" step="${step}" value="${id==='brake'?1:0}" aria-label="${label}"></div>`).join('')}</div>
             <div class="rail-actions"><button data-rail="reverse" id="rail-reverse" title="Change travel direction (X)">Reverse · X</button><button data-rail="stop">Full brake · Space</button><button data-rail="couple">Couple · F</button><button data-rail="hand" id="rail-hand">Handbrakes · B</button></div>
             <p class="rail-caption">Power and air brakes control the locomotive’s train. Select wagons below for handbrakes.</p><p id="rail-cut-status" class="rail-caption"></p><p id="rail-pickup" class="rail-caption"></p><div id="rail-consist" class="rail-consist"></div>
-            <div id="rail-switches" class="rail-switches"></div><div id="rail-tasks" class="rail-tasks"></div><p id="rail-notice" role="status"></p>
+            <div id="rail-switches" class="rail-switches"></div><div id="rail-tasks" class="rail-tasks"></div>
             <div class="rail-actions"><button data-rail="retry">Retry <kbd>Shift+R</kbd></button><button data-rail="help">Controls</button></div>`;
         $('rail-panel').onclick=e=>{const b=e.target.closest('[data-rail]');if(b&&!b.disabled&&b.tagName!=='INPUT')act(b.dataset.rail,b.dataset.rail==='uncouple'?{after:b.dataset.value,before:b.dataset.next}:b.dataset.value);};
         $('rail-panel').oninput=e=>{if(e.target.dataset.rail)act(e.target.dataset.rail,Number(e.target.value));};
@@ -40,6 +49,7 @@
     }
     function update(level,run,status,format,race=null) {
         const st=run.rail,projection=Presentation.snapshot(st),m=projection.metrics,g=R.engineGroup(st),selected=R.groupFor(st,st.selected)||g;
+        stateNow=st;
         const signals=projection.signals;
         $('rail-speed').textContent=projection.speed;
         $('rail-speed').classList.toggle('rail-danger',Math.abs(m.speed)>m.limit);
@@ -123,6 +133,12 @@
             if(name==='dispatch')b.textContent=st.traffic.find(t=>t.id===value)?.released?'Departure signalled':'Signal departure · H';
             if(['uncouple','couple','hand'].includes(name))b.title=state.reason||(name==='uncouple'?b.getAttribute('aria-label'):name==='hand'?help.cut:'Couple the adjacent cut');
             b.classList.toggle('rail-relevant',!b.disabled&&name===recommendation.action&&(name!=='uncouple'||(value.after===recommendation.split?.after&&value.before===recommendation.split?.before)));
+        });
+        $('rail-helm').querySelectorAll('[data-rail-step]').forEach(button=>{
+            const lever=projection.levers.find(l=>l.name===button.dataset.rail),step=Number(button.dataset.railStep);
+            const value=lever.name==='brake'?g.brake:st[lever.name];
+            button.disabled=status!=='running'||!projection.action(lever.name).enabled||(step<0?value<=lever.min:value>=lever.max);
+            button.classList.toggle('rail-relevant',!button.disabled&&recommendation.action===lever.name&&(!recommendation.direction||step===recommendation.direction));
         });
     }
     function render(canvas,level,run,zoom=1) {

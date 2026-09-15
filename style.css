@@ -15,9 +15,9 @@
 
 /* Railway controls use the full sidebar; the map keeps room for the tail. */
 body[data-theme="rail"] { --bg:#263830; --panel:#304239; --line:#5b6a53; --green:#c2d59e; --amber:#efd18e; --ink:#f0ecd6; --muted:#b9c4ab; }
-body[data-theme="rail"] .app { grid-template-columns:minmax(0,1fr); grid-template-rows:66px minmax(0,1fr); }
+body[data-theme="rail"] .app { grid-template-columns:minmax(0,1fr); grid-template-rows:66px minmax(0,1fr)100px; }
 body[data-theme="rail"] .workspace { grid-template-columns:minmax(0,1fr)320px; }
-body[data-theme="rail"] .sidebar, body[data-theme="rail"] .helm,
+body[data-theme="rail"] .sidebar,
 body[data-theme="rail"] .chart-meta, body[data-theme="rail"] .chart-bottom,
 body[data-theme="rail"] .mobile-instruments { display:none; }
 body[data-theme="rail"] .chart-heading { color:#334c3b; pointer-events:none; text-shadow:0 1px #e9e3c9; }
@@ -25,6 +25,16 @@ body[data-theme="rail"] .chart-heading .eyebrow { color:#556546; }
 body[data-theme="rail"] .chart-zoom { bottom:84px; }
 .rail-panel { background:var(--panel); padding:18px 15px; overflow:auto; min-height:0; min-width:0; border-left:1px solid var(--line); font-size:13px; }
 .rail-panel[hidden] { display:none; }
+.rail-helm { display:none; }
+body[data-theme="rail"] .helm { display:block; background:var(--panel); padding:10px 18px; }
+body[data-theme="rail"] .helm>.helm-group, body[data-theme="rail"] .helm>.utility { display:none; }
+body[data-theme="rail"] .rail-helm { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; max-width:960px; margin:auto; }
+.rail-telegraph { min-width:0; }
+.rail-telegraph>span { display:block; font-size:12px; margin-bottom:6px; }
+.rail-telegraph>div { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.rail-telegraph button { min-width:0; height:44px; padding:4px; font-size:24px; }
+#rail-helm .rail-relevant { outline:2px solid var(--amber); outline-offset:-2px; }
+#rail-helm button:disabled { opacity:.4; cursor:default; }
 .rail-readings { display:flex; align-items:center; justify-content:space-between; gap:16px; }
 .rail-readings strong { font:36px var(--mono); }
 .rail-readings b { font:20px var(--mono); }
@@ -60,6 +70,7 @@ body[data-theme="rail"] .chart-zoom { bottom:84px; }
 .rail-panel .rail-relevant, #rail-panel .rail-relevant { outline:2px solid #f2ce83; outline-offset:-2px; }
 #rail-panel button:disabled { opacity:.4; cursor:default; }
 #rail-cut-status, #rail-pickup { font-size:12px; overflow-wrap:anywhere; }
+#rail-pickup { white-space:pre-line; }
 .rail-switches { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:14px 0; }
 .rail-switches button { text-align:left; display:flex; flex-direction:column; gap:3px; }
 .rail-switches span,.rail-switches small { color:var(--muted); font-size:10px; }
@@ -69,7 +80,9 @@ body[data-theme="rail"] .chart-zoom { bottom:84px; }
 .rail-tasks .done { color:#c6dfa5; }
 #rail-notice { color:var(--amber); line-height:1.5; min-height:36px; }
 @media(max-width:760px) {
-  body[data-theme="rail"] .app { grid-template-rows:60px minmax(0,1fr); }
+  body[data-theme="rail"] .app { grid-template-rows:60px minmax(0,1fr)88px; }
+  body[data-theme="rail"] .helm { padding:8px 10px; }
+  body[data-theme="rail"] .rail-helm { gap:10px; }
   body[data-theme="rail"] .workspace { grid-template-columns:1fr; grid-template-rows:minmax(220px,1fr) minmax(160px,.85fr); }
   .rail-panel { padding:12px 16px; border-left:0; border-top:1px solid var(--line); }
   .rail-levers { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); column-gap:12px; margin:8px 0; }
@@ -80,6 +93,12 @@ body[data-theme="rail"] .chart-zoom { bottom:84px; }
 * {
   box-sizing:border-box
 }
+
+/* Repeated control clicks and drags must not select the instrument text.
+   Manuals and editable fields remain copyable. Native focus stays accessible. */
+.app, button, canvas, input[type="range"] { user-select:none; -webkit-user-select:none; }
+#dialog, textarea, input:not([type="range"]) { user-select:text; -webkit-user-select:text; }
+#dialog button { user-select:none; -webkit-user-select:none; }
 
 html,body {
   margin:0;

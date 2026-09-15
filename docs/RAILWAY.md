@@ -165,6 +165,13 @@ every source module and the stylesheet inlined. Generated builds are not committ
 
 ## Integration boundaries
 
+The lower helm offers +/− steps for power, train brake and loco brake (rear
+assistance on helper missions); values remain in the sidebar. Clicking a slider
+keeps game shortcuts active, while arrow keys still adjust the focused slider.
+The next-step hint identifies required brakes and overshot stopping positions.
+Hard buffer contact keeps coupling locked until the cuts separate beyond 3 m;
+the hint explains this recovery even before the first tutorial stop is complete.
+
 The shared shell selects `rail-adapter.js` through the simulation registry. Rail
 runs contain their own vehicles and a presentation focus, with no marine ship or
 job placeholders. Commands from keys, buttons, the console and recordings share
