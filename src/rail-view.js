@@ -15,6 +15,7 @@
         $('rail-panel').hidden=!level.rail;
         $('rail-helm').innerHTML='';
         if(!level.rail)return;
+        $('helm-controls').setAttribute('aria-label','Train controls');
         $('rail-helm').innerHTML=R.commands.levers(!!level.rail.helper).map(({name,label})=>`<div class="rail-telegraph"><span>${label}</span><div><button data-rail="${name}" data-rail-step="-1" aria-label="Decrease ${label.toLowerCase()}">−</button><button data-rail="${name}" data-rail-step="1" aria-label="Increase ${label.toLowerCase()}">+</button></div></div>`).join('');
         $('rail-helm').onclick=e=>{
             const button=e.target.closest('[data-rail-step]');

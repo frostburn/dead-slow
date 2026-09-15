@@ -50,3 +50,14 @@ test('gentle buffer contact offers coupling without imposing a tutorial prerequi
     assert.ok(R.availability(st,'couple').enabled);
     assert.match(R.assistance(st).pickup,/Ready to couple/);
 });
+test('a delivery split highlights train braking while wagon pressure builds',()=>{
+    const st=R.create(L[1]),g=R.engineGroup(st);
+    g.path=[{id:'mill',dir:1,start:0,end:st.net.edges.mill.length}];
+    g.cars.forEach((c,i)=>{c.q=250-i*25;c.v=0;c.pressure=.1;});g.brake=0;
+    let help=R.assistance(st);
+    assert.equal(help.action,'brake');assert.equal(help.direction,1);
+    assert.match(help.next,/train brake.*wagon brake pressure/);
+    assert.deepEqual(help.split,{after:'F4',before:'M1'});
+    g.cars.forEach(c=>c.pressure=1);help=R.assistance(st);
+    assert.equal(help.action,'uncouple');assert.ok(R.availability(st,'uncouple',help.split).enabled);
+});

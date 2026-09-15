@@ -233,7 +233,17 @@
                 else if(task.type==='position'){next='Hold here until the whole load is clear. Then select Export spur and reverse.';}
                 else if(['delivery','retire','ferry'].includes(task.type)&&cars.some(({g})=>g===eg)) {
                     const i=eg.cars.findIndex((c,i,a)=>i<a.length-1&&ids.includes(c.id)!==ids.includes(a[i+1].id));
-                    if(i>=0){split={after:eg.cars[i].id,before:eg.cars[i+1].id};action='uncouple';next=`Release the delivery at ${split.after} / ${split.before}.`;const a=availability(st,'uncouple',split);if(!a.enabled)next=a.reason;}
+                    if(i>=0) {
+                        split={after:eg.cars[i].id,before:eg.cars[i+1].id};action='uncouple';
+                        next=`Release the delivery at ${split.after} / ${split.before}.`;
+                        const allowed=availability(st,'uncouple',split);
+                        if(!allowed.enabled) {
+                            next=allowed.reason;
+                            if(st.power||st.helper){action=st.power?'power':'helper';direction=-1;}
+                            else if(eg.cars.some(c=>Math.abs(c.v)>.12))action='stop';
+                            else if(eg.cars.some(c=>!c.hand&&c.pressure<.3)){action='brake';direction=1;next='Apply the train brake (D) and wait for wagon brake pressure before uncoupling.';}
+                        }
+                    }
                 } else if(cars.some(({c})=>!c.hand)) {
                     const id=cars.find(({c})=>!c.hand).c.id;
                     next=`Set handbrakes on ${id}'s cut.`;action=groupFor(st,id)===selected?'hand':'select';
