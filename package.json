@@ -1,8 +1,8 @@
 {
   "name": "dead-slow-harbor-trials",
-  "version": "5.1.0",
+  "version": "6.0.0",
   "private": true,
-  "description": "Eight-world atlas: five complete campaigns, eight freight railway assignments, and two planned worlds. Sixty circuit missions plus one bonus; offline and dependency-free.",
+  "description": "Eight-world atlas: six complete campaigns and two planned worlds. Seventy-two circuit missions plus one bonus; offline and dependency-free.",
   "license": "MIT",
   "engines": {
     "node": ">=22"

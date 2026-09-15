@@ -23,7 +23,9 @@ def check_railway(page, check, out):
     page.evaluate('''() => {const st=DeadSlowTest.state.run.rail;st.reverser=-1;Railway.engineGroup(st).cars[0].v=.7;DeadSlowTest.hud();}''')
     check('Rollback speed is signed against the selected driving end',page.locator('#rail-speed').inner_text()=='-2.5')
     page.evaluate('DeadSlow.level(5,4);DeadSlow.speed(0)')
-    check('Passenger timetable is visible before departure','Rook’s Hollow due 5:55' in page.locator('#rail-operations').inner_text())
+    check('Passenger waits for a visible departure signal','Awaiting your signal' in page.locator('#rail-operations').inner_text() and page.locator('[data-rail="dispatch"]').is_enabled())
+    page.keyboard.press('h')
+    check('H signals the passenger and disables repeated dispatch',page.evaluate('DeadSlowTest.state.run.rail.traffic[0].released') and page.locator('[data-rail="dispatch"]').is_disabled())
     page.evaluate('DeadSlow.level(5,5);DeadSlow.speed(0)')
     check('Runaway wagons start moving independently',page.evaluate('Railway.groupFor(DeadSlowTest.state.run.rail,"R1").cars.every(c=>c.v>0)') and 'rolling free' in page.locator('#rail-operations').inner_text())
     page.evaluate('DeadSlow.level(5,7);DeadSlow.speed(0)')
@@ -78,7 +80,7 @@ def check_railway(page, check, out):
     page.screenshot(path=str(out/'rail-mobile.png'))
     audio=page.evaluate('''async()=>{
         const rate=22050,ctx=new OfflineAudioContext(1,rate*5,rate),train=RailAudio.createTrain(ctx);
-        const st={power:0,independent:0,stats:{distance:0},groups:[{cars:[{powered:true,v:0,pressure:0}]}]};
+        const st={power:0,independent:0,stats:{distance:0},groups:[{cars:[{id:'engine',powered:true,v:0,pressure:0}]}]};
         train.tick(st,true);
         const tasks=[ctx.suspend(1).then(()=>{st.power=3;st.groups[0].cars[0].v=8;st.stats.distance=12;train.tick(st,true);return ctx.resume()}),
             ctx.suspend(2).then(()=>{train.event('couple');return ctx.resume()}),
@@ -91,3 +93,40 @@ def check_railway(page, check, out):
     }''')
     check('Train audio renders finite unclipped engine and rolling sound',audio['finite'] and audio['peak']<.8 and audio['moving']>audio['idle']>0)
     check('Train audio falls silent after stopping',audio['paused']<.00001)
+    page.evaluate('DeadSlow.level(5,9);DeadSlow.speed(0)')
+    check('Helper control waits for a connected helper',page.locator('#rail-helper').is_disabled())
+    check('The helper needs a real reverse approach',page.locator('[data-rail="couple"]').is_disabled() and '78.4 m' in page.locator('#rail-pickup').inner_text())
+    page.evaluate('DeadSlow.level(5,12);DeadSlow.speed(0)')
+    page.locator('[data-rail="couple"]').click()
+    check('Coupling enables rear assistance',page.locator('#rail-helper').is_enabled())
+    page.keyboard.press('e')
+    check('E commands the helper in place of the loco brake',page.evaluate('DeadSlowTest.state.run.rail.helper===1 && DeadSlowTest.state.run.rail.power===0') and page.locator('#rail-independent').count()==0)
+    for width in [320,390,844]:
+        page.set_viewport_size({'width':width,'height':844 if width<800 else 390})
+        page.screenshot(path=str(out/f'rail-helper-{width}.png'))
+        bounds=page.evaluate('({page:document.documentElement.scrollWidth,viewport:innerWidth,levers:[...document.querySelectorAll(".rail-levers input")].map(e=>({id:e.id,right:e.getBoundingClientRect().right}))})')
+        check(f'Three train levers fit at {width}px: {bounds}',len(bounds['levers'])==3 and bounds['page']<=bounds['viewport'] and all(e['right']<=bounds['viewport'] for e in bounds['levers']))
+        stable=page.evaluate('''() => {
+            const st=DeadSlowTest.state.run.rail,c=Railway.drivingEngine(st),tops=[],heights=[];
+            for(const force of [0,110000,0,125000,0]){
+                c.coupler=force;st.time+=1;DeadSlowTest.hud();
+                tops.push(document.querySelector('.rail-levers').getBoundingClientRect().top);
+                heights.push(document.getElementById('rail-alert').getBoundingClientRect().height);
+            }
+            return new Set(tops).size===1 && new Set(heights).size===1 && document.getElementById('rail-alert').textContent.includes('Couplers within limits');
+        }''')
+        check(f'Coupler warnings keep controls steady at {width}px',stable)
+    page.screenshot(path=str(out/'rail-helper-mobile.png'))
+    page.set_viewport_size({'width':1440,'height':1000})
+    page.evaluate('''() => {
+        DeadSlowTest.state.storage.races['long-grade']=[{time:123,clean:false},{time:135,clean:true}];
+        DeadSlowTest.state.storage.races['grand-tour']=[{time:456,clean:true}];
+    }''')
+    page.click('#log-btn')
+    check('Railway logbook shows railway and tour records',all(label in page.locator('#dialog').inner_text() for label in ['World 5 · The Long Grade','Grand Tour · 72','02:03.00','02:15.00','07:36.00']))
+    for number,label in [(10,'balance reserve'),(11,'Low Crossing'),(12,'Coastal passenger')]:
+        page.evaluate('(n)=>{DeadSlow.level(5,n);DeadSlow.speed(0)}',number)
+        check(f'5-{number} shows its operating constraint',label in page.locator('#rail-operations').inner_text())
+        page.wait_for_timeout(50);page.screenshot(path=str(out/f'rail-{number}.png'))
+    page.evaluate('DeadSlow.watch("long-grade-12",0)')
+    check('Finale recording remains console-accessible',page.evaluate('DeadSlow.state().replay==="long-grade-12"'))

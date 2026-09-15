@@ -16,8 +16,8 @@ function distance(st,id,target,s,direction) {
     }
     throw Error('Route does not reach '+target);
 }
-function move(st,id,edge,s,direction,max=3) {
-    const group=R.engineGroup(st),engine=group.cars.find(c=>c.powered);
+function move(st,id,edge,s,direction,max=3,power=1) {
+    const engine=R.drivingEngine(st);
     R.command(st,'power',0);R.command(st,'independent',0);
     if(st.reverser*engine.face!==direction){R.command(st,'stop');step(st,8);assert.ok(R.command(st,'reverse'));}
     let count=0;
@@ -26,10 +26,10 @@ function move(st,id,edge,s,direction,max=3) {
         if(remaining<1.6){R.command(st,'stop');step(st,10);break;}
         const target=Math.min(max,Math.sqrt(Math.max(.02,remaining-1)*.11));
         const brake=speed>target+.06?Math.min(1,Math.ceil((speed-target)*2)*.25):0;
-        R.command(st,'brake',brake);R.command(st,'power',!brake&&speed<target-.08?1:0);
+        R.command(st,'brake',brake);R.command(st,'power',!brake&&speed<target-.08?power:0);
         step(st,.2);
     }
     assert.ok(count<20000,'Move timed out '+id+' '+edge);
-    assert.ok(Math.abs(distance(st,id,edge,s,direction))<6,'Stopped near requested position');
+    assert.ok(Math.abs(distance(st,id,edge,s,direction))<6,`${id}: ${distance(st,id,edge,s,direction).toFixed(1)} m from ${edge} ${s}`);
 }
 module.exports={step,move,distance};

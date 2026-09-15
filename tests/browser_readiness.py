@@ -17,7 +17,7 @@ with sync_playwright() as pw:
     page.wait_for_function('!!window.DeadSlowTest')
     check('Normal play does not show practice controls',not page.locator('#review-controls').is_visible())
     page.evaluate('DeadSlow.tour(8)')
-    check('Tour begins with sixty stages, no ranked departure and visible speed control',page.evaluate('DeadSlow.progress().circuit.length===60 && DeadSlowTest.state.storage.attempts===0') and page.locator('#review-controls').is_visible())
+    check('Tour begins with seventy-two stages, no ranked departure and visible speed control',page.evaluate('DeadSlow.progress().circuit.length===72 && DeadSlowTest.state.storage.attempts===0') and page.locator('#review-controls').is_visible())
     page.select_option('#review-rate','2');check('On-screen rate changes without a menu',page.evaluate('DeadSlow.speed()===2 && DeadSlowTest.state.status==="running"'))
     page.keyboard.press('BracketRight');check('Faster key selects 4x',page.evaluate('DeadSlow.speed()===4'))
     page.keyboard.press('BracketLeft');check('Slower key returns to 2x',page.evaluate('DeadSlow.speed()===2'))
@@ -32,11 +32,11 @@ with sync_playwright() as pw:
     page.evaluate('DeadSlow.speed(1);DeadSlowTest.finish();DeadSlowTest.next()')
     check('Next remains practice even at 1x',page.evaluate('DeadSlow.progress().practice && DeadSlow.progress().circuit.practice && DeadSlow.progress().circuit.position===2'))
     # Visit world boundaries via state-machine completion, not a navigation claim.
-    for completed in [12,24,36,48,59]:
+    for completed in [12,24,36,48,60,71]:
         page.evaluate('''n=>{while(DeadSlow.progress().circuit.completed<n){DeadSlowTest.finish();DeadSlowTest.next();}}''',completed)
         check(f'Circuit reaches completed stage {completed} without stale-mode errors',page.evaluate(f'DeadSlow.progress().circuit.completed==={completed} && DeadSlow.progress().practice'))
     page.evaluate('DeadSlowTest.finish()')
-    check('Grand Tour ends with both hamsters and no extra bonus stage', 'Five worlds.' in page.locator('#dialog').inner_text() and page.evaluate('DeadSlow.progress().circuit.completed===60 && DeadSlowTest.state.storage.races["grand-tour"].length===0'))
+    check('Grand Tour ends with both hamsters and no extra bonus stage', 'Six worlds.' in page.locator('#dialog').inner_text() and page.evaluate('DeadSlow.progress().circuit.completed===72 && DeadSlowTest.state.storage.races["grand-tour"].length===0'))
     page.evaluate('DeadSlow.normal()');check('Normal command starts fresh ranked individual play',not page.locator('#review-controls').is_visible() and page.evaluate('!DeadSlow.progress().practice && DeadSlow.progress().circuit===null'))
     for id in ['backwater','island-exchange']:
         page.evaluate('(id)=>{DeadSlow.level(id);DeadSlow.speed(0)}',id)

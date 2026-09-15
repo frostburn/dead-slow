@@ -3,7 +3,7 @@
 // This is a test harness, not a second implementation of the simulation.
 const vm = require('node:vm'), fs = require('node:fs'), path = require('node:path');
 const P = require('../src/physics.js'), L = require('../src/levels.js'), S = require('../src/storage.js');
-function create() {
+function create({fieldDialog=()=>''}={}) {
     const nodes = new Map();
     const node = id => {
         if (!nodes.has(id))
@@ -39,7 +39,7 @@ function create() {
     };
     const ctx = {
         Railway: require('../src/rail.js'), RailView: {prepare:noop, update:noop, key:()=>false, dialog:()=>''},
-        GerboRampage: require('../src/rampage.js'), GerboView: {prepare:noop, update:noop, dialog:()=>''},
+        GerboRampage: require('../src/rampage.js'), GerboView: {prepare:noop, update:noop, dialog:fieldDialog},
         HarborSpace: require('../src/space.js'), HarborSpaceUI: { prepare: noop, update: noop },
         HarborConsole: require('../src/console.js'), HarborPhysics: P, HarborNavigation: require('../src/navigation.js'), HarborJobs: require('../src/jobs.js'), HarborLevels: L, HarborWorlds: L.worlds, HarborStorage: S, HarborRenderer: { create: () => ({ scale: 1, render: noop }) }, HarborAudio: { create: () => ({
                 setRail: noop, railEvent: noop, setRampage: noop, setSpace: noop, radar: noop, init: noop, tick: noop, order: noop, impact: noop, checkpoint: noop, success: noop, horn: noop

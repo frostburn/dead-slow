@@ -1,4 +1,13 @@
-# Current release checks — 5.1.0
+# Current release checks — 6.0.0
+
+Version 6 adds `tests/rail-final.test.cjs` for complete control-only routes in
+5-09 through 5-12 and `tests/version-six.test.cjs` for volcanic hill physics,
+helper forces, ferry balance, flood boundaries and volcanic record migration.
+`tests/rail-dispatch.test.cjs` checks manual departure signals, tunnel routing,
+whole-passenger clearance, reused helper controls and schema 17 archives.
+`tests/browser_rail.py` checks the three-lever mobile layout, stable warning space,
+final-mission displays and console finale playback. The browser suite runs in CI.
+Use `npm run test:ci` for concise failure excerpts instead of full assertion dumps.
 
 Focused tests for the current release are in `tests/release-atlas.test.cjs` and
 `tests/browser_release_atlas.py`. The Node tests exercise restart state transitions,

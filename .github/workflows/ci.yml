@@ -63,3 +63,11 @@ jobs:
 
       - name: Restart safety, eight-world atlas and volcanic crossings
         run: python tests/browser_release_atlas.py
+
+      - name: Keep browser screenshots and reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-review
+          path: reports/
+          retention-days: 7

@@ -9,7 +9,7 @@ function context(){
     ctx.createOscillator=ctx.createBufferSource=()=>{const s={...node(),start(time){s.startTime=time;},stop(time){s.stopped=true;s.stopTime=time;},setPeriodicWave(){s.custom=true;}};ctx.sources.push(s);return s;};
     return ctx;
 }
-const state=(distance=0,speed=3)=>({power:2,independent:0,stats:{distance},groups:[{cars:[{powered:true,v:speed,pressure:.5}]}]});
+const state=(distance=0,speed=3)=>({power:2,independent:0,stats:{distance},groups:[{cars:[{id:'engine',powered:true,v:speed,pressure:.5}]}]});
 test('train sound runs through a silent initial bus and mute/pause stops transients',()=>{
     const ctx=context(),train=A.createTrain(ctx);assert.equal(ctx.gains[0].gain.value,0);assert.ok(ctx.sources[0].custom);
     train.tick(state(),true);assert.equal(ctx.gains[0].gain.value,1);train.event('couple');

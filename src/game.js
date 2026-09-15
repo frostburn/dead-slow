@@ -250,6 +250,7 @@
     }
     function signal() {
         if (run.rampage) return lineAction();
+        if (run.rail && R.availability(run.rail,'dispatch').enabled) return railCommand('dispatch');
         if (!run.space) return audio.horn();
         if (status !== 'running') return false;
         const now = performance.now() / 1000;
@@ -287,6 +288,7 @@
         if (status !== 'running' || !run.rail) return false;
         const oldBrake = R.engineGroup(run.rail).brake;
         const ok = R.command(run.rail, name, value);
+        if (ok && name === 'dispatch') audio.horn();
         if (ok && ['couple','uncouple','switch','hand','reverse'].includes(name)) audio.railEvent(name);
         if (ok && name === 'brake' && Math.abs(oldBrake-value)>=.25) audio.railEvent('brake');
         if (name === 'power' && ok) run.throttleOrders++;
@@ -296,7 +298,7 @@
         R.update(run.rail, dt);
         if (run.rail.stats.contacts>run.contacts) audio.railEvent('couple');
         run.time = run.rail.time; run.distance = run.rail.stats.distance; run.contacts = run.rail.stats.contacts;
-        const g = R.engineGroup(run.rail), c = g.cars.find(c=>c.powered), p = R.locate(run.rail,g,c.q);
+        const g = R.engineGroup(run.rail), c = g.cars.find(c=>c.id==='engine'), p = R.locate(run.rail,g,c.q);
         Object.assign(run.ship,{x:p.x,y:p.y,a:p.a,vx:c.v*Math.cos(p.a),vy:c.v*Math.sin(p.a)});
         run.maxSpeed = Math.max(run.maxSpeed,Math.abs(c.v));
         if (run.rail.failure) { status='failed'; clearInput(); audio.tick(run.ship,false); showFailure(); return; }
@@ -568,14 +570,14 @@
     }
     function showResult() {
         const r = run.result;
-        if (r && run.rail) return openDialog('result', V.dialog('result', level, run, format, hasNext()));
+        if (r && run.rail) return openDialog('result', V.dialog('result', level, run, format, hasNext(), marathon));
         if (r && run.rampage) return openDialog('result', G.dialog('result', level, run, format, [], settings, null, fieldContext()));
         if (!r)
             return;
         const rank = r.time <= level.pace[0] ? 'GOLD PACE' : r.time <= level.pace[1] ? 'SILVER PACE' : r.time <= level.pace[2] ? 'BRONZE PACE' : wording('SAFELY MOORED', 'CAPTURE SECURED');
         const marathonDone = marathon && !hasNext();
         openDialog('result', `<div class="eyebrow">${run.pausedUsed ? 'PRACTICE COMPLETE' : run.pb ? 'NEW PERSONAL BEST' : wording('LINES ASHORE', 'CAPTURE CONFIRMED')} · ${level.name.toUpperCase()}</div>
- <h1>${marathonDone ? (marathon.id === 'grand-tour' ? 'Five worlds. One captain.' : wording('One world. All fast.', 'Twelve sectors. Mission complete.')) : run.space ? 'Capture confirmed.' : 'All fast. At last.'}</h1><div class="result-badge">${run.pausedUsed ? 'UNRANKED PRACTICE' : rank}${r.clean ? ' · CLEAN' : ''}</div><div class="result-time">${format(r.time)}</div>
+ <h1>${marathonDone ? (marathon.id === 'grand-tour' ? 'Six worlds. Every load home.' : wording('One world. All fast.', 'Twelve sectors. Mission complete.')) : run.space ? 'Capture confirmed.' : 'All fast. At last.'}</h1><div class="result-badge">${run.pausedUsed ? 'UNRANKED PRACTICE' : rank}${r.clean ? ' · CLEAN' : ''}</div><div class="result-time">${format(r.time)}</div>
  <p class="subtle">${run.pausedUsed ? esc(run.practiceReason || 'Practice attempt') + '. This time was not saved to the leaderboards.' : run.pb ? wording('Your new best line is saved as the ghost for this harbor.', 'Your best flight is saved as the ghost for this sector.') : wording('A harbor conquered. A braking point learned.', 'Rendezvous complete. Counterburn mastered.')}</p>
  <div class="result-grid"><div><strong>${r.contacts}</strong><span>HULL CONTACTS</span></div><div><strong>${r.hull}%</strong><span>HULL REMAINING</span></div><div><strong>${r.commands}</strong><span>ENGINE ORDERS</span></div></div>
  <p class="subtle">${r.space ? `${r.distance} m traveled · ${r.space.fuelUsed.toFixed(2)} Δv propellant used · ${r.space.shots} shots · ${r.space.captures} captures<br>Clean = no hull contacts. Moving cradles require relative rest, not absolute rest.` : `${r.distance} m traveled · ${r.thruster.toFixed(1)} s bow thrust · ${r.wakes} wake violations · ${r.groundings} groundings<br>Clean = no contacts, wake violations, grounding or parted towlines.`}</p>
@@ -627,7 +629,7 @@
                 total: marathon.total, stages: marathon.stages, length: marathon.route.length,
                 retries: marathon.retries, practice: marathon.practice, done: !hasNext(), hasNext: hasNext() } : null,
             boards: log ? [...WORLDS.filter(w=>!w.comingSoon && !w.partial).map(w=>[w.id,`World ${w.number} · ${w.name}`]),
-                ['grand-tour','Grand Tour · 60 stages']].map(([id,name])=>({ name,
+                ['grand-tour','Grand Tour · 72 stages']].map(([id,name])=>({ name,
                     overall:store.bestRace(id)?.time, clean:store.bestRace(id,true)?.time })) : [],
             archived48: log ? store.data.archivedRaces['grand-tour-48'] : [],
             layoutRaces: log ? layoutRaceArchives() : []
@@ -643,6 +645,10 @@
                 return { name, overall: rows[0]?.time, clean: rows.find(r => r.clean)?.time };
             })).filter(row => Number.isFinite(row.overall));
         return older.concat([
+            ['long-grade-dispatch-v1','World 5 · earlier helper and passenger routes'],
+            ['grand-tour-dispatch-v1','Grand Tour · earlier helper and passenger routes'],
+            ['gerbozilla-topography-v1','World 4 · before volcanic hills'],
+            ['grand-tour-60','Grand Tour · earlier 60-stage route'],
             ['gerbozilla-contour-v1','World 4 · angular volcanic banks'],
             ['grand-tour-contour-v1','Grand Tour · angular volcanic banks'],
             ['gerbozilla-volcano-v1','World 4 · before volcanic crossings'],
@@ -652,6 +658,11 @@
             return {name,overall:rows[0]?.time,clean:rows.find(r=>r.clean)?.time};
         }).filter(row=>Number.isFinite(row.overall)));
     }
+    function circuitRecords(ids=null) {
+        const routes=[...WORLDS.filter(w=>!w.comingSoon&&!w.partial).map(w=>[w.id,`World ${w.number} · ${w.name}`]),
+            ['grand-tour',`Grand Tour · ${LEVELS.filter(l=>!l.bonus&&!l.standalone).length}`]].filter(([id])=>!ids||ids.includes(id));
+        return `<h3 class="circuit-heading">Circuit records</h3><table class="log-table"><thead><tr><th>ROUTE</th><th>OVERALL</th><th>CLEAN</th></tr></thead><tbody>${routes.map(([id,name])=>`<tr><td>${name}</td><td>${format(store.bestRace(id)?.time)}</td><td class="clean">${format(store.bestRace(id,true)?.time)}</td></tr>`).join('')}</tbody></table>`;
+    }
     function showLog(filter = 'overall') {
         if (level.rail) {
             pauseForMenu();
@@ -659,17 +670,20 @@
             return openDialog('log', `${topModal('Railway logbook','THE LONG GRADE')}<p>${level.name} · ${stage.attempts} attempts</p>
                 <p>Best ${format(store.best(level.id)?.time)} · clean ${format(store.best(level.id,true)?.time)}</p>
                 <p>${stage.runs.slice(0,10).map(r=>format(r.time)).join(' · ')||'No recorded deliveries yet.'}</p>
+                ${circuitRecords(['long-grade','grand-tour'])}
+                ${store.data.archivedStages[level.id+'-dispatch-v1']?.runs.length?`<p class="subtle">Earlier route (archived): ${store.data.archivedStages[level.id+'-dispatch-v1'].runs.map(r=>format(r.time)).join(' · ')}</p>`:''}
+                ${layoutRaceArchives().filter(a=>a.name.startsWith('Grand Tour')||a.name.startsWith('World 5')).map(a=>`<p class="subtle">${esc(a.name)} (archived): overall ${format(a.overall)} · clean ${format(a.clean)}</p>`).join('')}
                 <div class="dialog-actions"><button data-action="toggle-focus-pause">Pause on window blur: ${settings.pauseOnBlur?'on':'off'}</button><button data-action="toggle-sound">Sound: ${settings.sound?'on':'off'}</button><button data-action="export">Export records</button><button data-action="import">Import records</button><button data-action="back">Back</button></div>
                 <p class="subtle">Pausing makes a run practice. Hiding the tab always pauses.</p>`);
         }
-        if (level.rampage) { pauseForMenu(); return openDialog('log', G.dialog('log', level, run, format, store.stage(level.id).runs, settings, [level.id+'-contour-v1',level.id+'-volcano-v1',level.id+'-layout-v1',level.id+'-preview',level.id,level.rampage.retiredId].filter(Boolean).filter(id=>store.data.archivedStages[id]).map(id=>({id,...store.data.archivedStages[id]})), fieldContext(true))); }
+        if (level.rampage) { pauseForMenu(); return openDialog('log', G.dialog('log', level, run, format, store.stage(level.id).runs, settings, [level.id+'-topography-v1',level.id+'-contour-v1',level.id+'-volcano-v1',level.id+'-layout-v1',level.id+'-preview',level.id,level.rampage.retiredId].filter(Boolean).filter(id=>store.data.archivedStages[id]).map(id=>({id,...store.data.archivedStages[id]})), fieldContext(true))); }
         pauseForMenu();
         const s = store.stage(level.id), runs = s.runs.filter(r => filter !== 'clean' || r.clean).slice(0, 10);
         openDialog('log', `${topModal(wording('The captain’s logbook.', 'The flight logbook.'))}
  <p>World ${level.worldNumber} / ${level.bonus ? "BONUS" : level.stageNumber} · ${level.name} · ${s.attempts} ${wording("departures", "launches")} · ${s.clears} ranked ${wording("arrivals", "captures")}</p>
  <div class="dialog-actions" style="margin-top:8px"><button class="${filter === 'overall' ? 'primary' : 'secondary'} small" data-filter="overall">Overall</button><button class="${filter === 'clean' ? 'primary' : 'secondary'} small" data-filter="clean">Clean only</button></div>
  <table class="log-table"><thead><tr><th>#</th><th>TIME / IGT</th><th>CONTACTS</th><th>CLASS</th></tr></thead><tbody>${runs.length ? runs.map((r, i) => `<tr><td>${String(i + 1).padStart(2, '0')}</td><td>${format(r.time)}</td><td>${r.contacts}</td><td class="${r.clean ? 'clean' : ''}">${r.clean ? 'CLEAN' : 'OPEN'}</td></tr>`).join('') : `<tr><td colspan="4">${wording('No ranked arrival yet. The harbor is waiting.', 'No ranked capture yet. Your sector is waiting.')}</td></tr>`}</tbody></table>
- <h3 class="circuit-heading">Circuit records</h3><table class="log-table"><thead><tr><th>ROUTE</th><th>OVERALL</th><th>CLEAN</th></tr></thead><tbody>${[...WORLDS.filter(w => !w.comingSoon && !w.partial).map(w => [w.id, `World ${w.number} · ${w.name}`]), ['grand-tour', `Grand Tour · ${LEVELS.filter(l => !l.bonus && !l.standalone).length}`]].map(([id, name]) => `<tr><td>${name}</td><td>${format(store.bestRace(id)?.time)}</td><td class="clean">${format(store.bestRace(id, true)?.time)}</td></tr>`).join('')}</tbody></table><p class="subtle">${store.data.archivedRaces?.['grand-tour-48']?.length ? '48-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-48'][0].time) + '<br>' : ''}${store.data.archivedRaces?.['grand-tour-24']?.length ? '24-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-24'][0].time) + '<br>' : ''}${store.data.archivedRaces?.['grand-tour-36']?.length ? '36-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-36'][0].time) + '<br>' : ''}${store.data.marathon.length ? '12-stage circuit (archived): ' + format(store.data.marathon[0].time) + '<br>' : ''}Paused runs are unranked. Beat the course targets to earn gold, silver or bronze.</p>
+ ${circuitRecords()}<p class="subtle">${store.data.archivedRaces?.['grand-tour-48']?.length ? '48-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-48'][0].time) + '<br>' : ''}${store.data.archivedRaces?.['grand-tour-24']?.length ? '24-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-24'][0].time) + '<br>' : ''}${store.data.archivedRaces?.['grand-tour-36']?.length ? '36-stage Grand Tour (archived): ' + format(store.data.archivedRaces['grand-tour-36'][0].time) + '<br>' : ''}${store.data.marathon.length ? '12-stage circuit (archived): ' + format(store.data.marathon[0].time) + '<br>' : ''}Paused runs are unranked. Beat the course targets to earn gold, silver or bronze.</p>
  ${store.data.archivedStages[level.id+'-layout-v1']?.runs.length ? `<details><summary>Earlier layout records (archived)</summary><p class="subtle">The barge now starts broadside. Earlier inline-tow times, ghosts and splits remain in exports, not on this route’s board.</p><table class="log-table"><thead><tr><th>TIME / IGT</th><th>CONTACTS</th><th>CLASS</th></tr></thead><tbody>${store.data.archivedStages[level.id+'-layout-v1'].runs.map(r => `<tr><td>${format(r.time)}</td><td>${r.contacts}</td><td>${r.clean ? 'CLEAN' : 'OPEN'}</td></tr>`).join('')}</tbody></table></details>` : ''}
  ${store.data.archivedStages[level.id + '-approach-v1']?.runs.length ? `<details><summary>Earlier straight-approach records (archived)</summary><p class="subtle">These times belong to the earlier approach. Its ghost and splits remain in exports.</p>${store.data.archivedStages[level.id + '-approach-v1'].runs.map(r => `<p>${format(r.time)} · ${r.clean ? 'CLEAN' : 'OPEN'}</p>`).join('')}</details>` : ''}
  ${layoutRaceArchives().map(a=>`<p class="subtle">${esc(a.name)} (archived): overall ${format(a.overall)} · clean ${format(a.clean)}</p>`).join('')}
@@ -686,7 +700,7 @@
         if (level.rampage) { pauseForMenu(); return openDialog('help', G.dialog('help', level, run, format)); }
         if (level.space) {
             pauseForMenu();
-            openDialog('help', `${topModal('Flight manual.', 'MERIDIAN FLIGHT AUTHORITY')}<div class="help-grid"><div><h3>No free brakes</h3><p>W/S select persistent fore/aft thrust, from full retro to full forward. Space cuts main thrust. Velocity persists when engines stop. A/D fire rotational jets: rotation also persists after release, so counterfire. H (or RADAR PULSE) sends a visual scan with an electronic ping; M mutes the audio but not the scan. Q/E translate sideways without turning. The controls and touch buttons work simultaneously.</p><h3>Capture is relative</h3><p>Fit the whole hull in the cradle, match its nose arrow and velocity, reduce relative spin below 0.69°/s, cut every jet, and hold for two seconds. Fuel and assembly collars show their own progress. Moving cradles do not stop while you dock.</p><h3>Propellant</h3><p>All jets and the rescue beam share your fuel supply. Heavier craft need more fuel to change speed. Solar craft cannot fire jets in full shadow; scanners also inhibit power. Leave enough fuel to slow down.</p></div><div><h3>Special assignments</h3><p>F acquires/releases a rescue beam within 170 m and with clear line of sight. J attracts; K repels. Forces are equal and opposite. Friendly craft must settle in their own capture cradle; then dock the tug.</p><p>For gunnery, move into the firing box, face the lead diamond and hold still with all jets off for three seconds. Firing and projectile flight are automatic; recoil pushes your ship backward. A confirmed hit unlocks the home cradle.</p><p>Stellar radiation heats exposed hulls. Use asteroids for shade; cover the whole hull for full protection. The solar assignment reverses that rule: darkness removes thrust, not momentum.</p><p>Two chronogates send you to their marked destinations and add each recorded leg as a repeating solid history. Use the station’s passing bays to avoid your past selves. Your clock never rewinds. The Century Ship is a separate 30+ minute bonus, excluded from the 60-stage Grand Tour.</p></div></div><div class="dialog-actions"><button class="primary" data-action="back" autofocus>Back to flight</button></div>`, true); return;
+            openDialog('help', `${topModal('Flight manual.', 'MERIDIAN FLIGHT AUTHORITY')}<div class="help-grid"><div><h3>No free brakes</h3><p>W/S select persistent fore/aft thrust, from full retro to full forward. Space cuts main thrust. Velocity persists when engines stop. A/D fire rotational jets: rotation also persists after release, so counterfire. H (or RADAR PULSE) sends a visual scan with an electronic ping; M mutes the audio but not the scan. Q/E translate sideways without turning. The controls and touch buttons work simultaneously.</p><h3>Capture is relative</h3><p>Fit the whole hull in the cradle, match its nose arrow and velocity, reduce relative spin below 0.69°/s, cut every jet, and hold for two seconds. Fuel and assembly collars show their own progress. Moving cradles do not stop while you dock.</p><h3>Propellant</h3><p>All jets and the rescue beam share your fuel supply. Heavier craft need more fuel to change speed. Solar craft cannot fire jets in full shadow; scanners also inhibit power. Leave enough fuel to slow down.</p></div><div><h3>Special assignments</h3><p>F acquires/releases a rescue beam within 170 m and with clear line of sight. J attracts; K repels. Forces are equal and opposite. Friendly craft must settle in their own capture cradle; then dock the tug.</p><p>For gunnery, move into the firing box, face the lead diamond and hold still with all jets off for three seconds. Firing and projectile flight are automatic; recoil pushes your ship backward. A confirmed hit unlocks the home cradle.</p><p>Stellar radiation heats exposed hulls. Use asteroids for shade; cover the whole hull for full protection. The solar assignment reverses that rule: darkness removes thrust, not momentum.</p><p>Two chronogates send you to their marked destinations and add each recorded leg as a repeating solid history. Use the station’s passing bays to avoid your past selves. Your clock never rewinds. The Century Ship is a separate 30+ minute bonus, excluded from the 72-stage Grand Tour.</p></div></div><div class="dialog-actions"><button class="primary" data-action="back" autofocus>Back to flight</button></div>`, true); return;
         }
         pauseForMenu();
         openDialog('help', `${topModal('It handles like a ship.')}
@@ -825,7 +839,7 @@
             $('review-rate').value = String(developer.rate);
             $('review-freeze').textContent = developer.rate === 0 ? 'Resume time' : 'Freeze';
         }
-        if (run?.rail) { V.update(level, run, status, format); return; }
+        if (run?.rail) { V.update(level, run, status, format, marathon); return; }
         if (run?.rampage) {
             const label = (developer?.rate === 0 ? 'FROZEN' : developer?.rate !== 1 ? developer?.rate + '× PRACTICE' : 'PRACTICE') + ' · UNRANKED';
             G.update(level, run, status, format, label, store.stage(level.id).bestSplits, store.best(level.id), fieldContext().race); return;

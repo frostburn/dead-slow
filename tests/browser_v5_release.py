@@ -20,7 +20,7 @@ with sync_playwright() as pw:
     page.evaluate('DeadSlowTest.courses(4)')
     text=page.locator('#dialog').inner_text()
     check('Full World 4 has twelve course cards and no preview label',page.locator('.level-card').count()==12 and 'preview' not in text.lower())
-    check('World 4 circuit and sixty-stage Grand Tour are selectable','World 4 run · 12 courses' in text and 'all 60' in text)
+    check('World 4 circuit and seventy-two-stage Grand Tour are selectable','World 4 run · 12 courses' in text and 'all 72' in text)
     page.screenshot(path=str(OUT/'world-five.png'))
     for number in [2,3,4,5,6,7,8,9,10,11]:
         page.evaluate('(n)=>{DeadSlow.level(4,n);DeadSlow.speed(0)}',number)
@@ -44,7 +44,7 @@ with sync_playwright() as pw:
     check('Championship record goes to its separate board',page.evaluate('DeadSlowTest.state.storage.races.gerbozilla.length===1 && DeadSlowTest.state.storage.races.gerbozilla[0].stages===12'))
     page.screenshot(path=str(OUT/'championship-result.png'))
     page.click('[data-action=log]')
-    check('Field log includes championship and Grand Tour records','Circuit records' in page.locator('#dialog').inner_text() and 'Grand Tour · 60 stages' in page.locator('#dialog').inner_text())
+    check('Field log includes championship and Grand Tour records','Circuit records' in page.locator('#dialog').inner_text() and 'Grand Tour · 72 stages' in page.locator('#dialog').inner_text())
     page.evaluate('''() => {
       const data=DeadSlowTest.state.storage;
       data.archivedRaces['grand-tour-48']=[{time:9876,contacts:0,clean:true}];
@@ -57,9 +57,9 @@ with sync_playwright() as pw:
     check('Preview and earlier terrain archives remain separately accessible','Preview field map records (archived)' in text and 'Earlier terrain records (archived)' in text)
     check('Old forty-eight-stage circuit is visible in the rolling field log','48-stage Grand Tour (archived)' in text)
     page.evaluate('DeadSlow.normal();DeadSlowTest.marathon("grand-tour")')
-    page.evaluate('''() => {for(let i=0;i<60;i++){DeadSlowTest.state.run.time=1;DeadSlowTest.finish();if(i<59)DeadSlowTest.next();}}''')
-    check('Grand Tour ends in space after the field championship',page.evaluate('DeadSlowTest.state.level.id==="perihelion-dispatch" && DeadSlowTest.state.marathon.stages===60'))
-    check('Final result celebrates all five worlds with the full circuit time','Five worlds.' in page.locator('#dialog').inner_text() and 'GRAND TOUR 60/60' in page.locator('#dialog').inner_text())
+    page.evaluate('''() => {for(let i=0;i<72;i++){DeadSlowTest.state.run.time=1;DeadSlowTest.finish();if(i<71)DeadSlowTest.next();}}''')
+    check('Grand Tour ends in space after the field championship',page.evaluate('DeadSlowTest.state.level.id==="perihelion-dispatch" && DeadSlowTest.state.marathon.stages===72'))
+    check('Final result celebrates all six worlds with the full circuit time','Six worlds.' in page.locator('#dialog').inner_text() and 'GRAND TOUR 72/72' in page.locator('#dialog').inner_text())
     page.evaluate('DeadSlow.level(4,10);DeadSlow.speed(0)')
     for w,h in [(390,844),(320,740),(844,390)]:
         page.set_viewport_size({'width':w,'height':h});page.wait_for_timeout(90)

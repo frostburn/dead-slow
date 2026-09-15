@@ -26,6 +26,7 @@ test('5-04: complete freight takes Rook’s loop, passenger passes, freight reac
     const st=R.create(L[3]);cmd(st,'switch','a');cmd(st,'switch','b');
     assert.ok(R.metrics(st).length>st.net.edges['refuge-loop'].length);
     move(st,'engine','hollow-loop',510,1,3);cmd(st,'hand');
+    cmd(st,'switch','a');cmd(st,'switch','b');cmd(st,'dispatch','passenger');
     for(let i=0;i<900&&!st.traffic[0].finished;i++)step(st,1);
     assert.ok(st.traffic[0].finished,'Passenger must actually traverse the valley');
     step(st,1);assert.ok(st.completed.includes('meet'));cmd(st,'hand');

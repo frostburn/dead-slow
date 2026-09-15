@@ -42,7 +42,7 @@
             tick(st,running) {
                 if(disposed)return;
                 if(!running||!st){if(active)stop();return;}
-                active=true;const now=ctx.currentTime,group=st.groups.find(g=>g.cars.some(c=>c.powered)),engine=group.cars.find(c=>c.powered);
+                active=true;const now=ctx.currentTime,group=st.groups.find(g=>g.cars.some(c=>c.id==='engine')),engine=group.cars.find(c=>c.id==='engine');
                 const speed=Math.abs(engine.v),braking=Math.max(engine.pressure,st.independent),power=st.power/4;
                 bus.gain.setTargetAtTime(1,now,.025);motor.frequency.setTargetAtTime(32+power*28,now,.25);
                 motorFilter.frequency.setTargetAtTime(180+power*230,now,.2);motorGain.gain.setTargetAtTime(.018+power*.035,now,.12);

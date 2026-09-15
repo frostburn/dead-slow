@@ -28,7 +28,7 @@
                 const upcoming = (bridge.levels.catalog || []).find(l => l.comingSoon &&
                     (typeof worldOrId === 'string' ? l.id === worldOrId : l.worldNumber === worldOrId && l.stageNumber === stage));
                 throw new RangeError(upcoming ? 'Coming soon: this assignment is not playable yet.' :
-                    'Unknown assignment. Worlds 1–4 and 6 are complete; World 5 stages 1–3 are playable; World 6 stage 13 is the separate bonus. DeadSlow.levels() lists the atlas.');
+                    'Unknown assignment. Worlds 1–6 are complete; World 6 stage 13 is the separate bonus. DeadSlow.levels() lists the atlas.');
             }
             return i;
         }
@@ -116,7 +116,7 @@
         const menu = Object.freeze({
             help() {
                 const commands = [
-                    ['DeadSlow.tour(8)', 'Start a manual 60-stage Grand Tour at 8×, unranked from departure.'],
+                    ['DeadSlow.tour(8)', 'Start a manual 72-stage Grand Tour at 8×, unranked from departure.'],
                     ['DeadSlow.circuit(3, 8)', 'Start a twelve-stage world playtest; keep speed across retry/next.'],
                     ['DeadSlow.progress()', 'Compact current mission, circuit clock and completed sector splits.'],
                     ['DeadSlow.levels()', 'List all assignments; world and stage numbers start at 1.'],

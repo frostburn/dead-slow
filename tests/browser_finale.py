@@ -24,7 +24,7 @@ with sync_playwright() as pw:
         page.screenshot(path=str(SHOTS/(name+'.png')))
     page.evaluate('DeadSlowTest.courses(4)')
     check('All twelve World 4 courses are selectable', page.locator('.level-card').count()==12)
-    check('Course count and existing Grand Tour remain honest', '0 / 12 COURSES COMPLETE' in page.locator('#dialog').inner_text() and 'all 60' in page.locator('#dialog').inner_text())
+    check('Course count and existing Grand Tour remain honest', '0 / 12 COURSES COMPLETE' in page.locator('#dialog').inner_text() and 'all 72' in page.locator('#dialog').inner_text())
     shot('world-five')
     for number in [10,11,12]:
         page.locator(f'[data-stage="{48+number}"]').click()
