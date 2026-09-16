@@ -29,7 +29,7 @@
         return {x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t,
             a:Math.atan2(b.y-a.y,b.x-a.x),grade:(b.z-a.z)/(length||1),edge:id,s,
             limit:(edge.restrictions||[]).find(r=>s/edge.length>=r.from&&s/edge.length<=r.to)?.limit||edge.limit||10,
-            adhesion:edge.adhesion??.18};
+            adhesion:edge.adhesion??.28};
     }
     const entry=(net,id,dir,start=0)=>({id,dir,start,end:start+net.edges[id].length});
     function locate(st,group,q) {
@@ -84,7 +84,7 @@
             return {...t,path,exitQ,v:0,released:false,finished:false,waiting:'Awaiting your signal · H',cars:Array.from({length:4},(_,i)=>({id:t.id+'-'+i,q:t.head-i*t.length/4,length:t.length/4-1.2,mass:40000,v:0}))};
         });
         return {net,groups,traffic,config:cfg,time:0,power:0,helper:0,reverser:1,independent:0,selected:'engine',crew:[],
-            completed:[],taskHold:{},finishHold:0,failure:null,notice:'Release the train brake to move.',
+            completed:[],taskHold:{},finishHold:0,failure:null,gantry:cfg.gantry?{position:0,target:0}:null,notice:'Release the train brake to move.',
             stats:{distance:0,couplings:0,uncouplings:0,peakTemperature:20,peakCoupler:0,contacts:0},nextCut:groups.length};
     }
     function setBrake(st,group,value) {
@@ -100,6 +100,7 @@
         if(name==='helper'){st.helper=clamp(value,0,4);return true;}
         if(name==='brake'){setBrake(st,group,value);return true;}
         if(name==='independent'){st.independent=clamp(value,0,1);return true;}
+        if(name==='gantry'){st.gantry.target=1-st.gantry.target;return true;}
         if(name==='dispatch') {
             const t=st.traffic.find(t=>!t.released&&!t.finished&&(!value||t.id===value));
             t.released=true;t.waiting='Signal received';st.notice=t.name+' signalled. Track signals still protect the route.';return true;
@@ -162,11 +163,21 @@
         }
         return nearest;
     }
+    function routeDistance(st,group,q,edge,s) {
+        const preview=previewPath(st,group,q-3000,q+3000);
+        const distances=preview.path.filter(leg=>leg.id===edge).map(leg=>(leg.dir===1?leg.start+s:leg.end-s)-q);
+        return distances.length?distances.sort((a,b)=>Math.abs(a)-Math.abs(b))[0]:null;
+    }
     function availability(st,name,value) {
         const eg=engineGroup(st),selected=groupFor(st,st.selected)||eg;
         let reason='';
         if(!Commands.valid(name,value,true))reason='Invalid railway command.';
         else if(st.failure)reason='Retry to begin again.';
+        else if(name==='gantry') {
+            if(!st.gantry)reason='No loading gantry here.';
+            else if(st.gantry.position!==st.gantry.target)reason='Gantry moving. Keep its travel lane clear.';
+            else if(st.groups.some(g=>[cargoShape(st,g),...g.cars.map(c=>vehicleShape(st,g,c))].some(poly=>cargoHit(st,poly,[gantryBox(st,true)]))))reason='Move the train clear of the gantry travel lane.';
+        }
         else if(name==='helper'&&!eg.cars.some(c=>c.helper))reason='Couple the helper before requesting assistance.';
         else if(name==='independent'&&st.config.helper&&value!==0)reason='Use the train brake with a helper.';
         else if(name==='dispatch'&&!st.traffic.some(t=>!t.released&&!t.finished&&(!value||t.id===value)))reason='No passenger awaiting a departure signal.';
@@ -200,9 +211,8 @@
         const coupling=availability(st,'couple');
         const pickup=hit?`${hit.b.car.id} · ${hit.distance.toFixed(1)} m to buffers · relative speed ${(Math.abs(hit.a.car.v-hit.b.car.v*hit.a.dir*hit.b.dir)*3.6).toFixed(1)} km/h${hit.distance<=3?'\n'+(coupling.enabled?'Ready to couple · F':coupling.reason):''}`:'No waiting cut on this stretch of track.';
         let next='',action=null,split=null,direction=null,needsMovement=false;
-        // A newly released cut needs attention regardless of mission order.
-        if(selected!==eg&&hands<selected.cars.length){next='Secure this cut before leaving it.';action='hand';}
-        const task=st.config.tasks.find(t=>!st.completed.includes(t.id)&&(!t.after||st.completed.includes(t.after)));
+        const unsecured=selected!==eg&&hands<selected.cars.length;
+        const task=st.config.tasks.find(t=>!st.completed.includes(t.id)&&(!t.after||st.completed.includes(t.after))&&!(st.caught&&t.milestone&&t.type==='coupled'));
         if(!next&&task) {
             const zone=st.config.zones.find(z=>z.id===task.zone);
             if(task.type==='traffic') {
@@ -214,11 +224,24 @@
                 const wagons=groupFor(st,task.cars[0]);
                 if(st.caught&&wagons.cars.every(c=>Math.abs(c.v)<.08)){
                     next='Secure the caught wagons with their handbrakes.';action=selected===wagons?'hand':'select';
-                } else {next=taskReady(st,task)?'Hold the rescued wagons here.':eg.cars.some(c=>task.cars.includes(c.id))?'Brake before the broken crossing. Secure the wagons once stopped.':'Match the rolling wagons, then couple within 3 m.';action=eg.cars.length===1?'couple':null;}
+                } else if(taskReady(st,task))next='Hold the rescued wagons here.';
+                else if(eg.cars.some(c=>task.cars.includes(c.id))) {
+                    const room=eg.cars.filter(c=>task.cars.includes(c.id)).map(c=>routeDistance(st,eg,c.q,zone.edge,zone.to-c.length/2)).filter(d=>d!==null);
+                    const stopped=eg.cars.every(c=>Math.abs(c.v)<.08),insideZone=eg.cars.filter(c=>task.cars.includes(c.id)).every(c=>inside(st,c,eg,zone));
+                    next=room.length?`${Math.max(0,Math.floor(Math.min(...room)))} m of stopping room before the river. `:'';
+                    next+=stopped&&insideZone?'Set the wagon handbrakes to secure the train.':'Brake into the marked track; secure the wagons once stopped.';
+                    action=stopped&&insideZone?'hand':'stop';
+                } else {next='Match the rolling wagons, then couple within 3 m.';action='couple';}
             }
             else if(task.type==='coupled') {
                 if(task.cars.every(id=>eg.cars.some(c=>c.id===id)))next='Coupled. Collection being confirmed.';
-                else {next=coupling.enabled?'Buffers in reach. Couple the waiting wagons.':hit&&hit.distance<=3?coupling.reason:pickup;action='couple';needsMovement=!hit||hit.distance>3;}
+                else {
+                    const target=task.cars.find(id=>!eg.cars.some(c=>c.id===id)),cut=groupFor(st,target),ends=endpoints(st,eg);
+                    const gaps=cut?endpoints(st,cut).flatMap(b=>ends.map(a=>routeDistance(st,eg,a.q,b.edge,b.s))).filter(d=>d!==null):[];
+                    const distance=gaps.length?Math.min(...gaps.map(Math.abs)):null;
+                    next=coupling.enabled?'Buffers in reach. Couple the waiting wagons.':hit&&hit.distance<=3?coupling.reason:distance!==null?`${Math.ceil(distance)} m to ${target}'s cut along the selected route. Approach below 2 km/h relative speed.`:`Set the points toward ${target}'s cut.`;
+                    action='couple';needsMovement=!hit||hit.distance>3;
+                }
             }
             else {
                 const ids=task.type==='stop'?['engine']:task.cars;
@@ -227,9 +250,9 @@
                 if(task.type==='park'&&cars.some(({g})=>g!==eg)){next='Reconnect every wagon before parking the complete train.';action='couple';}
                 else if(outside.length) {
                     const {g,c}=outside.at(-1),p=locate(st,g,c.q);
-                    const missing=p.edge===zone.edge?clamp(p.s,zone.from+c.length/2,zone.to-c.length/2)-p.s:null;
-                    const behind=missing!==null&&g===eg&&missing*p.dir*st.reverser*drivingEngine(st).face<0;
-                    next=missing!==null?`${c.id==='engine'?'Loco':c.id} needs ${Math.ceil(Math.abs(missing))} m ${behind?'back':'more'} to fit inside ${zone.name}.${behind?' Stop and reverse (X).':''}`:`Bring ${c.id==='engine'?'the loco':c.id} into ${zone.name}.`;
+                    const same=p.edge===zone.edge,missing=same?(clamp(p.s,zone.from+c.length/2,zone.to-c.length/2)-p.s)*p.dir:routeDistance(st,g,c.q,zone.edge,(zone.from+zone.to)/2);
+                    const behind=missing!==null&&g===eg&&missing*st.reverser*drivingEngine(st).face<0;
+                    next=missing!==null?`${c.id==='engine'?'Loco':c.id} needs ${Math.ceil(Math.abs(missing))} m ${behind?'back':'more'} ${same?'to fit inside':'along the selected route to'} ${zone.name}.${behind?' Stop and reverse (X).':''}`:`Set the points to bring ${c.id==='engine'?'the loco':c.id} into ${zone.name}.`;
                     if(task.type==='stop'&&task.independent)next+=' Stop with the loco brake (E / Q).';
                     needsMovement=true;
                 } else if(st.power||cars.some(({c})=>Math.abs(c.v)>.08)) {
@@ -272,6 +295,7 @@
             direction=away?1:null;needsMovement=away;
         }
         if(!next)next='Keep all delivered wagons secured.';
+        if(unsecured){next+=' Secure the selected cut before leaving it.';if(!action)action='hand';}
         if(eg.cars.some(c=>c.hand)&&!['hand','uncouple'].includes(action)){next+=' Release the attached handbrakes before moving.';}
         if(needsMovement&&!eg.cars.some(c=>c.hand)) {
             if(st.independent>.05){next+=' Release the loco brake (Q) to move.';action='independent';direction=-1;}
@@ -376,9 +400,20 @@
             {x:b.x-dx*spec.overhang+dy*r,y:b.y-dy*spec.overhang-dx*r},
             {x:b.x-dx*spec.overhang-dy*r,y:b.y-dy*spec.overhang+dx*r}];
     }
-    function cargoHit(st,poly) {
+    function vehicleShape(st,group,car) {
+        const p=locate(st,group,car.q),dx=Math.cos(p.a),dy=Math.sin(p.a),half=car.length/2;
+        return [[half,2],[half,-2],[-half,-2],[-half,2]].map(([x,y])=>({x:p.x+x*dx-y*dy,y:p.y+x*dy+y*dx}));
+    }
+    function gantryBox(st,sweep=false) {
+        const spec=st.config.gantry;if(!spec)return null;
+        const [a,b]=spec.positions,t=st.gantry.position;
+        return {name:spec.name,x:sweep?Math.min(a.x,b.x):a.x+(b.x-a.x)*t,y:sweep?Math.min(a.y,b.y):a.y+(b.y-a.y)*t,
+            w:spec.w+(sweep?Math.abs(a.x-b.x):0),h:spec.h+(sweep?Math.abs(a.y-b.y):0),gantry:true};
+    }
+    function obstacles(st) {return [...st.config.obstacles||[],...st.gantry?[gantryBox(st)]:[]];}
+    function cargoHit(st,poly,boxes=obstacles(st)) {
         if(!poly)return null;
-        return (st.config.obstacles||[]).find(o=>{
+        return boxes.find(o=>{
             const box=[{x:o.x,y:o.y},{x:o.x+o.w,y:o.y},{x:o.x+o.w,y:o.y+o.h},{x:o.x,y:o.y+o.h}];
             const axes=[{x:1,y:0},{x:0,y:1},...poly.slice(0,2).map((p,i)=>({x:poly[i+1].y-p.y,y:p.x-poly[i+1].x}))];
             return axes.every(n=>{const a=poly.map(p=>p.x*n.x+p.y*n.y),b=box.map(p=>p.x*n.x+p.y*n.y);return Math.max(...a)>=Math.min(...b)&&Math.max(...b)>=Math.min(...a);});
@@ -394,6 +429,7 @@
         return {previews,collision:previews.find(p=>p.hit)||null};
     }
     function checkInfrastructure(st) {
+        if(st.gantry&&st.groups.some(g=>g.cars.some(c=>cargoHit(st,vehicleShape(st,g,c),[gantryBox(st)]))))st.failure='The train struck the loading gantry. Keep its travel lane clear.';
         for(const b of bridges(st)){
             if(b.over)st.failure=`${b.name} overloaded. Cross with one transformer and its support wagon at a time.`;
             else if(b.unpaired.length)st.failure=`Keep ${b.unpaired[0].join(' and ')} coupled beside each other while crossing the bridge.`;
@@ -446,6 +482,10 @@
     function update(st,dt) {
         if(st.failure)return;
         st.time+=dt;st.slip=false;st.slide=false;
+        if(st.gantry) {
+            const g=st.gantry,step=dt/st.config.gantry.seconds;
+            g.position+=clamp(g.target-g.position,-step,step);
+        }
         updateTraffic(st,dt);
         for(const group of st.groups) {
             const engine=group.cars.find(c=>c.id==='engine'),cars=group.cars,force=cars.map(c=>{
@@ -611,7 +651,7 @@
         if(st.helper&&!engineGroup(st).cars.some(c=>c.helper))throw Error('A detached helper cannot receive power.');
         return true;
     }
-    const api={network,at,locate,previewPath,create,update,command,availability,assistance,occupied,engineGroup,drivingEngine,groupFor,bounds,metrics,taskReady,danger,segments,bridges,cargoShape,cargoHit,clearance,ferry,forecast,assertInvariants,commands:Commands};
+    const api={network,at,locate,previewPath,create,update,command,availability,assistance,occupied,engineGroup,drivingEngine,groupFor,bounds,metrics,taskReady,danger,segments,bridges,cargoShape,cargoHit,obstacles,clearance,ferry,forecast,assertInvariants,commands:Commands};
     if(typeof module!=='undefined'&&module.exports)module.exports=api;
     root.Railway=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

@@ -1000,7 +1000,7 @@
     $('sound-btn').onclick = () => toggleSetting('sound');
     $('ghost-btn').onclick = () => toggleSetting('ghost');
     $('zoom-btn').onclick = zoomChart;
-    $('sea').ondblclick = zoomChart;
+    $('sea').ondblclick = e => e.preventDefault();
     $('line-action').onclick = lineAction;
     $('throttle-up').onclick = () => throttle(1);
     $('throttle-down').onclick = () => throttle(-1);

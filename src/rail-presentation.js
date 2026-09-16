@@ -51,7 +51,7 @@
         const actions=new Map(),put=(name,value)=>actions.set(name+':'+JSON.stringify(value),R.availability(st,name,value));
         const levers=R.commands.levers(!!st.config.helper);
         for(const lever of levers)put(lever.name,undefined);
-        for(const name of ['stop','reverse','hand','couple','dispatch'])put(name,undefined);
+        for(const name of ['stop','reverse','hand','couple','dispatch','gantry'])put(name,undefined);
         for(const group of st.groups)group.cars.forEach((car,i)=>{
             put('select',car.id);
             if(i<group.cars.length-1)put('uncouple',{after:car.id,before:group.cars[i+1].id});

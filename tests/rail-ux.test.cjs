@@ -2,6 +2,41 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const R=require('../src/rail.js'),L=require('../src/rail-levels.js');
 const step=(st,seconds)=>{for(let n=0;n<seconds*120;n++)R.update(st,1/120);};
+test('next split keeps its required distance ahead of unsecured-cut reminders',()=>{
+    const st=R.create(L[0]);st.selected='R1';R.groupFor(st,'R1').cars.forEach(c=>c.hand=false);
+    const help=R.assistance(st);
+    assert.match(help.next,/needs \d+ m/);assert.match(help.next,/Secure the selected cut/);
+    assert.ok(help.next.indexOf(' m')<help.next.indexOf('Secure'));
+});
+test('all four power notches add traction on dry rail',()=>{
+    const velocities=[];
+    for(const power of [1,2,3,4]) {
+        const st=R.create(L[0]),g=R.engineGroup(st);g.cars=[g.cars[0]];st.groups=[g];
+        g.path=[{id:'receiving',dir:1,start:0,end:st.net.edges.receiving.length}];g.cars[0].q=100;
+        R.command(st,'brake',0);g.cars[0].pressure=0;R.command(st,'power',power);step(st,.2);
+        assert.equal(st.slip,false);velocities.push(g.cars[0].v);
+    }
+    for(let i=1;i<4;i++)assert.ok(velocities[i]>velocities[i-1]);
+});
+test('runaway rescue reports remaining stopping room after coupling',()=>{
+    const st=R.create(L[4]),g=R.engineGroup(st),cut=R.groupFor(st,'R1');
+    g.cars.push(...cut.cars);st.groups=[g];st.completed.push('catch-wagons');
+    g.path=[{id:'bridge-approach',dir:1,start:0,end:st.net.edges['bridge-approach'].length}];
+    g.cars.forEach((c,i)=>{c.q=200-i*20;c.v=1;});
+    assert.match(R.assistance(st).next,/\d+ m of stopping room before the river/);
+    g.cars.forEach(c=>c.v=0);
+    assert.equal(R.assistance(st).action,'hand');
+});
+test('gantry cannot travel through the vessel and uses the same collision geometry as preview',()=>{
+    const st=R.create(L[7]);R.command(st,'switch','fork');R.command(st,'switch','join');
+    const hit=R.clearance(st).collision;assert.equal(hit.hit,'Loading gantry');
+    assert.equal(R.cargoHit(st,hit.polygon).name,'Loading gantry');
+    const g=R.engineGroup(st),a=st.net.edges.arrival.length,b=st.net.edges.broad.length;
+    g.path=[{id:'arrival',dir:1,start:0,end:a},{id:'broad',dir:1,start:a,end:a+b}];
+    g.cars.forEach(c=>c.q+=hit.distance);
+    assert.equal(R.availability(st,'gantry').enabled,false);
+    assert.equal(R.command(st,'gantry'),false);
+});
 // Geometry fixtures isolate guidance. Existing control recordings verify routes.
 function receiving(position=120,speed=0) {
     const st=R.create(L[0]),g=R.engineGroup(st);

@@ -22,6 +22,13 @@ test('railway watch playback completes through live controls and never writes re
     const report=t.cheats.report();assert.ok(report.verified);assert.ok(report.rail.couplings===1);
     assert.equal(t.state.storage.stages['long-grade-1'].clears,0);assert.equal(t.state.run.pausedUsed,true);
 });
+test('ferry watch run loads both decks and leaves the engine ashore through ordinary controls',()=>{
+    const t=create(),record=require('../src/verification.js').runs.find(r=>r.level==='long-grade-10');
+    t.cheats.watch(record.level,0);
+    for(let left=record.duration;left>0;left-=600)t.cheats.step(Math.min(600,left));
+    assert.ok(t.cheats.report().verified);assert.equal(t.state.storage.stages[record.level].clears,0);
+    assert.deepEqual(t.state.run.rail.completed,['port','starboard','ashore']);
+});
 test('railway logbook shows local circuit and Grand Tour clean and overall records',()=>{
     const t=create();t.cheats.level('long-grade-9');
     t.state.storage.races['long-grade']=[{time:123,clean:false},{time:135,clean:true}];

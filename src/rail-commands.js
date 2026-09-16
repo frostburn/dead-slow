@@ -11,7 +11,7 @@
         stop: {kind:'none'}, reverse: {kind:'none',cue:'reverse'},
         switch: {kind:'id',cue:'switch'}, select: {kind:'id'},
         hand: {kind:'none',cue:'hand'}, uncouple: {kind:'link',cue:'uncouple'},
-        couple: {kind:'none',cue:'couple'}, dispatch: {kind:'optional-id',cue:'horn'}
+        couple: {kind:'none',cue:'couple'}, dispatch: {kind:'optional-id',cue:'horn'}, gantry: {kind:'none',cue:'switch'}
     });
     Object.values(definitions).forEach(Object.freeze);
     /** @param {unknown} value @returns {value is string} */

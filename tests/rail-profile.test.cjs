@@ -17,12 +17,12 @@ test('profile does not project wagons on disconnected branches onto the active t
     for(const c of p.cars)assert.ok(Number.isFinite(c.q)&&Number.isFinite(c.z));
     assert.equal(p.cars.some(c=>c.id==='R1'),false);
 });
-test('adapter keeps completion timestamps stable and clears invalidated delivery splits',()=>{
+test('adapter keeps the first completion timestamp through invalidation and recovery',()=>{
     const create=require('../src/rail-adapter.js').create;
     const st={time:0,stats:{contacts:0,distance:0},config:{tasks:[{id:'delivery',text:'Deliver freight'}]},completed:['delivery'],finishHold:0};
     const adapter=create({railway:{update(s,dt){s.time+=dt},drivingEngine(){return {q:0,v:0}},engineGroup(){return {}},locate(){return {x:0,y:0,a:0}}},audio:{},view:{}});
     const run={rail:st,splits:[],time:0,contacts:0,maxSpeed:0,sampleAt:Infinity};
     adapter.step(run,1);adapter.step(run,2);assert.deepEqual(run.splits,[{name:'Deliver freight',time:1}]);
-    st.completed=[];adapter.step(run,1);assert.deepEqual(run.splits,[]);
-    st.completed=['delivery'];adapter.step(run,1);assert.equal(run.splits[0].time,5);
+    st.completed=[];adapter.step(run,1);assert.equal(run.splits[0].time,1);
+    st.completed=['delivery'];adapter.step(run,1);assert.equal(run.splits[0].time,1);
 });

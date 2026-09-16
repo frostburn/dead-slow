@@ -1,5 +1,20 @@
 # The Long Grade: twelve assignments
 
+Dry-track adhesion now supports all four power notches; the wet-leaf sections
+retain their explicit low adhesion. Railway rules revision 2 archives earlier
+handling times and includes refreshed recordings. `DeadSlow.watch('long-grade-10', 8)`
+shows a complete ferry-loading run using ordinary controls.
+
+Split clocks preserve the first completion time. A struck-through objective is
+no longer satisfied and must be restored if required for victory. Next-split
+guidance puts the route or buffer distance before reminders about selected cuts.
+Double-click no longer zooms; use Z or the zoom button.
+
+The vessel mission has a travelling loading gantry. Park it east to clear the
+first bend, stop along the southern curve, and move it west before the next bend.
+The gantry's current position affects both the swept-cargo preview and collisions;
+it cannot start moving through a train occupying its travel lane.
+
 Version 6 completes World 5. All twelve assignments join the railway circuit
 and the 72-stage Grand Tour. Schema 17 separately archives earlier 5-04, 5-09
 and 5-12 routes and their circuits. Other railway records remain active.
@@ -184,4 +199,4 @@ invariants and save compatibility are covered in `tests/architecture.test.cjs`.
 
 Rail guidance lives in a collapsible map panel, with optional operational and wagon details. Speed and stopping distance remain beside the controls. The grade profile shares the footer with compact telegraphs on wide screens and stacks above them on phones. Changing notices never shift the sidebar controls.
 
-Mission splits live in the railway sidebar and show simulation timestamps. Reversible delivery objectives lose their time if invalidated and get a fresh time when completed again. The side-view profile uses a read-only selected-route window with real longitudinal distances, exaggerated elevation, vehicle lengths, detached wagons and junction markers. It does not reserve track or alter routing.
+Mission splits live in the railway sidebar and preserve first-completion timestamps. Invalidated live objectives are struck through until restored. The side-view profile uses a read-only selected-route window with real longitudinal distances, exaggerated elevation, vehicle lengths, detached wagons and junction markers. It does not reserve track or alter routing.

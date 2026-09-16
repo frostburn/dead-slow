@@ -16,8 +16,8 @@
                 R.update(st, dt);
                 if (st.stats.contacts > run.contacts) audio.railEvent('couple');
                 run.time = st.time;
-                // Delivery splits must become pending again if a wagon rolls out.
-                run.splits=(run.splits||[]).filter(split=>st.config.tasks.some(task=>task.text===split.name&&st.completed.includes(task.id)));
+                // First completion is timing history; current validity lives in st.completed.
+                run.splits ||= [];
                 for(const task of st.config.tasks)if(st.completed.includes(task.id)&&!run.splits.some(split=>split.name===task.text)) {
                     run.splits.push({name:task.text,time:st.time});
                 }

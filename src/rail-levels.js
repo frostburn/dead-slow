@@ -10,7 +10,7 @@
     /** @param {string} id @param {string} name @param {string} brief @param {string} tip
      * @param {[number,number]} world @param {import('./rail-level-types.js').RailConfig} rail
      * @param {[number,number,number]} pace */
-    const level=(id,name,brief,tip,world,rail,pace)=>({id,name,brief,tip,world,rail,pace,
+    const level=(id,name,brief,tip,world,rail,pace)=>({id,name,brief,tip,world,rail,pace,rulesRevision:2,
         kind:'Freight railway',start:[100,100,0],berth:{x:100,y:100,a:0,l:50,w:20,angle:10,speed:.2},
         spec:{name:'No. 17',length:20,beam:4,mass:80000}});
     const levels=[
@@ -132,7 +132,8 @@
                 groups:[{cars:[loco('service',180)]},{brake:0,speed:2.8,cars:[wagon('R1','runaway-road',300,{mass:65000}),wagon('R2','runaway-road',282.8,{mass:65000}),wagon('R3','runaway-road',265.6,{mass:65000})]}],
                 zones:[{id:'safe',name:'Stop before the broken crossing',edge:'bridge-approach',from:35,to:340},
                     {id:'catch-yard',name:'Emergency gravel catch',edge:'catch',from:35,to:350,color:'#d9a168'}],
-                tasks:[{id:'rescue',type:'rescue',zone:'safe',alternative:'catch-yard',cars:['R1','R2','R3'],text:'All three wagons stopped and secured before the river'}]
+                tasks:[{id:'catch-wagons',type:'coupled',milestone:true,cars:['R1','R2','R3'],text:'Couple to the three runaway wagons'},
+                    {id:'rescue',type:'rescue',zone:'safe',alternative:'catch-yard',cars:['R1','R2','R3'],text:'Wagons secured before the river (or in the catch siding)'}]
             },[350,500,750]),
         level('long-grade-6','Leaves on the Line',
             'Take the timber freight over the wooded saddle in steady rain. Build momentum on the approach, ease power through the leaf-covered cutting, and control the descent to the paper works.',
@@ -173,8 +174,8 @@
                     {id:'transformers',type:'park',zone:'final',cars:['engine','T1','E1','T2','E2'],order:['T2','E2','T1','E1'],text:'5 · Park and secure all wagons, load 2 ahead; clear the points'}]
             },[900,1350,1900]),
         level('long-grade-8','The Corners Are the Cargo',
-            'Take the vessel around the loading platform, pull the whole load into the headshunt, then reverse into the export spur. The vessel swings outside its carrier wagons on tight bends.',
-            'Red outlines show where the vessel would strike an obstacle. Use the broad road, stop with both carriers beyond the headshunt mark, then select Export spur and reverse. Watch the leading cargo end during the final push.',
+            'Move the loading gantry to clear the vessel’s first turn, then bring it back west before the second turn. Pull into the headshunt and reverse into the export spur. The long vessel swings beyond its carrier wagons.',
+            'Use the broad road. Park the gantry east before entering, stop the vessel along the southern bend, then send the gantry west. Its travel lane must be clear. Red outlines preview collisions before you move.',
             [2000,1100],{
                 scenery:'yard',thermal:false,
                 nodes:{start:[70,450,10],fork:[560,450,10],join:[1260,450,10],head:[1780,150,10],end:[1850,910,10]},
@@ -186,7 +187,8 @@
                 switches:[{node:'fork',label:'Terminal west',stem:'arrival',branches:['tight','broad'],names:['Platform road','Broad freight road']},
                     {node:'join',label:'Export points',stem:'headshunt',branches:['tight','broad','terminal'],names:['Platform road','Broad freight road','Export spur']}],
                 groups:[{cars:[loco('arrival',310),wagon('C1','arrival',278.8,{length:40,mass:65000}),wagon('C2','arrival',237.6,{length:40,mass:65000})]}],
-                cargo:{cars:['C1','C2'],overhang:28,width:11},
+                cargo:{cars:['C1','C2'],overhang:40,width:14},
+                gantry:{name:'Loading gantry',positions:[{x:674,y:775},{x:1152,y:765}],w:10,h:10,seconds:8},
                 obstacles:[{name:'Loading platform',x:689,y:328,w:23,h:26},{name:'Signal cabin',x:1070,y:348,w:24,h:22}],
                 zones:[{id:'turn',name:'Whole load beyond this mark · stop and reverse',edge:'headshunt',from:140,to:450},
                     {id:'terminal',name:'Export berth',edge:'terminal',from:340,to:670}],

@@ -36,6 +36,7 @@
         $('rail-panel').innerHTML=`<div class="rail-readings"><div><strong id="rail-speed">0.0</strong><span>km/h</span></div><div><b id="rail-stop">0 m</b><span>estimated stop</span></div></div>
             ${(level.rail.traffic||[]).map(t=>`<button class="rail-dispatch" data-rail="dispatch" data-value="${t.id}">Signal departure · H</button>`).join('')}
             <div class="rail-levers">${R.commands.levers(!!level.rail.helper).map(({name:id,label,keys,min,max,step})=>`<div class="rail-lever"><label for="rail-${id}">${label}<output id="rail-${id}-value"></output><small>${keys}</small></label><input id="rail-${id}" data-rail="${id}" type="range" min="${min}" max="${max}" step="${step}" value="${id==='brake'?1:0}" aria-label="${label}"></div>`).join('')}</div>
+            ${level.rail.gantry?'<button class="rail-dispatch" data-rail="gantry" id="rail-gantry">Move gantry east</button>':''}
             <div class="rail-actions"><button data-rail="reverse" id="rail-reverse" title="Change travel direction (X)">Reverse · X</button><button data-rail="stop">Full brake · Space</button><button data-rail="couple">Couple · F</button><button data-rail="hand" id="rail-hand">Handbrakes · B</button></div>
             <div id="rail-consist" class="rail-consist"></div>
             <div id="rail-switches" class="rail-switches"></div><div class="section-label">SECTOR SPLITS</div><div id="rail-tasks" class="splits rail-tasks"></div>
@@ -97,6 +98,8 @@
         alert.hidden=false;alert.classList.toggle('critical',warning.severity===2||!!(coupling&&coupling.ratio>1));
         alert.classList.toggle('caution',!!warning.severity||!!coupling);
         alert.textContent=worst?.ratio>=1.2?'Derailment risk\nBrake now':coupling?`Coupler ${coupling.kind} · ${Math.round(Math.abs(coupling.force)/1000)} kN\n${coupling.kind==='push'?'Ease rear assistance.':'Share power; ease the front.'}`:worst?`${worst.id==='engine'?'Locomotive':worst.id} over ${Math.round(worst.limit*3.6)} km/h\nEase the train below the limit.`:warning.ahead?`Slow to ${Math.round(warning.ahead.limit*3.6)} km/h\n${Math.round(warning.ahead.distance)} m ahead`:st.config.helper?'Couplers within limits\nEase each engine over the crest.':'Speed within limit\nKeep room to stop.';
+        if(envelope?.collision){alert.classList.add('caution');alert.textContent=`${envelope.collision.hit} · ${Math.round(envelope.collision.distance)} m ahead\n${envelope.collision.hit===st.config.gantry?.name?'Move the gantry to clear the vessel.':'Choose a route with room for the cargo.'}`;}
+        if(st.gantry)$('rail-gantry').textContent=st.gantry.position!==st.gantry.target?'Gantry moving…':st.gantry.target===0?'Move gantry east':'Move gantry west';
         $('rail-info-title').textContent=alert.classList.contains('caution')||alert.classList.contains('critical')?alert.textContent.split('\n')[0]:'Train status';
         $('rail-info-title').classList.toggle('rail-danger',alert.classList.contains('caution')||alert.classList.contains('critical'));
         $('rail-hand').textContent=(selected.cars.some(c=>c.hand)?'Release handbrakes':'Set handbrakes')+' · B';
@@ -124,8 +127,8 @@
         }
         const nextSplit=st.config.tasks.find(t=>!st.completed.includes(t.id)&&(!t.after||st.completed.includes(t.after)));
         $('rail-tasks').innerHTML=st.config.tasks.map(t=>{
-            const done=st.completed.includes(t.id),split=done?run.splits?.find(s=>s.name===t.text):null;
-            return `<div class="split-row ${done?'done':t===nextSplit?'active':''}"><span>${t.text}</span><span>${split?format(split.time):status==='complete'&&t.milestone?'Skipped':'—'}</span></div>`;
+            const done=st.completed.includes(t.id),split=run.splits?.find(s=>s.name===t.text);
+            return `<div class="split-row ${done?'done':t===nextSplit?'active':''} ${split&&!done?'invalidated':''}"${split&&!done?' title="Objective no longer satisfied; first split time retained"':''}><span>${t.text}</span><span>${split?format(split.time):status==='complete'&&t.milestone?'Skipped':'—'}</span></div>`;
         }).join('');
         const help=projection.help;
         const recommendation=projection.recommendation;
@@ -144,7 +147,7 @@
             const enabled=['uncouple','hand','reverse'].includes(name)?actionEnabled(st,name,value,state.enabled):state.enabled;
             b.disabled=status!=='running'||!enabled;
             if(name==='dispatch')b.textContent=st.traffic.find(t=>t.id===value)?.released?'Departure signalled':'Signal departure · H';
-            if(['uncouple','couple','hand'].includes(name))b.title=state.reason||(name==='uncouple'?b.getAttribute('aria-label'):name==='hand'?help.cut:'Couple the adjacent cut');
+            if(['uncouple','couple','hand','gantry'].includes(name))b.title=state.reason||(name==='uncouple'?b.getAttribute('aria-label'):name==='hand'?help.cut:name==='gantry'?'Move the loading gantry between its west and east bays':'Couple the adjacent cut');
             b.classList.toggle('rail-relevant',!b.disabled&&name===recommendation.action&&(name!=='uncouple'||(value.after===recommendation.split?.after&&value.before===recommendation.split?.before)));
         });
         $('rail-helm').querySelectorAll('[data-rail-step]').forEach(button=>{
@@ -237,9 +240,11 @@
                 ctx.fillText(flood.closed?'FLOODED':`${flood.name} · ${Math.ceil(flood.remaining)} s`,p.x,p.y-22/scale);
             }
         }
-        for(const o of st.config.obstacles||[]) {
+        if(st.config.gantry){const [a,b]=st.config.gantry.positions;stroke([a,b],'#796344',4/scale);stroke([a,b],'#c7b47c',1/scale);}
+        for(const o of R.obstacles(st)) {
             ctx.fillStyle='#817567';ctx.fillRect(o.x+4,o.y+5,o.w,o.h);ctx.fillStyle='#66594c';ctx.fillRect(o.x,o.y,o.w,o.h);
             ctx.strokeStyle='#ebd6a4';ctx.lineWidth=1/scale;ctx.strokeRect(o.x,o.y,o.w,o.h);
+            if(o.gantry){ctx.strokeStyle='#d79846';ctx.lineWidth=3/scale;ctx.beginPath();ctx.moveTo(o.x+o.w/2,o.y+o.h/2);ctx.lineTo(o.x+o.w/2,o.y-20/scale);ctx.lineTo(o.x+o.w/2+16/scale,o.y-20/scale);ctx.stroke();ctx.font=`11px sans-serif`;ctx.save();ctx.translate(o.x,o.y-28/scale);ctx.scale(1/scale,1/scale);ctx.fillStyle='#483b28';ctx.fillText('GANTRY',0,0);ctx.restore();}
         }
         const polygon=(pts,fill,color,width)=>{ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();};
         const envelope=swept(st);

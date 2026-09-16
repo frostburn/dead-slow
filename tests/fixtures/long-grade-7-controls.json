@@ -8519,5 +8519,6 @@
         "hand"
       ]
     }
-  ]
+  ],
+  "compatibility": "rail:1:2"
 }

@@ -75,7 +75,11 @@ test('5-07: pocket, two bridge shuttles and ordered reassembly use actual coupli
 
 test('5-08: clear the load into the headshunt and reverse into the export spur',()=>{
     const st=R.create(L[7]);assert.ok(R.clearance(st).collision);
-    cmd(st,'switch','fork');cmd(st,'switch','join');assert.equal(R.clearance(st).collision,null);
+    cmd(st,'switch','fork');cmd(st,'switch','join');assert.equal(R.clearance(st).collision.hit,'Loading gantry');
+    const first=R.clearance(st).collision.distance;
+    cmd(st,'gantry');step(st,9);assert.ok(R.clearance(st).collision.distance>first+200);
+    move(st,'engine','broad',630,1,2);cmd(st,'gantry');step(st,9);
+    assert.equal(R.clearance(st).collision,null);
     move(st,'engine','headshunt',350,1,2.5);step(st,2);
     assert.ok(st.completed.includes('clear-load'));assert.equal(st.completed.includes('vessel'),false);
     cmd(st,'switch','join');

@@ -34,4 +34,5 @@ export interface RailConfig {
     floods?:{name:string;edge:string;from:number;to:number;at:number}[];
     cargo?:{cars:string[];overhang:number;width:number};
     obstacles?:{name:string;x:number;y:number;w:number;h:number}[];
+    gantry?:{name:string;positions:[{x:number;y:number},{x:number;y:number}];w:number;h:number;seconds:number};
 }
