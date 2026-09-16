@@ -19,11 +19,18 @@ def check_railway(page, check, out):
                 const current=HarborLevels.find(l=>l.rail===config);
                 const b=RailPresentation.statusPlacement(current,DeadSlowTest.state.run.rail.net,canvas.width,canvas.height);
                 const p={x:panel.x-canvas.x,y:panel.y-canvas.y,w:panel.width,h:panel.height};
-                return {clear:b.protectedAreas.every(a=>p.x>=a.x+a.w||p.x+p.w<=a.x||p.y>=a.y+a.h||p.y+p.h<=a.y),inside:p.x>=0&&p.y>=0&&p.x+p.w<=canvas.width+.5&&p.y+p.h<=canvas.height+.5};
+                const element=document.getElementById('rail-info'),style=getComputedStyle(element);
+                return {clear:b.protectedAreas.every(a=>p.x>=a.x+a.w||p.x+p.w<=a.x||p.y>=a.y+a.h||p.y+p.h<=a.y),fallback:element.dataset.fallback==='true'&&Math.abs(p.x-(canvas.width-p.w-12))<1&&Math.abs(p.y-54)<1,noScroll:style.maxHeight==='none'&&style.overflowY==='visible'&&element.scrollHeight<=element.clientHeight+1};
             }''')
-            check(f'5-{number:02}: open status avoids tracks and labels at {width}×{height}',bounds['clear'] and bounds['inside'])
+            check(f'5-{number:02}: full status fits or uses default corner at {width}×{height}',(bounds['clear'] or bounds['fallback']) and bounds['noScroll'])
             if width==1440:
                 page.screenshot(path=str(out/f'rail-status-{number:02}.png'))
+            expanded=page.evaluate('''async()=>{
+                const panel=document.getElementById('rail-info');panel.querySelector('.rail-details').open=true;
+                await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+                return panel.open&&panel.querySelector('.rail-details').open&&getComputedStyle(panel).maxHeight==='none'&&panel.scrollHeight<=panel.clientHeight+1;
+            }''')
+            check(f'5-{number:02}: expanding details never adds a status scrollbar at {width}×{height}',expanded)
     page.set_viewport_size({'width':1440,'height':1000})
     page.evaluate('DeadSlow.level(1,1);DeadSlow.speed(0)')
     page.locator('#brief').dblclick()

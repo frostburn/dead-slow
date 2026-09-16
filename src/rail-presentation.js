@@ -84,7 +84,7 @@
     }
     // Map-wide protection makes placement independent of current train motion
     // and notice text. Recompute only when the level, viewport or zoom changes.
-    function statusPlacement(level,net,w,h) {
+    function statusPlacement(level,net,w,h,height=260) {
         const s=Math.min((w-42)/level.world[0],(h-25)/level.world[1]);
         const ox=(w-level.world[0]*s)/2,oy=(h-level.world[1]*s)/2;
         const point=p=>({x:ox+p.x*s,y:oy+p.y*s});
@@ -105,7 +105,7 @@
         const anchor=anchors[Number(level.id.split('-').at(-1))-1]||[1,0];
         const width=Math.min(288,w-24),left=12,right=Math.max(left,w-width-12),top=54;
         let best=null;
-        for(const height of [260,220,180,140,100,44].filter(v=>v<=h-top-44)) {
+        if(height<=h-top-44) {
             const bottom=h-height-44,preferred={x:left+(right-left)*anchor[0],y:top+(bottom-top)*anchor[1]};
             const candidates=[preferred];
             for(let row=0;row<=16;row++)for(let col=0;col<=20;col++)candidates.push({x:left+(right-left)*col/20,y:top+(bottom-top)*row/16});
@@ -114,9 +114,8 @@
                 const score=blocked*1e8+Math.hypot(p.x-preferred.x,p.y-preferred.y);
                 if(!best||score<best.score)best={...rect,blocked,score,protectedAreas};
             }
-            if(best?.blocked===0)break;
         }
-        return best||{x:12,y:54,w:width,h:44,blocked:0,protectedAreas};
+        return best?.blocked===0?{...best,fallback:false}:{x:right,y:top,w:width,h:height,fallback:true,protectedAreas};
     }
     const api={profile,statusPlacement,snapshot,indicators,displayDirection,signedSpeed,actionEnabled};
     if(typeof module!=='undefined'&&module.exports)module.exports=api;

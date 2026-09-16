@@ -2,7 +2,7 @@
     'use strict';
     const R=typeof module!=='undefined'&&module.exports?require('./rail.js'):root.Railway;
     const $=id=>document.getElementById(id), clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-    let act=null,signature='',levelNow=null,stateNow=null,transform=null,clearanceCache=null,clearanceKey='',placementKey='';
+    let act=null,signature='',levelNow=null,stateNow=null,transform=null,clearanceCache=null,clearanceKey='',placementKey='',placementState='',placementHeight=0;
     const Presentation=typeof module!=='undefined'&&module.exports?require('./rail-presentation.js'):root.RailPresentation;
     const {indicators,displayDirection,signedSpeed,actionEnabled}=Presentation;
     function swept(st) {
@@ -11,7 +11,7 @@
         return clearanceCache;
     }
     function prepare(level,command) {
-        levelNow=level;stateNow=null;act=command;signature='';clearanceKey='';clearanceCache=null;placementKey='';
+        levelNow=level;stateNow=null;act=command;signature='';clearanceKey='';clearanceCache=null;placementKey='';placementState='';
         $('rail-panel').hidden=!level.rail;
         $('rail-info').hidden=!level.rail;
         $('rail-helm').innerHTML='';
@@ -166,20 +166,18 @@
         m.head=R.locate(st,train,direction>0?ends.hi:ends.lo);m.tail=R.locate(st,train,direction>0?ends.lo:ends.hi);
         const x=zoom===1?(w-level.world[0]*scale)/2:w/2-m.head.x*scale,y=zoom===1?(mapHeight-level.world[1]*scale)/2:mapHeight/2-m.head.y*scale;
         transform={x,y,s:scale};ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);
-        const layoutKey=level.id+':'+w+':'+h+':'+zoom;
+        const panel=$('rail-info'),layoutState=level.id+':'+w+':'+h+':'+zoom+':'+panel.open+':'+$('rail-info-body').querySelector('.rail-details').open;
+        if(layoutState!==placementState){placementState=layoutState;placementHeight=0;}
+        // Reserve the full natural height. Keep the largest observed height
+        // until an explicit layout change so changing notices cannot oscillate
+        // the window between map pockets.
+        placementHeight=Math.max(placementHeight,260,Math.ceil(panel.getBoundingClientRect().height));
+        const layoutKey=layoutState+':'+placementHeight;
         if(layoutKey!==placementKey) {
             placementKey=layoutKey;
-            const box=zoom===1?Presentation.statusPlacement(level,st.net,w,h):{x:w-Math.min(288,w-24)-12,y:54,w:Math.min(288,w-24),h:Math.min(260,h-98)};
-            const panel=$('rail-info');
-            Object.assign(panel.style,{left:box.x+'px',right:'auto',top:box.y+'px',width:box.w+'px',maxHeight:box.h+'px'});
-            panel.ontoggle=null;
-            if(box.h<100){
-                panel.open=false;
-                // A narrow viewport starts folded in a clear map pocket.
-                // Expanding it is an explicit, temporary overlay, not a
-                // reason to move the window whenever guidance changes.
-                panel.ontoggle=()=>Object.assign(panel.style,{top:(panel.open?Math.min(box.y,h-264):box.y)+'px',maxHeight:panel.open?'220px':box.h+'px'});
-            }
+            const box=zoom===1?Presentation.statusPlacement(level,st.net,w,h,placementHeight):{x:w-Math.min(288,w-24)-12,y:54,w:Math.min(288,w-24),fallback:true};
+            Object.assign(panel.style,{left:box.x+'px',right:'auto',top:box.y+'px',width:box.w+'px'});
+            panel.dataset.fallback=String(box.fallback);
         }
         const stroke=(points,color,width)=>{ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();};
         // Survey contours and tree stands are seeded from map coordinates.

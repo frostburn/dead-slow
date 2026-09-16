@@ -22,13 +22,15 @@ test('railway watch playback completes through live controls and never writes re
     const report=t.cheats.report();assert.ok(report.verified);assert.ok(report.rail.couplings===1);
     assert.equal(t.state.storage.stages['long-grade-1'].clears,0);assert.equal(t.state.run.pausedUsed,true);
 });
-test('status windows fit clear map pockets in all twelve levels at 1x',()=>{
+test('status windows keep their full height or fall back to the default corner',()=>{
     const P=require('../src/rail-presentation.js');
     for(const [w,h] of [[1120,735],[1600,850],[704,500],[360,430]])for(const level of L) {
         const box=P.statusPlacement(level,R.network(level.rail),w,h);
-        assert.equal(box.blocked,0,`${level.id} at ${w} × ${h}`);
-        assert.ok(box.x>=0&&box.y>=0&&box.x+box.w<=w&&box.y+box.h<=h);
-        if(w>=1120)assert.ok(box.h>=140,`${level.id}: full guidance fits on desktop`);
+        assert.equal(box.h,260);
+        if(box.fallback){assert.equal(box.x,w-box.w-12);assert.equal(box.y,54);}
+        else {assert.equal(box.blocked,0);assert.ok(box.y+box.h<=h);}
+        const expanded=P.statusPlacement(level,R.network(level.rail),w,h,900);
+        assert.equal(expanded.h,900);assert.equal(expanded.fallback,true);
     }
 });
 test('ferry watch run loads both decks and leaves the engine ashore through ordinary controls',()=>{

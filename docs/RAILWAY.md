@@ -22,8 +22,9 @@ rolling stock beneath the red cargo envelope.
 
 At 1×, Train status uses a preferred empty area for each level and avoids tracks,
 points, destination labels and tunnel mouths. Placement is stable throughout a
-run; resizing recalculates it. On narrow screens without a readable open pocket,
-it starts folded and can be explicitly expanded over the map.
+run; resizing recalculates it. The panel keeps its natural height without an
+internal scrollbar. When the full panel cannot fit in a clear pocket, it uses
+the default upper-right corner. Folding and expansion remain player choices.
 
 Version 6 completes World 5. All twelve assignments join the railway circuit
 and the 72-stage Grand Tour. Schema 17 separately archives earlier 5-04, 5-09
