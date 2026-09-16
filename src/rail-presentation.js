@@ -82,7 +82,42 @@
         });
         return {lo,hi,engine:engine.q,samples,cars,junctions};
     }
-    const api={profile,snapshot,indicators,displayDirection,signedSpeed,actionEnabled};
+    // Map-wide protection makes placement independent of current train motion
+    // and notice text. Recompute only when the level, viewport or zoom changes.
+    function statusPlacement(level,net,w,h,height=260) {
+        const s=Math.min((w-42)/level.world[0],(h-25)/level.world[1]);
+        const ox=(w-level.world[0]*s)/2,oy=(h-level.world[1]*s)/2;
+        const point=p=>({x:ox+p.x*s,y:oy+p.y*s});
+        const protectedAreas=[],pad=level.rail.cargo?30:21;
+        const label=(p,text,offset=24)=>protectedAreas.push({x:p.x-text.length*3.2-8,y:p.y-offset-15,w:text.length*6.4+16,h:24});
+        for(const edge of Object.values(net.edges)) {
+            edge.samples.slice(1).forEach((b,i)=>{const a=point(edge.samples[i]);b=point(b);
+                protectedAreas.push({x:Math.min(a.x,b.x)-pad,y:Math.min(a.y,b.y)-pad,w:Math.abs(a.x-b.x)+pad*2,h:Math.abs(a.y-b.y)+pad*2});});
+            if(edge.tunnel)label(point(R.at(net,edge.id,edge.tunnel.from)),edge.tunnel.name,28);
+        }
+        for(const z of level.rail.zones)label(point(R.at(net,z.edge,(z.from+z.to)/2)),z.name);
+        for(const sw of net.switches){const p=net.nodes[sw.node];label(point({x:p[0],y:p[1]}),sw.label,14);}
+        for(const f of level.rail.floods||[])label(point(R.at(net,f.edge,(f.from+f.to)/2)),f.name+' · 999 s',22);
+        // Preferred pockets: quarry NE, station south, descent NW, valley NE,
+        // river NW, woods NE, bridge NW, terminal NW, summit NW, ferry NW,
+        // floodplain NW, and the finale above its western plateau.
+        const anchors=[[1,0],[.5,1],[0,0],[1,0],[0,0],[1,0],[0,0],[0,0],[0,0],[0,0],[0,0],[.15,0]];
+        const anchor=anchors[Number(level.id.split('-').at(-1))-1]||[1,0];
+        const width=Math.min(288,w-24),left=12,right=Math.max(left,w-width-12),top=54;
+        let best=null;
+        if(height<=h-top-44) {
+            const bottom=h-height-44,preferred={x:left+(right-left)*anchor[0],y:top+(bottom-top)*anchor[1]};
+            const candidates=[preferred];
+            for(let row=0;row<=16;row++)for(let col=0;col<=20;col++)candidates.push({x:left+(right-left)*col/20,y:top+(bottom-top)*row/16});
+            for(const p of candidates){const rect={...p,w:width,h:height};
+                const blocked=protectedAreas.filter(b=>p.x<b.x+b.w&&p.x+width>b.x&&p.y<b.y+b.h&&p.y+height>b.y).length;
+                const score=blocked*1e8+Math.hypot(p.x-preferred.x,p.y-preferred.y);
+                if(!best||score<best.score)best={...rect,blocked,score,protectedAreas};
+            }
+        }
+        return best?.blocked===0?{...best,fallback:false}:{x:right,y:top,w:width,h:height,fallback:true,protectedAreas};
+    }
+    const api={profile,statusPlacement,snapshot,indicators,displayDirection,signedSpeed,actionEnabled};
     if(typeof module!=='undefined'&&module.exports)module.exports=api;
     root.RailPresentation=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

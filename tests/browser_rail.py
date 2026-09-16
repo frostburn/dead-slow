@@ -8,6 +8,29 @@ def rail_detail(page, selector):
 
 
 def check_railway(page, check, out):
+    for width,height in [(1440,1000),(1920,1080)]:
+        page.set_viewport_size({'width':width,'height':height})
+        for number in range(1,13):
+            page.evaluate('(n)=>{DeadSlow.level(5,n);DeadSlow.speed(0);document.getElementById("rail-info").open=true}',number)
+            bounds=page.evaluate('''async()=>{
+                await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+                const canvas=document.getElementById('sea').getBoundingClientRect(),panel=document.getElementById('rail-info').getBoundingClientRect();
+                const config=DeadSlowTest.state.run.rail.config;
+                const current=HarborLevels.find(l=>l.rail===config);
+                const b=RailPresentation.statusPlacement(current,DeadSlowTest.state.run.rail.net,canvas.width,canvas.height);
+                const p={x:panel.x-canvas.x,y:panel.y-canvas.y,w:panel.width,h:panel.height};
+                const element=document.getElementById('rail-info'),style=getComputedStyle(element);
+                return {clear:b.protectedAreas.every(a=>p.x>=a.x+a.w||p.x+p.w<=a.x||p.y>=a.y+a.h||p.y+p.h<=a.y),fallback:element.dataset.fallback==='true'&&Math.abs(p.x-(canvas.width-p.w-12))<1&&Math.abs(p.y-54)<1,noScroll:style.maxHeight==='none'&&style.overflowY==='visible'&&element.scrollHeight<=element.clientHeight+1};
+            }''')
+            check(f'5-{number:02}: full status fits or uses default corner at {width}×{height}',(bounds['clear'] or bounds['fallback']) and bounds['noScroll'])
+            if width==1440:
+                page.screenshot(path=str(out/f'rail-status-{number:02}.png'))
+            expanded=page.evaluate('''async()=>{
+                const panel=document.getElementById('rail-info');panel.querySelector('.rail-details').open=true;
+                await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+                return panel.open&&panel.querySelector('.rail-details').open&&getComputedStyle(panel).maxHeight==='none'&&panel.scrollHeight<=panel.clientHeight+1;
+            }''')
+            check(f'5-{number:02}: expanding details never adds a status scrollbar at {width}×{height}',expanded)
     page.set_viewport_size({'width':1440,'height':1000})
     page.evaluate('DeadSlow.level(1,1);DeadSlow.speed(0)')
     page.locator('#brief').dblclick()
@@ -16,7 +39,12 @@ def check_railway(page, check, out):
     check('Railway splits stay in the sidebar',page.locator('#rail-panel #rail-tasks').is_visible() and page.locator('#rail-info #rail-tasks').count()==0)
     page.evaluate('''(()=>{const r=DeadSlowTest.state.run,t=r.rail.config.tasks[0];r.rail.completed.push(t.id);r.splits.push({name:t.text,time:12.5});DeadSlowTest.hud()})()''')
     check('Completed railway split displays its timestamp',page.locator('#rail-tasks .done').inner_text().find('12.50')>=0)
+    page.evaluate('DeadSlowTest.state.run.rail.completed=[];DeadSlowTest.hud()')
+    check('Invalidated split retains its first time and strikes out the objective',page.locator('#rail-tasks .invalidated').count()==1 and '12.50' in page.locator('#rail-tasks .invalidated').inner_text() and page.locator('#rail-tasks .invalidated > span').first.evaluate('(e)=>getComputedStyle(e).textDecorationLine')=='line-through')
     page.evaluate('DeadSlow.level(5,1);DeadSlow.speed(0)')
+    zoom=page.locator('#zoom-btn').inner_text()
+    page.locator('#sea').dblclick(position={'x':20,'y':20})
+    check('Double click no longer changes map zoom',page.locator('#zoom-btn').inner_text()==zoom)
     page.locator('#rail-summary').dblclick()
     check('Railway instrument text cannot acquire selection boxes',page.evaluate('getSelection().toString()===""'))
     check('Lower railway telegraphs are visible',page.locator('#rail-helm').is_visible() and page.locator('#rail-helm button').count()==6)
@@ -82,12 +110,15 @@ def check_railway(page, check, out):
     page.screenshot(path=str(out/'rail-cargo-clearance.png'))
     page.locator('[data-rail="switch"][data-value="fork"]').click()
     page.locator('[data-rail="switch"][data-value="join"]').click()
-    check('Selecting both broad-route points clears the vessel preview','clears the vessel' in rail_detail(page, '#rail-operations'))
+    check('Broad road is fouled by parked flats outside the running track','parked wagon' in rail_detail(page, '#rail-operations'))
+    check('Cargo clearance uses normal shunting controls',page.locator('#rail-gantry').count()==0 and page.locator('[data-rail="select"][data-value="P1"]').count()==1)
+    page.evaluate('DeadSlowTest.railCommand("uncouple","engine");DeadSlowTest.railCommand("hand");DeadSlow.step(2)')
+    check('Cargo shunting guide records the secured carrier split',page.evaluate('DeadSlowTest.state.run.rail.completed.includes("leave-vessel")'))
     page.evaluate("DeadSlowTest.load(HarborLevels.findIndex(l=>l.id==='long-grade-1'),false)")
     check('Replay controls stay out of the player UI',page.locator('[data-action=watch-rail], [data-rail=watch], .rail-watch').count()==0 and 'Watch run' not in page.locator('#dialog').inner_text())
     page.evaluate('DeadSlow.watch("long-grade-1",8)')
     check('Watch run starts the railway recording as unranked playback',page.evaluate('DeadSlow.state().replay==="long-grade-1" && DeadSlowTest.state.run.pausedUsed && DeadSlow.speed()===8'))
-    page.evaluate('DeadSlow.speed(0);DeadSlow.step(600)')
+    page.evaluate('DeadSlow.speed(0);DeadSlow.step(600);if(DeadSlowTest.state.status!=="complete")DeadSlow.step(60)')
     check('Watchable railway run completes without recording a personal best',page.evaluate('DeadSlow.report().verified && DeadSlowTest.state.storage.stages["long-grade-1"].clears===0'))
     page.evaluate('DeadSlow.normal()')
     check('Taking the controls starts a fresh normal-speed ranked attempt',page.evaluate('DeadSlow.speed()===1 && !DeadSlowTest.state.run.pausedUsed && DeadSlowTest.state.status==="running"'))

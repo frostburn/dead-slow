@@ -20,8 +20,11 @@ function assisted(st,target=400) {
         const split=Math.ceil(g.cars.length/2),power=g.cars.slice(0,split),rear=g.cars.slice(split);
         const demand=cars=>cars.reduce((n,c)=>n+c.mass*(R.locate(st,g,c.q).grade*9.81+.012+acceleration),0);
         cmd(st,'brake',brake);
-        cmd(st,'power',brake?0:Math.max(0,Math.min(4,Math.ceil(demand(power)/52500))));
-        cmd(st,'helper',brake?0:Math.max(0,Math.min(4,Math.ceil(demand(rear)/47500))));
+        const pull=Math.max(...g.cars.map(c=>c.coupler||0)),push=Math.max(...g.cars.map(c=>-(c.coupler||0)));
+        const frontLimit=pull>(st.config.helper.workingPull||120000)*.85?2:3;
+        const rearLimit=push>st.config.compressionLimit*.85?2:3;
+        cmd(st,'power',brake?0:Math.max(0,Math.min(frontLimit,Math.ceil(demand(power)/52500))));
+        cmd(st,'helper',brake?0:Math.max(0,Math.min(rearLimit,Math.ceil(demand(rear)/47500))));
         step(st,.2);
     }
     throw Error('Helper crossing timed out');

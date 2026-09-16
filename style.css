@@ -27,7 +27,7 @@ body[data-theme="rail"] .chart-zoom { bottom:14px; }
 .rail-panel[hidden] { display:none; }
 .rail-helm, .rail-grade { display:none; }
 body[data-theme="rail"] .rail-grade { display:block; flex:1; min-width:0; height:64px; }
-.rail-info { position:absolute; z-index:3; top:70px; right:12px; width:288px; max-width:calc(100% - 24px); max-height:calc(100% - 125px); overflow:auto; overscroll-behavior:contain; background:#304239f2; color:var(--ink); border:1px solid var(--line); border-radius:6px; box-shadow:0 3px 12px #17271d30; font-size:12px; }
+.rail-info { position:absolute; z-index:3; top:54px; right:12px; width:288px; max-width:calc(100% - 24px); overflow:visible; background:#304239f2; color:var(--ink); border:1px solid var(--line); border-radius:6px; box-shadow:0 3px 12px #17271d30; font-size:12px; }
 .rail-info[hidden] { display:none; }
 .rail-info>summary { padding:10px 12px; cursor:pointer; font-weight:650; }
 .rail-info-body { padding:0 12px 10px; }
@@ -93,7 +93,6 @@ body[data-theme="rail"] .rail-helm { display:grid; grid-template-columns:repeat(
   body[data-theme="rail"] .helm { padding:6px 10px; flex-wrap:wrap; gap:4px; }
   body[data-theme="rail"] .rail-grade { flex-basis:100%; height:60px; }
   body[data-theme="rail"] .rail-helm { width:100%; }
-  .rail-info { top:54px; max-height:calc(100% - 100px); }
   body[data-theme="rail"] .rail-helm { gap:10px; }
   body[data-theme="rail"] .workspace { grid-template-columns:1fr; grid-template-rows:minmax(220px,1fr) minmax(160px,.85fr); }
   .rail-panel { padding:12px 16px; border-left:0; border-top:1px solid var(--line); }
@@ -554,6 +553,7 @@ strong {
 .split-row.active {
   color:var(--amber)
 }
+.split-row.invalidated > span:first-child { text-decoration:line-through; }
 
 .record-pair {
   display:flex;

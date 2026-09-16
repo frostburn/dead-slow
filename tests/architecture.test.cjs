@@ -8,26 +8,26 @@ const record={time:80,clean:true,contacts:0,hull:100,ghost:undefined};
 const stage=()=>({runs:[{...record}],ghost:[[0,1,2,0]],bestSplits:[30],clears:1,attempts:2});
 
 test('schema upgrade retains current records; a course revision archives only affected routes',()=>{
-    const data=S.fresh();data.version=17;delete data.compatibility;
+    const data=S.fresh();data.version=17;
     data.stages['long-grade-1']=stage();data.stages['dead-slow']=stage();
     for(const id of ['long-grade','grand-tour','coast'])data.races[id]=[{...record}];
     const upgraded=S.sanitize(data);
     assert.deepEqual(upgraded.stages['long-grade-1'],stage());
     const next=C.manifest(levels.map(l=>l.id==='long-grade-1'?{...l,courseRevision:2}:l));
-    const migrated=S.sanitize(upgraded,next),key=C.archiveKey('long-grade-1','rail:1:1');
+    const stamp=C.manifest(levels).stages['long-grade-1'],migrated=S.sanitize(upgraded,next),key=C.archiveKey('long-grade-1',stamp);
     assert.equal(migrated.stages['long-grade-1'],undefined);
     assert.deepEqual(migrated.archivedStages[key],stage());
     assert.deepEqual(migrated.stages['dead-slow'],stage());
     assert.equal(migrated.races['long-grade'].length,0);
     assert.equal(migrated.races['grand-tour'].length,0);
     assert.equal(migrated.races.coast.length,1);
-    assert.equal(migrated.archivedCompatibility.stages[key],'rail:1:1');
+    assert.equal(migrated.archivedCompatibility.stages[key],stamp);
     assert.deepEqual(S.sanitize(migrated,next),migrated);
 });
 test('rules and circuit order affect compatibility, presentation metadata does not',()=>{
     const current=C.manifest(levels);
     assert.deepEqual(C.manifest(levels.map(l=>({...l,name:'New title',tip:'New hint'}))),current);
-    const revised=C.manifest(levels.map(l=>l.campaign==='long-grade'?{...l,rulesRevision:2}:l));
+    const revised=C.manifest(levels.map(l=>l.campaign==='long-grade'?{...l,rulesRevision:l.rulesRevision+1}:l));
     assert.notEqual(revised.races['long-grade'],current.races['long-grade']);
     assert.equal(revised.races.coast,current.races.coast);
     const ordered=[...levels];[ordered[0],ordered[1]]=[ordered[1],ordered[0]];

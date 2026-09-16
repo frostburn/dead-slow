@@ -10,7 +10,7 @@
     /** @param {string} id @param {string} name @param {string} brief @param {string} tip
      * @param {[number,number]} world @param {import('./rail-level-types.js').RailConfig} rail
      * @param {[number,number,number]} pace */
-    const level=(id,name,brief,tip,world,rail,pace)=>({id,name,brief,tip,world,rail,pace,
+    const level=(id,name,brief,tip,world,rail,pace)=>({id,name,brief,tip,world,rail,pace,rulesRevision:3,
         kind:'Freight railway',start:[100,100,0],berth:{x:100,y:100,a:0,l:50,w:20,angle:10,speed:.2},
         spec:{name:'No. 17',length:20,beam:4,mass:80000}});
     const levels=[
@@ -132,7 +132,8 @@
                 groups:[{cars:[loco('service',180)]},{brake:0,speed:2.8,cars:[wagon('R1','runaway-road',300,{mass:65000}),wagon('R2','runaway-road',282.8,{mass:65000}),wagon('R3','runaway-road',265.6,{mass:65000})]}],
                 zones:[{id:'safe',name:'Stop before the broken crossing',edge:'bridge-approach',from:35,to:340},
                     {id:'catch-yard',name:'Emergency gravel catch',edge:'catch',from:35,to:350,color:'#d9a168'}],
-                tasks:[{id:'rescue',type:'rescue',zone:'safe',alternative:'catch-yard',cars:['R1','R2','R3'],text:'All three wagons stopped and secured before the river'}]
+                tasks:[{id:'catch-wagons',type:'coupled',milestone:true,cars:['R1','R2','R3'],text:'Couple to the three runaway wagons'},
+                    {id:'rescue',type:'rescue',zone:'safe',alternative:'catch-yard',cars:['R1','R2','R3'],text:'Wagons secured before the river (or in the catch siding)'}]
             },[350,500,750]),
         level('long-grade-6','Leaves on the Line',
             'Take the timber freight over the wooded saddle in steady rain. Build momentum on the approach, ease power through the leaf-covered cutting, and control the descent to the paper works.',
@@ -163,28 +164,42 @@
                 switches:[{node:'e',label:'Receiving points',stem:'bridge',branches:['receiving','pocket','return'],names:['Assembly road','Receiving pocket','Engine return loop']}],
                 groups:[{cars:[wagon('T1','west-yard',350,{length:24,mass:110000,heavy:true}),wagon('E1','west-yard',328.8,{length:16,mass:10000}),loco('west-yard',309.6),wagon('T2','west-yard',286.4,{length:24,mass:110000,heavy:true}),wagon('E2','west-yard',265.2,{length:16,mass:10000})]}],
                 zones:[{id:'final',name:'Assembly · 2 then 1 toward buffers',edge:'receiving',from:70,to:640},
-                    {id:'pocket-zone',name:'Receiving pocket',edge:'pocket',from:60,to:420}],
-                tasks:[{id:'transformers',type:'park',zone:'final',cars:['engine','T1','E1','T2','E2'],order:['T2','E2','T1','E1'],text:'Complete train secured; load 2 and support ahead of load 1'}]
+                    {id:'pocket-zone',name:'Receiving pocket',edge:'pocket',from:60,to:420},
+                    {id:'waiting-load',name:'West holding track',edge:'west-yard',from:80,to:500}],
+                tasks:[
+                    {id:'leave-load-2',type:'delivery',milestone:true,zone:'waiting-load',cars:['T2','E2'],text:'1 · Detach and secure load 2 + support before crossing'},
+                    {id:'pocket-load-1',type:'delivery',milestone:true,zone:'pocket-zone',cars:['T1','E1'],text:'2 · Leave load 1 + support secured in the pocket'},
+                    {id:'assembly-load-2',type:'delivery',milestone:true,zone:'final',cars:['T2','E2'],text:'3 · Leave load 2 + support secured on the assembly road'},
+                    {id:'rejoin-loads',type:'coupled',milestone:true,after:'assembly-load-2',cars:['T1','E1','T2','E2'],text:'4 · Use the return loop; collect load 1 and rejoin the freight'},
+                    {id:'transformers',type:'park',zone:'final',cars:['engine','T1','E1','T2','E2'],order:['T2','E2','T1','E1'],text:'5 · Park and secure all wagons, load 2 ahead; clear the points'}]
             },[900,1350,1900]),
         level('long-grade-8','The Corners Are the Cargo',
-            'Take the vessel around the loading platform, pull the whole load into the headshunt, then reverse into the export spur. The vessel swings outside its carrier wagons on tight bends.',
-            'Red outlines show where the vessel would strike an obstacle. Use the broad road, stop with both carriers beyond the headshunt mark, then select Export spur and reverse. Watch the leading cargo end during the final push.',
+            'The broad road is clear for ordinary wagons, but this vessel’s ends sweep across the neighbouring siding. Leave the carriers secured, use the locomotive to move the parked flats out of that sweep, then return for the vessel.',
+            'Shunt P1 and P2 into the marked refuge, or find another place outside the swept outline. Rejoin the carriers, take the broad road, and reverse from the headshunt into the export berth. Preview the load’s corners before committing.',
             [2000,1100],{
                 scenery:'yard',thermal:false,
-                nodes:{start:[70,450,10],fork:[560,450,10],join:[1260,450,10],head:[1780,150,10],end:[1850,910,10]},
+                nodes:{start:[70,450,10],fork:[560,450,10],join:[1260,450,10],head:[1780,150,10],end:[1850,910,10],refuge:[1120,650,10]},
                 tracks:[{id:'arrival',a:'start',b:'fork',limit:7},
                     {id:'tight',a:'fork',b:'join',points:[[560,450,10],[680,320,10],[740,470,10],[900,560,10],[1060,330,10],[1260,450,10]],limit:4},
                     {id:'broad',a:'fork',b:'join',points:[[560,450,10],[650,740,10],[910,850,10],[1170,740,10],[1260,450,10]],limit:5},
+                    {id:'clearance-road',a:'fork',b:'refuge',points:[[560,450,10],[565,690,10],[670,780,10],[1040,780,10],[1120,650,10]],limit:4},
                     {id:'headshunt',a:'join',b:'head',limit:4},
                     {id:'terminal',a:'join',b:'end',points:[[1260,450,10],[1510,510,10],[1750,690,10],[1850,910,10]],limit:4}],
-                switches:[{node:'fork',label:'Terminal west',stem:'arrival',branches:['tight','broad'],names:['Platform road','Broad freight road']},
+                switches:[{node:'fork',label:'Terminal west',stem:'arrival',branches:['tight','broad','clearance-road'],names:['Platform road','Broad freight road','Clearance siding']},
                     {node:'join',label:'Export points',stem:'headshunt',branches:['tight','broad','terminal'],names:['Platform road','Broad freight road','Export spur']}],
-                groups:[{cars:[loco('arrival',310),wagon('C1','arrival',278.8,{length:40,mass:65000}),wagon('C2','arrival',237.6,{length:40,mass:65000})]}],
-                cargo:{cars:['C1','C2'],overhang:28,width:11},
+                groups:[{cars:[loco('arrival',310),wagon('C1','arrival',278.8,{length:40,mass:65000}),wagon('C2','arrival',237.6,{length:40,mass:65000})]},
+                    {secured:true,cars:[wagon('P1','clearance-road',380,{mass:12000}),wagon('P2','clearance-road',362.8,{mass:12000})]}],
+                cargo:{cars:['C1','C2'],overhang:40,width:14,clearanceWagons:['P1','P2']},
                 obstacles:[{name:'Loading platform',x:689,y:328,w:23,h:26},{name:'Signal cabin',x:1070,y:348,w:24,h:22}],
-                zones:[{id:'turn',name:'Whole load beyond this mark · stop and reverse',edge:'headshunt',from:140,to:450},
+                zones:[{id:'vessel-wait',name:'Carrier holding track',edge:'arrival',from:180,to:320},
+                    {id:'refuge',name:'Flat wagon refuge',edge:'clearance-road',from:620,to:800},
+                    {id:'turn',name:'Whole load beyond this mark · stop and reverse',edge:'headshunt',from:140,to:450},
                     {id:'terminal',name:'Export berth',edge:'terminal',from:340,to:670}],
-                tasks:[{id:'clear-load',type:'position',zone:'turn',cars:['engine','C1','C2'],text:'Stop with the whole load inside the headshunt mark'},
+                tasks:[{id:'leave-vessel',type:'delivery',milestone:true,zone:'vessel-wait',cars:['C1','C2'],text:'Leave the carriers secured; free the locomotive'},
+                    {id:'collect-flats',type:'coupled',milestone:true,cars:['P1','P2'],text:'Couple to the parked flats on the clearance siding'},
+                    {id:'clear-flats',type:'delivery',milestone:true,zone:'refuge',cars:['P1','P2'],text:'Shunt the parked flats clear of the vessel’s sweep'},
+                    {id:'rejoin-vessel',type:'coupled',milestone:true,after:'collect-flats',cars:['C1','C2'],text:'Return for the vessel and rejoin the carriers'},
+                    {id:'clear-load',type:'position',zone:'turn',cars:['engine','C1','C2'],text:'Stop with the whole load inside the headshunt mark'},
                     {id:'vessel',type:'park',after:'clear-load',zone:'terminal',cars:['engine','C1','C2'],text:'Reverse into the export berth and secure the carriers'}]
             },[700,1000,1400]),
         level('long-grade-9','A Push from Behind',

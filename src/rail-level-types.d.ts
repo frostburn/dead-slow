@@ -11,7 +11,7 @@ export interface Track {
     bridge?:{name:string;maxMass:number;maxLoads:number;pairs:[string,string][]};
 }
 export interface Zone {id:string;name:string;edge:string;from:number;to:number;color?:string}
-interface TaskBase {id:string;text:string;after?:string;dwell?:number}
+interface TaskBase {id:string;text:string;after?:string;dwell?:number;milestone?:boolean}
 export type Task = TaskBase & (
     {type:'stop';zone:string;independent?:boolean} |
     {type:'coupled';cars:string[]} |
@@ -32,6 +32,6 @@ export interface RailConfig {
     river?:[number,number][];
     ferry?:{decks:string[];start:number;maxDifference:number};
     floods?:{name:string;edge:string;from:number;to:number;at:number}[];
-    cargo?:{cars:string[];overhang:number;width:number};
+    cargo?:{cars:string[];overhang:number;width:number;clearanceWagons?:string[]};
     obstacles?:{name:string;x:number;y:number;w:number;h:number}[];
 }

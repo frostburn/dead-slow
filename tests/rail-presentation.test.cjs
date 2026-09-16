@@ -18,9 +18,34 @@ test('the last wagon can be in danger while the locomotive is under the limit',(
     assert.equal(st.failure,null);assert.equal(g.cars.at(-1).curveTime,0);
 });
 test('railway watch playback completes through live controls and never writes records',()=>{
-    const t=create();t.cheats.watch('long-grade-1',0);t.cheats.step(600);
+    const t=create();t.cheats.watch('long-grade-1',0);t.cheats.step(600);if(t.state.status!=='complete')t.cheats.step(60);
     const report=t.cheats.report();assert.ok(report.verified);assert.ok(report.rail.couplings===1);
     assert.equal(t.state.storage.stages['long-grade-1'].clears,0);assert.equal(t.state.run.pausedUsed,true);
+});
+test('status windows keep their full height or fall back to the default corner',()=>{
+    const P=require('../src/rail-presentation.js');
+    for(const [w,h] of [[1120,735],[1600,850],[704,500],[360,430]])for(const level of L) {
+        const box=P.statusPlacement(level,R.network(level.rail),w,h);
+        assert.equal(box.h,260);
+        if(box.fallback){assert.equal(box.x,w-box.w-12);assert.equal(box.y,54);}
+        else {assert.equal(box.blocked,0);assert.ok(box.y+box.h<=h);}
+        const expanded=P.statusPlacement(level,R.network(level.rail),w,h,900);
+        assert.equal(expanded.h,900);assert.equal(expanded.fallback,true);
+    }
+});
+test('ferry watch run loads both decks and leaves the engine ashore through ordinary controls',()=>{
+    const t=create(),record=require('../src/verification.js').runs.find(r=>r.level==='long-grade-10');
+    t.cheats.watch(record.level,0);
+    for(let left=record.duration;left>0;left-=600)t.cheats.step(Math.min(600,left));
+    assert.ok(t.cheats.report().verified);assert.equal(t.state.storage.stages[record.level].clears,0);
+    assert.deepEqual(t.state.run.rail.completed,['port','starboard','ashore']);
+});
+test('cargo watch shunts the flats, rejoins the carriers and finishes without shortcuts',()=>{
+    const t=create(),record=require('../src/verification.js').runs.find(r=>r.level==='long-grade-8');
+    t.cheats.watch(record.level,0);
+    for(let left=record.duration;left>0;left-=600)t.cheats.step(Math.min(600,left));
+    assert.ok(t.cheats.report().verified);assert.equal(t.state.storage.stages[record.level].clears,0);
+    assert.ok(t.state.run.rail.completed.includes('clear-flats'));assert.ok(t.state.run.rail.completed.includes('vessel'));
 });
 test('railway logbook shows local circuit and Grand Tour clean and overall records',()=>{
     const t=create();t.cheats.level('long-grade-9');

@@ -29,7 +29,7 @@
         return {x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t,
             a:Math.atan2(b.y-a.y,b.x-a.x),grade:(b.z-a.z)/(length||1),edge:id,s,
             limit:(edge.restrictions||[]).find(r=>s/edge.length>=r.from&&s/edge.length<=r.to)?.limit||edge.limit||10,
-            adhesion:edge.adhesion??.18};
+            adhesion:edge.adhesion??.23};
     }
     const entry=(net,id,dir,start=0)=>({id,dir,start,end:start+net.edges[id].length});
     function locate(st,group,q) {
@@ -162,6 +162,11 @@
         }
         return nearest;
     }
+    function routeDistance(st,group,q,edge,s) {
+        const preview=previewPath(st,group,q-3000,q+3000);
+        const distances=preview.path.filter(leg=>leg.id===edge).map(leg=>(leg.dir===1?leg.start+s:leg.end-s)-q);
+        return distances.length?distances.sort((a,b)=>Math.abs(a)-Math.abs(b))[0]:null;
+    }
     function availability(st,name,value) {
         const eg=engineGroup(st),selected=groupFor(st,st.selected)||eg;
         let reason='';
@@ -200,9 +205,8 @@
         const coupling=availability(st,'couple');
         const pickup=hit?`${hit.b.car.id} · ${hit.distance.toFixed(1)} m to buffers · relative speed ${(Math.abs(hit.a.car.v-hit.b.car.v*hit.a.dir*hit.b.dir)*3.6).toFixed(1)} km/h${hit.distance<=3?'\n'+(coupling.enabled?'Ready to couple · F':coupling.reason):''}`:'No waiting cut on this stretch of track.';
         let next='',action=null,split=null,direction=null,needsMovement=false;
-        // A newly released cut needs attention regardless of mission order.
-        if(selected!==eg&&hands<selected.cars.length){next='Secure this cut before leaving it.';action='hand';}
-        const task=st.config.tasks.find(t=>!st.completed.includes(t.id)&&(!t.after||st.completed.includes(t.after)));
+        const unsecured=selected!==eg&&hands<selected.cars.length;
+        const task=st.config.tasks.find(t=>!st.completed.includes(t.id)&&(!t.after||st.completed.includes(t.after))&&!(st.caught&&t.milestone&&t.type==='coupled'));
         if(!next&&task) {
             const zone=st.config.zones.find(z=>z.id===task.zone);
             if(task.type==='traffic') {
@@ -214,11 +218,24 @@
                 const wagons=groupFor(st,task.cars[0]);
                 if(st.caught&&wagons.cars.every(c=>Math.abs(c.v)<.08)){
                     next='Secure the caught wagons with their handbrakes.';action=selected===wagons?'hand':'select';
-                } else {next=taskReady(st,task)?'Hold the rescued wagons here.':eg.cars.some(c=>task.cars.includes(c.id))?'Brake before the broken crossing. Secure the wagons once stopped.':'Match the rolling wagons, then couple within 3 m.';action=eg.cars.length===1?'couple':null;}
+                } else if(taskReady(st,task))next='Hold the rescued wagons here.';
+                else if(eg.cars.some(c=>task.cars.includes(c.id))) {
+                    const room=eg.cars.filter(c=>task.cars.includes(c.id)).map(c=>routeDistance(st,eg,c.q,zone.edge,zone.to-c.length/2)).filter(d=>d!==null);
+                    const stopped=eg.cars.every(c=>Math.abs(c.v)<.08),insideZone=eg.cars.filter(c=>task.cars.includes(c.id)).every(c=>inside(st,c,eg,zone));
+                    next=room.length?`${Math.max(0,Math.floor(Math.min(...room)))} m of stopping room before the river. `:'';
+                    next+=stopped&&insideZone?'Set the wagon handbrakes to secure the train.':'Brake into the marked track; secure the wagons once stopped.';
+                    action=stopped&&insideZone?'hand':'stop';
+                } else {next='Match the rolling wagons, then couple within 3 m.';action='couple';}
             }
             else if(task.type==='coupled') {
                 if(task.cars.every(id=>eg.cars.some(c=>c.id===id)))next='Coupled. Collection being confirmed.';
-                else {next=coupling.enabled?'Buffers in reach. Couple the waiting wagons.':hit&&hit.distance<=3?coupling.reason:pickup;action='couple';needsMovement=!hit||hit.distance>3;}
+                else {
+                    const target=task.cars.find(id=>!eg.cars.some(c=>c.id===id)),cut=groupFor(st,target),ends=endpoints(st,eg);
+                    const gaps=cut?endpoints(st,cut).flatMap(b=>ends.map(a=>routeDistance(st,eg,a.q,b.edge,b.s))).filter(d=>d!==null):[];
+                    const distance=gaps.length?Math.min(...gaps.map(Math.abs)):null;
+                    next=coupling.enabled?'Buffers in reach. Couple the waiting wagons.':hit&&hit.distance<=3?coupling.reason:distance!==null?`${Math.ceil(distance)} m to ${target}'s cut along the selected route. Approach below 2 km/h relative speed.`:`Set the points toward ${target}'s cut.`;
+                    action='couple';needsMovement=!hit||hit.distance>3;
+                }
             }
             else {
                 const ids=task.type==='stop'?['engine']:task.cars;
@@ -227,9 +244,9 @@
                 if(task.type==='park'&&cars.some(({g})=>g!==eg)){next='Reconnect every wagon before parking the complete train.';action='couple';}
                 else if(outside.length) {
                     const {g,c}=outside.at(-1),p=locate(st,g,c.q);
-                    const missing=p.edge===zone.edge?clamp(p.s,zone.from+c.length/2,zone.to-c.length/2)-p.s:null;
-                    const behind=missing!==null&&g===eg&&missing*p.dir*st.reverser*drivingEngine(st).face<0;
-                    next=missing!==null?`${c.id==='engine'?'Loco':c.id} needs ${Math.ceil(Math.abs(missing))} m ${behind?'back':'more'} to fit inside ${zone.name}.${behind?' Stop and reverse (X).':''}`:`Bring ${c.id==='engine'?'the loco':c.id} into ${zone.name}.`;
+                    const same=p.edge===zone.edge,missing=same?(clamp(p.s,zone.from+c.length/2,zone.to-c.length/2)-p.s)*p.dir:routeDistance(st,g,c.q,zone.edge,(zone.from+zone.to)/2);
+                    const behind=missing!==null&&g===eg&&missing*st.reverser*drivingEngine(st).face<0;
+                    next=missing!==null?`${c.id==='engine'?'Loco':c.id} needs ${Math.ceil(Math.abs(missing))} m ${behind?'back':'more'} ${same?'to fit inside':'along the selected route to'} ${zone.name}.${behind?' Stop and reverse (X).':''}`:`Set the points to bring ${c.id==='engine'?'the loco':c.id} into ${zone.name}.`;
                     if(task.type==='stop'&&task.independent)next+=' Stop with the loco brake (E / Q).';
                     needsMovement=true;
                 } else if(st.power||cars.some(({c})=>Math.abs(c.v)>.08)) {
@@ -272,6 +289,7 @@
             direction=away?1:null;needsMovement=away;
         }
         if(!next)next='Keep all delivered wagons secured.';
+        if(unsecured){next+=' Secure the selected cut before leaving it.';action='hand';needsMovement=false;}
         if(eg.cars.some(c=>c.hand)&&!['hand','uncouple'].includes(action)){next+=' Release the attached handbrakes before moving.';}
         if(needsMovement&&!eg.cars.some(c=>c.hand)) {
             if(st.independent>.05){next+=' Release the loco brake (Q) to move.';action='independent';direction=-1;}
@@ -376,11 +394,21 @@
             {x:b.x-dx*spec.overhang+dy*r,y:b.y-dy*spec.overhang-dx*r},
             {x:b.x-dx*spec.overhang-dy*r,y:b.y-dy*spec.overhang+dx*r}];
     }
-    function cargoHit(st,poly) {
+    function vehicleShape(st,group,car) {
+        const p=locate(st,group,car.q),dx=Math.cos(p.a),dy=Math.sin(p.a),half=car.length/2;
+        return [[half,4.5],[half,-4.5],[-half,-4.5],[-half,4.5]].map(([x,y])=>({x:p.x+x*dx-y*dy,y:p.y+x*dy+y*dx}));
+    }
+    function obstacles(st) {
+        return [...st.config.obstacles||[],...(st.config.cargo?.clearanceWagons||[]).map(id=>{
+            const g=groupFor(st,id),c=g.cars.find(c=>c.id===id);
+            return {name:`${id} · parked wagon`,car:id,polygon:vehicleShape(st,g,c)};
+        })];
+    }
+    function cargoHit(st,poly,boxes=obstacles(st)) {
         if(!poly)return null;
-        return (st.config.obstacles||[]).find(o=>{
-            const box=[{x:o.x,y:o.y},{x:o.x+o.w,y:o.y},{x:o.x+o.w,y:o.y+o.h},{x:o.x,y:o.y+o.h}];
-            const axes=[{x:1,y:0},{x:0,y:1},...poly.slice(0,2).map((p,i)=>({x:poly[i+1].y-p.y,y:p.x-poly[i+1].x}))];
+        return boxes.find(o=>{
+            const box=o.polygon||[{x:o.x,y:o.y},{x:o.x+o.w,y:o.y},{x:o.x+o.w,y:o.y+o.h},{x:o.x,y:o.y+o.h}];
+            const axes=[poly,box].flatMap(shape=>shape.slice(0,2).map((p,i)=>({x:shape[i+1].y-p.y,y:p.x-shape[i+1].x})));
             return axes.every(n=>{const a=poly.map(p=>p.x*n.x+p.y*n.y),b=box.map(p=>p.x*n.x+p.y*n.y);return Math.max(...a)>=Math.min(...b)&&Math.max(...b)>=Math.min(...a);});
         })||null;
     }
@@ -391,7 +419,9 @@
         for(let i=0;i<16;i++)if(!extend(st,group,dir>0))break;
         const b=bounds(group),room=dir>0?group.path.at(-1).end-b.hi:b.lo-group.path[0].start,previews=[];
         for(let distance=0;distance<=Math.min(2400,room);distance+=12){const polygon=cargoShape(st,group,dir*distance);if(polygon)previews.push({polygon,distance,hit:cargoHit(st,polygon)?.name||null});}
-        return {previews,collision:previews.find(p=>p.hit)||null};
+        const collision=previews.find(p=>p.hit)||null;
+        if(collision)collision.bodies=group.cars.map(c=>vehicleShape(st,group,{...c,q:c.q+dir*collision.distance}));
+        return {previews,collision};
     }
     function checkInfrastructure(st) {
         for(const b of bridges(st)){
@@ -477,9 +507,13 @@
                 const fade=1-clamp((c.temp-180)/270,0,.8);
                 let brake=c.mass*(c.powered?.85:.7)*c.pressure*fade;
                 if(c.powered&&engine) {
-                    const demand=(c.helper?st.helper:st.power)/4*(c.helper?(st.config.helper?.tractive||190000):(st.config.tractive||210000)),adhesion=p.adhesion*c.mass*G;
-                    force[i]+=Math.min(demand,adhesion)*st.reverser*engine.face;
-                    if(demand>adhesion*1.01)st.slip=true;
+                    // Motor effort falls with road speed. Full power spins at
+                    // launch; easing to notch 3 restores grip. At speed the
+                    // fourth notch fits within adhesion and adds useful power.
+                    const demand=(c.helper?st.helper:st.power)/4*(c.helper?(st.config.helper?.tractive||190000):(st.config.tractive||210000))*Math.min(1,2.8/Math.max(.01,Math.abs(c.v)));
+                    const adhesion=p.adhesion*c.mass*G,slip=demand>adhesion*1.01;
+                    force[i]+=(slip?adhesion*.78:Math.min(demand,adhesion))*st.reverser*engine.face;
+                    if(slip)st.slip=true;
                     if(!c.helper)brake=Math.max(brake,c.mass*1.05*st.independent*fade);
                 }
                 c.sliding=brake>p.adhesion*c.mass*G*1.05&&Math.abs(c.v)>.2;
@@ -549,10 +583,10 @@
             st.taskHold[task.id]=met?(st.taskHold[task.id]||0)+dt:0;
             if(met&&st.taskHold[task.id]>=(task.dwell||1)&&!st.completed.includes(task.id))st.completed.push(task.id);
             // Delivery/parking are live requirements; leaving the zone revokes
-            // them. Tutorial milestones remain remembered.
-            if(!met&&['delivery','park','rescue','retire','ferry'].includes(task.type))st.completed=st.completed.filter(id=>id!==task.id);
+            // them. Tutorial and optional guide milestones remain remembered.
+            if(!met&&!task.milestone&&['delivery','park','rescue','retire','ferry'].includes(task.type))st.completed=st.completed.filter(id=>id!==task.id);
         }
-        st.finishHold=st.config.tasks.every(t=>st.completed.includes(t.id))?st.finishHold+dt:0;
+        st.finishHold=st.config.tasks.every(t=>t.milestone||st.completed.includes(t.id))?st.finishHold+dt:0;
     }
     function metrics(st) {
         const group=engineGroup(st),engine=group.cars.find(c=>c.id==='engine'),mass=group.cars.reduce((s,c)=>s+c.mass,0),b=bounds(group);
@@ -611,7 +645,7 @@
         if(st.helper&&!engineGroup(st).cars.some(c=>c.helper))throw Error('A detached helper cannot receive power.');
         return true;
     }
-    const api={network,at,locate,previewPath,create,update,command,availability,assistance,occupied,engineGroup,drivingEngine,groupFor,bounds,metrics,taskReady,danger,segments,bridges,cargoShape,cargoHit,clearance,ferry,forecast,assertInvariants,commands:Commands};
+    const api={network,at,locate,previewPath,create,update,command,availability,assistance,occupied,engineGroup,drivingEngine,groupFor,bounds,metrics,taskReady,danger,segments,bridges,cargoShape,vehicleShape,cargoHit,obstacles,clearance,ferry,forecast,assertInvariants,commands:Commands};
     if(typeof module!=='undefined'&&module.exports)module.exports=api;
     root.Railway=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

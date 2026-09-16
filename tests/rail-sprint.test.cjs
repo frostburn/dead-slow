@@ -66,14 +66,14 @@ test('5-07: pocket, two bridge shuttles and ordered reassembly use actual coupli
     const st=R.create(L[6]);
     require('./rail-routes.cjs').bridge(st);
     assert.ok(st.finishHold>=2);assert.equal(st.groups.length,1);
+    for(const task of st.config.tasks)assert.ok(st.completed.includes(task.id),task.id);
+    assert.ok(st.completed.includes('pocket-load-1'),'Pocket split remains after collecting load 1');
+    st.completed=['transformers'];
+    const adapter=require('../src/rail-adapter.js').create({railway:R});
+    assert.ok(adapter.ready({rail:st}),'Guidance does not outlaw alternative shunting solutions');
 });
 
 test('5-08: clear the load into the headshunt and reverse into the export spur',()=>{
-    const st=R.create(L[7]);assert.ok(R.clearance(st).collision);
-    cmd(st,'switch','fork');cmd(st,'switch','join');assert.equal(R.clearance(st).collision,null);
-    move(st,'engine','headshunt',350,1,2.5);step(st,2);
-    assert.ok(st.completed.includes('clear-load'));assert.equal(st.completed.includes('vessel'),false);
-    cmd(st,'switch','join');
-    move(st,'C2','terminal',590,-1,2);cmd(st,'hand');step(st,4);
-    assert.ok(st.finishHold>=2);
+    const st=R.create(L[7]);require('./rail-cargo-route.cjs').cargo(st);
+    assert.equal(st.stats.contacts,0);assert.equal(st.groups.length,2);
 });

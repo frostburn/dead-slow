@@ -2,7 +2,7 @@
     'use strict';
     const R=typeof module!=='undefined'&&module.exports?require('./rail.js'):root.Railway;
     const $=id=>document.getElementById(id), clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-    let act=null,signature='',levelNow=null,stateNow=null,transform=null,clearanceCache=null,clearanceKey='';
+    let act=null,signature='',levelNow=null,stateNow=null,transform=null,clearanceCache=null,clearanceKey='',placementKey='',placementState='',placementHeight=0;
     const Presentation=typeof module!=='undefined'&&module.exports?require('./rail-presentation.js'):root.RailPresentation;
     const {indicators,displayDirection,signedSpeed,actionEnabled}=Presentation;
     function swept(st) {
@@ -11,7 +11,7 @@
         return clearanceCache;
     }
     function prepare(level,command) {
-        levelNow=level;stateNow=null;act=command;signature='';clearanceKey='';clearanceCache=null;
+        levelNow=level;stateNow=null;act=command;signature='';clearanceKey='';clearanceCache=null;placementKey='';placementState='';
         $('rail-panel').hidden=!level.rail;
         $('rail-info').hidden=!level.rail;
         $('rail-helm').innerHTML='';
@@ -62,7 +62,7 @@
         $('rail-speed').classList.toggle('rail-danger',Math.abs(m.speed)>m.limit);
         $('rail-stop').textContent=Number.isFinite(m.stopping)?Math.ceil(m.stopping)+' m':'No reserve';
         $('rail-summary').textContent=`${Math.round(m.length)} m · ${Math.round(m.mass/1000)} t · limit ${Math.round(m.limit*3.6)} km/h`;
-        $('rail-heat').textContent=level.rail.thermal?`Brakes ${Math.round(m.temperature)}°C${m.temperature>180?' · fading':''}`:signals.slip?'Wheelspin · ease power':'Wheels gripping';
+        $('rail-heat').textContent=(level.rail.thermal?`Brakes ${Math.round(m.temperature)}°C${m.temperature>180?' · fading':''} · `:'')+(signals.slip?'Wheelspin · ease power':'Wheels gripping');
         $('rail-heat').classList.toggle('rail-danger',m.temperature>180);
         const operations=[];
         if(st.config.helper) {
@@ -97,6 +97,7 @@
         alert.hidden=false;alert.classList.toggle('critical',warning.severity===2||!!(coupling&&coupling.ratio>1));
         alert.classList.toggle('caution',!!warning.severity||!!coupling);
         alert.textContent=worst?.ratio>=1.2?'Derailment risk\nBrake now':coupling?`Coupler ${coupling.kind} · ${Math.round(Math.abs(coupling.force)/1000)} kN\n${coupling.kind==='push'?'Ease rear assistance.':'Share power; ease the front.'}`:worst?`${worst.id==='engine'?'Locomotive':worst.id} over ${Math.round(worst.limit*3.6)} km/h\nEase the train below the limit.`:warning.ahead?`Slow to ${Math.round(warning.ahead.limit*3.6)} km/h\n${Math.round(warning.ahead.distance)} m ahead`:st.config.helper?'Couplers within limits\nEase each engine over the crest.':'Speed within limit\nKeep room to stop.';
+        if(envelope?.collision){alert.classList.add('caution');alert.textContent=`${envelope.collision.hit} · ${Math.round(envelope.collision.distance)} m ahead\n${envelope.collision.hit.includes('parked wagon')?'The vessel’s end swings across the siding. Shunt the flats clear.':'Choose a route with room for the cargo.'}`;}
         $('rail-info-title').textContent=alert.classList.contains('caution')||alert.classList.contains('critical')?alert.textContent.split('\n')[0]:'Train status';
         $('rail-info-title').classList.toggle('rail-danger',alert.classList.contains('caution')||alert.classList.contains('critical'));
         $('rail-hand').textContent=(selected.cars.some(c=>c.hand)?'Release handbrakes':'Set handbrakes')+' · B';
@@ -122,9 +123,10 @@
                 return `<button data-rail="switch" data-value="${sw.node}" ${R.occupied(st,sw.node)?'disabled':''}><span>${sw.label}</span><b>${sw.names[sw.selected]}</b>${level.rail.thermal?`<small>${Math.round(edge.length)} m · ${grade.toFixed(1)}% max grade</small>`:''}${R.occupied(st,sw.node)?'<small>occupied</small>':''}</button>`;
             }).join('');
         }
+        const nextSplit=st.config.tasks.find(t=>!st.completed.includes(t.id)&&(!t.after||st.completed.includes(t.after)));
         $('rail-tasks').innerHTML=st.config.tasks.map(t=>{
-            const done=st.completed.includes(t.id),split=done?run.splits?.find(s=>s.name===t.text):null;
-            return `<div class="split-row ${done?'done':''}"><span>${t.text}</span><span>${split?format(split.time):'—'}</span></div>`;
+            const done=st.completed.includes(t.id),split=run.splits?.find(s=>s.name===t.text);
+            return `<div class="split-row ${done?'done':t===nextSplit?'active':''} ${split&&!done?'invalidated':''}"${split&&!done?' title="Objective no longer satisfied; first split time retained"':''}><span>${t.text}</span><span>${split?format(split.time):status==='complete'&&t.milestone?'Skipped':'—'}</span></div>`;
         }).join('');
         const help=projection.help;
         const recommendation=projection.recommendation;
@@ -164,6 +166,19 @@
         m.head=R.locate(st,train,direction>0?ends.hi:ends.lo);m.tail=R.locate(st,train,direction>0?ends.lo:ends.hi);
         const x=zoom===1?(w-level.world[0]*scale)/2:w/2-m.head.x*scale,y=zoom===1?(mapHeight-level.world[1]*scale)/2:mapHeight/2-m.head.y*scale;
         transform={x,y,s:scale};ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);
+        const panel=$('rail-info'),layoutState=level.id+':'+w+':'+h+':'+zoom+':'+panel.open+':'+$('rail-info-body').querySelector('.rail-details').open;
+        if(layoutState!==placementState){placementState=layoutState;placementHeight=0;}
+        // Reserve the full natural height. Keep the largest observed height
+        // until an explicit layout change so changing notices cannot oscillate
+        // the window between map pockets.
+        placementHeight=Math.max(placementHeight,260,Math.ceil(panel.getBoundingClientRect().height));
+        const layoutKey=layoutState+':'+placementHeight;
+        if(layoutKey!==placementKey) {
+            placementKey=layoutKey;
+            const box=zoom===1?Presentation.statusPlacement(level,st.net,w,h,placementHeight):{x:w-Math.min(288,w-24)-12,y:54,w:Math.min(288,w-24),fallback:true};
+            Object.assign(panel.style,{left:box.x+'px',right:'auto',top:box.y+'px',width:box.w+'px'});
+            panel.dataset.fallback=String(box.fallback);
+        }
         const stroke=(points,color,width)=>{ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();};
         // Survey contours and tree stands are seeded from map coordinates.
         ctx.lineCap='round';ctx.lineJoin='round';
@@ -248,7 +263,10 @@
             const centers=envelope.previews.map(p=>({x:p.polygon.reduce((n,v)=>n+v.x,0)/4,y:p.polygon.reduce((n,v)=>n+v.y,0)/4}));
             stroke(centers,'#aa914766',8);
             for(const p of envelope.previews.filter(p=>p.distance>0&&p.distance<=480&&p.distance%120===0))polygon(p.polygon,'#e6d5a622','#9a7d4588',1/scale);
-            if(envelope.collision)polygon(envelope.collision.polygon,'#c34e3944','#b6402a',2/scale);
+            if(envelope.collision){
+                polygon(envelope.collision.polygon,'#c34e3944','#b6402a',2/scale);
+                for(const body of envelope.collision.bodies)polygon(body,'#70babb33','#356d76',1.5/scale);
+            }
         }
         for(const z of st.config.zones) {
             const pts=[];for(let s=z.from;s<=z.to;s+=3)pts.push(R.at(st.net,z.edge,s));
