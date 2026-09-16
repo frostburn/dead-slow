@@ -117,7 +117,64 @@
         }
         return best?.blocked===0?{...best,fallback:false}:{x:right,y:top,w:width,h:height,fallback:true,protectedAreas};
     }
-    const api={profile,statusPlacement,snapshot,indicators,displayDirection,signedSpeed,actionEnabled};
+    const landscapes=new WeakMap();
+    // Surveyed track heights anchor a small, cached terrain field. A level yard
+    // stays level; contours describe the interpolated terrain between tracks.
+    function landscape(level,net) {
+        if(landscapes.has(level))return landscapes.get(level);
+        const edges=Object.values(net.edges),survey=edges.flatMap(e=>{
+            const points=[];for(let s=0;s<e.length;s+=30)points.push(R.at(net,e.id,s));
+            points.push(R.at(net,e.id,e.length));return points;
+        });
+        const contours=[],min=Math.min(...survey.map(p=>p.z)),max=Math.max(...survey.map(p=>p.z));
+        if(max-min>1) {
+            const nx=Math.ceil(level.world[0]/40),ny=Math.ceil(level.world[1]/40),grid=[];
+            for(let y=0;y<=ny;y++)for(let x=0;x<=nx;x++) {
+                const p={x:x*level.world[0]/nx,y:y*level.world[1]/ny},near=[];
+                for(const q of survey){const d=(p.x-q.x)**2+(p.y-q.y)**2;
+                    if(near.length<12||d<near[11].d){near.push({d,z:q.z});near.sort((a,b)=>a.d-b.d);near.length=Math.min(12,near.length);}}
+                // Fade the outer neighbour to zero so changing the nearest set
+                // does not create contour seams. Round away flat-field noise.
+                const radius=Math.sqrt(near.at(-1).d)+1;
+                const weight=q=>(1/Math.sqrt(Math.max(1,q.d))-1/radius)**2;
+                const z=near.reduce((n,q)=>n+q.z*weight(q),0)/near.reduce((n,q)=>n+weight(q),0);
+                grid.push({...p,z:Math.round(z*1e6)/1e6});
+            }
+            for(let z=Math.ceil(min/5)*5;z<max;z+=5)for(let y=0;y<ny;y++)for(let x=0;x<nx;x++) {
+                const i=y*(nx+1)+x,corners=[grid[i],grid[i+1],grid[i+nx+2],grid[i+nx+1]],crossings=[];
+                corners.forEach((a,j)=>{const b=corners[(j+1)%4];if((a.z<z)===(b.z<z))return;
+                    const t=(z-a.z)/(b.z-a.z);crossings.push({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t});});
+                for(let j=0;j+1<crossings.length;j+=2)contours.push([crossings[j],crossings[j+1]]);
+            }
+        }
+        const river=level.rail.scenery!=='valley'?[]:level.rail.river?
+            level.rail.river.map(([x,y])=>({x,y})):Array.from({length:45},(_,i)=>({x:i*level.world[0]/40-70,y:level.world[1]*.89+Math.sin(i*.13)*85}));
+        const bridges=[];
+        const cross=(a,b)=>a.x*b.y-a.y*b.x;
+        for(const edge of edges) {
+            if(edge.bridge)continue; // Load-rated structures already supply a deck.
+            const spans=[];
+            edge.samples.slice(1).forEach((b,i)=>{
+                const a=edge.samples[i],v={x:b.x-a.x,y:b.y-a.y};
+                river.slice(1).forEach((d,j)=>{
+                    const c=river[j],w={x:d.x-c.x,y:d.y-c.y},den=cross(v,w);
+                    if(Math.abs(den)<1e-8)return;
+                    const delta={x:c.x-a.x,y:c.y-a.y},t=cross(delta,w)/den,u=cross(delta,v)/den;
+                    if(t<0||t>1||u<0||u>1)return;
+                    const s=a.s+(b.s-a.s)*t;
+                    if(edge.closedFrom!==undefined&&s>=edge.closedFrom)return;
+                    if((level.rail.floods||[]).some(f=>f.edge===edge.id&&s>=f.from&&s<=f.to))return;
+                    const half=30*Math.hypot(v.x,v.y)*Math.hypot(w.x,w.y)/Math.abs(den)+10;
+                    spans.push({edge:edge.id,from:Math.max(0,s-half),to:Math.min(edge.length,edge.closedFrom??Infinity,s+half)});
+                });
+            });
+            spans.sort((a,b)=>a.from-b.from);
+            for(const span of spans){const prev=bridges.at(-1);
+                if(prev?.edge===span.edge&&span.from<=prev.to)prev.to=Math.max(prev.to,span.to);else bridges.push(span);}
+        }
+        const result={contours,river,bridges};landscapes.set(level,result);return result;
+    }
+    const api={profile,landscape,statusPlacement,snapshot,indicators,displayDirection,signedSpeed,actionEnabled};
     if(typeof module!=='undefined'&&module.exports)module.exports=api;
     root.RailPresentation=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

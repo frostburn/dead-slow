@@ -414,6 +414,7 @@
     }
     function clearance(st) {
         if(!st.config.cargo)return null;
+        if(groupFor(st,st.config.cargo.cars[0])!==engineGroup(st))return null;
         const original=groupFor(st,st.config.cargo.cars[0]),group={...original,path:original.path.map(p=>({...p}))};
         const eg=engineGroup(st),engine=eg.cars.find(c=>c.id==='engine'),dir=st.reverser*engine.face;
         for(let i=0;i<16;i++)if(!extend(st,group,dir>0))break;

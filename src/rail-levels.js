@@ -10,7 +10,7 @@
     /** @param {string} id @param {string} name @param {string} brief @param {string} tip
      * @param {[number,number]} world @param {import('./rail-level-types.js').RailConfig} rail
      * @param {[number,number,number]} pace */
-    const level=(id,name,brief,tip,world,rail,pace)=>({id,name,brief,tip,world,rail,pace,rulesRevision:3,
+    const level=(id,name,brief,tip,world,rail,pace)=>({id,name,brief,tip,world,rail,pace,rulesRevision:3,courseRevision:id==='long-grade-8'||id==='long-grade-10'?2:1,
         kind:'Freight railway',start:[100,100,0],berth:{x:100,y:100,a:0,l:50,w:20,angle:10,speed:.2},
         spec:{name:'No. 17',length:20,beam:4,mass:80000}});
     const levels=[
@@ -67,6 +67,7 @@
             'Choose your route at both ends of each branch. Watch the tail’s grade and brake temperature. A cool train with room to stop is worth the extra distance.',
             [1750,1250],{
                 thermal:true,scenery:'valley',
+                river:[[0,1220],[500,1240],[1080,1230],[1400,1200],[1450,1070],[1620,965],[1750,940]],
                 nodes:{quarry:[100,140,62],summit:[500,140,60],join:[950,790,27],cool:[1090,905,25],out:[1270,1020,23],works:[1620,1130,22]},
                 tracks:[
                     {id:'plateau',a:'quarry',b:'summit',limit:15},
@@ -178,11 +179,11 @@
             'Shunt P1 and P2 into the marked refuge, or find another place outside the swept outline. Rejoin the carriers, take the broad road, and reverse from the headshunt into the export berth. Preview the load’s corners before committing.',
             [2000,1100],{
                 scenery:'yard',thermal:false,
-                nodes:{start:[70,450,10],fork:[560,450,10],join:[1260,450,10],head:[1780,150,10],end:[1850,910,10],refuge:[1120,650,10]},
+                nodes:{start:[70,450,10],fork:[560,450,10],join:[1260,450,10],head:[1780,150,10],end:[1850,910,10],refuge:[1120,950,10]},
                 tracks:[{id:'arrival',a:'start',b:'fork',limit:7},
                     {id:'tight',a:'fork',b:'join',points:[[560,450,10],[680,320,10],[740,470,10],[900,560,10],[1060,330,10],[1260,450,10]],limit:4},
                     {id:'broad',a:'fork',b:'join',points:[[560,450,10],[650,740,10],[910,850,10],[1170,740,10],[1260,450,10]],limit:5},
-                    {id:'clearance-road',a:'fork',b:'refuge',points:[[560,450,10],[565,690,10],[670,780,10],[1040,780,10],[1120,650,10]],limit:4},
+                    {id:'clearance-road',a:'fork',b:'refuge',points:[[560,450,10],[565,690,10],[670,780,10],[930,930,10],[1120,950,10]],limit:4},
                     {id:'headshunt',a:'join',b:'head',limit:4},
                     {id:'terminal',a:'join',b:'end',points:[[1260,450,10],[1510,510,10],[1750,690,10],[1850,910,10]],limit:4}],
                 switches:[{node:'fork',label:'Terminal west',stem:'arrival',branches:['tight','broad','clearance-road'],names:['Platform road','Broad freight road','Clearance siding']},
@@ -190,7 +191,7 @@
                 groups:[{cars:[loco('arrival',310),wagon('C1','arrival',278.8,{length:40,mass:65000}),wagon('C2','arrival',237.6,{length:40,mass:65000})]},
                     {secured:true,cars:[wagon('P1','clearance-road',380,{mass:12000}),wagon('P2','clearance-road',362.8,{mass:12000})]}],
                 cargo:{cars:['C1','C2'],overhang:40,width:14,clearanceWagons:['P1','P2']},
-                obstacles:[{name:'Loading platform',x:689,y:328,w:23,h:26},{name:'Signal cabin',x:1070,y:348,w:24,h:22}],
+                obstacles:[{name:'Loading platform',x:714,y:328,w:23,h:26},{name:'Signal cabin',x:1085,y:293,w:24,h:22}],
                 zones:[{id:'vessel-wait',name:'Carrier holding track',edge:'arrival',from:180,to:320},
                     {id:'refuge',name:'Flat wagon refuge',edge:'clearance-road',from:620,to:800},
                     {id:'turn',name:'Whole load beyond this mark · stop and reverse',edge:'headshunt',from:140,to:450},
@@ -229,7 +230,7 @@
                 tracks:[{id:'quay',a:'west',b:'fork',limit:5},
                     {id:'port',a:'fork',b:'p',points:[[740,470,5],[825,420,5],[1000,420,5],[1230,420,5]],limit:2},
                     {id:'starboard',a:'fork',b:'s',points:[[740,470,5],[825,550,5],[1000,550,5],[1230,550,5]],limit:2},
-                    {id:'quay-loop',a:'fork',b:'west',points:[[740,470,5],[620,700,5],[270,720,5],[90,470,5]],limit:4}],
+                    {id:'quay-loop',a:'fork',b:'west',points:[[740,470,5],[780,540,5],[785,680,5],[650,790,5],[300,800,5],[100,710,5],[30,560,5],[50,470,5],[90,470,5]],limit:4}],
                 switches:[{node:'fork',label:'Ferry points',stem:'quay',branches:['port','starboard','quay-loop'],names:['Port deck','Starboard deck','Quay loop']}],
                 groups:[{cars:[wagon('A1','quay',379.6,{length:24,mass:25000}),wagon('A2','quay',354.4,{length:24,mass:25000}),wagon('reach','quay',325.2,{length:32,mass:12000}),loco('quay',298),wagon('B1','quay',274.8,{length:24,mass:25000}),wagon('B2','quay',249.6,{length:24,mass:25000})]}],
                 zones:[{id:'port-load',name:'Port deck · pair A',edge:'port',from:90,to:230},
