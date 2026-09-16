@@ -29,7 +29,7 @@
         return {x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t,
             a:Math.atan2(b.y-a.y,b.x-a.x),grade:(b.z-a.z)/(length||1),edge:id,s,
             limit:(edge.restrictions||[]).find(r=>s/edge.length>=r.from&&s/edge.length<=r.to)?.limit||edge.limit||10,
-            adhesion:edge.adhesion??.28};
+            adhesion:edge.adhesion??.23};
     }
     const entry=(net,id,dir,start=0)=>({id,dir,start,end:start+net.edges[id].length});
     function locate(st,group,q) {
@@ -84,7 +84,7 @@
             return {...t,path,exitQ,v:0,released:false,finished:false,waiting:'Awaiting your signal · H',cars:Array.from({length:4},(_,i)=>({id:t.id+'-'+i,q:t.head-i*t.length/4,length:t.length/4-1.2,mass:40000,v:0}))};
         });
         return {net,groups,traffic,config:cfg,time:0,power:0,helper:0,reverser:1,independent:0,selected:'engine',crew:[],
-            completed:[],taskHold:{},finishHold:0,failure:null,gantry:cfg.gantry?{position:0,target:0}:null,notice:'Release the train brake to move.',
+            completed:[],taskHold:{},finishHold:0,failure:null,notice:'Release the train brake to move.',
             stats:{distance:0,couplings:0,uncouplings:0,peakTemperature:20,peakCoupler:0,contacts:0},nextCut:groups.length};
     }
     function setBrake(st,group,value) {
@@ -100,7 +100,6 @@
         if(name==='helper'){st.helper=clamp(value,0,4);return true;}
         if(name==='brake'){setBrake(st,group,value);return true;}
         if(name==='independent'){st.independent=clamp(value,0,1);return true;}
-        if(name==='gantry'){st.gantry.target=1-st.gantry.target;return true;}
         if(name==='dispatch') {
             const t=st.traffic.find(t=>!t.released&&!t.finished&&(!value||t.id===value));
             t.released=true;t.waiting='Signal received';st.notice=t.name+' signalled. Track signals still protect the route.';return true;
@@ -173,11 +172,6 @@
         let reason='';
         if(!Commands.valid(name,value,true))reason='Invalid railway command.';
         else if(st.failure)reason='Retry to begin again.';
-        else if(name==='gantry') {
-            if(!st.gantry)reason='No loading gantry here.';
-            else if(st.gantry.position!==st.gantry.target)reason='Gantry moving. Keep its travel lane clear.';
-            else if(st.groups.some(g=>[cargoShape(st,g),...g.cars.map(c=>vehicleShape(st,g,c))].some(poly=>cargoHit(st,poly,[gantryBox(st,true)]))))reason='Move the train clear of the gantry travel lane.';
-        }
         else if(name==='helper'&&!eg.cars.some(c=>c.helper))reason='Couple the helper before requesting assistance.';
         else if(name==='independent'&&st.config.helper&&value!==0)reason='Use the train brake with a helper.';
         else if(name==='dispatch'&&!st.traffic.some(t=>!t.released&&!t.finished&&(!value||t.id===value)))reason='No passenger awaiting a departure signal.';
@@ -402,20 +396,19 @@
     }
     function vehicleShape(st,group,car) {
         const p=locate(st,group,car.q),dx=Math.cos(p.a),dy=Math.sin(p.a),half=car.length/2;
-        return [[half,2],[half,-2],[-half,-2],[-half,2]].map(([x,y])=>({x:p.x+x*dx-y*dy,y:p.y+x*dy+y*dx}));
+        return [[half,4.5],[half,-4.5],[-half,-4.5],[-half,4.5]].map(([x,y])=>({x:p.x+x*dx-y*dy,y:p.y+x*dy+y*dx}));
     }
-    function gantryBox(st,sweep=false) {
-        const spec=st.config.gantry;if(!spec)return null;
-        const [a,b]=spec.positions,t=st.gantry.position;
-        return {name:spec.name,x:sweep?Math.min(a.x,b.x):a.x+(b.x-a.x)*t,y:sweep?Math.min(a.y,b.y):a.y+(b.y-a.y)*t,
-            w:spec.w+(sweep?Math.abs(a.x-b.x):0),h:spec.h+(sweep?Math.abs(a.y-b.y):0),gantry:true};
+    function obstacles(st) {
+        return [...st.config.obstacles||[],...(st.config.cargo?.clearanceWagons||[]).map(id=>{
+            const g=groupFor(st,id),c=g.cars.find(c=>c.id===id);
+            return {name:`${id} · parked wagon`,car:id,polygon:vehicleShape(st,g,c)};
+        })];
     }
-    function obstacles(st) {return [...st.config.obstacles||[],...st.gantry?[gantryBox(st)]:[]];}
     function cargoHit(st,poly,boxes=obstacles(st)) {
         if(!poly)return null;
         return boxes.find(o=>{
-            const box=[{x:o.x,y:o.y},{x:o.x+o.w,y:o.y},{x:o.x+o.w,y:o.y+o.h},{x:o.x,y:o.y+o.h}];
-            const axes=[{x:1,y:0},{x:0,y:1},...poly.slice(0,2).map((p,i)=>({x:poly[i+1].y-p.y,y:p.x-poly[i+1].x}))];
+            const box=o.polygon||[{x:o.x,y:o.y},{x:o.x+o.w,y:o.y},{x:o.x+o.w,y:o.y+o.h},{x:o.x,y:o.y+o.h}];
+            const axes=[poly,box].flatMap(shape=>shape.slice(0,2).map((p,i)=>({x:shape[i+1].y-p.y,y:p.x-shape[i+1].x})));
             return axes.every(n=>{const a=poly.map(p=>p.x*n.x+p.y*n.y),b=box.map(p=>p.x*n.x+p.y*n.y);return Math.max(...a)>=Math.min(...b)&&Math.max(...b)>=Math.min(...a);});
         })||null;
     }
@@ -426,10 +419,11 @@
         for(let i=0;i<16;i++)if(!extend(st,group,dir>0))break;
         const b=bounds(group),room=dir>0?group.path.at(-1).end-b.hi:b.lo-group.path[0].start,previews=[];
         for(let distance=0;distance<=Math.min(2400,room);distance+=12){const polygon=cargoShape(st,group,dir*distance);if(polygon)previews.push({polygon,distance,hit:cargoHit(st,polygon)?.name||null});}
-        return {previews,collision:previews.find(p=>p.hit)||null};
+        const collision=previews.find(p=>p.hit)||null;
+        if(collision)collision.bodies=group.cars.map(c=>vehicleShape(st,group,{...c,q:c.q+dir*collision.distance}));
+        return {previews,collision};
     }
     function checkInfrastructure(st) {
-        if(st.gantry&&st.groups.some(g=>g.cars.some(c=>cargoHit(st,vehicleShape(st,g,c),[gantryBox(st)]))))st.failure='The train struck the loading gantry. Keep its travel lane clear.';
         for(const b of bridges(st)){
             if(b.over)st.failure=`${b.name} overloaded. Cross with one transformer and its support wagon at a time.`;
             else if(b.unpaired.length)st.failure=`Keep ${b.unpaired[0].join(' and ')} coupled beside each other while crossing the bridge.`;
@@ -482,10 +476,6 @@
     function update(st,dt) {
         if(st.failure)return;
         st.time+=dt;st.slip=false;st.slide=false;
-        if(st.gantry) {
-            const g=st.gantry,step=dt/st.config.gantry.seconds;
-            g.position+=clamp(g.target-g.position,-step,step);
-        }
         updateTraffic(st,dt);
         for(const group of st.groups) {
             const engine=group.cars.find(c=>c.id==='engine'),cars=group.cars,force=cars.map(c=>{
@@ -517,9 +507,13 @@
                 const fade=1-clamp((c.temp-180)/270,0,.8);
                 let brake=c.mass*(c.powered?.85:.7)*c.pressure*fade;
                 if(c.powered&&engine) {
-                    const demand=(c.helper?st.helper:st.power)/4*(c.helper?(st.config.helper?.tractive||190000):(st.config.tractive||210000)),adhesion=p.adhesion*c.mass*G;
-                    force[i]+=Math.min(demand,adhesion)*st.reverser*engine.face;
-                    if(demand>adhesion*1.01)st.slip=true;
+                    // Motor effort falls with road speed. Full power spins at
+                    // launch; easing to notch 3 restores grip. At speed the
+                    // fourth notch fits within adhesion and adds useful power.
+                    const demand=(c.helper?st.helper:st.power)/4*(c.helper?(st.config.helper?.tractive||190000):(st.config.tractive||210000))*Math.min(1,2.8/Math.max(.01,Math.abs(c.v)));
+                    const adhesion=p.adhesion*c.mass*G,slip=demand>adhesion*1.01;
+                    force[i]+=(slip?adhesion*.78:Math.min(demand,adhesion))*st.reverser*engine.face;
+                    if(slip)st.slip=true;
                     if(!c.helper)brake=Math.max(brake,c.mass*1.05*st.independent*fade);
                 }
                 c.sliding=brake>p.adhesion*c.mass*G*1.05&&Math.abs(c.v)>.2;
@@ -651,7 +645,7 @@
         if(st.helper&&!engineGroup(st).cars.some(c=>c.helper))throw Error('A detached helper cannot receive power.');
         return true;
     }
-    const api={network,at,locate,previewPath,create,update,command,availability,assistance,occupied,engineGroup,drivingEngine,groupFor,bounds,metrics,taskReady,danger,segments,bridges,cargoShape,cargoHit,obstacles,clearance,ferry,forecast,assertInvariants,commands:Commands};
+    const api={network,at,locate,previewPath,create,update,command,availability,assistance,occupied,engineGroup,drivingEngine,groupFor,bounds,metrics,taskReady,danger,segments,bridges,cargoShape,vehicleShape,cargoHit,obstacles,clearance,ferry,forecast,assertInvariants,commands:Commands};
     if(typeof module!=='undefined'&&module.exports)module.exports=api;
     root.Railway=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

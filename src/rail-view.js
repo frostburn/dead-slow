@@ -2,7 +2,7 @@
     'use strict';
     const R=typeof module!=='undefined'&&module.exports?require('./rail.js'):root.Railway;
     const $=id=>document.getElementById(id), clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-    let act=null,signature='',levelNow=null,stateNow=null,transform=null,clearanceCache=null,clearanceKey='';
+    let act=null,signature='',levelNow=null,stateNow=null,transform=null,clearanceCache=null,clearanceKey='',placementKey='';
     const Presentation=typeof module!=='undefined'&&module.exports?require('./rail-presentation.js'):root.RailPresentation;
     const {indicators,displayDirection,signedSpeed,actionEnabled}=Presentation;
     function swept(st) {
@@ -11,7 +11,7 @@
         return clearanceCache;
     }
     function prepare(level,command) {
-        levelNow=level;stateNow=null;act=command;signature='';clearanceKey='';clearanceCache=null;
+        levelNow=level;stateNow=null;act=command;signature='';clearanceKey='';clearanceCache=null;placementKey='';
         $('rail-panel').hidden=!level.rail;
         $('rail-info').hidden=!level.rail;
         $('rail-helm').innerHTML='';
@@ -36,7 +36,6 @@
         $('rail-panel').innerHTML=`<div class="rail-readings"><div><strong id="rail-speed">0.0</strong><span>km/h</span></div><div><b id="rail-stop">0 m</b><span>estimated stop</span></div></div>
             ${(level.rail.traffic||[]).map(t=>`<button class="rail-dispatch" data-rail="dispatch" data-value="${t.id}">Signal departure · H</button>`).join('')}
             <div class="rail-levers">${R.commands.levers(!!level.rail.helper).map(({name:id,label,keys,min,max,step})=>`<div class="rail-lever"><label for="rail-${id}">${label}<output id="rail-${id}-value"></output><small>${keys}</small></label><input id="rail-${id}" data-rail="${id}" type="range" min="${min}" max="${max}" step="${step}" value="${id==='brake'?1:0}" aria-label="${label}"></div>`).join('')}</div>
-            ${level.rail.gantry?'<button class="rail-dispatch" data-rail="gantry" id="rail-gantry">Move gantry east</button>':''}
             <div class="rail-actions"><button data-rail="reverse" id="rail-reverse" title="Change travel direction (X)">Reverse · X</button><button data-rail="stop">Full brake · Space</button><button data-rail="couple">Couple · F</button><button data-rail="hand" id="rail-hand">Handbrakes · B</button></div>
             <div id="rail-consist" class="rail-consist"></div>
             <div id="rail-switches" class="rail-switches"></div><div class="section-label">SECTOR SPLITS</div><div id="rail-tasks" class="splits rail-tasks"></div>
@@ -63,7 +62,7 @@
         $('rail-speed').classList.toggle('rail-danger',Math.abs(m.speed)>m.limit);
         $('rail-stop').textContent=Number.isFinite(m.stopping)?Math.ceil(m.stopping)+' m':'No reserve';
         $('rail-summary').textContent=`${Math.round(m.length)} m · ${Math.round(m.mass/1000)} t · limit ${Math.round(m.limit*3.6)} km/h`;
-        $('rail-heat').textContent=level.rail.thermal?`Brakes ${Math.round(m.temperature)}°C${m.temperature>180?' · fading':''}`:signals.slip?'Wheelspin · ease power':'Wheels gripping';
+        $('rail-heat').textContent=(level.rail.thermal?`Brakes ${Math.round(m.temperature)}°C${m.temperature>180?' · fading':''} · `:'')+(signals.slip?'Wheelspin · ease power':'Wheels gripping');
         $('rail-heat').classList.toggle('rail-danger',m.temperature>180);
         const operations=[];
         if(st.config.helper) {
@@ -98,8 +97,7 @@
         alert.hidden=false;alert.classList.toggle('critical',warning.severity===2||!!(coupling&&coupling.ratio>1));
         alert.classList.toggle('caution',!!warning.severity||!!coupling);
         alert.textContent=worst?.ratio>=1.2?'Derailment risk\nBrake now':coupling?`Coupler ${coupling.kind} · ${Math.round(Math.abs(coupling.force)/1000)} kN\n${coupling.kind==='push'?'Ease rear assistance.':'Share power; ease the front.'}`:worst?`${worst.id==='engine'?'Locomotive':worst.id} over ${Math.round(worst.limit*3.6)} km/h\nEase the train below the limit.`:warning.ahead?`Slow to ${Math.round(warning.ahead.limit*3.6)} km/h\n${Math.round(warning.ahead.distance)} m ahead`:st.config.helper?'Couplers within limits\nEase each engine over the crest.':'Speed within limit\nKeep room to stop.';
-        if(envelope?.collision){alert.classList.add('caution');alert.textContent=`${envelope.collision.hit} · ${Math.round(envelope.collision.distance)} m ahead\n${envelope.collision.hit===st.config.gantry?.name?'Move the gantry to clear the vessel.':'Choose a route with room for the cargo.'}`;}
-        if(st.gantry)$('rail-gantry').textContent=st.gantry.position!==st.gantry.target?'Gantry moving…':st.gantry.target===0?'Move gantry east':'Move gantry west';
+        if(envelope?.collision){alert.classList.add('caution');alert.textContent=`${envelope.collision.hit} · ${Math.round(envelope.collision.distance)} m ahead\n${envelope.collision.hit.includes('parked wagon')?'The vessel’s end swings across the siding. Shunt the flats clear.':'Choose a route with room for the cargo.'}`;}
         $('rail-info-title').textContent=alert.classList.contains('caution')||alert.classList.contains('critical')?alert.textContent.split('\n')[0]:'Train status';
         $('rail-info-title').classList.toggle('rail-danger',alert.classList.contains('caution')||alert.classList.contains('critical'));
         $('rail-hand').textContent=(selected.cars.some(c=>c.hand)?'Release handbrakes':'Set handbrakes')+' · B';
@@ -147,7 +145,7 @@
             const enabled=['uncouple','hand','reverse'].includes(name)?actionEnabled(st,name,value,state.enabled):state.enabled;
             b.disabled=status!=='running'||!enabled;
             if(name==='dispatch')b.textContent=st.traffic.find(t=>t.id===value)?.released?'Departure signalled':'Signal departure · H';
-            if(['uncouple','couple','hand','gantry'].includes(name))b.title=state.reason||(name==='uncouple'?b.getAttribute('aria-label'):name==='hand'?help.cut:name==='gantry'?'Move the loading gantry between its west and east bays':'Couple the adjacent cut');
+            if(['uncouple','couple','hand'].includes(name))b.title=state.reason||(name==='uncouple'?b.getAttribute('aria-label'):name==='hand'?help.cut:'Couple the adjacent cut');
             b.classList.toggle('rail-relevant',!b.disabled&&name===recommendation.action&&(name!=='uncouple'||(value.after===recommendation.split?.after&&value.before===recommendation.split?.before)));
         });
         $('rail-helm').querySelectorAll('[data-rail-step]').forEach(button=>{
@@ -168,6 +166,21 @@
         m.head=R.locate(st,train,direction>0?ends.hi:ends.lo);m.tail=R.locate(st,train,direction>0?ends.lo:ends.hi);
         const x=zoom===1?(w-level.world[0]*scale)/2:w/2-m.head.x*scale,y=zoom===1?(mapHeight-level.world[1]*scale)/2:mapHeight/2-m.head.y*scale;
         transform={x,y,s:scale};ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);
+        const layoutKey=level.id+':'+w+':'+h+':'+zoom;
+        if(layoutKey!==placementKey) {
+            placementKey=layoutKey;
+            const box=zoom===1?Presentation.statusPlacement(level,st.net,w,h):{x:w-Math.min(288,w-24)-12,y:54,w:Math.min(288,w-24),h:Math.min(260,h-98)};
+            const panel=$('rail-info');
+            Object.assign(panel.style,{left:box.x+'px',right:'auto',top:box.y+'px',width:box.w+'px',maxHeight:box.h+'px'});
+            panel.ontoggle=null;
+            if(box.h<100){
+                panel.open=false;
+                // A narrow viewport starts folded in a clear map pocket.
+                // Expanding it is an explicit, temporary overlay, not a
+                // reason to move the window whenever guidance changes.
+                panel.ontoggle=()=>Object.assign(panel.style,{top:(panel.open?Math.min(box.y,h-264):box.y)+'px',maxHeight:panel.open?'220px':box.h+'px'});
+            }
+        }
         const stroke=(points,color,width)=>{ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();};
         // Survey contours and tree stands are seeded from map coordinates.
         ctx.lineCap='round';ctx.lineJoin='round';
@@ -240,11 +253,9 @@
                 ctx.fillText(flood.closed?'FLOODED':`${flood.name} · ${Math.ceil(flood.remaining)} s`,p.x,p.y-22/scale);
             }
         }
-        if(st.config.gantry){const [a,b]=st.config.gantry.positions;stroke([a,b],'#796344',4/scale);stroke([a,b],'#c7b47c',1/scale);}
-        for(const o of R.obstacles(st)) {
+        for(const o of st.config.obstacles||[]) {
             ctx.fillStyle='#817567';ctx.fillRect(o.x+4,o.y+5,o.w,o.h);ctx.fillStyle='#66594c';ctx.fillRect(o.x,o.y,o.w,o.h);
             ctx.strokeStyle='#ebd6a4';ctx.lineWidth=1/scale;ctx.strokeRect(o.x,o.y,o.w,o.h);
-            if(o.gantry){ctx.strokeStyle='#d79846';ctx.lineWidth=3/scale;ctx.beginPath();ctx.moveTo(o.x+o.w/2,o.y+o.h/2);ctx.lineTo(o.x+o.w/2,o.y-20/scale);ctx.lineTo(o.x+o.w/2+16/scale,o.y-20/scale);ctx.stroke();ctx.font=`11px sans-serif`;ctx.save();ctx.translate(o.x,o.y-28/scale);ctx.scale(1/scale,1/scale);ctx.fillStyle='#483b28';ctx.fillText('GANTRY',0,0);ctx.restore();}
         }
         const polygon=(pts,fill,color,width)=>{ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();};
         const envelope=swept(st);
@@ -254,7 +265,10 @@
             const centers=envelope.previews.map(p=>({x:p.polygon.reduce((n,v)=>n+v.x,0)/4,y:p.polygon.reduce((n,v)=>n+v.y,0)/4}));
             stroke(centers,'#aa914766',8);
             for(const p of envelope.previews.filter(p=>p.distance>0&&p.distance<=480&&p.distance%120===0))polygon(p.polygon,'#e6d5a622','#9a7d4588',1/scale);
-            if(envelope.collision)polygon(envelope.collision.polygon,'#c34e3944','#b6402a',2/scale);
+            if(envelope.collision){
+                polygon(envelope.collision.polygon,'#c34e3944','#b6402a',2/scale);
+                for(const body of envelope.collision.bodies)polygon(body,'#70babb33','#356d76',1.5/scale);
+            }
         }
         for(const z of st.config.zones) {
             const pts=[];for(let s=z.from;s<=z.to;s+=3)pts.push(R.at(st.net,z.edge,s));

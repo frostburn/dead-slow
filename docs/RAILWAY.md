@@ -1,19 +1,29 @@
 # The Long Grade: twelve assignments
 
-Dry-track adhesion now supports all four power notches; the wet-leaf sections
-retain their explicit low adhesion. Railway rules revision 2 archives earlier
-handling times and includes refreshed recordings. `DeadSlow.watch('long-grade-10', 8)`
-shows a complete ferry-loading run using ordinary controls.
+On dry track, notch 3 launches faster than notch 4: wheelspin reduces the
+force transmitted by the wheels. Motor effort falls with road speed, bringing
+full power within dry adhesion at roughly 12 km/h. Wet-leaf sections retain
+their lower grip. Railway rules revision 3 archives earlier handling times.
+`DeadSlow.watch('long-grade-10', 8)` shows the ferry loading sequence.
 
 Split clocks preserve the first completion time. A struck-through objective is
 no longer satisfied and must be restored if required for victory. Next-split
 guidance puts the route or buffer distance before reminders about selected cuts.
 Double-click no longer zooms; use Z or the zoom button.
 
-The vessel mission has a travelling loading gantry. Park it east to clear the
-first bend, stop along the southern curve, and move it west before the next bend.
-The gantry's current position affects both the swept-cargo preview and collisions;
-it cannot start moving through a train occupying its travel lane.
+The vessel mission requires shunting parked flats off its swept path. The
+running track is clear for the locomotive and normal wagon bodies; the long
+vessel alone swings into the neighbouring siding. Secure the carriers, move
+P1/P2 to the refuge, return for the vessel, and reverse through the headshunt.
+Their actual oriented bodies affect both preview and collision checks, so other
+clear parking positions also work. `DeadSlow.watch('long-grade-8', 8)` demonstrates
+the complete sequence with ordinary controls. Blue preview outlines show the
+rolling stock beneath the red cargo envelope.
+
+At 1×, Train status uses a preferred empty area for each level and avoids tracks,
+points, destination labels and tunnel mouths. Placement is stable throughout a
+run; resizing recalculates it. On narrow screens without a readable open pocket,
+it starts folded and can be explicitly expanded over the map.
 
 Version 6 completes World 5. All twelve assignments join the railway circuit
 and the 72-stage Grand Tour. Schema 17 separately archives earlier 5-04, 5-09

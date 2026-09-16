@@ -1,7 +1,7 @@
-export type Name = 'power'|'helper'|'brake'|'independent'|'stop'|'reverse'|'switch'|'select'|'hand'|'uncouple'|'couple'|'dispatch'|'gantry';
+export type Name = 'power'|'helper'|'brake'|'independent'|'stop'|'reverse'|'switch'|'select'|'hand'|'uncouple'|'couple'|'dispatch';
 export interface Link {after:string;before:string}
 export type Value = number|string|Link|undefined;
-export type Command = ['power'|'helper'|'brake'|'independent',number]|['switch'|'select',string]|['uncouple',string|Link]|['dispatch',string?]|['stop'|'reverse'|'hand'|'couple'|'gantry'];
+export type Command = ['power'|'helper'|'brake'|'independent',number]|['switch'|'select',string]|['uncouple',string|Link]|['dispatch',string?]|['stop'|'reverse'|'hand'|'couple'];
 export interface Definition {kind:'notch'|'fraction'|'id'|'link'|'optional-id'|'none';cue?:string}
 export interface Level {id:string;simulation?:string;rail?:unknown;rampage?:unknown;space?:unknown}
 export interface Adapter<Run> {
