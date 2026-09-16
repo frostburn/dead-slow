@@ -462,6 +462,10 @@ src/
 Edit `src`, `index.html` and `style.css`, not `dist/index.html`. The generated
 bundle is ignored by git and rebuilt by the deployment workflow.
 
+Railway terrain contours and river bridges are precomputed by `npm run build`.
+After changing railway surveys, also commit the regenerated `src/rail-scenery.js`.
+`npm run check` rejects stale scenery; the browser never runs terrain interpolation.
+
 ## Checks
 
 ```sh

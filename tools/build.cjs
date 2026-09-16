@@ -32,6 +32,7 @@ function bundle(root = ROOT) {
     return html;
 }
 function build(root = ROOT) {
+    require('./build-rail-scenery.cjs').write(root);
     const html = bundle(root);
     const dist = path.join(root, 'dist');
     fs.mkdirSync(dist, { recursive: true });

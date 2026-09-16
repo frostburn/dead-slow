@@ -1,6 +1,18 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
 const R=require('../src/rail.js'),P=require('../src/rail-presentation.js'),L=require('../src/rail-levels.js');
+test('checked-in scenery matches the current surveys and generation stays outside the browser',()=>{
+    const fs=require('node:fs'),path=require('node:path'),root=path.resolve(__dirname,'..');
+    assert.equal(fs.readFileSync(path.join(root,'src/rail-scenery.js'),'utf8'),require('../tools/build-rail-scenery.cjs').source());
+    const html=require('../tools/build.cjs').bundle();
+    assert.ok(html.includes('root.RailScenery=data'));
+    assert.ok(!html.includes('function generateLandscape('));
+});
+test('opening every landscape needs no survey or track sampling at runtime',()=>{
+    const at=R.at;R.at=()=>{throw new Error('Unexpected runtime survey sampling');};
+    try{for(const level of L){const scene=P.landscape({...level});assert.ok(Array.isArray(scene.contours));assert.ok(Array.isArray(scene.bridges));}}
+    finally{R.at=at;}
+});
 const cross=(a,b)=>a.x*b.y-a.y*b.x;
 function intersects(a,b,c,d) {
     const v={x:b.x-a.x,y:b.y-a.y},w={x:d.x-c.x,y:d.y-c.y},delta={x:c.x-a.x,y:c.y-a.y},den=cross(v,w);
