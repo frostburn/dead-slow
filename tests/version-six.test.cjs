@@ -38,7 +38,9 @@ test('sharing the climb protects couplers; front-only pull and rear-only curve p
         for(let i=0;i<2400&&!st.failure;i++)R.update(st,1/120);
         return st;
     }
-    assert.equal(probe(4,4).failure,null);
+    // Dry rail now transmits the requested force instead of limiting the top
+    // notches through wheelspin. Share moderate power on this steady climb.
+    const shared=probe(3,3);assert.equal(shared.failure,null);assert.ok(R.drivingEngine(shared).v>.5);
     assert.match(probe(4,0).failure,/sustain the pull/);
     assert.match(probe(0,4,6).failure,/bunched/);
 });

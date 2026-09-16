@@ -295,7 +295,7 @@
             direction=away?1:null;needsMovement=away;
         }
         if(!next)next='Keep all delivered wagons secured.';
-        if(unsecured){next+=' Secure the selected cut before leaving it.';if(!action)action='hand';}
+        if(unsecured){next+=' Secure the selected cut before leaving it.';action='hand';needsMovement=false;}
         if(eg.cars.some(c=>c.hand)&&!['hand','uncouple'].includes(action)){next+=' Release the attached handbrakes before moving.';}
         if(needsMovement&&!eg.cars.some(c=>c.hand)) {
             if(st.independent>.05){next+=' Release the loco brake (Q) to move.';action='independent';direction=-1;}
