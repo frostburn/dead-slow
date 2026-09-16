@@ -9,7 +9,7 @@
         return {
             id: 'rail',
             create(level) { return {rail:R.create(level)}; },
-            ready(run) { return run.rail.config.tasks.every(task=>run.rail.completed.includes(task.id)); },
+            ready(run) { return run.rail.config.tasks.every(task=>task.milestone||run.rail.completed.includes(task.id)); },
             clean(run) { return run.rail.stats.contacts === 0; },
             step(run, dt) {
                 const st = run.rail;

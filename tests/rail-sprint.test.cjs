@@ -66,6 +66,11 @@ test('5-07: pocket, two bridge shuttles and ordered reassembly use actual coupli
     const st=R.create(L[6]);
     require('./rail-routes.cjs').bridge(st);
     assert.ok(st.finishHold>=2);assert.equal(st.groups.length,1);
+    for(const task of st.config.tasks)assert.ok(st.completed.includes(task.id),task.id);
+    assert.ok(st.completed.includes('pocket-load-1'),'Pocket split remains after collecting load 1');
+    st.completed=['transformers'];
+    const adapter=require('../src/rail-adapter.js').create({railway:R});
+    assert.ok(adapter.ready({rail:st}),'Guidance does not outlaw alternative shunting solutions');
 });
 
 test('5-08: clear the load into the headshunt and reverse into the export spur',()=>{

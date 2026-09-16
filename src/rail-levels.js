@@ -163,8 +163,14 @@
                 switches:[{node:'e',label:'Receiving points',stem:'bridge',branches:['receiving','pocket','return'],names:['Assembly road','Receiving pocket','Engine return loop']}],
                 groups:[{cars:[wagon('T1','west-yard',350,{length:24,mass:110000,heavy:true}),wagon('E1','west-yard',328.8,{length:16,mass:10000}),loco('west-yard',309.6),wagon('T2','west-yard',286.4,{length:24,mass:110000,heavy:true}),wagon('E2','west-yard',265.2,{length:16,mass:10000})]}],
                 zones:[{id:'final',name:'Assembly · 2 then 1 toward buffers',edge:'receiving',from:70,to:640},
-                    {id:'pocket-zone',name:'Receiving pocket',edge:'pocket',from:60,to:420}],
-                tasks:[{id:'transformers',type:'park',zone:'final',cars:['engine','T1','E1','T2','E2'],order:['T2','E2','T1','E1'],text:'Complete train secured; load 2 and support ahead of load 1'}]
+                    {id:'pocket-zone',name:'Receiving pocket',edge:'pocket',from:60,to:420},
+                    {id:'waiting-load',name:'West holding track',edge:'west-yard',from:80,to:500}],
+                tasks:[
+                    {id:'leave-load-2',type:'delivery',milestone:true,zone:'waiting-load',cars:['T2','E2'],text:'1 · Detach and secure load 2 + support before crossing'},
+                    {id:'pocket-load-1',type:'delivery',milestone:true,zone:'pocket-zone',cars:['T1','E1'],text:'2 · Leave load 1 + support secured in the pocket'},
+                    {id:'assembly-load-2',type:'delivery',milestone:true,zone:'final',cars:['T2','E2'],text:'3 · Leave load 2 + support secured on the assembly road'},
+                    {id:'rejoin-loads',type:'coupled',milestone:true,after:'assembly-load-2',cars:['T1','E1','T2','E2'],text:'4 · Use the return loop; collect load 1 and rejoin the freight'},
+                    {id:'transformers',type:'park',zone:'final',cars:['engine','T1','E1','T2','E2'],order:['T2','E2','T1','E1'],text:'5 · Park and secure all wagons, load 2 ahead; clear the points'}]
             },[900,1350,1900]),
         level('long-grade-8','The Corners Are the Cargo',
             'Take the vessel around the loading platform, pull the whole load into the headshunt, then reverse into the export spur. The vessel swings outside its carrier wagons on tight bends.',

@@ -16,7 +16,7 @@ export interface Focus { x:number; y:number; a:number }
 export interface RailState {
     time:number;
     stats: {contacts:number; distance:number; [name:string]:number};
-    config: {tasks: {id:string;text:string}[]};
+    config: {tasks: {id:string;text:string;milestone?:boolean}[]};
     completed:string[];
     failure:string|null;
     finishHold:number;

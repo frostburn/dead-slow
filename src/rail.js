@@ -549,10 +549,10 @@
             st.taskHold[task.id]=met?(st.taskHold[task.id]||0)+dt:0;
             if(met&&st.taskHold[task.id]>=(task.dwell||1)&&!st.completed.includes(task.id))st.completed.push(task.id);
             // Delivery/parking are live requirements; leaving the zone revokes
-            // them. Tutorial milestones remain remembered.
-            if(!met&&['delivery','park','rescue','retire','ferry'].includes(task.type))st.completed=st.completed.filter(id=>id!==task.id);
+            // them. Tutorial and optional guide milestones remain remembered.
+            if(!met&&!task.milestone&&['delivery','park','rescue','retire','ferry'].includes(task.type))st.completed=st.completed.filter(id=>id!==task.id);
         }
-        st.finishHold=st.config.tasks.every(t=>st.completed.includes(t.id))?st.finishHold+dt:0;
+        st.finishHold=st.config.tasks.every(t=>t.milestone||st.completed.includes(t.id))?st.finishHold+dt:0;
     }
     function metrics(st) {
         const group=engineGroup(st),engine=group.cars.find(c=>c.id==='engine'),mass=group.cars.reduce((s,c)=>s+c.mass,0),b=bounds(group);

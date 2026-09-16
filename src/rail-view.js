@@ -122,9 +122,10 @@
                 return `<button data-rail="switch" data-value="${sw.node}" ${R.occupied(st,sw.node)?'disabled':''}><span>${sw.label}</span><b>${sw.names[sw.selected]}</b>${level.rail.thermal?`<small>${Math.round(edge.length)} m · ${grade.toFixed(1)}% max grade</small>`:''}${R.occupied(st,sw.node)?'<small>occupied</small>':''}</button>`;
             }).join('');
         }
+        const nextSplit=st.config.tasks.find(t=>!st.completed.includes(t.id)&&(!t.after||st.completed.includes(t.after)));
         $('rail-tasks').innerHTML=st.config.tasks.map(t=>{
             const done=st.completed.includes(t.id),split=done?run.splits?.find(s=>s.name===t.text):null;
-            return `<div class="split-row ${done?'done':''}"><span>${t.text}</span><span>${split?format(split.time):'—'}</span></div>`;
+            return `<div class="split-row ${done?'done':t===nextSplit?'active':''}"><span>${t.text}</span><span>${split?format(split.time):status==='complete'&&t.milestone?'Skipped':'—'}</span></div>`;
         }).join('');
         const help=projection.help;
         const recommendation=projection.recommendation;
