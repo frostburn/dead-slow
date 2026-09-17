@@ -147,8 +147,8 @@ open a narrow shoulder beside the hull. Pressure ridges remain impassable.
 Slush is a continuous resistance field after a 20-second grace period; an
 opened cell never becomes a solid collider under a vessel. Breaking can leave
 mass-bearing floes, spawned only after occupied hulls clear their location.
-Icebergs drift independently, collide as solid bodies, and already carry keel
-metadata; depth bands and sonar are reserved for later assignments.
+Icebergs drift independently and collide as solid bodies. Their keel metadata
+also defines underwater clearance in the submarine assignments.
 
 Supply captains plan connected cleared water with beam clearance, then apply
 the same engine lag, thrust, rudder, drag and collision model as the player.
@@ -192,3 +192,41 @@ their signatures. The polar tests cover boundaries and complete all six missions
 through ordinary controls at 120 Hz, including towing and physical projectile
 hits. A passive defense run loses a transport before it can leave. Browser UI checks run
 inside the existing atlas job; there is no additional CI matrix or job.
+
+## Pale Reach submarine watch
+
+`submarine-levels.js` adds 7-07–7-09 to the same standalone campaign.
+`submarine.js` uses the existing inertial hull integrator and captain controls,
+with gradual depth changes between 18, 48 and 88 metres. Whole-hull overlap
+determines keel and seabed clearance. Invalid horizontal approaches collide;
+terrain never snaps a vessel into another depth band. Static hex chart texture
+is cached; moving keels and depth-dependent obstruction shading stay live.
+
+`sonar.js` stores detached observations, never live actor references. Passive
+listening supplies uncertain position, motion and machinery clues; speed,
+counterthrust and thrusters mask the receiver and alert listeners. Active pulses
+schedule echoes after travel time and give enemies an expiring emission fix.
+Unobserved tracks extrapolate briefly, then hold position while uncertainty grows.
+The underwater view renders hidden contacts from those estimates alone; only
+the covert mission's explicitly reported surface patrols have exact chart symbols.
+
+Identification is a separate bridge order. Torpedoes require a fresh identified
+submarine track, matching depth, forward arc, clearance and four steady seconds.
+They follow the plotted solution through space, can miss, and strike the first
+solid obstacle or hull at their depth. Enemy attacks use expiring sensor fixes.
+Going quiet lets the minelayer lose contact; decoys are released from its stern.
+One damaging hit makes it abandon minelaying and withdraw, which is a successful
+defense once the passage is safe and Petrel returns. Pursuit is unnecessary.
+
+The covert team needs quiet, slow transfers at working depth. Work advances only
+after leaving the exposed area; recovery and homecoming are separate objectives.
+Patrol listening arcs, self-noise, range and depth determine suspicion. Suspicion
+can decay, while a confirmed alarm remains latched. No infantry state is exposed.
+
+`submarine-navigation.cjs` completes all three missions through ordinary helm,
+depth, sonar and mission orders, using observed tracks and visible patrol reports.
+Focused tests cover lost-contact uncertainty, fire interlocks, projectile flight,
+depth clearance, alarm latching, failure deadlines, pause/retry and a warm chart
+draw budget. Existing browser CI checks the new controls and mobile layouts;
+there is no additional job or Node version. Existing surface course signatures
+and the 72-stage Grand Tour remain unchanged.

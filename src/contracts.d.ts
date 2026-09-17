@@ -68,9 +68,10 @@ export interface RailServices {
     fail():void;
 }
 
-export type PolarAction = 'tow'|'target'|'fire';
+export type PolarAction = 'tow'|'target'|'fire'|'ping'|'identify'|'team'|'ascend'|'descend'|'depth';
 export interface PolarInput {rudder:number;thruster:number;winch?:number}
 export interface PolarState {
+    submarine?:boolean;
     level:Level;
     contacts:number;
     fleet:{ship:{hull:number}}[];

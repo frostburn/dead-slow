@@ -28,11 +28,11 @@ test('removing Borrowed Water’s deadline archives only that assignment’s for
     for(const n of [1,3])assert.deepEqual(out.stages[`pale-reach-${n}`],stage());
 });
 test('physical cutter charts archive only the three former timed-opening assignments',()=>{
-    const old=C.manifest(levels.map(l=>l.polar&&l.stageNumber>=4?{...l,courseRevision:1}:l)),data=S.fresh();data.compatibility=old;
+    const old=C.manifest(levels.map(l=>l.polar&&l.stageNumber>=4&&l.stageNumber<=6?{...l,courseRevision:1}:l)),data=S.fresh();data.compatibility=old;
     for(const l of levels)data.stages[l.id]=stage();data.races['grand-tour']=[{...record}];
     const current=C.manifest(levels),out=S.sanitize(data,current);assert.deepEqual(current.races,old.races);
     for(const l of levels){
-        if(l.polar&&l.stageNumber>=4){assert.equal(out.stages[l.id],undefined);assert.deepEqual(out.archivedStages[C.archiveKey(l.id,'polar:1:1')],stage());}
+        if(l.polar&&l.stageNumber>=4&&l.stageNumber<=6){assert.equal(out.stages[l.id],undefined);assert.deepEqual(out.archivedStages[C.archiveKey(l.id,'polar:1:1')],stage());}
         else assert.deepEqual(out.stages[l.id],stage());
     }
     assert.equal(out.races['grand-tour'].length,1);

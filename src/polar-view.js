@@ -4,6 +4,7 @@
     const P=typeof module!=='undefined'&&module.exports?require('./physics.js'):root.HarborPhysics;
     const I=typeof module!=='undefined'&&module.exports?require('./polar.js'):root.PaleReach;
     const G=typeof module!=='undefined'&&module.exports?require('./polar-grid.js'):root.PaleReachGrid;
+    const U=typeof module!=='undefined'&&module.exports?require('./submarine-view.js'):root.PaleReachSubmarineView;
     const $=id=>document.getElementById(id);
     const set=(id,v)=>{const node=$(id),text=String(v);if(node.textContent!==text)node.textContent=text;};
     const html=(id,v)=>{const node=$(id);if(node.innerHTML!==v)node.innerHTML=v;};
@@ -73,8 +74,10 @@
         }).join('');
     }
     function prepare(level,command,action){
+        $('polar-sub-controls').hidden=true;
         $('polar-panel').hidden=!level.polar;
         if(!level.polar)return;
+        if(level.polar.underwater)return U.prepare(level,action);
         document.title='DEAD SLOW — Race for the Pale Reach';
         set('courses-btn','World map');set('check-objectives','Passage objectives');
         if(level.polar.mission==='defense'){
@@ -92,6 +95,7 @@
         set('polar-legend','BLUE · thin sheet / CREAM · pressure ridge / SPECKLED · closing slush / WHITE · solid drifting ice');
     }
     function update(level,run,status,format){
+        if(run.polar.submarine)return U.update(level,run,status,format);
         const s=run.ship,st=run.polar,o=st.operation,m=P.groundMotion(s),h=Math.max(0,Math.ceil(s.hull)),g=I.gap(run);
         set('speed',(m.surge<0?'−':'')+(m.speed*1.94384).toFixed(1));set('mobile-speed',$('speed').textContent);
         set('speed-direction',m.direction.toUpperCase());set('mobile-direction',m.direction.toUpperCase());
@@ -140,6 +144,7 @@
         set('delta','ALL REQUIRED HULLS MUST SURVIVE');$('race-banner').hidden=true;set('scale-label','100 METRES');
     }
     function dialog(kind,level,run,format,hasNext=false,race=null,actions=''){
+        if(run.polar.submarine)return U.dialog(kind,level,run,format,hasNext,race,actions);
         const st=run.polar,c=level.polar,eyebrow=`<div class="eyebrow">WORLD 7 · PASSAGE SERVICE · ${String(level.stageNumber).padStart(2,'0')} / 12</div>`;
         const retry='<button data-action="retry">Retry<span class="key-hint"> · Shift+R</span></button><button data-action="courses">World map</button>';
         if(kind==='intro')return `${eyebrow}<h1>${level.name}</h1><p>${level.brief}</p><div class="polar-message"><strong>${c.dispatch[0]}</strong><p>${c.dispatch[1]}</p></div><p class="subtle">${level.tip}</p><div class="control-summary">Engine telegraph, rudder and bow thruster below.<span class="keyboard-only"><br>W / S engine · A / D rudder · Q / E bow thruster · Space neutral</span><br>${c.mission==='survey'?'F: towline · J/K: winch. Eight steady seconds nearby transfers the recorders.':c.gun?'T: select hostile target · B: fire after the solution is ready. Slow below 2.4 kn and steady the bow.':c.mission==='convoy'?'Hold and Proceed orders control each supply captain. Both return legs are required.':'Neutral does not brake. Use astern thrust early.'}</div><div class="dialog-actions"><button class="primary" data-action="begin" autofocus>Take the watch →</button><button data-action="help">Ice pilot’s notes</button><button data-action="courses">World map</button></div>`;
@@ -151,6 +156,7 @@
         return `${eyebrow}<h1>Read the water you make.</h1><p><b>Sheet ice.</b> Blue is thinner; pale sheet needs more momentum. Meet it bow first at 3–5 kn in Kestrel. The bow fractures sheet a little wider than the hull. Sideways or stern-first contact does not cut a new route. A loaded supply hull cannot break sheet. Cream pressure ridges are impassable.</p><p><b>Closing channels.</b> Broken water steadily fills with speckled slush. More slush means more drag, not an invisible gate. It never solidifies underneath a hull. Passing an icebreaker through it clears it again. Watch the whole stern, especially on bends.</p><p><b>Solid moving ice.</b> A few substantial floes remain after breaking. The large striped iceberg moves independently and cannot be broken; leave room for its projected drift. Floe and hull collisions transfer momentum and damage vessels.</p><p><b>Working separation.</b> In Borrowed Water, keep roughly 25–65 m between hulls. Closing rate matters as much as gap. The leader slows physically against compressed ice and never waits just to preserve your spacing. Pass the marked bends in order. Rime finishing the lead does not fail the assignment; she waits at Glass Quay. A late arrival through heavy slush still counts.</p><p><b>Two supply captains.</b> Dashed outbound and return routes are requests for cleared water, not guaranteed safe tracks. Captains choose connected cleared water toward their destination and brake for intact ice, ships and icebergs. Hold also takes time to stop. Unloading needs a slow, stable hull; after it finishes, the captain waits for another Proceed before returning. You can reopen slushy return leads. Both supply ships must regain safe water before Kestrel docks.</p><p><b>Survey rescue.</b> No weapons are authorized. Bring the tug’s stern within 55 m of Caliper’s bow at low relative speed; F makes or releases the line. J/K winch it. A slack line cannot push, and an overloaded line can part. Hold within 65 m with little relative motion for eight seconds to recover the recorders. Return the whole survey hull to the green safe-water ellipse and stop it, then moor Kestrel. Protect the civilian station.</p><p><b>Surface combat.</b> T cycles hostile contacts; target buttons select directly. Kestrel’s forward gun reaches 290 m within its amber bow arc. Hold below 2.4 kn with little turn for 2.5 seconds; B fires one shell, followed by a nine-second reload. Intact sheet and pressure ridges block the firing line; opened slush permits fire. Shells have flight time and can strike intervening hulls or solid ice. Red solution lines and impact marks warn of enemy fire. Maneuvering to defend can cost your firing solution. Destroyed installations remain solid obstacles.</p><p><b>Changing approaches.</b> Dashed cutter routes show intentions, not cleared water. Watch the labeled icebreakers: only their advancing bows or your own can fracture sheet. A disabled cutter coasts to a stop; stationary hulls open no more ice. Their wakes visibly thicken with slush. Openings admit hostile boats as well as your own ship. In Home Ice, cargo crews unload automatically; give Proceed when each transport is ready to leave. The final transport reaching safe water completes defense. At Ravel Shelf, disable both marked installations and return to your home berth.</p><p>Individual records and ghosts are saved. These six assignments sit outside the 72-stage Grand Tour until the full Pale Reach campaign is ready.</p><div class="dialog-actions"><button class="primary" data-action="back" autofocus>Back to the bridge</button></div>`;
     }
     function render(canvas,level,run,zoom,options={}){
+        if(run.polar.submarine)return U.render(canvas,level,run,zoom,options);
         const box=canvas.getBoundingClientRect(),dpr=Math.min(root.devicePixelRatio||1,2),w=Math.round(box.width*dpr),h=Math.round(box.height*dpr);
         if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
         const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);

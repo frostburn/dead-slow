@@ -5,11 +5,11 @@ const {create}=require('./headless.cjs');
 const level=n=>L.find(l=>l.id===`pale-reach-${n}`);
 const state=n=>({...I.create(level(n)),time:0,contacts:0,distance:0,maxSpeed:0,dockHold:0,sampleAt:0,ghost:[],splits:[]});
 
-test('Pale Reach has six standalone assignments and six future chapters',()=>{
+test('Pale Reach has nine standalone assignments and three future chapters',()=>{
  const w=L.worlds.find(w=>w.id==='pale-reach');assert.ok(w.partial&&!w.comingSoon);
- assert.equal(w.stages.filter(l=>!l.comingSoon).length,6);assert.equal(w.stages.filter(l=>l.comingSoon).length,6);
- const t=create();for(let n=1;n<=3;n++){t.cheats.level(7,n);assert.ok(t.state.run.polar);assert.ok(level(n).standalone);}
- assert.throws(()=>t.cheats.level(7,7),/Coming soon/);assert.throws(()=>t.cheats.circuit(7),/unavailable/);
+ assert.equal(w.stages.filter(l=>!l.comingSoon).length,9);assert.equal(w.stages.filter(l=>l.comingSoon).length,3);
+ const t=create();for(let n=1;n<=9;n++){t.cheats.level(7,n);assert.ok(t.state.run.polar);assert.ok(level(n).standalone);}
+ assert.throws(()=>t.cheats.level(7,10),/Coming soon/);assert.throws(()=>t.cheats.circuit(7),/unavailable/);
  t.cheats.tour(0);assert.equal(t.state.marathon.route.length,72);
 });
 test('only a momentum-driven icebreaking bow opens sheet; ridges remain solid',()=>{

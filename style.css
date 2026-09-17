@@ -2547,3 +2547,13 @@ body[data-theme="polar"] .chart-bottom { display:none; }
 #polar-targets .selected { border-color:var(--amber); background:#594a35; }
 #polar-gun-readout,#polar-tow-readout { display:block; font:10px/1.5 var(--mono); color:var(--amber); margin:6px 0; }
 #polar-fire:enabled { border-color:var(--amber); }
+#polar-sub-controls[hidden],#sub-team[hidden],#sub-fire[hidden] { display:none; }
+.sub-depths { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px; margin:6px 0; }
+#polar-sub-controls .selected { border-color:var(--amber); background:#594a35; }
+#sub-depth-status,#sub-noise,#sub-solution,#sub-track-detail { font:10px/1.5 var(--mono); color:var(--muted); margin:6px 0; }
+#sub-noise,#sub-solution { color:var(--amber); }
+#sub-contacts { display:grid; grid-template-columns:1fr; gap:5px; max-height:190px; overflow:auto; }
+#sub-contacts button { text-align:left; overflow-wrap:anywhere; }
+#sub-contacts b,#sub-contacts span { display:block; font-size:10px; line-height:1.4; }
+#sub-contacts span { color:var(--muted); font-size:9px; }
+#sub-team { width:100%; }

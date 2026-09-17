@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#07141d"><meta name="description" content="Dead Slow: seventy-two maritime, spacecraft, giant hamster-ball and freight railway trials, six polar passage assignments and the Century Ship bonus, local records, and ghost runs. A self-contained offline browser game.">
+<meta name="theme-color" content="#07141d"><meta name="description" content="Dead Slow: seventy-two maritime, spacecraft, giant hamster-ball and freight railway trials, nine polar passage assignments and the Century Ship bonus, local records, and ghost runs. A self-contained offline browser game.">
 <title>DEAD SLOW — Harbor Trials</title>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -50,6 +50,14 @@
     <div id="polar-actions" hidden>
      <div id="polar-tow-controls" hidden><button data-polar-action="tow">Connect / release tow <span class="key-hint">· F</span></button><div class="polar-winch"><button data-hold="linein">Shorten <span class="key-hint">· J</span></button><button data-hold="lineout">Lengthen <span class="key-hint">· K</span></button></div><span id="polar-tow-readout"></span></div>
      <div id="polar-gun-controls" hidden><div id="polar-targets" aria-label="Hostile targets"></div><div id="polar-gun-readout" role="status"></div><div class="polar-winch"><button data-polar-action="target">Next target <span class="key-hint">· T</span></button><button data-polar-action="fire" id="polar-fire">Fire <span class="key-hint">· B</span></button></div></div>
+     <div id="polar-sub-controls" hidden>
+      <div class="section-label">DEPTH ORDER · Z / X</div><div class="sub-depths"><button data-sub-depth="0">Shallow · 18 m</button><button data-sub-depth="1">Working · 48 m</button><button data-sub-depth="2">Deep · 88 m</button></div>
+      <div id="sub-depth-status" role="status"></div><div id="sub-noise" role="status"></div>
+      <div class="polar-winch"><button id="sub-ping" data-polar-action="ping">Active pulse <span class="key-hint">· P</span></button><button data-polar-action="target">Next contact <span class="key-hint">· T</span></button></div>
+      <div id="sub-contacts" aria-label="Observed sonar tracks"></div><p id="sub-track-detail"></p>
+      <div class="polar-winch"><button id="sub-identify" data-polar-action="identify">Record identification <span class="key-hint">· I</span></button><button id="sub-fire" data-polar-action="fire">Torpedo <span class="key-hint">· B</span></button></div>
+      <div id="sub-solution" role="status"></div><button id="sub-team" data-polar-action="team">Insert team <span class="key-hint">· F</span></button>
+     </div>
     </div>
     <div id="polar-fleet"></div><p id="polar-legend"></p>
     <details class="polar-mobile-splits"><summary>Split times · elapsed IGT</summary><div id="polar-splits" class="splits"></div></details>
@@ -100,10 +108,14 @@
 <script src="src/rail-scenery.js"></script>
 <script src="src/rail-presentation.js"></script>
 <script src="src/rail-view.js"></script>
+<script src="src/submarine-levels.js"></script>
 <script src="src/polar-levels.js"></script>
 <script src="src/polar-grid.js"></script>
 <script src="src/polar-operations.js"></script>
+<script src="src/sonar.js"></script>
+<script src="src/submarine.js"></script>
 <script src="src/polar.js"></script>
+<script src="src/submarine-view.js"></script>
 <script src="src/polar-view.js"></script>
 <script src="src/levels.js"></script>
 <script src="src/jobs.js"></script>

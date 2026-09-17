@@ -8,7 +8,7 @@ test('polar frames have a bounded drawing budget, including local ice changes',(
  const canvas=()=>({width:0,height:0,getBoundingClientRect:()=>({width:1050,height:720}),getContext:()=>context});
  const previous=global.document;global.document={createElement:canvas};
  try{
-  for(const l of L.filter(l=>l.polar)){
+  for(const l of L.filter(l=>l.polar&&!l.polar.underwater)){
    const r={...I.create(l),time:0},c=canvas();V.render(c,l,r,1);draws=0;bitmaps=0;
    for(let frame=0;frame<60;frame++){r.ship.x+=.01;r.polar.time+=1/60;V.render(c,l,r,1);}
    assert.ok(draws/60<100,`${l.id}: ${draws/60} draw calls per unchanged frame`);

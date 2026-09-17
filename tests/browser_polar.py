@@ -1,7 +1,7 @@
 """Pale Reach UI checks, called once from the existing atlas browser job."""
 def check_polar(page,check,out):
     page.set_viewport_size({'width':1440,'height':1000})
-    for stage in [1,2,3,4,5,6]:
+    for stage in range(1,10):
         page.evaluate('(n)=>{DeadSlow.level(7,n);DeadSlow.speed(0)}',stage)
         page.wait_for_timeout(80)
         check(f'7-0{stage} exposes polar chart and hides railway panels',page.locator('#polar-panel').is_visible() and not page.locator('#rail-panel').is_visible())
@@ -33,6 +33,8 @@ def check_polar(page,check,out):
             page.keyboard.press('b')
             check('An unprepared shot consumes no ammunition',page.evaluate('DeadSlowTest.state.run.polar.operation.gun.ammo===24'))
             check('Strike restores the mooring checklist',page.locator('#check-inside').inner_text()=='Inside berth')
+        if stage>=7:
+            check_submarine(page,check,stage)
         page.screenshot(path=str(out/f'pale-reach-{stage}.png'))
     page.evaluate('DeadSlow.level(7,3);DeadSlow.speed(0)')
     check_polar_rendering(page,check)
@@ -54,14 +56,51 @@ def check_polar(page,check,out):
         page.locator('.polar-mobile-splits').evaluate('(d)=>d.open=true')
         check(f'Split times are accessible at {width}×{height}',page.locator('#polar-splits').is_visible() and page.locator('#polar-splits .split-row').count()==3)
         page.screenshot(path=str(out/f'pale-reach-{width}.png'))
-        for stage in [4,5,6]:
+        for stage in range(4,10):
             page.evaluate('(n)=>{DeadSlow.level(7,n);DeadSlow.speed(0)}',stage)
             check(f'7-0{stage} operations fit {width}×{height}',page.evaluate('document.documentElement.scrollWidth<=innerWidth'))
             check(f'7-0{stage} action buttons are usable at {width}×{height}',page.locator('#polar-actions button:visible').evaluate_all('(bs)=>bs.length>=3 && bs.every(b=>b.getBoundingClientRect().height>=40)'))
+            if stage>=7:
+                check(f'7-0{stage} depth and sonar orders remain available at {width}×{height}',page.locator('[data-sub-depth]').count()==3 and page.locator('#sub-ping').is_visible())
+                page.locator('.polar-mobile-splits').evaluate('(d)=>d.open=true')
+                check(f'7-0{stage} elapsed splits remain available at {width}×{height}',page.locator('#polar-splits .split-row').count()==(4 if stage==8 else 3))
             page.screenshot(path=str(out/f'pale-reach-{stage}-{width}.png'))
         page.evaluate('DeadSlow.level(7,3);DeadSlow.speed(0)')
     page.set_viewport_size({'width':1440,'height':1000});page.evaluate('DeadSlow.level(1,1);DeadSlow.speed(0)')
     check('Leaving the polar world hides its convoy panel',not page.locator('#polar-panel').is_visible())
+
+def check_submarine(page,check,stage):
+    check(f'7-0{stage} exposes underwater controls and clearance',page.locator('#polar-sub-controls').is_visible() and 'SEABED' in page.locator('#polar-ice').inner_text())
+    check(f'7-0{stage} hides surface weapons and tow controls',not page.locator('#polar-gun-controls').is_visible() and not page.locator('#polar-tow-controls').is_visible())
+    check(f'7-0{stage} describes an estimated sonar chart','estimated sonar' in page.locator('#chart-section').get_attribute('aria-label'))
+    if stage==7:
+        page.evaluate('DeadSlow.step(2)')
+        page.keyboard.press('t');page.evaluate('DeadSlowTest.hud()')
+        check('First passive return stays unidentified with weapons locked',page.locator('#sub-contacts [aria-pressed=true]').count()==1 and 'UNIDENTIFIED' in page.locator('#sub-contacts').inner_text() and page.locator('#sub-fire').is_disabled())
+        page.locator('[data-sub-depth="1"]').click()
+        check('Depth button changes the order without moving the hull instantly',page.evaluate('DeadSlowTest.state.run.ship.depthTarget===48 && DeadSlowTest.state.run.ship.depth===18'))
+        page.evaluate('DeadSlow.step(10)')
+        check('Depth readout follows the gradual dive',page.evaluate('DeadSlowTest.state.run.ship.depth>18 && DeadSlowTest.state.run.ship.depth<48') and '48 m ORDERED' in page.locator('#sub-depth-status').inner_text())
+        page.keyboard.press('p');page.evaluate('DeadSlowTest.hud()')
+        check('Pulse key starts the visible recharge',page.locator('#sub-ping').is_disabled() and page.evaluate('DeadSlowTest.state.run.polar.stats.pulses===1'))
+        page.evaluate('DeadSlow.step(4)')
+        page.locator('#sub-contacts button').first.click()
+        check('Active echo permits a deliberate identification',page.locator('#sub-identify').is_enabled() and 'observed depth' in page.locator('#sub-track-detail').inner_text())
+        page.locator('#sub-identify').click()
+        check('Identifying the tender does not unlock torpedoes','FRIENDLY TENDER' in page.locator('#sub-contacts').inner_text() and page.locator('#sub-fire').is_disabled())
+        page.keyboard.press('z');page.evaluate('DeadSlowTest.hud()')
+        check('Shallower key reaches the depth order',page.evaluate('DeadSlowTest.state.run.ship.depthTarget===18'))
+    if stage==8:
+        check('Covert watch exposes team progress and suspicion','SUSPICION' in page.locator('#polar-readout').inner_text() and 'TEAM WORK' in page.locator('#sub-solution').inner_text() and page.locator('#sub-team').is_visible() and not page.locator('#sub-fire').is_visible())
+        page.locator('#sub-team').click()
+        check('Remote insertion gives a visible hatch requirement','marked hatch' in page.locator('#polar-notice').inner_text())
+        page.click('#pause-btn')
+        check('Underwater pause describes the stopped mission clocks','sonar memories' in page.locator('#dialog').inner_text())
+        page.locator('[data-action=resume]').click()
+    if stage==9:
+        page.evaluate('DeadSlow.step(3)')
+        check('Minelayer watch starts with uncertain contacts and a locked tube',page.locator('#sub-contacts button').count()>0 and '±' in page.locator('#sub-contacts').inner_text() and page.locator('#sub-fire').is_disabled())
+        check('Hunt objective guards the passage rather than requiring a kill','Keep the passage clear' in page.locator('#splits').inner_text())
 
 def check_polar_rendering(page,check):
     result=page.evaluate('''() => {
