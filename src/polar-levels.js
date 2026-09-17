@@ -5,7 +5,7 @@
     const supply={name:'COUNCIL SUPPLY · LANTERN',length:42,beam:10,mass:1.8,propulsion:2,dragScale:1.05,draft:5.8,iceClass:0};
     const berth=(x,y,a=0)=>({x,y,a,l:64,w:27,angle:12,speed:.32});
     const base=(n,name,kind,start,spec,world,polar,brief,tip,pace)=>({id:`pale-reach-${n}`,name,kind,start,spec,world,polar,
-        simulation:'polar',standalone:true,courseRevision:1,rulesRevision:1,berth:polar.berth,brief,tip,pace});
+        simulation:'polar',standalone:true,courseRevision:2,rulesRevision:1,berth:polar.berth,brief,tip,pace});
     const firstRoute=[[105,390],[210,365],[280,275],[350,220],[445,235],[530,275],[640,280]];
     const lead=[[115,380],[210,380],[290,330],[385,265],[485,265],[585,320],[690,340],[795,310]];
     const north=[[160,355],[275,290],[355,230],[450,185],[570,165],[690,170]];

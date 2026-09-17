@@ -8,6 +8,11 @@ def check_polar(page,check,out):
         check(f'7-0{stage} shows its authored bridge briefing',page.evaluate('DeadSlowTest.state.level.polar.dispatch[1].length>80'))
         if stage==1:
             check('Turning pocket progress is visible','TURNING POCKET' in page.locator('#polar-readout').inner_text())
+            page.evaluate('DeadSlow.step(12.25);DeadSlowTest.state.run.polar.routeOpened=true;DeadSlow.step(1)')
+            check('Completed polar splits show elapsed minutes, seconds and hundredths',page.locator('#splits .split-row').first.locator('span').last.inner_text()=='00:12.25')
+            page.evaluate('DeadSlow.step(2)')
+            check('Recorded split time stays fixed as the clock advances',page.locator('#splits .split-row').first.locator('span').last.inner_text()=='00:12.25')
+            check('Unfinished polar splits retain an empty time',page.locator('#splits .split-row').last.locator('span').last.inner_text()=='—')
         if stage==2:
             check('Following mission has live gap and closing rate','HULL GAP' in page.locator('#polar-readout').inner_text())
         page.screenshot(path=str(out/f'pale-reach-{stage}.png'))
@@ -26,6 +31,8 @@ def check_polar(page,check,out):
         check(f'Polar bridge fits {width}×{height}',page.evaluate('document.documentElement.scrollWidth<=innerWidth'))
         check(f'Convoy orders remain visible at {width}×{height}',page.locator('#polar-panel').is_visible() and page.locator('[data-convoy=sedge][data-order=proceed]').is_visible())
         check(f'Order buttons have usable targets at {width}×{height}',page.locator('#polar-fleet button').evaluate_all('(bs)=>bs.every(b=>b.getBoundingClientRect().height>=40)'))
+        page.locator('.polar-mobile-splits').evaluate('(d)=>d.open=true')
+        check(f'Split times are accessible at {width}×{height}',page.locator('#polar-splits').is_visible() and page.locator('#polar-splits .split-row').count()==3)
         page.screenshot(path=str(out/f'pale-reach-{width}.png'))
     page.set_viewport_size({'width':1440,'height':1000});page.evaluate('DeadSlow.level(1,1);DeadSlow.speed(0)')
     check('Leaving the polar world hides its convoy panel',not page.locator('#polar-panel').is_visible())

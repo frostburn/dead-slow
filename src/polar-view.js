@@ -4,6 +4,12 @@
     const P=typeof module!=='undefined'&&module.exports?require('./physics.js'):root.HarborPhysics;
     const I=typeof module!=='undefined'&&module.exports?require('./polar.js'):root.PaleReach;
     const $=id=>document.getElementById(id),set=(id,v)=>$(id).textContent=v;
+    function splitRows(run,format){
+        return I.progress(run).map(o=>{
+            const split=run.splits.find(p=>p.name===o.text),done=!!split;
+            return `<div class="split-row ${done?'done':''}"><span>${o.text}</span><span>${done?format(split.time):'—'}</span></div>`;
+        }).join('');
+    }
     function prepare(level,command){
         $('polar-panel').hidden=!level.polar;
         if(!level.polar)return;
@@ -42,7 +48,7 @@
                 b.disabled=status!=='running'||f.returned||f.leg==='unloading';b.classList.toggle('selected',f.order===b.dataset.order);b.setAttribute('aria-pressed',String(f.order===b.dataset.order));
             }
         }
-        $('splits').innerHTML=I.progress(run).map(o=>`<div class="split-row ${o.done?'done':''}"><span>${o.text}</span><span>${o.done?'✓':'—'}</span></div>`).join('');
+        const splits=splitRows(run,format);$('splits').innerHTML=splits;$('polar-splits').innerHTML=splits;
         $('check-objectives').classList.toggle('ok',I.ready(run));
         for(const k of ['inside','aligned','slow'])$('check-'+k).classList.toggle('ok',!!run.dock[k]);
         $('dock-bar').style.width=Math.min(100,run.dockHold*50)+'%';
@@ -55,14 +61,14 @@
         if(kind==='intro')return `${eyebrow}<h1>${level.name}</h1><p>${level.brief}</p><div class="polar-message"><strong>${c.dispatch[0]}</strong><p>${c.dispatch[1]}</p></div><p class="subtle">${level.tip}</p><div class="control-summary">Engine telegraph, rudder and bow thruster below.<span class="keyboard-only"><br>W / S engine · A / D rudder · Q / E bow thruster · Space neutral</span><br>${c.mission==='convoy'?'Hold and Proceed orders control each supply captain. Both return legs are required.':'Neutral does not brake. Use astern thrust early.'}</div><div class="dialog-actions"><button class="primary" data-action="begin" autofocus>Take the watch →</button><button data-action="help">Ice pilot’s notes</button><button data-action="courses">World map</button></div>`;
         if(kind==='pause')return `${eyebrow}<h1>The watch is held.</h1><p>Vessels, drift and channel closure are paused together. This attempt is now unranked practice.</p><div class="dialog-actions"><button class="primary" data-action="resume" autofocus>Resume watch</button>${retry}</div>`;
         if(kind==='failed')return `${eyebrow}<h1>A crew did not get through.</h1><p>${st.failure||'The assignment could not be completed.'}</p><div class="result-time">${format(run.time)}</div><div class="dialog-actions">${retry}</div>`;
-        if(kind==='result')return `${eyebrow}<h1>${c.mission==='convoy'?'Both crews are home.':c.mission==='follow'?'The cargo is ashore.':'A harbor, not just a channel.'}</h1><p>${c.mission==='convoy'?'Tern and Cinder have their supplies. The Council records two returning crews; the rival charts still disagree.':c.mission==='follow'?'Glass Quay’s crew can begin unloading Lantern. Rime holds clear while the lead thickens behind you.':'Thawmark now has turning room and a supply berth. The Council’s harbor master accepts the route as usable.'}</p><div class="result-time">${format(run.time)}</div><div class="result-badge">${run.pausedUsed?'UNRANKED PRACTICE':run.pb?'NEW PERSONAL BEST':'PASSAGE COMPLETE'}${run.result?.clean?' · CLEAN':''}</div>${actions}`;
+        if(kind==='result')return `${eyebrow}<h1>${c.mission==='convoy'?'Both crews are home.':c.mission==='follow'?'The cargo is ashore.':'A harbor, not just a channel.'}</h1><p>${c.mission==='convoy'?'Tern and Cinder have their supplies. The Council records two returning crews; the rival charts still disagree.':c.mission==='follow'?'Glass Quay’s crew can begin unloading Lantern. Rime holds clear while the lead thickens behind you.':'Thawmark now has turning room and a supply berth. The Council’s harbor master accepts the route as usable.'}</p><div class="result-time">${format(run.time)}</div><div class="result-badge">${run.pausedUsed?'UNRANKED PRACTICE':run.pb?'NEW PERSONAL BEST':'PASSAGE COMPLETE'}${run.result?.clean?' · CLEAN':''}</div><div class="section-label">SPLITS · ELAPSED IGT</div><div class="splits">${splitRows(run,format)}</div>${actions}`;
         return `${eyebrow}<h1>Read the water you make.</h1><p><b>Sheet ice.</b> Blue is thinner; pale sheet needs more momentum. Meet it bow first at 3–5 kn in Kestrel. The bow fractures sheet a little wider than the hull. Sideways or stern-first contact does not cut a new route. A loaded supply hull cannot break sheet. Cream pressure ridges are impassable.</p><p><b>Closing channels.</b> Broken water steadily fills with speckled slush. More slush means more drag, not an invisible gate. It never solidifies underneath a hull. Passing an icebreaker through it clears it again. Watch the whole stern, especially on bends.</p><p><b>Solid moving ice.</b> A few substantial floes remain after breaking. The large striped iceberg moves independently and cannot be broken; leave room for its projected drift. Floe and hull collisions transfer momentum and damage vessels.</p><p><b>Working separation.</b> In Borrowed Water, keep roughly 25–65 m between hulls. Closing rate matters as much as gap. The leader slows physically against compressed ice and never waits just to preserve your spacing. Pass each bend with 15–100 m between hulls while Rime is still leading; a solo passage after she finishes does not count.</p><p><b>Two supply captains.</b> Dashed outbound and return routes are requests for cleared water, not guaranteed safe tracks. Captains choose connected cleared water toward their destination and brake for intact ice, ships and icebergs. Hold also takes time to stop. Unloading needs a slow, stable hull; after it finishes, the captain waits for another Proceed before returning. You can reopen slushy return leads. Both supply ships must regain safe water before Kestrel docks.</p><p>Individual records and ghosts are saved. These three opening assignments sit outside the 72-stage Grand Tour until the full Pale Reach campaign is ready.</p><div class="dialog-actions"><button class="primary" data-action="back" autofocus>Back to the bridge</button></div>`;
     }
     function render(canvas,level,run,zoom,options={}){
         const box=canvas.getBoundingClientRect(),dpr=Math.min(root.devicePixelRatio||1,2),w=Math.round(box.width*dpr),h=Math.round(box.height*dpr);
         if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
         const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
-        const W=box.width,H=box.height,st=run.polar,c=st.config,ice=st.ice,z=ice.cell;
+        const W=box.width,H=box.height,st=run.polar,c=st.config,ice=st.ice;
         const scale=Math.min((W-32)/level.world[0],(H-64)/level.world[1])*zoom;
         let ox=(W-level.world[0]*scale)/2,oy=(H-level.world[1]*scale)/2+12;
         if(zoom>1){ox=W/2-run.ship.x*scale;oy=H/2-run.ship.y*scale;}
@@ -70,19 +76,27 @@
         const line=(points,color,width=1,dash=[])=>{ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash);ctx.stroke();ctx.setLineDash([]);};
         const label=(text,x,y,color='#8fb9c3',size=10)=>{ctx.fillStyle=color;ctx.font=`${size}px ui-monospace, monospace`;ctx.textAlign='center';ctx.fillText(text,x,y);};
         ctx.fillStyle='#173e4a';ctx.fillRect(0,0,...level.world);
+        ctx.save();ctx.beginPath();ctx.rect(0,0,...level.world);ctx.clip();
         for(let k=0;k<ice.thickness.length;k++){
             const t=ice.thickness[k];if(!t)continue;
-            const x=k%ice.cols*z,y=Math.floor(k/ice.cols)*z;
-            if(x*scale+ox>W||y*scale+oy>H||(x+z)*scale+ox<0||(y+z)*scale+oy<0)continue;
+            const {x,y,poly}=ice.tiles[k],r=ice.radius;
+            if((x-r)*scale+ox>W||(y-r)*scale+oy>H||(x+r)*scale+ox<0||(y+r)*scale+oy<0)continue;
+            ctx.beginPath();poly.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();
             if(ice.opened[k]>=0){
-                const density=I.slushAt(st,k);ctx.fillStyle=`rgba(154,195,199,${.08+density*.49})`;ctx.fillRect(x,y,z+.3,z+.3);
-                if(density>.12){ctx.fillStyle=`rgba(215,232,225,${density*.8})`;ctx.fillRect(x+3,y+3,2,1.6);ctx.fillRect(x+8,y+8,2.5,1.6);}
+                const density=I.slushAt(st,k);ctx.fillStyle=`rgba(154,195,199,${.08+density*.49})`;ctx.fill();
+                ctx.strokeStyle=`rgba(154,195,199,${.06+density*.18})`;ctx.lineWidth=.65;ctx.stroke();
+                if(density>.12){ctx.fillStyle=`rgba(215,232,225,${density*.8})`;ctx.fillRect(x-3,y-3,2,1.6);ctx.fillRect(x+1,y+2,2.5,1.6);}
             }else{
-                ctx.fillStyle=t>=1?'#cbd0bd':t>.7?'#bad1d1':t>.4?'#8eb8c2':'#648f9f';ctx.fillRect(x,y,z+.3,z+.3);
-                if(k%7===0)line([[x+2,y+1],[x+6,y+6],[x+4,y+11]],t>=1?'#929b87':'#47708055',.7);
-                if(t>=1&&k%3===0)line([[x+2,y+10],[x+6,y+3],[x+10,y+10]],'#89927d',1);
+                ctx.fillStyle=t>=1?'#cbd0bd':t>.7?'#bad1d1':t>.4?'#8eb8c2':'#648f9f';ctx.fill();
+                ctx.strokeStyle=t>=1?'#929b8755':'#345e7048';ctx.lineWidth=.8;ctx.stroke();
+                if(k%7===0)for(let a=0;a<3;a++){
+                    const dx=Math.cos(a*Math.PI/3)*3,dy=Math.sin(a*Math.PI/3)*3;
+                    line([[x-dx,y-dy],[x+dx,y+dy]],t>=1?'#929b87':'#47708088',.7);
+                }
+                if(t>=1&&k%3===0)line([[x-3,y+3],[x,y-3],[x+3,y+3]],'#89927d',1);
             }
         }
+        ctx.restore();
         // Open-water contours are chart marks, never collision borders.
         for(const e of c.water){ctx.beginPath();ctx.ellipse(e.x,e.y,e.rx,e.ry,0,0,Math.PI*2);ctx.strokeStyle='#6d9caa30';ctx.lineWidth=1;ctx.stroke();}
         const route=(r,color)=>{line(r,color,1.3,[6,7]);for(let i=1;i<r.length;i++){const a=r[i-1],b=r[i],x=(a[0]+b[0])/2,y=(a[1]+b[1])/2,ang=Math.atan2(b[1]-a[1],b[0]-a[0]);line([[x-6*Math.cos(ang-.5),y-6*Math.sin(ang-.5)],[x,y],[x-6*Math.cos(ang+.5),y-6*Math.sin(ang+.5)]],color,1);}};
@@ -119,5 +133,5 @@
         ctx.fillText('PALE REACH / COUNCIL PASSAGE CHART',16,H-17);
         ctx.strokeStyle='#abc5c9';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(W-120,H-22);ctx.lineTo(W-120+100*scale,H-22);ctx.stroke();
     }
-    const api={prepare,update,render,dialog};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.PaleReachView=api;
+    const api={prepare,update,render,dialog,splitRows};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.PaleReachView=api;
 })(globalThis);

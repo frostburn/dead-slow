@@ -127,10 +127,12 @@ only when two domains need the same behavior; preserve the offline HTML delivera
 ## Pale Reach surface service
 
 `polar-levels.js` declares the first three World 7 charts. `polar.js` owns a
-12-metre sheet grid, per-cell opening times and closure rates, physical fleet
+hexagonal sheet grid (144 m² per tile), per-cell opening times and closure rates, physical fleet
 ships, drifting solids, cargo states and completion. `polar-adapter.js` plugs
 that state into the existing shell; `polar-view.js` draws the same collision
-grid and exposes the two captain orders. No marine job state is fabricated.
+grid and exposes the two captain orders. `polar-grid.js` shares tile polygons,
+point lookup and six-neighbor connectivity between rendering, collision and
+route planning. No marine job state is fabricated.
 
 Sheet fractures require forward momentum and a bow approach, cost speed and
 open a narrow shoulder beside the hull. Pressure ridges remain impassable.
@@ -149,7 +151,7 @@ planning clearance rejects the current grid cell; physics still prevents
 crossing intact sheet. Paths are requests, never position constraints.
 
 Partial World 7 assignments have normal individual records and ghosts, with
-`polar:1:1` compatibility stamps. `standalone` excludes them from the existing
+`polar:2:1` compatibility stamps. `standalone` excludes them from the existing
 72-stage Grand Tour until the complete campaign exists; prior circuits keep
 their signatures. `tests/polar.test.cjs` covers boundaries and completes all
 three missions through ordinary controls at 120 Hz. Browser UI checks run

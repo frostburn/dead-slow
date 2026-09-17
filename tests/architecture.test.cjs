@@ -7,6 +7,19 @@ const {validateRail}=require('../tools/validate-rail.cjs'),{create}=require('./h
 const record={time:80,clean:true,contacts:0,hull:100,ghost:undefined};
 const stage=()=>({runs:[{...record}],ghost:[[0,1,2,0]],bestSplits:[30],clears:1,attempts:2});
 
+test('hex polar charts archive square-grid ghosts without changing existing circuits',()=>{
+    const old=C.manifest(levels.map(l=>l.polar?{...l,courseRevision:1}:l)),data=S.fresh();
+    data.compatibility=old;data.stages['dead-slow']=stage();data.races['grand-tour']=[{...record}];
+    for(const l of levels.filter(l=>l.polar))data.stages[l.id]=stage();
+    const current=C.manifest(levels),out=S.sanitize(data,current);
+    assert.deepEqual(current.races,old.races);assert.deepEqual(out.stages['dead-slow'],stage());
+    assert.equal(out.races['grand-tour'].length,1);
+    for(const l of levels.filter(l=>l.polar)){
+        assert.equal(current.stages[l.id],'polar:2:1');assert.equal(out.stages[l.id],undefined);
+        assert.deepEqual(out.archivedStages[C.archiveKey(l.id,'polar:1:1')],stage());
+    }
+});
+
 test('schema upgrade retains current records; a course revision archives only affected routes',()=>{
     const data=S.fresh();data.version=17;
     data.stages['long-grade-1']=stage();data.stages['dead-slow']=stage();

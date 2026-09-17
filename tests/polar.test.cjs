@@ -34,6 +34,19 @@ test('turning-pocket completion is separate from opening a passage',()=>{
  for(const k of r.polar.pocket)r.polar.ice.opened[k]=0;
  assert.equal(I.ready(r),true);assert.equal(r.polar.complete,false);
 });
+test('polar splits retain elapsed completion times in bridge and result displays',()=>{
+ const r=state(1),l=level(1),V=require('../src/polar-view.js'),format=t=>t.toFixed(2)+' s';
+ r.polar.routeOpened=true;I.step(l,r,{},1/120);
+ const first=r.splits[0].time;assert.ok(first>0);
+ for(let n=0;n<120;n++)I.step(l,r,{},1/120);
+ for(const k of r.polar.pocket)r.polar.ice.opened[k]=0;
+ I.step(l,r,{},1/120);
+ assert.equal(r.splits.length,2);assert.equal(r.splits[0].time,first);assert.ok(r.splits[1].time>first);
+ const rows=V.splitRows(r,format);
+ for(const split of r.splits)assert.ok(rows.includes(format(split.time)));
+ assert.ok(rows.includes('<span>—</span>'));assert.ok(!rows.includes('✓'));
+ assert.ok(V.dialog('result',l,r,format).includes(rows));
+});
 test('Hold preserves inertia and cargo cannot carve a replacement channel',()=>{
  const r=state(3),f=r.polar.fleet[0];assert.equal(I.command(r,'unknown','proceed'),false);
  assert.equal(I.command(r,f.id,'teleport'),false);assert.equal(I.command(r,f.id,'proceed'),true);
@@ -65,6 +78,8 @@ for(const n of [1,2,3])test(`7-0${n}: complete fixed-step trip using helm and ca
  const {t,earlyPocket,closedLoad,bergWait}=require('./polar-navigation.cjs').navigate(n),r=t.state.run;
  assert.equal(t.state.status,'complete',JSON.stringify({time:r.time,ship:[r.ship.x,r.ship.y],dock:r.dock,fleet:r.polar.fleet.map(f=>f.waiting)}));
  assert.ok(r.ship.hull>90);assert.ok(r.result.polar);assert.ok(r.ghost.length>100);
+ assert.equal(r.splits.length,I.progress(r).length);
+ assert.ok(r.splits.every((s,i)=>s.time>0&&s.time<=r.time&&(!i||s.time>=r.splits[i-1].time)));
  assert.equal(t.state.storage.stages[t.state.level.id].runs.length,1);
  if(n===1){assert.ok(earlyPocket<r.polar.config.pocket.required);assert.ok(I.pocketClear(r.polar)>=.86);assert.equal(r.polar.floes.length,4);assert.equal(r.ship.hull,100);}
  if(n===2){assert.equal(r.polar.checkpoint,3);assert.ok(r.polar.fleet[0].returned);assert.ok(closedLoad>.1);assert.equal(r.ship.hull,100);}

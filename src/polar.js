@@ -2,6 +2,7 @@
 (function(root){
     'use strict';
     const P=typeof module!=='undefined'&&module.exports?require('./physics.js'):root.HarborPhysics;
+    const G=typeof module!=='undefined'&&module.exports?require('./polar-grid.js'):root.PaleReachGrid;
     const clamp=P.clamp, speed=s=>Math.hypot(s.vx,s.vy);
     function segmentDistance(x,y,a,b){
         const dx=b[0]-a[0],dy=b[1]-a[1],t=clamp(((x-a[0])*dx+(y-a[1])*dy)/(dx*dx+dy*dy||1),0,1);
@@ -11,10 +12,10 @@
     const inside=(x,y,e)=>((x-e.x)/e.rx)**2+((y-e.y)/e.ry)**2<=1;
     const inRect=(x,y,r)=>x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h;
     function create(level){
-        const c=level.polar,cell=c.cell,cols=Math.ceil(level.world[0]/cell),rows=Math.ceil(level.world[1]/cell);
-        const ice={cell,cols,rows,thickness:new Float32Array(cols*rows),opened:new Float64Array(cols*rows).fill(-1),closing:new Float32Array(cols*rows),revision:0};
-        for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){
-            const k=j*cols+i,x=(i+.5)*cell,y=(j+.5)*cell;
+        const c=level.polar,grid=G.create(...level.world,c.cell),count=grid.tiles.length;
+        const ice={...grid,thickness:new Float32Array(count),opened:new Float64Array(count).fill(-1),closing:new Float32Array(count),revision:0};
+        for(let k=0;k<count;k++){
+            const {x,y}=ice.tiles[k];
             let thickness=c.thickness,closing=c.closing;
             if(routeDistance(x,y,c.route)<c.thinWidth/2)thickness=c.thinIce;
             if(c.secondary&&routeDistance(x,y,c.secondary.route)<c.secondary.width/2){thickness=c.secondary.thickness;closing=c.secondary.closing;}
@@ -28,21 +29,16 @@
         const bergs=(c.bergs||[]).map(b=>P.ship(b.x,b.y,0,{...b,mass:80,hull:100,vessel:'iceberg'}));
         const pocket=[];
         if(c.pocket)for(let k=0;k<ice.thickness.length;k++){
-            const x=(k%cols+.5)*cell,y=(Math.floor(k/cols)+.5)*cell;
+            const {x,y}=ice.tiles[k];
             if(inside(x,y,c.pocket))pocket.push(k);
         }
         return {ship,polar:{level,config:c,ice,fleet,bergs,floes:[],pendingFloes:[],pocket,time:0,broken:0,contacts:0,damage:0,slush:0,
             routeOpened:false,notice:'Read the ice before committing your bow.',lastHits:{},failure:null,complete:false,
             stats:{sheetArea:0,slushCleared:0,deliveries:0,safeReturns:0,orders:0},checkpoint:0},dock:P.docking(ship,level.berth,false)};
     }
-    function indexAt(ice,x,y){const i=Math.floor(x/ice.cell),j=Math.floor(y/ice.cell);return i>=0&&i<ice.cols&&j>=0&&j<ice.rows?j*ice.cols+i:-1;}
+    const indexAt=G.indexAt;
     function slushAt(st,k){return k<0||st.ice.opened[k]<0?0:clamp((st.time-st.ice.opened[k]-20)/st.ice.closing[k],0,.96);}
     function solidAt(st,x,y){const k=indexAt(st.ice,x,y);return k>=0&&st.ice.thickness[k]>0&&st.ice.opened[k]<0;}
-    function eachCell(st,poly,fn){
-        const b=P.bounds(poly),g=st.ice,z=g.cell;
-        for(let j=Math.max(0,Math.floor(b.minY/z));j<=Math.min(g.rows-1,Math.floor(b.maxY/z));j++)
-            for(let i=Math.max(0,Math.floor(b.minX/z));i<=Math.min(g.cols-1,Math.floor(b.maxX/z));i++)fn(j*g.cols+i,i*z,j*z);
-    }
     function impact(st,s,id,hit){
         if(!hit||hit.impact<.24||st.time-(st.lastHits[id]??-100)<1.2)return;
         st.lastHits[id]=st.time;st.contacts++;
@@ -50,26 +46,27 @@
     }
     function iceContact(st,s,dt){
         // The pressure bow fractures a narrow shoulder beside the hull as it advances.
-        const g=st.ice,z=g.cell,poly=P.hull(s),fracture=s.iceClass?P.hull({...s,beam:s.beam+18}):poly,f=P.axes(s).f;
+        const g=st.ice,poly=P.hull(s),fracture=s.iceClass?P.hull({...s,beam:s.beam+18}):poly,f=P.axes(s).f;
         let slush=0,samples=0;
-        eachCell(st,fracture,(k,x,y)=>{
+        G.each(g,P.bounds(fracture),(k,tile)=>{
+            const {x,y}=tile;
             if(!g.thickness[k])return;
-            const rect={x,y,w:z,h:z},hit=P.sat(fracture,P.rect(rect));if(!hit)return;
+            const hit=P.sat(fracture,tile.poly);if(!hit)return;
             if(g.opened[k]>=0){
-                const density=slushAt(st,k);if(P.sat(poly,P.rect(rect))){slush+=density;samples++;}
+                const density=slushAt(st,k);if(P.sat(poly,tile.poly)){slush+=density;samples++;}
                 if(s.iceClass&&density>.015){g.opened[k]=st.time;st.stats.slushCleared+=density*dt;}
                 return;
             }
             const forward=s.vx*f.x+s.vy*f.y;
-            const bow=(x+z/2-s.x)*f.x+(y+z/2-s.y)*f.y;
+            const bow=(x-s.x)*f.x+(y-s.y)*f.y;
             // A suitable bow approach is required; broadside or stern-first contact cannot carve.
             if(s.iceClass&&g.thickness[k]<1&&forward>=.8+g.thickness[k]*1.5&&bow>0&&-P.dot(f,hit.normal)>.08){
-                g.opened[k]=st.time;g.revision++;st.broken++;st.stats.sheetArea+=z*z;
+                g.opened[k]=st.time;g.revision++;st.broken++;st.stats.sheetArea+=g.area;
                 const loss=1-.045*g.thickness[k];s.vx*=loss;s.vy*=loss;
                 if(st.config.fragments&&st.floes.length+st.pendingFloes.length<st.config.fragments&&x>=(st.config.fragmentFromX||0)&&st.broken%4===0)
-                    st.pendingFloes.push({x:x+z/2,y:y+z/2,k});
+                    st.pendingFloes.push({x,y,k});
             }else{
-                const collision=P.contact(s,rect);
+                const collision=P.contact(s,tile);
                 impact(st,s,'ice-'+(s.name||'ship'),collision);
                 if(s===st.player&&collision){st.notice=g.thickness[k]>=1?'PRESSURE RIDGE · take the thin dogleg':s.iceClass?'Back off, build momentum, meet the sheet bow first.':'Intact sheet · this hull needs an opened channel.';st.noticeUntil=st.time+3;}
             }
@@ -123,30 +120,28 @@
     // Route requests are destination orders. Captains use the water actually cut,
     // with beam clearance, instead of insisting on an exact painted centreline.
     function waterRoute(st,s,goal){
-        const g=st.ice,z=g.cell,start=indexAt(g,s.x,s.y),end=indexAt(g,...goal);
+        const g=st.ice,start=indexAt(g,s.x,s.y),end=indexAt(g,...goal);
         if(start<0||end<0)return null;
         const available=new Int8Array(g.thickness.length),margin=s.beam/2+3;
         function open(k){
             if(k<0||k>=available.length)return false;
             if(available[k])return available[k]===1;
-            const x=(k%g.cols+.5)*z,y=(Math.floor(k/g.cols)+.5)*z;
-            let ok=x>margin&&y>margin&&x<g.cols*z-margin&&y<g.rows*z-margin;
+            const {x,y}=g.tiles[k];
+            let ok=x>margin&&y>margin&&x<g.width-margin&&y<g.height-margin;
             for(const [dx,dy] of [[0,0],[-margin,0],[margin,0],[0,-margin],[0,margin],[-margin*.7,-margin*.7],[margin*.7,-margin*.7],[-margin*.7,margin*.7],[margin*.7,margin*.7]])if(solidAt(st,x+dx,y+dy))ok=false;
             available[k]=ok?1:-1;return ok;
         }
         if(!open(start)||!open(end))return null;
         const queue=[start],prev=new Int32Array(available.length).fill(-1);prev[start]=start;
         for(let head=0;head<queue.length&&prev[end]<0;head++){
-            const k=queue[head],x=k%g.cols,y=Math.floor(k/g.cols);
-            for(const [dx,dy] of [[1,0],[0,1],[-1,0],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]]){
-                const nx=x+dx,ny=y+dy,n=ny*g.cols+nx;
-                if(nx<0||nx>=g.cols||ny<0||ny>=g.rows||prev[n]>=0||!open(n))continue;
-                if(dx&&dy&&(!open(y*g.cols+nx)||!open(ny*g.cols+x)))continue;
+            const k=queue[head];
+            for(const n of G.neighbors(g,k)){
+                if(prev[n]>=0||!open(n))continue;
                 prev[n]=k;queue.push(n);
             }
         }
         if(prev[end]<0)return null;
-        const cells=[];for(let k=end;k!==start;k=prev[k])cells.push([(k%g.cols+.5)*z,(Math.floor(k/g.cols)+.5)*z]);
+        const cells=[];for(let k=end;k!==start;k=prev[k])cells.push([g.tiles[k].x,g.tiles[k].y]);
         const points=[[s.x,s.y],...cells.reverse(),goal],route=[points[0]];
         function visible(a,b){
             const dx=b[0]-a[0],dy=b[1]-a[1],d=Math.hypot(dx,dy),nx=-dy/(d||1)*margin,ny=dx/(d||1)*margin;
