@@ -135,6 +135,9 @@
     ];
     const underwater=typeof module!=='undefined'&&module.exports?require('./submarine-levels.js'):root.PaleReachSubmarineLevels;
     levels.push(...underwater.levels);
+    const finale=typeof module!=='undefined'&&module.exports?require('./polar-finale-levels.js'):root.PaleReachFinaleLevels;
+    levels.push(...finale.levels);
+    for(const level of levels)delete level.standalone;
     const api={levels,breaker,supply};
     if(typeof module!=='undefined'&&module.exports)module.exports=api;
     root.PaleReachLevels=api;

@@ -6,7 +6,7 @@ const near = (a, b, eps = 1e-8) => assert.ok(Math.abs(a - b) < eps, `${a} != ${b
 const level = id => L.find(l => l.id === id);
 test('all five playable worlds supply twelve circuit stages', () => {
     assert.equal(L.worlds.length, 8);
-    assert.equal(new Set(L.map(l => l.id)).size, 82);
+    assert.equal(new Set(L.map(l => l.id)).size, 85);
     for (const w of L.worlds.filter(w => !w.comingSoon && !w.partial)) {
         const stages = L.filter(l => l.campaign === w.id && !l.bonus);
         assert.equal(stages.length, 12);
@@ -151,11 +151,11 @@ test('new project load applies its explicit mass and keeps the longer hull', () 
     assert.equal(t.state.run.ship.mass, 2.25);
     assert.equal(t.state.run.ship.length, 34);
 });
-for (const id of ['coast', 'northwatch', 'archipelago', 'meridian', 'gerbozilla', 'long-grade', 'grand-tour'])
+for (const id of ['coast', 'northwatch', 'archipelago', 'meridian', 'gerbozilla', 'long-grade', 'pale-reach', 'grand-tour'])
     test(`${id}: circuit route, transitions, retry time and final record`, () => {
         const t = create();
         t.marathon(id);
-        const r = t.state.marathon, expected = id === 'grand-tour' ? 72 : 12;
+        const r = t.state.marathon, expected = id === 'grand-tour' ? 84 : 12;
         assert.equal(r.route.length, expected);
         assert.equal(t.state.index, id === 'grand-tour' ? 0 : L.findIndex(l => l.campaign === id));
         t.advance(3);
@@ -166,7 +166,7 @@ for (const id of ['coast', 'northwatch', 'archipelago', 'meridian', 'gerbozilla'
             const l = t.state.level;
             // Circuit progression test only: spacecraft objective state machines
             // and complete control recordings are checked in space.test.cjs.
-            if (l.space || l.rampage || l.rail) {
+            if (l.space || l.rampage || l.rail || l.polar) {
                 t.advance(2); t.finish();
                 if (j < expected - 1) t.next();
                 continue;

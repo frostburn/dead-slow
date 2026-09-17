@@ -4,6 +4,10 @@
     const P=typeof module!=='undefined'&&module.exports?require('./physics.js'):root.HarborPhysics;
     const Sonar=typeof module!=='undefined'&&module.exports?require('./sonar.js'):root.PaleReachSonar;
     const Geometry=typeof module!=='undefined'&&module.exports?require('./polar-operations.js'):root.PaleReachOperations;
+    const Recovery=typeof module!=='undefined'&&module.exports?require('./submarine-recovery.js'):root.PaleReachRecovery;
+    const covert=st=>['covert','recovery'].includes(st.config.mission);
+    const access=st=>st.recovery?Recovery.access(st):st.config.access;
+    const listenRange=st=>st.recovery?.search?360:300;
     const bands=[{name:'SHALLOW',depth:18},{name:'WORKING',depth:48},{name:'DEEP',depth:88}];
     const speed=s=>Math.hypot(s.vx,s.vy),distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
     const weapon=(ammo,damage=60)=>({ammo,damage,cooldown:0,solution:0,hold:4,range:360,arc:.58,reason:'Identify a submerged contact',aim:null});
@@ -17,9 +21,10 @@
             actors:c.actors.map(actor),shelves:c.shelves.map(s=>({...s,poly:s.poly.map(([x,y])=>({x,y}))})),
             platforms:c.platforms.map(p=>({...p,poly:P.rect(p)})),bergs:c.bergs.map(b=>P.ship(b.x,b.y,0,{...b,vessel:'iceberg',depth:0,mass:80})),
             tracks:[],trackSerial:0,selected:null,sensorAt:0,noise:0,pulseAt:-100,pulses:[],echoes:[],torpedoes:[],bursts:[],serial:0,
-            gun:weapon(c.mission==='covert'?0:c.mission==='hunt'?8:6),notice:'Listen quietly. Plotted contacts are estimates.',noticeUntil:8,
+            gun:weapon(['covert','recovery'].includes(c.mission)?0:c.mission==='hunt'?8:6),notice:'Listen quietly. Plotted contacts are estimates.',noticeUntil:8,
             stats:{damageTaken:0,towBreaks:0,pulses:0,shots:0,identifications:0,hostilesDisabled:0,teamInserted:0,teamRecovered:0,maxSuspicion:0},
             mission:{identified:false,intercepted:false,team:'aboard',ordered:false,board:0,work:0,left:false,suspicion:0,alarm:false,mining:0,threatGone:false,homeHold:0,secured:false}};
+        if(c.mission==='recovery')Recovery.create(st);
         return {ship,polar:st,dock:{inside:false,aligned:true,slow:true,ready:false}};
     }
     function obstacles(st,depth,height=5){
@@ -41,6 +46,7 @@
     function say(st,text){st.notice=text;st.noticeUntil=st.time+6;}
     function action(run,name,value){
         const st=run.polar,s=run.ship,m=st.mission;
+        if(name==='rendezvous'&&st.recovery){const ok=Recovery.select(st,value);if(ok)say(st,Recovery.message(st));return ok;}
         if(name==='depth'||name==='ascend'||name==='descend'){
             const current=bands.findIndex(b=>b.depth===s.depthTarget),index=name==='depth'?Number(value):P.clamp(current+(name==='ascend'?-1:1),0,2),band=bands[index];
             if(!band||!depthAllowed(st,s,band.depth)){say(st,'Depth order blocked here: check the keel and seabed clearance.');return false;}
@@ -63,7 +69,7 @@
                     if(a.decoys)a.nextDecoy=Math.min(a.nextDecoy,st.time+5);
                 }
             }
-            if(st.config.mission==='covert'&&patrolHeard){m.suspicion=Math.min(100,m.suspicion+32);m.alarm||=m.suspicion>=100;}
+            if(covert(st)&&patrolHeard){m.suspicion=Math.min(100,m.suspicion+32);m.alarm||=m.suspicion>=100;}
             say(st,'ACTIVE PULSE · echo in transit. Listeners within reach receive your emission position.');return true;
         }
         if(name==='identify'){
@@ -77,17 +83,18 @@
             const solution=firingSolution(st);if(!solution.ok||st.gun.solution<st.gun.hold||st.gun.cooldown>0||st.gun.ammo<=0){say(st,solution.reason);return false;}
             launch(st,{ship:s,id:'player'},st.gun,solution.aim);return true;
         }
-        if(name==='team'&&st.config.mission==='covert'){
+        if(name==='team'&&covert(st)){
             if(!['aboard','waiting'].includes(m.team)){say(st,m.team==='working'?'The team is still inside. Clear the exposed area.':'Team recovered. Return to safe water.');return false;}
-            const a=st.config.access;
-            if(distance(s,a)>a.radius||Math.abs(s.depth-a.depth)>5){say(st,'Team transfer needs the marked hatch at working depth.');return false;}
+            const a=access(st);
+            if(a.available===false){say(st,'The team is relocating on the ice. Wait for its rendezvous beacon.');return false;}
+            if(distance(s,a)>a.radius||Math.abs(s.depth-a.depth)>5){say(st,st.recovery?`Recovery needs the selected moving beacon at ${a.depth} m.`:'Team transfer needs the marked hatch at working depth.');return false;}
             m.ordered=true;say(st,'Team transfer ordered. Hold quietly below 0.5 kn.');return true;
         }
         return false;
     }
     function firingSolution(st){
         const s=st.player,g=st.gun,t=st.tracks.find(t=>t.id===st.selected);
-        if(st.config.mission==='covert')return {ok:false,reason:'Weapons sealed for the covert assignment'};
+        if(covert(st))return {ok:false,reason:'Weapons sealed for the covert assignment'};
         if(!t?.identified||t.category!=='submarine')return {ok:false,reason:'Identify a hostile submarine before arming'};
         const fix=Sonar.predict(t,st.time),d=distance(s,fix);
         if(fix.age>12||fix.radius>36||fix.quality<55)return {ok:false,reason:'Uncertain solution · reacquire the track'};
@@ -186,23 +193,24 @@
     }
     function mission(st,dt){
         const c=st.config,m=st.mission,s=st.player,hostile=st.actors.find(a=>a.hostile);
-        if(c.mission==='covert'){
+        if(covert(st)){
             let exposure=0;
             for(const a of st.actors.filter(a=>a.kind==='patrol')){
                 const d=distance(s,a.ship),angle=Math.abs(P.wrap(Math.atan2(s.y-a.ship.y,s.x-a.ship.x)-a.ship.a)),depthFactor=s.depth>70?.58:1;
                 const inArc=angle<1.05?1:.18;
-                if(d<300&&!blocked(st,s,a.ship,s.depth))exposure+=Math.max(0,(1-d/300)*st.noise*inArc*depthFactor*17-1.05);
+                const range=listenRange(st),rayDepth=st.recovery?(s.depth+a.ship.depth)/2:s.depth;
+                if(d<range&&!blocked(st,s,a.ship,rayDepth))exposure+=Math.max(0,(1-d/range)*st.noise*inArc*depthFactor*17-1.05);
             }
-            const a=c.access,close=distance(s,a)<a.radius&&Math.abs(s.depth-a.depth)<5;
+            const a=access(st),close=a.available!==false&&distance(s,a)<a.radius&&Math.abs(s.depth-a.depth)<5;
             m.suspicion=P.clamp(m.suspicion+(exposure>0?exposure:-1.25)*dt,0,100);
             st.stats.maxSuspicion=Math.max(st.stats.maxSuspicion,m.suspicion);
             if(m.alarm||m.suspicion>=100){m.alarm=true;st.failure='Confirmed alarm. The covert assignment and its recovery window are lost.';}
             if(m.ordered){
-                m.board=close&&speed(s)<.25&&st.noise<.35?m.board+dt:Math.max(0,m.board-dt*2);
+                m.board=close&&Math.hypot(s.vx-(a.vx||0),s.vy-(a.vy||0))<.25&&st.noise<.35?m.board+dt:Math.max(0,m.board-dt*2);
                 if(m.board>=a.hold){m.ordered=false;m.board=0;if(m.team==='aboard'){m.team='working';st.stats.teamInserted=1;say(st,'TEAM INSERTED · clear the 125 m exposed area.');}else{m.team='recovered';st.stats.teamRecovered=1;say(st,'TEAM ABOARD · escape to home water without an alarm.');}}
             }
             if(m.team==='working'&&distance(s,a)>a.standOff){m.left=true;m.work=Math.min(a.work,m.work+dt);if(m.work>=a.work){m.team='waiting';say(st,'TEAM READY · return through a patrol gap and order recovery.');}}
-            m.threatGone=m.team==='recovered';
+            m.threatGone=m.team==='recovered'&&(!st.recovery||st.recovery.escaped);
         }else{
             if(c.mission==='intercept'){
                 m.intercepted=hostile.ship.hull<=0;
@@ -225,14 +233,14 @@
     }
     function step(level,run,input,dt,I){
         const st=run.polar,s=run.ship,old={x:s.x,y:s.y};st.player=s;st.time+=dt;run.time=st.time;
-        for(const b of st.bergs){
+        for(const b of st.externalIce?[]:st.bergs){
             b.x+=b.vx*dt;b.y+=b.vy*dt;
             if(b.range?.ry&&(b.y>b.range.y+b.range.ry&&b.vy>0||b.y<b.range.y-b.range.ry&&b.vy<0))b.vy=-b.vy;
             if(b.range?.rx&&(b.x>b.range.x+b.range.rx&&b.vx>0||b.x<b.range.x-b.range.rx&&b.vx<0))b.vx=-b.vx;
         }
         P.integrate(s,input,{},dt);
         for(const o of obstacles(st,s.depth))hit(st,s,'terrain-'+(o.name||o.id),P.contact(s,o));
-        vertical(st,s,dt);st.noise=noise(s,input);
+        vertical(st,s,dt);st.noise=noise(s,input);if(st.recovery)Recovery.step(st,dt);
         for(const a of st.actors)moveActor(st,a,dt,I);
         const hulls=[s,...st.actors.filter(a=>a.active&&a.kind!=='decoy').map(a=>a.ship)];
         for(let i=0;i<hulls.length;i++)for(let j=i+1;j<hulls.length;j++)if(Math.abs(hulls[i].depth-hulls[j].depth)<10){const h=P.collideBodies(hulls[i],hulls[j]);hit(st,hulls[i],'hull-'+i+'-'+j,h);hit(st,hulls[j],'hull-'+j+'-'+i,h);}
@@ -247,17 +255,18 @@
         if(run.time>=run.sampleAt){run.sampleAt=run.time+.25;run.ghost.push([run.time,s.x,s.y,s.a]);if(run.ghost.length>16000)run.ghost.shift();}
         for(const o of progress(run))if(o.done&&!run.splits.some(p=>p.name===o.text))run.splits.push({name:o.text,time:run.time});
     }
-    function ready(run){const st=run.polar;return st.mission.threatGone&&(st.config.mission==='covert'||st.mission.identified);}
-    function progress(run){const st=run.polar,m=st.mission,done=st.config.mission==='covert'?[st.stats.teamInserted>0,m.work>=st.config.access.work,st.stats.teamRecovered>0,m.secured]:[m.identified,m.threatGone,m.secured];return st.config.objectives.map((text,i)=>({text,done:!!done[i]}));}
+    function ready(run){const st=run.polar;return st.mission.threatGone&&(covert(st)||st.mission.identified);}
+    function progress(run){const st=run.polar,m=st.mission,done=st.recovery?Recovery.progress(st):st.config.mission==='covert'?[st.stats.teamInserted>0,m.work>=st.config.access.work,st.stats.teamRecovered>0,m.secured]:[m.identified,m.threatGone,m.secured];return st.config.objectives.map((text,i)=>({text,done:!!done[i]}));}
     function message(run){const st=run.polar,m=st.mission,c=st.config;
         if(st.failure)return st.failure;
         if(st.complete)return 'Assignment complete. Petrel and the required crew are secure.';
         if(st.noticeUntil>st.time)return st.notice;
+        if(st.recovery)return Recovery.message(st);
         if(m.threatGone)return 'Assignment secured · return to home water, slow below 0.7 kn, and hold for five seconds.';
         if(c.mission==='covert')return m.ordered?`TEAM TRANSFER ${m.board.toFixed(1)} / 8 s · hold quietly at working depth`:m.team==='aboard'?'Approach the marked hatch quietly. F orders insertion.':m.team==='working'?`TEAM WORK ${Math.floor(m.work)} / ${c.access.work} s · stay outside the 125 m exposed area`:'Team waiting. Return quietly and press F to recover them.';
         if(c.mission==='hunt'&&st.actors.some(a=>a.aborted))return 'Minelayer withdrawing. Keep the passage clear; pursuing beyond the chart is unnecessary.';
         return m.mining>0?`PASSAGE THREAT · ${Math.floor(m.mining)} / ${c.mission==='hunt'?c.passage.lay:c.installation.hold} s`:'Listen, select a contact, and identify it before committing to an interception.';
     }
-    const api={create,step,action,ready,progress,message,bands,space,depthAllowed,noise,obstacles,blocked,firingSolution,Sonar};
+    const api={create,step,action,ready,progress,message,bands,space,depthAllowed,noise,obstacles,blocked,firingSolution,Sonar,Recovery,covert,access,listenRange};
     if(typeof module!=='undefined'&&module.exports)module.exports=api;root.PaleReachSubmarine=api;
 })(globalThis);

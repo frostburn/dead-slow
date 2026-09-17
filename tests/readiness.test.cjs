@@ -7,30 +7,30 @@ const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-7,`${a} != ${b}`);
 const level=id=>L.find(l=>l.id===id);
 
 test('practice Grand Tour starts unranked without recording a ranked departure',()=>{
- const t=create(),p=t.cheats.tour(8);assert.equal(p.circuit.length,72);assert.ok(p.practice&&p.circuit.practice);
+ const t=create(),p=t.cheats.tour(8);assert.equal(p.circuit.length,84);assert.ok(p.practice&&p.circuit.practice);
  assert.equal(p.circuit.position,1);assert.equal(p.timeScale,8);assert.equal(t.state.storage.attempts,0);
  assert.ok(t.state.marathon.route.every(i=>!L[i].bonus&&!L[i].standalone));
 });
-test('all six practice circuits have twelve missions; invalid requests are atomic',()=>{
- const t=create();for(const w of [1,2,3,4,5,6]){const p=t.cheats.circuit(w,4);assert.equal(p.world,w);assert.equal(p.circuit.length,12);assert.ok(p.practice);}
- const before=t.cheats.progress();for(const call of [()=>t.cheats.circuit(7),()=>t.cheats.circuit('century-ship'),()=>t.cheats.tour(33),()=>t.cheats.tour(NaN)])assert.throws(call);
+test('all seven practice circuits have twelve missions; invalid requests are atomic',()=>{
+ const t=create();for(const w of [1,2,3,4,5,6,7]){const p=t.cheats.circuit(w,4);assert.equal(p.world,w);assert.equal(p.circuit.length,12);assert.ok(p.practice);}
+ const before=t.cheats.progress();for(const call of [()=>t.cheats.circuit(8),()=>t.cheats.circuit('century-ship'),()=>t.cheats.tour(33),()=>t.cheats.tour(NaN)])assert.throws(call);
  assert.deepEqual(t.cheats.progress(),before);
 });
-test('practice survives all seventy-two transitions, retries and a return to 1x',()=>{
+test('practice survives all eighty-four transitions, retries and a return to 1x',()=>{
  // State-machine traversal only: finish() is deliberately isolated here. This
- // is NOT proof of seventy-two navigation completions; real controls are tested below.
+ // is NOT proof of eighty-four navigation completions; real controls are tested below.
  const t=create();t.cheats.tour(8);let expectedTime=0;
- for(let i=0;i<72;i++){
+ for(let i=0;i<84;i++){
   assert.equal(t.state.marathon.position,i);assert.ok(t.state.run.pausedUsed);
   if(i%12===0){t.advance(.25);t.retry();expectedTime+=.25;assert.ok(t.state.run.pausedUsed);}
   if(i===4)t.cheats.speed(1);
   t.advance(.25);expectedTime+=.25;t.finish();
   assert.ok(t.state.run.result);assert.equal(t.state.storage.stages[t.state.level.id].runs.length,0);
   near(t.cheats.progress().circuit.time,expectedTime);
-  if(i<71)t.next();
+  if(i<83)t.next();
  }
- const p=t.cheats.progress();assert.equal(p.circuit.completed,72);assert.equal(p.circuit.splits.length,72);assert.equal(p.circuit.retries,6);
- assert.equal(p.level,'perihelion-dispatch');assert.equal(t.state.storage.races['grand-tour'].length,0);assert.equal(t.state.storage.attempts,0);
+ const p=t.cheats.progress();assert.equal(p.circuit.completed,84);assert.equal(p.circuit.splits.length,84);assert.equal(p.circuit.retries,7);
+ assert.equal(p.level,'pale-reach-12');assert.equal(t.state.storage.races['grand-tour'].length,0);assert.equal(t.state.storage.attempts,0);
  p.circuit.splits[0].time=-1;assert.ok(t.cheats.progress().circuit.splits[0].time>=0,'inspection is detached');
  t.cheats.normal();assert.equal(t.state.marathon,null);assert.equal(t.cheats.speed(),1);assert.equal(t.state.run.pausedUsed,false);
 });
@@ -42,8 +42,8 @@ test('actual fixed-step frames keep speed on retry and stop precisely on complet
  t.cheats.warp(289,121,0);t.cheats.step(3);assert.equal(t.state.status,'complete');const done=t.state.run.time;
  t.frame(5100);near(t.state.run.time,done);t.next();assert.equal(t.cheats.speed(),0);assert.ok(t.state.run.pausedUsed);
 });
-test('all 82 assignments load with finite clean initial state and usable objectives',()=>{
- const t=create();assert.equal(L.length,82);
+test('all 85 assignments load with finite clean initial state and usable objectives',()=>{
+ const t=create();assert.equal(L.length,85);
  for(let i=0;i<L.length;i++){
   t.load(i,false);const {run,level:l}=t.state;
   assert.equal(t.state.status,'ready',l.id);

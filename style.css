@@ -2557,3 +2557,6 @@ body[data-theme="polar"] .chart-bottom { display:none; }
 #sub-contacts b,#sub-contacts span { display:block; font-size:10px; line-height:1.4; }
 #sub-contacts span { color:var(--muted); font-size:9px; }
 #sub-team { width:100%; }
+#polar-phase { display:block; color:var(--amber); font:11px/1.5 var(--mono); margin-bottom:8px; }
+#polar-phase[hidden],#sub-pickups[hidden] { display:none; }
+#sub-pickups { display:grid; grid-template-columns:1fr 1fr; gap:5px; margin:6px 0; }

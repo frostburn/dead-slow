@@ -1,7 +1,7 @@
 """Pale Reach UI checks, called once from the existing atlas browser job."""
 def check_polar(page,check,out):
     page.set_viewport_size({'width':1440,'height':1000})
-    for stage in range(1,10):
+    for stage in range(1,13):
         page.evaluate('(n)=>{DeadSlow.level(7,n);DeadSlow.speed(0)}',stage)
         page.wait_for_timeout(80)
         check(f'7-0{stage} exposes polar chart and hides railway panels',page.locator('#polar-panel').is_visible() and not page.locator('#rail-panel').is_visible())
@@ -33,8 +33,13 @@ def check_polar(page,check,out):
             page.keyboard.press('b')
             check('An unprepared shot consumes no ammunition',page.evaluate('DeadSlowTest.state.run.polar.operation.gun.ammo===24'))
             check('Strike restores the mooring checklist',page.locator('#check-inside').inner_text()=='Inside berth')
-        if stage>=7:
+        if stage>=7 and stage!=11:
             check_submarine(page,check,stage)
+        if stage==11:
+            check('Neutral rescue has three captain pairs and towing without guns',page.locator('#polar-fleet button').count()==6 and page.locator('#polar-tow-controls').is_visible() and not page.locator('#polar-gun-controls').is_visible())
+            page.locator('[data-convoy=moth][data-order=proceed]').click()
+            check('A stranded captain requires rescue contact before departure','Establish rescue contact first' in page.locator('#polar-notice').inner_text())
+            check('All required rescues have elapsed split rows',page.locator('#splits .split-row').count()==5)
         page.screenshot(path=str(out/f'pale-reach-{stage}.png'))
     page.evaluate('DeadSlow.level(7,3);DeadSlow.speed(0)')
     check_polar_rendering(page,check)
@@ -56,14 +61,17 @@ def check_polar(page,check,out):
         page.locator('.polar-mobile-splits').evaluate('(d)=>d.open=true')
         check(f'Split times are accessible at {width}×{height}',page.locator('#polar-splits').is_visible() and page.locator('#polar-splits .split-row').count()==3)
         page.screenshot(path=str(out/f'pale-reach-{width}.png'))
-        for stage in range(4,10):
+        for stage in range(4,13):
             page.evaluate('(n)=>{DeadSlow.level(7,n);DeadSlow.speed(0)}',stage)
             check(f'7-0{stage} operations fit {width}×{height}',page.evaluate('document.documentElement.scrollWidth<=innerWidth'))
             check(f'7-0{stage} action buttons are usable at {width}×{height}',page.locator('#polar-actions button:visible').evaluate_all('(bs)=>bs.length>=3 && bs.every(b=>b.getBoundingClientRect().height>=40)'))
-            if stage>=7:
+            if stage>=7 and stage!=11:
                 check(f'7-0{stage} depth and sonar orders remain available at {width}×{height}',page.locator('[data-sub-depth]').count()==3 and page.locator('#sub-ping').is_visible())
                 page.locator('.polar-mobile-splits').evaluate('(d)=>d.open=true')
-                check(f'7-0{stage} elapsed splits remain available at {width}×{height}',page.locator('#polar-splits .split-row').count()==(4 if stage==8 else 3))
+                check(f'7-{stage:02} elapsed splits remain available at {width}×{height}',page.locator('#polar-splits .split-row').count()==(6 if stage==12 else 4 if stage==8 else 3))
+            if stage==12:
+                handoff_fixture(page)
+                check(f'Finale handoff keeps captain orders usable at {width}×{height}',page.locator('#polar-fleet button').count()==6 and page.locator('#polar-fleet button').evaluate_all('(bs)=>bs.every(b=>b.getBoundingClientRect().height>=40)') and page.evaluate('document.documentElement.scrollWidth<=innerWidth'))
             page.screenshot(path=str(out/f'pale-reach-{stage}-{width}.png'))
         page.evaluate('DeadSlow.level(7,3);DeadSlow.speed(0)')
     page.set_viewport_size({'width':1440,'height':1000});page.evaluate('DeadSlow.level(1,1);DeadSlow.speed(0)')
@@ -101,6 +109,32 @@ def check_submarine(page,check,stage):
         page.evaluate('DeadSlow.step(3)')
         check('Minelayer watch starts with uncertain contacts and a locked tube',page.locator('#sub-contacts button').count()>0 and '±' in page.locator('#sub-contacts').inner_text() and page.locator('#sub-fire').is_disabled())
         check('Hunt objective guards the passage rather than requiring a kill','Keep the passage clear' in page.locator('#splits').inner_text())
+    if stage==10:
+        check('Recovery begins with a waiting team and two pickup choices',page.locator('#sub-pickups button').count()==2 and 'Recover team' in page.locator('#sub-team').inner_text() and 'RECOVERY' in page.locator('#sub-solution').inner_text())
+        page.locator('[data-pickup=far]').click()
+        check('Rendezvous button orders actual travel on the ice',page.locator('[data-pickup=far]').get_attribute('aria-pressed')=='true' and page.evaluate('!DeadSlowTest.state.run.polar.recovery.settled && DeadSlowTest.state.run.polar.mission.team==="waiting"'))
+        page.evaluate('DeadSlow.step(3)')
+        check('Relocating team has visible progress','RELOCATING' in page.locator('#sub-solution').inner_text())
+    if stage==12:
+        check('Finale starts with a shared weather clock and a surface work report','LEG 1 / PETREL' in page.locator('#polar-phase').inner_text() and 'RIME ABOVE' in page.locator('#polar-ice').inner_text())
+        handoff_fixture(page)
+        check('Handoff replaces submarine orders with the three actual convoy captains',not page.locator('#polar-sub-controls').is_visible() and page.locator('#polar-fleet button').count()==6 and 'KESTREL' in page.locator('#ship-name').inner_text())
+        check('Handoff preserves elapsed time and shows the second leg','LEG 2 / KESTREL' in page.locator('#polar-phase').inner_text() and page.evaluate('DeadSlowTest.state.run.time>6 && DeadSlowTest.state.run.finalJourney.watch.handoffAt>2'))
+        page.locator('[data-convoy=witness][data-order=proceed]').click()
+        check('The new bridge sends orders to the retained surface state',page.evaluate('DeadSlowTest.state.run.finalJourney.surface.polar.fleet[0].order==="proceed"'))
+        page.keyboard.press('Shift+r');page.evaluate('DeadSlowTest.hud()')
+        check('Retry restores both legs and their original ice','LEG 1 / PETREL' in page.locator('#polar-phase').inner_text() and page.locator('#polar-sub-controls').is_visible() and page.evaluate('DeadSlowTest.state.run.finalJourney.surface.polar.broken===0'))
+
+def handoff_fixture(page):
+    # UI transition isolation, not a navigation proof: full control runs are in
+    # polar-finale-navigation.cjs. Only engineer objective state is arranged here.
+    page.evaluate('''() => {
+        DeadSlow.step(2);
+        const st=DeadSlowTest.state.run.polar;
+        st.mission.team='recovered';st.mission.work=st.config.access.work;
+        st.stats.teamInserted=1;st.stats.teamRecovered=1;
+        DeadSlow.step(5.2);
+    }''')
 
 def check_polar_rendering(page,check):
     result=page.evaluate('''() => {

@@ -15,7 +15,7 @@ def check_space(browser, check, html, screenshots=None):
             page.screenshot(path=str(Path(screenshots)/name))
     page.evaluate('DeadSlow.level(6,1);DeadSlow.speed(0);DeadSlowTest.courses(6)')
     check('Meridian lists twelve sectors plus a selectable bonus alongside all eight atlas worlds',page.locator('.world-tab').count()==8 and page.locator('.level-card').count()==13)
-    check('Bonus is explicitly excluded from the 72-stage Grand Tour','excluded from every circuit' in page.locator('#dialog').inner_text() and 'all 72' in page.locator('#dialog').inner_text())
+    check('Bonus is explicitly excluded from the 84-stage Grand Tour','excluded from every circuit' in page.locator('#dialog').inner_text() and 'all 84' in page.locator('#dialog').inner_text())
     shot('worlds-four.png')
     # Progress is campaign-only; the selectable Century Ship has its own tally.
     check('Fresh Meridian chart reports twelve campaign sectors and a separate bonus',

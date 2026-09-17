@@ -6,10 +6,11 @@
     const speed=s=>Math.hypot(s.vx,s.vy),distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
     const gun=c=>({...c,solution:0,cooldown:0,target:null,ammo:c.ammo??999,reason:'Select a hostile contact'});
     function create(level){
-        const c=level.polar;if(!['survey','defense','strike'].includes(c.mission))return null;
+        const c=level.polar;if(!['survey','defense','strike','rescue','transit'].includes(c.mission))return null;
         const entity=(n,team)=>({...n,team,active:!!n.cutter||team==='patrol'||n.spawn===0,waypoint:0,planAt:0,route:n.route?.map(p=>p.slice()),ship:P.ship(...n.start,{...n.spec,id:n.id,name:n.name,required:false,hostile:team==='hostile',hull:team==='hostile'?72:100,maxHull:team==='hostile'?72:100}),gun:team==='hostile'&&!n.cutter?gun({range:215,arc:.95,hold:3.5,reload:18,damage:18,shellSpeed:48,maxSpeed:.9,maxTurn:.025}):null});
         const assets=(c.assets||[]).map(a=>({...a,active:true,fixed:true,poly:P.rect(a),ship:P.ship(a.x+a.w/2,a.y+a.h/2,a.a||0,{id:a.id,name:a.name,length:a.w,beam:a.h,mass:1e6,hull:a.hp,maxHull:a.hp,moored:true}),gun:a.gun?gun(a.gun):null}));
-        return {kind:c.mission,assets,npcs:[...(c.patrols||[]).map(n=>entity(n,'patrol')),...(c.raiders||[]).map(n=>entity(n,'hostile')),...(c.cutters||[]).map(n=>entity({...n,cutter:true,status:'HOLDING'},n.team))],
+        const crossfire=(c.crossfire||[]).map(n=>({...entity({...n,spawn:0},n.team),crossfire:true,gun:gun({range:560,arc:.5,hold:8,reload:38,damage:12,shellSpeed:42,maxSpeed:.2,maxTurn:.02}),ship:P.ship(...n.start,{...n.spec,id:n.id,name:n.name,required:false,hull:600,maxHull:600})}));
+        return {kind:c.mission,assets,npcs:[...(c.patrols||[]).map(n=>entity(n,'patrol')),...(c.raiders||[]).map(n=>entity(n,'hostile')),...(c.cutters||[]).map(n=>entity({...n,cutter:true,status:'HOLDING'},n.team)),...crossfire],
             survey:c.survey?{...c.survey,ship:P.ship(...c.survey.start,{...c.survey.spec,id:c.survey.id,name:c.survey.name,required:true}),recorders:0,recovered:false,safeNow:false}:null,
             line:null,gun:c.gun?gun(c.gun):null,shells:[],bursts:[],alarmAt:null,warning:'',serial:0};
     }
@@ -57,7 +58,8 @@
         return first;
     }
     function launch(st,source,target,g){
-        const aim=solution(st,source,target,g);if(!aim.ok||g.solution<g.hold||g.cooldown>0||g.ammo<=0)return false;
+        if(g.solution<g.hold||g.cooldown>0||g.ammo<=0)return false;
+        const aim=solution(st,source,target,g);if(!aim.ok)return false;
         const dx=aim.aim.x-aim.muzzle.x,dy=aim.aim.y-aim.muzzle.y,d=Math.hypot(dx,dy);
         st.operation.shells.push({id:++st.operation.serial,source:source.id,team:source.team,x:aim.muzzle.x,y:aim.muzzle.y,vx:dx/d*g.shellSpeed,vy:dy/d*g.shellSpeed,life:g.range/g.shellSpeed+.5,damage:g.damage,aim:aim.aim});
         g.ammo--;g.solution=0;g.cooldown=g.reload;
@@ -67,10 +69,10 @@
     function action(run,name,value){
         const st=run.polar,o=st.operation;if(!o)return false;st.player=run.ship;
         if(name==='tow'&&o.survey){
-            if(o.line){o.line=null;st.notice='Towline released. Caliper is still moving.';st.noticeUntil=st.time+4;return true;}
+            if(o.line){o.line=null;st.notice='Towline released. '+o.survey.name+' is still moving.';st.noticeUntil=st.time+4;return true;}
             const s=run.ship,t=o.survey.ship,ends=P.towEndpoints(s,t),d=distance(ends.a,ends.b);
             const blocked=[...o.assets.map(a=>a.poly),...st.bergs.map(b=>P.hull(b))].some(poly=>P.segmentHitsPoly(ends.a,ends.b,poly));
-            if(d>55||Math.hypot(s.vx-t.vx,s.vy-t.vy)>.7||blocked){st.notice='Towline: bring stern and survey bow within 55 m, slow together, and clear the line.';st.noticeUntil=st.time+4;return false;}
+            if(d>55||Math.hypot(s.vx-t.vx,s.vy-t.vy)>.7||blocked){st.notice='Towline: bring stern and '+o.survey.name+' bow within 55 m, slow together, and clear the line.';st.noticeUntil=st.time+4;return false;}
             o.line={length:P.clamp(d+2,18,65),strength:2.2,tension:0,overload:0};st.stats.orders++;return true;
         }
         if(!o.gun)return false;
@@ -113,6 +115,11 @@
                 control=I.pilot(s,n.route,n.waypoint,n.cruise,hold,35);n.waypoint=control.waypoint;
                 if(control.arrived&&!hold){n.finished=true;n.status='LEAD COMPLETE';}
                 else if(n.finished)n.status='LEAD COMPLETE';
+            }else if(n.crossfire){
+                const opponent=o.npcs.find(a=>a.id===n.opponent&&a.ship.hull>0);
+                n.gun.target=opponent?.id;s.throttle=0;
+                const error=opponent?P.wrap(Math.atan2(opponent.ship.y-s.y,opponent.ship.x-s.x)-s.a):0;
+                control={input:{rudder:0,thruster:P.clamp(error*2.5-s.r*35,-1,1)}};
             }else if(n.team==='patrol'){
                 control=I.pilot(s,n.route,n.waypoint,n.cruise);n.waypoint=control.waypoint;
                 if(control.arrived){n.route.reverse();n.waypoint=0;}
@@ -146,16 +153,26 @@
         const o=st.operation;if(!o)return;
         if(o.survey){
             const t=o.survey,s=t.ship,close=distance(run.ship,s)<65&&Math.hypot(run.ship.vx-s.vx,run.ship.vy-s.vy)<.5;
-            if(!t.recovered){t.recorders=close?t.recorders+dt:Math.max(0,t.recorders-dt*.5);if(t.recorders>=8){t.recovered=true;st.stats.recorders=1;}}
+            if(o.kind==='survey'&&!t.recovered){t.recorders=close?t.recorders+dt:Math.max(0,t.recorders-dt*.5);if(t.recorders>=8){t.recovered=true;st.stats.recorders=1;}}
             const e=t.safe;t.safeNow=P.hull(s).every(p=>((p.x-e.x)/e.rx)**2+((p.y-e.y)/e.ry)**2<=1)&&speed(s)<.45;
+            if(t.pocket)t.safeNow&&=P.hull(s).every(p=>((p.x-t.pocket.x)/t.pocket.rx)**2+((p.y-t.pocket.y)/t.pocket.ry)**2>1);
+        }
+        if(o.kind==='rescue')for(const f of st.fleet){
+            if(!f.rescued){const close=distance(run.ship,f.ship)<st.config.rescue.contactRange&&speed(run.ship)<1;
+                f.rescueContact=close?f.rescueContact+dt:Math.max(0,f.rescueContact-dt);
+                if(f.rescueContact>0)f.waiting=`Rescue contact ${f.rescueContact.toFixed(1)} / ${st.config.rescue.hold} s`;
+                if(f.rescueContact>=st.config.rescue.hold){f.rescued=true;st.notice=f.name+': rescue contact established. Awaiting Proceed through cleared water.';st.noticeUntil=st.time+8;}
+            }
         }
         const entities=allEntities(st),player={id:'player',team:'friendly',ship:run.ship};
         const guns=[...(o.gun?[{...player,gun:o.gun}]:[]),...o.npcs.filter(n=>n.active&&n.gun),...o.assets.filter(a=>a.gun)];
         for(const source of guns){
             const g=source.gun;g.cooldown=Math.max(0,g.cooldown-dt);
-            if(source.ship.hull<=0){g.solution=0;continue;}
+            if(source.ship.hull<=0||source.ship.disabled){g.solution=0;continue;}
             if(source.fixed)g.target='player';
-            const target=entities.find(e=>e.id===g.target&&e.ship.hull>0&&!e.escaped),aim=solution(st,source,target,g);
+            const target=entities.find(e=>e.id===g.target&&e.ship.hull>0&&!e.escaped);
+            if(!source.crossfire||st.time>=(g.checkAt||0)){g.cachedAim=solution(st,source,target,g);g.checkAt=st.time+.25;}
+            const aim=g.cachedAim;
             g.reason=g.ammo<=0?'Ammunition expended':g.cooldown>0?'Reloading':aim.reason;g.aim=aim.aim;
             g.solution=aim.ok&&g.cooldown===0?Math.min(g.hold,g.solution+dt):Math.max(0,g.solution-dt*3);
             if(source.id!=='player')launch(st,source,target,g);
@@ -170,9 +187,9 @@
                 shot.life=0;o.bursts.push({x:a.x+(b.x-a.x)*fraction,y:a.y+(b.y-a.y)*fraction,until:st.time+1.4});
                 if(hit.ship){
                     const old=hit.ship.hull;hit.ship.hull=Math.max(0,old-shot.damage);
-                    if(hit.team!=='hostile')st.stats.damageTaken+=Math.min(old,shot.damage);
-                    else if(old>0&&hit.ship.hull===0)st.stats.hostilesDisabled++;
-                    if(hit.team==='civilian')st.failure='The civilian monitoring station was hit.';
+                    if(hit.team==='friendly'||hit.team==='civilian')st.stats.damageTaken+=Math.min(old,shot.damage);
+                    else if(hit.team==='hostile'&&old>0&&hit.ship.hull===0)st.stats.hostilesDisabled++;
+                    if(hit.team==='civilian'&&hit.fixed)st.failure='The civilian monitoring station was hit.';
                 }
             }
         }
@@ -180,10 +197,12 @@
         for(const a of o.assets)if(a.essential&&a.ship.hull<=0)st.failure='The supply base was lost before its essential cargo and transports were secured.';
         for(const s of [run.ship,...st.fleet.map(f=>f.ship),...(o.survey?[o.survey.ship]:[])])if(s.hull<=0)st.failure=s.name+' lost. Every required crew must come home.';
     }
-    function ready(st){const o=st.operation;if(!o)return false;return o.kind==='survey'?o.survey.recovered&&o.survey.safeNow:o.kind==='defense'?st.fleet.every(f=>f.unloaded&&f.returned):o.assets.filter(a=>a.team==='hostile').every(a=>a.ship.hull<=0);}
-    function progress(st){const o=st.operation;return o.kind==='survey'?[o.survey.recovered,o.survey.safeNow,st.complete]:o.kind==='defense'?[st.fleet.every(f=>f.unloaded),st.fleet.every(f=>f.returned)]:[o.assets.find(a=>a.id==='battery').ship.hull<=0,o.assets.find(a=>a.id==='fuel').ship.hull<=0,st.complete];}
+    function ready(st){const o=st.operation;if(!o)return false;return o.kind==='rescue'?o.survey.safeNow&&st.fleet.every(f=>f.rescued&&f.returned):o.kind==='transit'?st.fleet.every(f=>f.returned):o.kind==='survey'?o.survey.recovered&&o.survey.safeNow:o.kind==='defense'?st.fleet.every(f=>f.unloaded&&f.returned):o.assets.filter(a=>a.team==='hostile').every(a=>a.ship.hull<=0);}
+    function progress(st){const o=st.operation;return o.kind==='rescue'?[...st.fleet.map(f=>f.returned),o.survey.safeNow,st.complete]:o.kind==='transit'?[false,false,false,false,false,st.complete]:o.kind==='survey'?[o.survey.recovered,o.survey.safeNow,st.complete]:o.kind==='defense'?[st.fleet.every(f=>f.unloaded),st.fleet.every(f=>f.returned)]:[o.assets.find(a=>a.id==='battery').ship.hull<=0,o.assets.find(a=>a.id==='fuel').ship.hull<=0,st.complete];}
     function message(st){const o=st.operation;
         if(o.warning)return o.warning;
+        if(o.kind==='rescue')return `${st.fleet.filter(f=>f.rescued).length}/3 GROUPS CONTACTED · ${st.stats.safeReturns}/3 SAFE · ORIEL ${o.survey.safeNow?'IN REFUGE':o.line?'UNDER TOW':'BLOCKING THE TURNING POCKET'}. No kills count toward rescue.`;
+        if(o.kind==='transit')return `${st.stats.safeReturns}/3 RELIEF SHIPS THROUGH · reopen the aging wake and keep stopping room.`;
         if(o.kind==='survey')return !o.survey.recovered?`RECORDER TRANSFER ${Math.floor(o.survey.recorders)} / 8 s · hold within 65 m with little relative motion`:o.survey.safeNow?'Caliper and her recorders are safe. Moor Kestrel.':o.line?`TOW CONNECTED · ${Math.round(o.line.tension*100)}% tension · allow room for Caliper’s stern`:'Recorders aboard · connect the tow and bring Caliper home.';
         if(o.kind==='defense')return `${st.stats.deliveries}/2 cargoes ashore · ${st.stats.safeReturns}/2 transports safe. Give Proceed after unloading.`;
         return ready(st)?'Both military installations disabled. Withdraw to the green home berth.':'Disable the battery and fuel-transfer machinery; plan your exit before firing.';
