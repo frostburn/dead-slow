@@ -465,6 +465,11 @@ bundle is ignored by git and rebuilt by the deployment workflow.
 Railway terrain contours and river bridges are precomputed by `npm run build`.
 After changing railway surveys, also commit the regenerated `src/rail-scenery.js`.
 `npm run check` rejects stale scenery; the browser never runs terrain interpolation.
+Terrain is a continuous thin-plate surface fitted to track surveys. Use
+`rail.terrain.heights` for off-track landscape heights and `interval` for contour
+spacing in metres (1 m for shallow relief, 5 m for mountain routes). Flat yards
+stay flat. Track `tangentStart` / `tangentEnd` directions can align loop joins
+without extending or overlapping the adjoining track.
 
 ## Checks
 

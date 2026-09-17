@@ -10,7 +10,7 @@
     /** @param {string} id @param {string} name @param {string} brief @param {string} tip
      * @param {[number,number]} world @param {import('./rail-level-types.js').RailConfig} rail
      * @param {[number,number,number]} pace */
-    const level=(id,name,brief,tip,world,rail,pace)=>({id,name,brief,tip,world,rail,pace,rulesRevision:3,courseRevision:id==='long-grade-8'||id==='long-grade-10'?2:1,
+    const level=(id,name,brief,tip,world,rail,pace)=>({id,name,brief,tip,world,rail,pace,rulesRevision:3,courseRevision:id==='long-grade-10'?3:id==='long-grade-7'||id==='long-grade-8'?2:1,
         kind:'Freight railway',start:[100,100,0],berth:{x:100,y:100,a:0,l:50,w:20,angle:10,speed:.2},
         spec:{name:'No. 17',length:20,beam:4,mass:80000}});
     const levels=[
@@ -67,6 +67,7 @@
             'Choose your route at both ends of each branch. Watch the tail’s grade and brake temperature. A cool train with room to stop is worth the extra distance.',
             [1750,1250],{
                 thermal:true,scenery:'valley',
+                terrain:{interval:5,heights:[[0,0,66],[1750,0,53],[0,1250,23],[1750,1250,20],[100,700,39],[1100,430,44]]},
                 river:[[0,1220],[500,1240],[1080,1230],[1400,1200],[1450,1070],[1620,965],[1750,940]],
                 nodes:{quarry:[100,140,62],summit:[500,140,60],join:[950,790,27],cool:[1090,905,25],out:[1270,1020,23],works:[1620,1130,22]},
                 tracks:[
@@ -117,6 +118,7 @@
             'The early connection gives more stopping room. The longer service branch reaches a second interception on a gentler grade. The gravel catch siding saves the wagons, but the finish will be rough.',
             [2300,1000],{
                 scenery:'valley',thermal:false,
+                terrain:{interval:1,heights:[[0,0,30],[2300,0,23],[0,1000,26],[2300,1000,21],[1000,100,25]]},
                 river:[[2120,0],[2070,190],[2160,400],[2140,650],[2220,1000]],
                 nodes:{top:[80,290,27],early:[650,400,24],late:[1390,400,23],fork:[1740,400,22.5],broken:[2200,400,22.5],service:[270,680,24],catch:[1910,780,24]},
                 tracks:[{id:'runaway-road',a:'top',b:'early',limit:18},
@@ -141,6 +143,7 @@
             'Amber wagons are sliding or spinning. Lower brake settings can grip better than full service on wet leaves. The approach curve limits the speed you can carry into the climb.',
             [2100,1150],{
                 scenery:'woodland',weather:'rain',thermal:false,tractive:105000,
+                terrain:{interval:1,heights:[[0,0,29],[2100,0,29],[0,1150,23],[2100,1150,23],[1050,100,33],[1050,1100,24]]},
                 nodes:{yard:[80,760,25],bend:[650,760,25],summit:[1170,470,29],out:[1580,560,25],works:[2000,740,25]},
                 tracks:[{id:'approach',a:'yard',b:'bend',limit:8,adhesion:.12},
                     {id:'cutting',a:'bend',b:'summit',points:[[650,760,25],[800,660,26.2],[970,550,27.6],[1170,470,29]],limit:7,adhesion:.035,restrictions:[{from:0,to:.2,limit:6.5}]},
@@ -161,7 +164,7 @@
                     {id:'bridge',a:'w',b:'e',limit:3,bridge:{name:'Temporary bridge',maxMass:205000,maxLoads:1,pairs:[['T1','E1'],['T2','E2']]}},
                     {id:'receiving',a:'e',b:'end',limit:6},
                     {id:'pocket',a:'e',b:'pocket',points:[[790,470,20],[940,680,20],[1190,800,20]],limit:5},
-                    {id:'return',a:'end',b:'e',points:[[1490,470,20],[1470,290,20],[1100,250,20],[890,310,20],[790,470,20]],limit:5}],
+                    {id:'return',a:'end',b:'e',points:[[1490,470,20],[1540,400,20],[1450,260,20],[1100,250,20],[890,350,20],[790,470,20]],tangentStart:[1,0],tangentEnd:[-1,0],limit:5}],
                 switches:[{node:'e',label:'Receiving points',stem:'bridge',branches:['receiving','pocket','return'],names:['Assembly road','Receiving pocket','Engine return loop']}],
                 groups:[{cars:[wagon('T1','west-yard',350,{length:24,mass:110000,heavy:true}),wagon('E1','west-yard',328.8,{length:16,mass:10000}),loco('west-yard',309.6),wagon('T2','west-yard',286.4,{length:24,mass:110000,heavy:true}),wagon('E2','west-yard',265.2,{length:16,mass:10000})]}],
                 zones:[{id:'final',name:'Assembly · 2 then 1 toward buffers',edge:'receiving',from:70,to:640},
@@ -230,7 +233,7 @@
                 tracks:[{id:'quay',a:'west',b:'fork',limit:5},
                     {id:'port',a:'fork',b:'p',points:[[740,470,5],[825,420,5],[1000,420,5],[1230,420,5]],limit:2},
                     {id:'starboard',a:'fork',b:'s',points:[[740,470,5],[825,550,5],[1000,550,5],[1230,550,5]],limit:2},
-                    {id:'quay-loop',a:'fork',b:'west',points:[[740,470,5],[780,540,5],[785,680,5],[650,790,5],[300,800,5],[100,710,5],[30,560,5],[50,470,5],[90,470,5]],limit:4}],
+                    {id:'quay-loop',a:'fork',b:'west',points:[[740,470,5],[780,540,5],[785,680,5],[650,790,5],[300,800,5],[100,710,5],[30,560,5],[40,500,5],[90,470,5]],tangentStart:[1,1.5],tangentEnd:[1,0],limit:4}],
                 switches:[{node:'fork',label:'Ferry points',stem:'quay',branches:['port','starboard','quay-loop'],names:['Port deck','Starboard deck','Quay loop']}],
                 groups:[{cars:[wagon('A1','quay',379.6,{length:24,mass:25000}),wagon('A2','quay',354.4,{length:24,mass:25000}),wagon('reach','quay',325.2,{length:32,mass:12000}),loco('quay',298),wagon('B1','quay',274.8,{length:24,mass:25000}),wagon('B2','quay',249.6,{length:24,mass:25000})]}],
                 zones:[{id:'port-load',name:'Port deck · pair A',edge:'port',from:90,to:230},
@@ -268,7 +271,9 @@
             'Bring the winter-supply freight from the plateau to the coastal terminal. Use the rear helper across the summit, leave it secured in Summit Yard, then manage the long descent and meet the coastal passenger at Lantern Viaduct.',
             'Ease each engine as its end crests. Fit the whole freight in Lantern loop, set both ends to Main viaduct and Summit Junction to Ridge tunnel, then signal the passenger with H. Keep cool brakes for the terminal.',
             [3800,2000],{
-                scenery:'valley',weather:'snow',thermal:true,helper:{tractive:190000},couplerLimit:260000,compressionLimit:135000,
+                scenery:'valley',weather:'snow',thermal:true,
+                terrain:{interval:5,heights:[[0,0,43],[3800,0,66],[0,2000,16],[3800,2000,10],[700,1100,29],[1500,1300,30],[3000,650,48]]},
+                helper:{tractive:190000},couplerLimit:260000,compressionLimit:135000,
                 nodes:{start:[80,220,40],foot:[620,220,40],crest:[1330,360,65],yard:[1940,500,63],tunnel:[2510,240,63],a:[2210,1120,31],b:[2750,1240,28],end:[3640,1770,13]},
                 tracks:[{id:'plateau',a:'start',b:'foot',limit:9},
                     {id:'summit',a:'foot',b:'crest',points:[[620,220,40],[850,210,49],[1090,275,58],[1330,360,65]],limit:8},

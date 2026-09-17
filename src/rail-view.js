@@ -182,7 +182,9 @@
         const stroke=(points,color,width)=>{ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();};
         const landscape=Presentation.landscape(level,st.net);
         ctx.lineCap='round';ctx.lineJoin='round';
-        for(const contour of landscape.contours)stroke(contour,'#bdbb9e',1/scale);
+        ctx.beginPath();
+        for(const [a,b] of landscape.contours){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);}
+        ctx.strokeStyle='#bdbb9e';ctx.lineWidth=1/scale;ctx.stroke();
         for(let i=0;i<150;i++) {
             const tx=(Math.sin(i*43.1)*43758.5%1+1)%1*level.world[0],ty=(Math.sin(i*19.3)*9645.2%1+1)%1*level.world[1];
             if(Object.values(st.net.edges).some(e=>e.samples.some(p=>Math.hypot(p.x-tx,p.y-ty)<36)))continue;
