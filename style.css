@@ -2535,3 +2535,14 @@ body[data-theme="polar"] .chart-bottom { display:none; }
   #polar-fleet { grid-template-columns:1fr; }
   .polar-order>span { min-height:0; }
 }
+
+/* Pale Reach: deliberate orders remain usable beside the helm on small screens. */
+#polar-actions { margin:10px 0; }
+#polar-actions[hidden],#polar-tow-controls[hidden],#polar-gun-controls[hidden] { display:none; }
+#polar-actions button { min-height:42px; padding:8px; font:11px var(--mono); }
+.polar-winch { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:6px 0; }
+#polar-targets { display:flex; flex-wrap:wrap; gap:5px; }
+#polar-targets button { flex:1 1 100px; font-size:10px; }
+#polar-targets .selected { border-color:var(--amber); background:#594a35; }
+#polar-gun-readout,#polar-tow-readout { display:block; font:10px/1.5 var(--mono); color:var(--amber); margin:6px 0; }
+#polar-fire:enabled { border-color:var(--amber); }

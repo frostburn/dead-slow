@@ -5,11 +5,11 @@ const {create}=require('./headless.cjs');
 const level=n=>L.find(l=>l.id===`pale-reach-${n}`);
 const state=n=>({...I.create(level(n)),time:0,contacts:0,distance:0,maxSpeed:0,dockHold:0,sampleAt:0,ghost:[],splits:[]});
 
-test('Pale Reach has three standalone assignments and nine future chapters',()=>{
+test('Pale Reach has six standalone assignments and six future chapters',()=>{
  const w=L.worlds.find(w=>w.id==='pale-reach');assert.ok(w.partial&&!w.comingSoon);
- assert.equal(w.stages.filter(l=>!l.comingSoon).length,3);assert.equal(w.stages.filter(l=>l.comingSoon).length,9);
+ assert.equal(w.stages.filter(l=>!l.comingSoon).length,6);assert.equal(w.stages.filter(l=>l.comingSoon).length,6);
  const t=create();for(let n=1;n<=3;n++){t.cheats.level(7,n);assert.ok(t.state.run.polar);assert.ok(level(n).standalone);}
- assert.throws(()=>t.cheats.level(7,4),/Coming soon/);assert.throws(()=>t.cheats.circuit(7),/unavailable/);
+ assert.throws(()=>t.cheats.level(7,7),/Coming soon/);assert.throws(()=>t.cheats.circuit(7),/unavailable/);
  t.cheats.tour(0);assert.equal(t.state.marathon.route.length,72);
 });
 test('only a momentum-driven icebreaking bow opens sheet; ridges remain solid',()=>{
@@ -96,15 +96,11 @@ test('polar departure hulls start clear and the whole required hull must stay on
  const r=state(3),s=r.polar.fleet[0].ship;s.x=1;s.y=380;s.vx=-.1;
  I.step(level(3),r,{},1/120);assert.match(r.polar.failure,/MORROW left the assignment chart/);assert.ok(s.x>0&&s.x<1,'exit fails before the centre leaves, without bouncing');
 });
-test('waiting until Rime finishes cannot complete Borrowed Water as a solo trip',()=>{
+test('Rime finishing leaves the late supply passage playable',()=>{
  const t=create();t.load(L.indexOf(level(2)),true);t.advance(450);
- assert.equal(t.state.status,'failed');assert.equal(t.state.run.polar.checkpoint,0);
- assert.match(t.state.run.polar.failure,/stay with the icebreaker/);
- assert.equal(t.state.storage.stages['pale-reach-2'].runs.length,0);
-});
-test('follow checkpoints need working separation from an unfinished leader',()=>{
- const r=state(2);r.polar.ice.opened.fill(0);r.ship.x=300;r.ship.y=330;
- I.step(level(2),r,{},1/120);assert.equal(r.polar.checkpoint,0,'distant leader does not count');
- r.polar.fleet[0].ship.x=380;r.polar.fleet[0].ship.y=330;
- I.step(level(2),r,{},1/120);assert.equal(r.polar.checkpoint,1,'nearby working leader does count');
+ assert.equal(t.state.status,'running');assert.equal(t.state.run.polar.failure,null);
+ assert.ok(t.state.run.polar.fleet[0].returned);assert.equal(t.state.run.polar.checkpoint,0);
+ assert.match(I.message(t.state.run),/retry when you choose/);
+ const r=t.state.run;r.ship.x=300;r.ship.y=330;
+ I.step(level(2),r,{},1/120);assert.equal(r.polar.checkpoint,1,'a late passage can still earn its checkpoints');
 });

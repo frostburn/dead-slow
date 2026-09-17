@@ -2,7 +2,7 @@
   "name": "dead-slow-harbor-trials",
   "version": "6.0.0",
   "private": true,
-  "description": "Eight-world atlas: six complete campaigns, three Pale Reach assignments and a planned final world. Seventy-two circuit missions plus one bonus; offline and dependency-free.",
+  "description": "Eight-world atlas: six complete campaigns, six Pale Reach assignments and a planned final world. Seventy-two circuit missions plus one bonus; offline and dependency-free.",
   "license": "MIT",
   "engines": {
     "node": ">=22"

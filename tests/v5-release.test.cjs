@@ -11,7 +11,7 @@ const stage=()=>({runs:[{...sample}],ghost:[[0,100,150,0]],bestSplits:[10,20],cl
 test('version 6 is a full release with six twelve-stage circuits and one excluded bonus',()=>{
  assert.match(require('../package.json').version,/^6\.\d+\.\d+$/);
  assert.equal(require('../package-lock.json').version,require('../package.json').version);
- assert.equal(L.length,76);assert.equal(L.filter(l=>!l.bonus&&!l.standalone).length,72);
+ assert.equal(L.length,79);assert.equal(L.filter(l=>!l.bonus&&!l.standalone).length,72);
  assert.equal(L.filter(l=>l.bonus).length,1);
  for(const w of L.worlds.filter(w=>!w.comingSoon&&!w.partial)){assert.ok(!w.preview);assert.equal(L.filter(l=>l.campaign===w.id&&!l.bonus&&!l.standalone).length,12);}
 });
