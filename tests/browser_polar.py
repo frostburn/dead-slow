@@ -5,14 +5,13 @@ def check_polar(page,check,out):
         page.evaluate('(n)=>{DeadSlow.level(7,n);DeadSlow.speed(0)}',stage)
         page.wait_for_timeout(80)
         check(f'7-{stage:02} exposes a folding bridge watch and hides railway panels',page.locator('#polar-info').is_visible() and not page.locator('#rail-panel').is_visible())
-        check(f'7-{stage:02} keeps status and splits out of the control sidebar',page.locator('#polar-info #polar-readout').count()==1 and page.locator('#polar-info #polar-splits').count()==1 and page.locator('#polar-panel #polar-readout, #polar-panel #sub-track-detail, #polar-panel .splits').count()==0)
-        check(f'7-{stage:02} only reserves a sidebar when extra controls exist',page.locator('#polar-panel').is_visible()==(stage>2))
+        check(f'7-{stage:02} keeps mission reports in the window and shared instruments in the sidebar',page.locator('#polar-info #polar-readout').count()==1 and page.locator('.sidebar #splits').is_visible() and page.locator('.sidebar #speed').is_visible() and page.locator('#polar-panel #polar-readout, #polar-panel #sub-track-detail, #polar-panel .splits').count()==0)
+        check(f'7-{stage:02} keeps the shared sidebar on every assignment',page.locator('.sidebar').is_visible() and page.locator('#polar-panel').is_visible()==(stage>2))
         if stage>2:
             check(f'7-{stage:02} desktop orders stay compact',page.locator('#polar-panel').evaluate('(e)=>e.getBoundingClientRect().height<500'))
         check(f'7-0{stage} shows its authored bridge briefing',page.evaluate('DeadSlowTest.state.level.polar.dispatch[1].length>80'))
         if stage==1:
-            page.locator('.polar-timing').evaluate('(d)=>d.open=true')
-            check('Elapsed splits can be opened inside the chart window',page.locator('#polar-info #polar-splits').is_visible())
+            check('Elapsed splits remain visible in the shared sidebar',page.locator('.sidebar #splits').is_visible())
             check('Turning pocket progress is visible','TURNING POCKET' in page.locator('#polar-readout').inner_text())
             page.evaluate('DeadSlow.step(12.25);DeadSlowTest.state.run.polar.routeOpened=true;DeadSlow.step(1)')
             check('Completed polar splits show elapsed minutes, seconds and hundredths',page.locator('#splits .split-row').first.locator('span').last.inner_text()=='00:12.25')
@@ -66,8 +65,7 @@ def check_polar(page,check,out):
         check(f'Convoy orders remain visible at {width}×{height}',page.locator('#polar-panel').is_visible() and page.locator('[data-convoy=sedge][data-order=proceed]').is_visible())
         check(f'Order buttons have usable targets at {width}×{height}',page.locator('#polar-fleet button').evaluate_all('(bs)=>bs.every(b=>b.getBoundingClientRect().height>=40)'))
         page.locator('#polar-info').evaluate('(d)=>d.open=true')
-        page.locator('.polar-timing').evaluate('(d)=>d.open=true')
-        check(f'Split times are accessible at {width}×{height}',page.locator('#polar-splits').is_visible() and page.locator('#polar-splits .split-row').count()==3)
+        check(f'Split times are accessible at {width}×{height}',page.locator('#splits').is_visible() and page.locator('#splits .split-row').count()==3)
         page.screenshot(path=str(out/f'pale-reach-{width}.png'))
         page.locator('#polar-info > summary').click()
         check(f'Folding the watch clears its reports from the chart at {width}×{height}',not page.locator('#polar-readout').is_visible() and page.locator('#polar-panel [data-convoy]').first.is_visible())
@@ -78,8 +76,7 @@ def check_polar(page,check,out):
             if stage>=7 and stage!=11:
                 check(f'7-0{stage} depth and sonar orders remain available at {width}×{height}',page.locator('[data-sub-depth]').count()==3 and page.locator('#sub-ping').is_visible())
                 page.locator('#polar-info').evaluate('(d)=>d.open=true')
-                page.locator('.polar-timing').evaluate('(d)=>d.open=true')
-                check(f'7-{stage:02} elapsed splits remain available at {width}×{height}',page.locator('#polar-splits .split-row').count()==(6 if stage==12 else 4 if stage==8 else 3))
+                check(f'7-{stage:02} elapsed splits remain available at {width}×{height}',page.locator('#splits .split-row').count()==(6 if stage==12 else 4 if stage==8 else 3))
             if stage==12:
                 handoff_fixture(page)
                 check(f'Finale handoff keeps captain orders usable at {width}×{height}',page.locator('#polar-fleet button').count()==6 and page.locator('#polar-fleet button').evaluate_all('(bs)=>bs.every(b=>b.getBoundingClientRect().height>=40)') and page.evaluate('document.documentElement.scrollWidth<=innerWidth'))

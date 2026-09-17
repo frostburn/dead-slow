@@ -5,7 +5,7 @@ Report [bugs and feature requests](https://github.com/frostburn/dead-slow/issues
 
 **Neutral is not a brake.** A top-down ship-handling game about arriving slowly,
 with enough room left to stop—at sea, in vacuum, inside a giant hamster ball, or along a freight railway.
-Version 6 has eighty-four circuit stages across seven playable worlds in an eight-world atlas, a separate Century Ship bonus, local speedrun
+Version 7 has eighty-four circuit stages across seven playable worlds in an eight-world atlas, a separate Century Ship bonus, local speedrun
 records, personal-best ghosts, keyboard controls and a multitouch helm.
 
 ## The eight-world atlas

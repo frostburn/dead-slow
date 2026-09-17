@@ -1,6 +1,7 @@
 /* Underwater bridge: draw observed acoustic tracks, not hidden actor positions. */
 (function(root){
     'use strict';
+    const L=typeof module!=='undefined'&&module.exports?require('./polar-labels.js'):root.PaleReachLabels;
     const P=typeof module!=='undefined'&&module.exports?require('./physics.js'):root.HarborPhysics;
     const U=typeof module!=='undefined'&&module.exports?require('./submarine.js'):root.PaleReachSubmarine;
     const F=typeof module!=='undefined'&&module.exports?require('./polar-finale.js'):root.PaleReachFinale;
@@ -52,10 +53,10 @@
         for(const b of $('sub-pickups').querySelectorAll('[data-pickup]')){const selected=b.dataset.pickup===st.recovery?.selected;b.disabled=!live||m.team==='recovered';b.classList.toggle('selected',selected);b.setAttribute('aria-pressed',String(selected));}
         $('sub-fire').disabled=!live||g.solution<g.hold||g.cooldown>0||g.ammo<=0;
         $('sub-team').disabled=!live||!['aboard','waiting'].includes(m.team)||m.ordered;set('sub-team',m.team==='aboard'?'Insert team · F':m.team==='working'?'Team working':m.team==='waiting'?'Recover team · F':'Team aboard · return home');
-        const rows=splits(run,format);html('splits',rows);html('polar-splits',rows);
+        html('splits',splits(run,format));
         $('check-objectives').classList.toggle('ok',m.threatGone);$('check-inside').classList.toggle('ok',run.dock.inside);$('check-aligned').classList.toggle('ok',Math.abs(s.heave)<.15);$('check-slow').classList.toggle('ok',motion.speed<.35&&m.suspicion<20);$('dock-bar').style.width=Math.min(100,m.homeHold*20)+'%';
         set('clock',format(run.time));set('clock-label',run.pausedUsed?'PRACTICE · UNRANKED':'WATCH TIME · IGT');$('clock-label').classList.toggle('practice',run.pausedUsed);
-        set('delta',U.covert(st)?'CONFIRMED ALARM ENDS THE ASSIGNMENT':'GUARD THE PASSAGE · IDENTIFY BEFORE FIRING');$('race-banner').hidden=true;set('scale-label','100 METRES');
+        set('delta',U.covert(st)?'CONFIRMED ALARM ENDS THE ASSIGNMENT':'GUARD THE PASSAGE · IDENTIFY BEFORE FIRING');set('scale-label','100 METRES');
     }
     function dialog(kind,level,run,format,hasNext,race,actions=''){
         const st=run.polar,c=st.config,head=`<div class="eyebrow">WORLD 7 · UNDERWATER WATCH · ${String(level.stageNumber).padStart(2,'0')} / 12</div>`,retry='<button data-action="retry">Retry · Shift+R</button><button data-action="courses">World map</button>';
@@ -76,7 +77,7 @@
         ctx.fillStyle='#102c37';ctx.fillRect(0,0,W,H);ctx.save();ctx.translate(ox,oy);ctx.scale(scale,scale);
         const poly=points=>{ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();};
         const line=(a,b,color,width=1,dash=[])=>{ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash);ctx.stroke();ctx.setLineDash([]);};
-        const label=(text,x,y,color='#b7d1d0',size=10)=>{ctx.fillStyle=color;ctx.font=`${size}px ui-monospace,monospace`;ctx.textAlign='center';ctx.fillText(text,x,y);};
+        const labels=L.create(ctx,W,H,ox,oy,scale),label=labels.add;
         const ring=(x,y,r,color,dash=[])=>{ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.setLineDash(dash);ctx.stroke();ctx.setLineDash([]);};
         let bg=backgrounds.get(level);
         if(!bg){
@@ -109,7 +110,7 @@
             const f=U.Sonar.predict(t,st.time),color=t.id===st.selected?'#f6d097':t.identified&&t.category==='submarine'?'#e9a38b':t.identified&&t.category==='service'?'#a7d9ba':'#a6cfcc';
             ctx.globalAlpha=Math.max(.2,1-f.age/160);ctx.beginPath();ctx.arc(f.x,f.y,f.radius,0,Math.PI*2);ctx.fillStyle=color+'0c';ctx.fill();ctx.strokeStyle=color;ctx.lineWidth=t.id===st.selected?2:1;ctx.setLineDash(f.age>6?[4,7]:[2,5]);ctx.stroke();ctx.setLineDash([]);
             line({x:f.x-5,y:f.y},{x:f.x+5,y:f.y},color);line({x:f.x,y:f.y-5},{x:f.x,y:f.y+5},color);
-            line(f,{x:f.x+t.vx*35,y:f.y+t.vy*35},color,1.5);label(t.id+' · '+kind(t),f.x,f.y-f.radius-12,color,9);label('±'+Math.ceil(f.radius)+' m · '+Math.floor(f.age)+' s',f.x,f.y+f.radius+14,color,9);ctx.globalAlpha=1;
+            line(f,{x:f.x+t.vx*35,y:f.y+t.vy*35},color,1.5);label(t.id+' · '+kind(t),f.x,f.y-18,color,9,t.id===st.selected?3:2);ctx.globalAlpha=1;
         }
         for(const p of st.pulses)ring(p.x,p.y,Math.min(p.range,(st.time-p.at)*210),'#92dfdc99');
         for(const t of st.torpedoes){line({x:t.x-t.vx*1.5,y:t.y-t.vy*1.5},t,t.hostile?'#ff9d84':'#ffe4a3',2.5);ring(t.x,t.y,6,t.hostile?'#ffb097':'#ffedba');}
@@ -118,8 +119,8 @@
         if(options.settings?.ghost&&ghost?.length&&run.time<=ghost.at(-1)[0]){let lo=0,hi=ghost.length-1;while(lo<hi){const mid=Math.ceil((lo+hi)/2);if(ghost[mid][0]<=run.time)lo=mid;else hi=mid-1;}const a=ghost[lo],b=ghost[Math.min(lo+1,ghost.length-1)],t=b[0]===a[0]?0:P.clamp((run.time-a[0])/(b[0]-a[0]),0,1);poly(P.hull({...s,x:a[1]+(b[1]-a[1])*t,y:a[2]+(b[2]-a[2])*t,a:a[3]+P.wrap(b[3]-a[3])*t}));ctx.fillStyle='#d6efda38';ctx.fill();}
         poly(P.hull(s));ctx.fillStyle='#e9bb80';ctx.fill();ctx.strokeStyle='#172f37';ctx.lineWidth=2;ctx.stroke();line(P.localPoint(s,-7,0),P.localPoint(s,4,0),'#435a5c',5);ring(s.x,s.y,27,'#f4d09866');label('PETREL · '+Math.round(s.depth)+' m',s.x,s.y+35,'#ffe0ad');
         if(st.gun.aim)line(s,st.gun.aim,st.gun.solution>=st.gun.hold?'#c3e7b0':'#d9bd7f66',1.3,[5,8]);
-        for(const mark of c.landmarks)label(mark.text,mark.x,mark.y,'#779b9f',10);
-        ctx.restore();ctx.fillStyle='#b2cac9';ctx.font='10px ui-monospace,monospace';ctx.textAlign='left';ctx.fillText('PALE REACH / ESTIMATED ACOUSTIC PLOT · '+s.depth.toFixed(0)+' m',16,H-17);line({x:W-120,y:H-22},{x:W-120+100*scale,y:H-22},'#b2cac9',2);
+        for(const mark of c.landmarks)label(mark.text,mark.x,mark.y,'#779b9f',10,0);
+        ctx.restore();labels.draw();ctx.fillStyle='#b2cac9';ctx.font='10px ui-monospace,monospace';ctx.textAlign='left';ctx.fillText('PALE REACH / ESTIMATED ACOUSTIC PLOT · '+s.depth.toFixed(0)+' m',16,H-17);line({x:W-120,y:H-22},{x:W-120+100*scale,y:H-22},'#b2cac9',2);
     }
     const api={prepare,update,dialog,render};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.PaleReachSubmarineView=api;
 })(globalThis);

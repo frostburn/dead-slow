@@ -5,6 +5,7 @@
     const I=typeof module!=='undefined'&&module.exports?require('./polar.js'):root.PaleReach;
     const G=typeof module!=='undefined'&&module.exports?require('./polar-grid.js'):root.PaleReachGrid;
     const U=typeof module!=='undefined'&&module.exports?require('./submarine-view.js'):root.PaleReachSubmarineView;
+    const L=typeof module!=='undefined'&&module.exports?require('./polar-labels.js'):root.PaleReachLabels;
     let convoyOrder,bridgeOrder;
     const $=id=>document.getElementById(id);
     const set=(id,v)=>{const node=$(id),text=String(v);if(node.textContent!==text)node.textContent=text;};
@@ -106,12 +107,9 @@
     }
     function update(level,run,status,format,race=null){
         if(run.polar.rebridge){prepare(run.polar.level,convoyOrder,bridgeOrder);run.polar.rebridge=false;set('ship-name',run.ship.name);set('brief',run.polar.config.dispatch[1]);set('hint','Kestrel has the watch. Reopen the aging lead and use Hold / Proceed to bring all three relief ships through.');}
-        const ship=run.ship,sub=run.polar.submarine,motion=P.groundMotion(ship);
-        set('polar-summary',`${ship.name.split(' · ').at(-1)} · ${(motion.speed*1.94384).toFixed(1)} kn · ${sub?Math.round(ship.depth)+' m':Math.ceil(ship.hull)+'% hull'}`);
-        set('polar-navigation',`HEADING ${String(Math.round((ship.a*180/Math.PI+450)%360)).padStart(3,'0')}° · ${motion.direction.toUpperCase()} · HULL ${Math.ceil(ship.hull)}% · ${run.contacts} CONTACTS`);
-        set('polar-best',`BEST ${$('best-overall').textContent} · CLEAN ${$('best-clean').textContent}`);
-        $('polar-race').hidden=!race;
-        if(race)set('polar-race',`${race.id==='grand-tour'?'GRAND TOUR':'PALE REACH'} ${race.position+1}/${race.route.length} · ${format(race.total+(status==='complete'?0:run.time))}${race.practice?' · PRACTICE':''}`);
+        set('polar-summary',run.ship.name.split(' · ').at(-1));
+        $('race-banner').hidden=!race;
+        if(race)set('race-banner',`${race.id==='grand-tour'?'GRAND TOUR':'PALE REACH'} ${race.position+1}/${race.route.length} · ${format(race.total+(status==='complete'?0:run.time))}${race.practice?' · PRACTICE':''}`);
         if(run.finalJourney){const w=run.finalJourney.watch;$('polar-phase').hidden=false;set('polar-phase',`${w.phase==='underwater'?'LEG 1 / PETREL':'LEG 2 / KESTREL'} · ${format(Math.max(0,w.deadline-run.time))} WEATHER REMAINING`);}
         if(run.polar.submarine)return U.update(level,run,status,format);
         const s=run.ship,st=run.polar,o=st.operation,m=P.groundMotion(s),h=Math.max(0,Math.ceil(s.hull)),g=I.gap(run);
@@ -151,7 +149,7 @@
             set('polar-gun-readout',`${target?target.name+' · '+Math.round(Math.hypot(target.ship.x-s.x,target.ship.y-s.y))+' m':'SELECT A HOSTILE CONTACT'} / ${g.ammo} ROUNDS · ${g.cooldown>0?'RELOAD '+g.cooldown.toFixed(1)+' s':ready?'SOLUTION READY':g.reason+' · '+g.solution.toFixed(1)+' / '+g.hold+' s'}`);
             $('polar-fire').disabled=status!=='running'||!ready;
         }
-        const splits=splitRows(run,format);html('splits',splits);html('polar-splits',splits);
+        html('splits',splitRows(run,format));
         $('check-objectives').classList.toggle('ok',I.ready(run));
         for(const k of ['inside','aligned','slow'])$('check-'+k).classList.toggle('ok',!!run.dock[k]);
         $('dock-bar').style.width=Math.min(100,run.dockHold*50)+'%';
@@ -165,7 +163,7 @@
             $('check-objectives').classList.toggle('ok',st.fleet.every(f=>f.rescued));$('check-inside').classList.toggle('ok',st.fleet.some(f=>f.returned));$('check-aligned').classList.toggle('ok',st.fleet.every(f=>f.returned));$('check-slow').classList.toggle('ok',o.kind==='rescue'?o.survey.safeNow:run.time<st.journey.deadline);$('dock-bar').style.width=st.stats.safeReturns/st.fleet.length*100+'%';
         }
         set('clock',format(run.time));set('clock-label',run.pausedUsed?'PRACTICE · UNRANKED':'PASSAGE TIME · IGT');$('clock-label').classList.toggle('practice',run.pausedUsed);
-        set('delta','ALL REQUIRED HULLS MUST SURVIVE');$('race-banner').hidden=true;set('scale-label','100 METRES');
+        set('delta','ALL REQUIRED HULLS MUST SURVIVE');set('scale-label','100 METRES');
     }
     function dialog(kind,level,run,format,hasNext=false,race=null,actions=''){
         if(kind==='result'&&race)actions=`<div class="race-banner">${race.id==='grand-tour'?'GRAND TOUR':'PALE REACH CAMPAIGN'} · ${race.stages}/${race.route.length} · ${format(race.total)} · ${race.retries} retries${race.practice?' · PRACTICE':''}</div>`+actions;
@@ -193,7 +191,7 @@
         if(zoom>1){ox=W/2-run.ship.x*scale;oy=H/2-run.ship.y*scale;}
         ctx.fillStyle='#102d38';ctx.fillRect(0,0,W,H);ctx.save();ctx.translate(ox,oy);ctx.scale(scale,scale);
         const line=(points,color,width=1,dash=[])=>{ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash);ctx.stroke();ctx.setLineDash([]);};
-        const label=(text,x,y,color='#8fb9c3',size=10)=>{ctx.fillStyle=color;ctx.font=`${size}px ui-monospace, monospace`;ctx.textAlign='center';ctx.fillText(text,x,y);};
+        const labels=L.create(ctx,W,H,ox,oy,scale),label=labels.add;
         // The changing chart is one bitmap per frame; new fractures dirty nearby
         // chunks immediately, while slow slush ageing is sampled at 8 Hz.
         const surface=iceSurface(st,Math.min(4,Math.max(1,Math.ceil(scale*dpr))));
@@ -246,7 +244,7 @@
         }else{
             const b=level.berth;ctx.save();ctx.translate(b.x,b.y);ctx.rotate(b.a);ctx.strokeStyle='#8ce0b8';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.strokeRect(-b.l/2,-b.w/2,b.l,b.w);ctx.setLineDash([]);line([[-8,-5],[5,0],[-8,5]],'#8ce0b8',2);ctx.restore();
         }
-        for(const mark of c.landmarks)label(mark.text,mark.x,mark.y,'#365b65',10);
+        for(const mark of c.landmarks)label(mark.text,mark.x,mark.y,'#365b65',10,0);
         for(const iceBody of [...st.floes,...st.bergs]){
             if(iceBody.vessel==='iceberg'){
                 const x=iceBody.x+iceBody.vx*90,y=iceBody.y+iceBody.vy*90;line([[iceBody.x,iceBody.y],[x,y]],'#efd29b',2,[4,4]);label('DRIFT · 90s',x+32,y,'#f7dbae',9);
@@ -259,7 +257,7 @@
             const hull=P.hull(s);ctx.beginPath();hull.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle=s.hull<=0?'#495957':player?'#f2bb76':s.hostile?'#df8e78':s.required===false?'#bbbbb0':s.iceClass?'#dae7dd':'#93c4b1';ctx.fill();ctx.strokeStyle='#16313b';ctx.lineWidth=1.5;ctx.stroke();
             ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.a);ctx.fillStyle='#324f59';ctx.fillRect(-s.length*.2,-s.beam*.29,s.length*.25,s.beam*.58);line([[s.length*.17,0],[s.length*.35,0]],'#233e47',1);ctx.restore();
             if(player){ctx.beginPath();ctx.arc(s.x,s.y,Math.max(s.length,s.beam)*.7,0,Math.PI*2);ctx.strokeStyle='#fbd69a70';ctx.lineWidth=1;ctx.stroke();}
-            label(player?'KESTREL'===s.name?'KESTREL':s.name.split(' · ').at(-1):s.name,s.x,s.y+s.beam+16,player?'#ffe1b3':'#eef2da',10);
+            label(player?'KESTREL'===s.name?'KESTREL':s.name.split(' · ').at(-1):s.name,s.x,s.y+s.beam+16,player?'#ffe1b3':'#eef2da',10,player?3:2);
             if(I.speed(s)>.3)line([[s.x,s.y],[s.x+s.vx*12,s.y+s.vy*12]],'#f5e4b866',1,[3,3]);
         }
         const ghost=options.ghost;
@@ -270,7 +268,7 @@
             ctx.save();ctx.globalAlpha=.28;const h=P.hull(s);ctx.beginPath();h.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle='#d4fbe0';ctx.fill();ctx.restore();
         }
         for(const f of st.fleet)vessel(f.ship);for(const s of I.operations.bodies(st))vessel(s);vessel(run.ship,true);
-        ctx.restore();ctx.fillStyle='#abc5c9';ctx.font='10px ui-monospace, monospace';ctx.textAlign='left';
+        ctx.restore();labels.draw();ctx.fillStyle='#abc5c9';ctx.font='10px ui-monospace, monospace';ctx.textAlign='left';
         ctx.fillText('PALE REACH / COUNCIL PASSAGE CHART',16,H-17);
         ctx.strokeStyle='#abc5c9';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(W-120,H-22);ctx.lineTo(W-120+100*scale,H-22);ctx.stroke();
     }
