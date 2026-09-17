@@ -237,6 +237,8 @@ with sync_playwright() as p:
     check_mission_design(browser, check, html, args.screenshots)
     from browser_flight_presentation import check_flight_presentation
     check_flight_presentation(browser, check, html, args.screenshots)
+    from browser_keyboard_hints import check_keyboard_hints
+    check_keyboard_hints(browser, check, html)
     report={'passed':len(checks),'checks':checks,'first_harbor_time':actual['result']['time'],'errors':errors+mobile_errors}
     if args.report:
         args.report.parent.mkdir(parents=True,exist_ok=True)

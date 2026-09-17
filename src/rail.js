@@ -87,7 +87,7 @@
             let q=0;const path=t.route.map(([id,dir])=>{const p=entry(net,id,dir,q);q=p.end;return p;});
             const last=path.at(-1),tunnel=net.edges[last.id].tunnel;
             const exitQ=tunnel&&last.dir===1?last.start+tunnel.from:last.end;
-            return {...t,path,exitQ,v:0,released:false,finished:false,waiting:'Awaiting your signal · H',cars:Array.from({length:4},(_,i)=>({id:t.id+'-'+i,q:t.head-i*t.length/4,length:t.length/4-1.2,mass:40000,v:0}))};
+            return {...t,path,exitQ,v:0,released:false,finished:false,waiting:'Awaiting Signal departure',cars:Array.from({length:4},(_,i)=>({id:t.id+'-'+i,q:t.head-i*t.length/4,length:t.length/4-1.2,mass:40000,v:0}))};
         });
         return {net,groups,traffic,config:cfg,time:0,power:0,helper:0,reverser:1,independent:0,selected:'engine',crew:[],
             completed:[],taskHold:{},finishHold:0,failure:null,notice:'Release the train brake to move.',
@@ -209,7 +209,7 @@
         const label=selected.cars.map(c=>c.helper?'Helper':c.powered?'Loco':c.id).join(' · ');
         const cut=`${label} — handbrakes ${hands}/${selected.cars.length} · air brake ${Math.round(air*100)}%`;
         const coupling=availability(st,'couple');
-        const pickup=hit?`${hit.b.car.id} · ${hit.distance.toFixed(1)} m to buffers · relative speed ${(Math.abs(hit.a.car.v-hit.b.car.v*hit.a.dir*hit.b.dir)*3.6).toFixed(1)} km/h${hit.distance<=3?'\n'+(coupling.enabled?'Ready to couple · F':coupling.reason):''}`:'No waiting cut on this stretch of track.';
+        const pickup=hit?`${hit.b.car.id} · ${hit.distance.toFixed(1)} m to buffers · relative speed ${(Math.abs(hit.a.car.v-hit.b.car.v*hit.a.dir*hit.b.dir)*3.6).toFixed(1)} km/h${hit.distance<=3?'\n'+(coupling.enabled?'Ready to couple':coupling.reason):''}`:'No waiting cut on this stretch of track.';
         let next='',action=null,split=null,direction=null,needsMovement=false;
         const unsecured=selected!==eg&&hands<selected.cars.length;
         const task=st.config.tasks.find(t=>!st.completed.includes(t.id)&&(!t.after||st.completed.includes(t.after))&&!(st.caught&&t.milestone&&t.type==='coupled'));
@@ -217,7 +217,7 @@
             const zone=st.config.zones.find(z=>z.id===task.zone);
             if(task.type==='traffic') {
                 const passenger=st.traffic.find(t=>t.id===task.traffic);
-                next=passenger?.released?'Keep the passenger route clear. '+passenger.waiting+'.':'Fit the whole freight in the loop, set the passenger route, then signal with H.';
+                next=passenger?.released?'Keep the passenger route clear. '+passenger.waiting+'.':'Fit the whole freight in the loop, set the passenger route, then use Signal departure.';
             }
             else if(task.type==='crew')next=`Stop beside ${zone.name} for ${task.dwell||5} seconds to board the crew.`;
             else if(task.type==='rescue'){
@@ -352,7 +352,7 @@
         for(const t of st.traffic) {
             if(t.finished)continue;
             t.reserved=[];
-            if(!t.released){t.waiting='Awaiting your signal · H';continue;}
+            if(!t.released){t.waiting='Awaiting Signal departure';continue;}
             const head=bounds(t).hi,horizon=t.v*t.v/.8+70;
             let stop=t.path.at(-1).end+t.length+20;t.waiting='Running';
             for(let i=0;i<t.path.length;i++) {
@@ -580,7 +580,7 @@
             const totalMass=eg.cars.reduce((s,c)=>s+c.mass,0)+hit.cut.cars.reduce((s,c)=>s+c.mass,0);
             const velocity=otherMoving?(eg.cars.reduce((s,c)=>s+c.mass*c.v,0)+hit.cut.cars.reduce((s,c)=>s+c.mass*c.v*orientation,0))/totalMass:0;
             eg.cars.forEach(c=>{c.q-=hit.a.sign*Math.max(0,correction);c.v=velocity;});hit.cut.cars.forEach(c=>c.v=velocity*orientation);
-            st.power=0;st.helper=0;st.notice=st.bufferImpact.speed>COUPLING_SPEED?'Hard buffer contact. Back away beyond 3 m and approach slowly.':'Buffers touching. Press F to couple.';
+            st.power=0;st.helper=0;st.notice=st.bufferImpact.speed>COUPLING_SPEED?'Hard buffer contact. Back away beyond 3 m and approach slowly.':'Buffers touching. Use Couple.';
         }
         const approach=nearby(st,eg,3);
         if(st.bufferImpact&&(!approach||impactKey(approach)!==st.bufferImpact.key))st.bufferImpact=null;

@@ -2477,3 +2477,12 @@ body[data-theme="rampage"] .review-controls { background:#f6f1dbed; color:#31483
 .support-link a { color:inherit; text-decoration:underline; text-underline-offset:3px; }
 .permanent-support { padding:5px 14px; margin:0; text-align:center; font-size:11px; }
 @media(max-width:650px) { .world-tabs { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+/* Coarse, non-hovering primary input is the best available tablet heuristic.
+   Screen width and touch support alone would also hide hints on laptops. */
+@media (hover: none) and (pointer: coarse) {
+  body:not(.keyboard-used) kbd,
+  body:not(.keyboard-used) .key-hint,
+  body:not(.keyboard-used) .key-row,
+  body:not(.keyboard-used) .keyboard-only { display: none !important; }
+}

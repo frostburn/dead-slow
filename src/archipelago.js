@@ -50,7 +50,7 @@
         {
             id: 'bigger-boat', name: 'A Bigger Boat', kind: 'Tug initiation · a 56-metre yacht', world: [520, 310], start: [153, 156, 0], spec: TUG, berth: berth(445, 156),
             brief: 'Elvara has lost her engine. Your stern is already near her bow: make fast with F, take up the slack gently, and tow her into the broad green rescue berth. Then moor Sivra at the service pier.',
-            tip: 'F makes or releases the line. Hold J to reel in, K to pay out. A rope pulls; it cannot push or brake the yacht for you. Slow early and let her coast into her own berth.',
+            tip: 'Use the towline button to make or release the line. Hold Reel in or Pay out. A rope pulls; it cannot push or brake the yacht for you. Slow early and let her coast into her own berth.',
             pace: [195, 285, 410], towables: [boat('elvira', 'ELVARA', 80, 156, 56, 13, 2.4)], jobs: [tow('elvira', 'Elvara · rescue berth', 326, 156, 80, 36)],
             obstacles: [quay(277, 178, 89, 13, 'RESCUE QUAY'), quay(416, 171, 64, 13, 'SERVICE PIER')],
             islands: [island(248, 66, 64, 33, 'Rönnvikka', 6), island(246, 254, 76, 33, '', 7), island(43, 69, 24, 29, '', 8)]

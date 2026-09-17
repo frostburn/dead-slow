@@ -7,7 +7,7 @@
         id: 'gerbo-first-outing', name: 'A Small Problem in Seedhaven', kind: 'Rolling / ridge / lake / two districts',
         start: [130, 530, 0], world: [1500, 920], pace: [125, 180, 260], standalone: false,
         brief: 'Gerbozilla has outgrown the exercise wheel. Build a run-up over the ridge, coast across Blue Lake, flatten Seedhaven’s two evacuated districts, then settle in the recovery meadow. The northern district needs a little redirection.',
-        tip: 'Push with WASD or the arrows. Push against your motion to brake. Water removes traction, not momentum. Space / F gives 3 seconds of protection; recharge takes another 6 seconds.',
+        tip: 'Hold the direction buttons to push. Push against your motion to brake. Water removes traction, not momentum. Shield gives 3 seconds of protection; recharge takes another 6 seconds.',
         spec: { name: 'GERBOZILLA', length: 48, beam: 48, mass: 8, draft: 0, vessel: 'ball' },
         // Used only by generic record/UI setup. Gerbozilla has circular, not ship-hull, geometry.
         berth: { x: 1340, y: 365, a: 0, l: 150, w: 150, speed: .8 },
@@ -184,7 +184,7 @@
     const fire = course('gerbo-pepperbreath', 'Pepperbreath at Marshmallow Keep', 'Pepper pickup / fire arcs / armored walls',
         [180,680,0],[1800,1300],
         'Marshmallow Keep’s low stone walls stop even a mountain-sized exercise ball. Collect the giant pepper, then circle the keep and breathe fire over its walls into three armored districts. There is no ramming shortcut through the masonry.',
-        'Hold H to breathe fire toward your last directional push. Release H to refill the breath meter. Low walls can be fired over; giant black boulders block the flame. Fire is unavailable in deep water. Shield the automated return fire.', {
+        'Hold Fire to breathe toward your last directional push. Release Fire to refill the breath meter. Low walls can be fired over; giant black boulders block the flame. Fire is unavailable in deep water. Shield the automated return fire.', {
             sheet:'MARSHMALLOW KEEP',subtitle:'PEPPERBREATH',
             hills:[{x:240,y:220,rx:120,ry:60,height:18,lobes:[{x:55,y:-20,rx:65,ry:45,height:8}]}],
             forests:[{x:420,y:320,rx:210,ry:150,shore:[.18,.08,1],density:.65}],

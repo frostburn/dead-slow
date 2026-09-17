@@ -1,6 +1,53 @@
 (function(root) {
     'use strict';
     const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+    // A breathy three-chime steam whistle: a short call followed by a long one.
+    // Separate from the low, saturated reeds used by ships.
+    function soundWhistle(ctx,destination=ctx.destination) {
+        const now=ctx.currentTime,duration=1.9,bus=ctx.createGain(),filter=ctx.createBiquadFilter();
+        const sources=[],nodes=[bus,filter],calls=[[0,.42],[.65,1.05]],peak=.065;
+        filter.type='lowpass';filter.frequency.value=2400;filter.Q.value=.5;
+        filter.connect(bus);bus.connect(destination);bus.gain.setValueAtTime(0,now);
+        for(const [start,length] of calls) {
+            bus.gain.setValueAtTime(0,now+start);
+            bus.gain.linearRampToValueAtTime(peak,now+start+.09);
+            bus.gain.setValueAtTime(peak,now+start+length-.14);
+            bus.gain.linearRampToValueAtTime(0,now+start+length);
+        }
+        const wave=ctx.createPeriodicWave(new Float32Array(7),new Float32Array([0,1,.32,.13,.07,.025,.01]));
+        for(const frequency of [392,493.88,587.33]) {
+            const pipe=ctx.createOscillator(),gain=ctx.createGain();gain.gain.value=.24;
+            pipe.setPeriodicWave(wave);
+            for(const [start,length] of calls) {
+                pipe.frequency.setValueAtTime(frequency*.94,now+start);
+                pipe.frequency.exponentialRampToValueAtTime(frequency,now+start+.11);
+                pipe.frequency.setValueAtTime(frequency,now+start+length-.14);
+                pipe.frequency.linearRampToValueAtTime(frequency*.97,now+start+length);
+            }
+            pipe.connect(gain);gain.connect(filter);sources.push(pipe);nodes.push(gain);
+        }
+        const steam=ctx.createBufferSource(),air=ctx.createBiquadFilter(),airGain=ctx.createGain();
+        const buffer=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate),data=buffer.getChannelData(0);
+        let seed=40;for(let i=0;i<data.length;i++){seed=(1664525*seed+1013904223)>>>0;data[i]=seed/2147483648-1;}
+        steam.buffer=buffer;steam.loop=true;air.type='bandpass';air.frequency.value=1700;air.Q.value=.6;airGain.gain.value=.18;
+        steam.connect(air);air.connect(airGain);airGain.connect(filter);sources.push(steam);nodes.push(air,airGain);
+        let ended=0,stopped=false;
+        for(const source of sources) {
+            source.onended=()=>{source.disconnect();if(++ended===sources.length)nodes.forEach(n=>n.disconnect());};
+            source.start(now);source.stop(now+duration);
+        }
+        return {until:now+duration,stop(){
+            if(stopped)return;stopped=true;
+            const time=ctx.currentTime,age=time-now;
+            let held=0;
+            for(const [start,length] of calls) {
+                const t=age-start;
+                if(t>=0&&t<length)held=peak*Math.min(1,t/.09,(length-t)/.14);
+            }
+            bus.gain.cancelScheduledValues(time);bus.gain.setValueAtTime(held,time);bus.gain.linearRampToValueAtTime(0,time+.012);
+            for(const source of sources)try{source.stop(time+.02);}catch(_){/* Already ended. */}
+        }};
+    }
     function createTrain(ctx,destination=ctx.destination) {
         const bus=ctx.createGain(),motor=ctx.createOscillator(),motorGain=ctx.createGain(),motorFilter=ctx.createBiquadFilter();
         const noise=ctx.createBufferSource(),rolling=ctx.createGain(),rollFilter=ctx.createBiquadFilter();
@@ -66,5 +113,5 @@
             dispose() {if(disposed)return;stop();disposed=true;for(const s of [motor,noise,squeal]){s.stop();s.disconnect();}for(const n of [bus,motorGain,motorFilter,rolling,rollFilter,squealGain,squealFilter])n.disconnect();}
         };
     }
-    const api={createTrain};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.RailAudio=api;
+    const api={createTrain,soundWhistle};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.RailAudio=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

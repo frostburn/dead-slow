@@ -89,7 +89,7 @@
             },[450,650,950]),
         level('long-grade-4','Meet at Rook’s Hollow',
             'An opposing passenger service is due through the valley. Meet it at Rook’s Hollow, then bring the complete freight into East Yard.',
-            'Rook’s loop fits the freight; the short refuge does not. Clear both points, set them back to Main line, then press H to signal the passenger’s departure. It waits at red signals if its route is blocked.',
+            'Rook’s loop fits the freight; the short refuge does not. Clear both points, set them back to Main line, then use Signal departure to signal the passenger’s departure. It waits at red signals if its route is blocked.',
             [2200,850],{
                 scenery:'valley',thermal:false,
                 nodes:{west:[80,450,20],exit:[65,110,20],a:[570,450,20],b:[1090,450,20],c:[1460,450,18],d:[1590,450,18],east:[2130,450,18]},
@@ -208,7 +208,7 @@
             },[700,1000,1400]),
         level('long-grade-9','A Push from Behind',
             'Reverse the ore train gently onto the waiting helper, then take both engines over the saddle. Leave the helper secured in Summit Yard and deliver the freight to the valley exchange.',
-            'Stop close to the helper and couple with F, release its handbrake, then reverse for the climb. E / Q raises / lowers rear assistance. Share the climb; ease front power at the crest, then the rear as the tail comes over.',
+            'Stop close to the helper and use Couple, release its handbrake, then reverse for the climb. The Helper control raises or lowers rear assistance. Share the climb; ease front power at the crest, then the rear as the tail comes over.',
             [2600,1200],{
                 scenery:'valley',thermal:false,helper:{tractive:190000,workingPull:130000,pullGrace:16,compressionGrace:3},couplerLimit:300000,compressionLimit:140000,
                 nodes:{start:[80,700,20],foot:[680,700,20],crest:[1380,410,40],yard:[1910,490,38],end:[2470,930,28]},
@@ -269,7 +269,7 @@
             },[1100,1600,2100]),
         level('long-grade-12','The Long Grade',
             'Bring the winter-supply freight from the plateau to the coastal terminal. Use the rear helper across the summit, leave it secured in Summit Yard, then manage the long descent and meet the coastal passenger at Lantern Viaduct.',
-            'Ease each engine as its end crests. Fit the whole freight in Lantern loop, set both ends to Main viaduct and Summit Junction to Ridge tunnel, then signal the passenger with H. Keep cool brakes for the terminal.',
+            'Ease each engine as its end crests. Fit the whole freight in Lantern loop, set both ends to Main viaduct and Summit Junction to Ridge tunnel, then use Signal departure for the passenger. Keep cool brakes for the terminal.',
             [3800,2000],{
                 scenery:'valley',weather:'snow',thermal:true,
                 terrain:{interval:5,heights:[[0,0,43],[3800,0,66],[0,2000,16],[3800,2000,10],[700,1100,29],[1500,1300,30],[3000,650,48]]},

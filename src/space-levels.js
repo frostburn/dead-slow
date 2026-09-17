@@ -12,7 +12,7 @@
             id: 'vacuum', name: 'Nothing to Push Against', kind: 'Burn · coast · counterburn',
             world: [900, 560], start: [120, 370, 0], berth: berth(760, 180),
             brief: 'Welcome to the Black Meridian. Meridian Station is above your departure line. Combine a forward burn with lateral jets, let two outbound rocks pass, then remove both components of your velocity. There is no water, no drag and no automatic stabilization.',
-            tip: 'W/S select fore/aft thrust. A/D fire rotational jets; counterfire to stop spinning. Q/E translate sideways without turning. Space cuts thrust, not velocity.',
+            tip: 'Use the thrust telegraph for fore/aft thrust, rotation buttons to turn, and lateral jets to translate sideways. Counterfire to stop spinning. Cut thrust stops the engine, not your velocity.',
             pace: [145, 210, 300], space: {
                 mission: 'arrival', fuel: 90, acceleration: .36,
                 asteroids: [
@@ -78,7 +78,7 @@
         {
             id: 'equal-and-opposite', name: 'Equal and Opposite', kind: 'Attractor / repulsor rescue',
             world: [1100, 640], start: [190, 355, 0], spec: tug, berth: berth(920, 220),
-            brief: 'The survey launch has lost propulsion. Lock your beam with F. Hold J to attract it or K to repel it. Both vessels feel equal and opposite forces. Settle the launch in the green rescue cradle, release the beam, and dock Moth.',
+            brief: 'The survey launch has lost propulsion. Use Lock beam, then hold Attract or Repel. Both vessels feel equal and opposite forces. Settle the launch in the green rescue cradle, release the beam, and dock Moth.',
             tip: 'Beam range is 170 m; rock blocks the line of sight. Attraction is not a brake on the pair’s centre of mass. Reverse the beam or reposition to remove the launch’s velocity before capture.',
             pace: [280, 440, 650], space: {
                 mission: 'rescue', fuel: 220, acceleration: .65,

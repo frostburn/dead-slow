@@ -194,7 +194,7 @@
                 return `${b.name} · securing shore lines ${state.towHold.toFixed(1)} / ${job.hold || 2}s`;
             if (state.line)
                 return `${b.name} → rescue berth · ${(state.line.tension * 100).toFixed(0)}% line load · J / K winch`;
-            return `${b.name} · put your stern near her bow, slow down, press F to make fast.`;
+            return `${b.name} · put your stern near her bow, slow down, use Make fast to make fast.`;
         }
         const count = job.type === 'load' ? job.vehicles.length : job.count;
         if (state.closing)
