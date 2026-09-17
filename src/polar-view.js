@@ -121,7 +121,7 @@
         if(o?.survey)set('polar-tow-readout',o.line?`${Math.round(o.line.length)} m LINE · ${Math.round(o.line.tension*100)}% TENSION`:'STERN TO BOW · 55 m MAX · SLOW RELATIVE MOTION');
         if(o?.gun){
             const g=o.gun,targets=I.operations.targets(st),target=targets.find(t=>t.id===g.target);
-            html('polar-targets',targets.map(t=>`<button data-polar-target="${t.id}" class="${t.id===g.target?'selected':''}" aria-pressed="${t.id===g.target}">${t.name} · ${Math.ceil(t.ship.hull)}%</button>`).join(''));
+            html('polar-targets',targets.map(t=>`<button data-polar-target="${t.id}" class="${t.id===g.target?'selected':''}" aria-pressed="${t.id===g.target}">${t.name} · ${Math.ceil(t.ship.hull/(t.ship.maxHull||100)*100)}%</button>`).join(''));
             const ready=g.solution>=g.hold&&g.cooldown===0&&g.ammo>0;
             set('polar-gun-readout',`${target?target.name+' · '+Math.round(Math.hypot(target.ship.x-s.x,target.ship.y-s.y))+' m':'SELECT A HOSTILE CONTACT'} / ${g.ammo} ROUNDS · ${g.cooldown>0?'RELOAD '+g.cooldown.toFixed(1)+' s':ready?'SOLUTION READY':g.reason+' · '+g.solution.toFixed(1)+' / '+g.hold+' s'}`);
             $('polar-fire').disabled=status!=='running'||!ready;
@@ -183,7 +183,7 @@
             for(const a of op.assets){
                 ctx.fillStyle=a.ship.hull<=0?'#46504c':a.team==='hostile'?'#966c60':a.team==='civilian'?'#b5c8bc':'#647e77';ctx.fillRect(a.x,a.y,a.w,a.h);
                 ctx.strokeStyle=a.team==='hostile'?'#f3a785':'#b9ddd0';ctx.lineWidth=2;ctx.strokeRect(a.x,a.y,a.w,a.h);
-                label(a.name+(a.ship.hull<=0?' · DISABLED':' · '+Math.ceil(a.ship.hull)+'%'),a.ship.x,a.y-13,a.team==='hostile'?'#ffc2a2':'#d3ebe0',9);
+                label(a.name+(a.ship.hull<=0?' · DISABLED':' · '+Math.ceil(a.ship.hull/a.hp*100)+'%'),a.ship.x,a.y-13,a.team==='hostile'?'#ffc2a2':'#d3ebe0',9);
             }
             if(op.gun){
                 const g=op.gun,s=run.ship;ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.arc(s.x,s.y,g.range,s.a-g.arc,s.a+g.arc);ctx.closePath();ctx.fillStyle='#efc67b0a';ctx.fill();ctx.strokeStyle='#f3c78040';ctx.lineWidth=1;ctx.stroke();

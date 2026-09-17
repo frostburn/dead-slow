@@ -14,8 +14,8 @@
     }
     function create(level,ice){
         const c=level.polar;if(!['survey','defense','strike'].includes(c.mission))return null;
-        const entity=(n,team)=>({...n,team,active:team==='patrol'||n.spawn===0,waypoint:0,planAt:0,route:n.route?.map(p=>p.slice()),ship:P.ship(...n.start,{...n.spec,id:n.id,name:n.name,required:false,hostile:team==='hostile',hull:team==='hostile'?72:100}),gun:team==='hostile'?gun({range:215,arc:.95,hold:3.5,reload:18,damage:18,shellSpeed:48,maxSpeed:.9,maxTurn:.025}):null});
-        const assets=(c.assets||[]).map(a=>({...a,active:true,fixed:true,poly:P.rect(a),ship:P.ship(a.x+a.w/2,a.y+a.h/2,a.a||0,{id:a.id,name:a.name,length:a.w,beam:a.h,mass:1e6,hull:a.hp,moored:true}),gun:a.gun?gun(a.gun):null}));
+        const entity=(n,team)=>({...n,team,active:team==='patrol'||n.spawn===0,waypoint:0,planAt:0,route:n.route?.map(p=>p.slice()),ship:P.ship(...n.start,{...n.spec,id:n.id,name:n.name,required:false,hostile:team==='hostile',hull:team==='hostile'?72:100,maxHull:team==='hostile'?72:100}),gun:team==='hostile'?gun({range:215,arc:.95,hold:3.5,reload:18,damage:18,shellSpeed:48,maxSpeed:.9,maxTurn:.025}):null});
+        const assets=(c.assets||[]).map(a=>({...a,active:true,fixed:true,poly:P.rect(a),ship:P.ship(a.x+a.w/2,a.y+a.h/2,a.a||0,{id:a.id,name:a.name,length:a.w,beam:a.h,mass:1e6,hull:a.hp,maxHull:a.hp,moored:true}),gun:a.gun?gun(a.gun):null}));
         const melts=(c.melts||[]).map(m=>({...m,opened:0,total:0})),thaw=[];
         for(let k=0;k<ice.tiles.length;k++)if(ice.thickness[k]>0&&ice.thickness[k]<1){
             const p=ice.tiles[k];let next=null;
