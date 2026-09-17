@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#07141d"><meta name="description" content="Dead Slow: seventy-two maritime, spacecraft, giant hamster-ball and freight railway trials, and the Century Ship bonus, local records, and ghost runs. A self-contained offline browser game.">
+<meta name="theme-color" content="#07141d"><meta name="description" content="Dead Slow: seventy-two maritime, spacecraft, giant hamster-ball and freight railway trials, three polar passage assignments and the Century Ship bonus, local records, and ghost runs. A self-contained offline browser game.">
 <title>DEAD SLOW — Harbor Trials</title>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -45,6 +45,11 @@
    <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </section>
   <aside class="sidebar">
+   <section id="polar-panel" class="polar-panel" aria-label="Polar passage and convoy orders" hidden>
+    <div id="polar-dispatch" class="section-label"></div><strong id="polar-readout" role="status"></strong><div id="polar-ice"></div>
+    <div id="polar-fleet"></div><p id="polar-legend"></p>
+    <details class="polar-mobile-splits"><summary>Split times · elapsed IGT</summary><div id="polar-splits" class="splits"></div></details>
+   </section>
    <div class="section-label">CURRENT ASSIGNMENT</div><h1 class="mission-name" id="mission-name"></h1><p class="brief" id="brief"></p>
    <div class="rule"></div>
    <div class="instruments"><div><div class="section-label" id="speed-frame-label">SPEED / GROUND</div><div class="reading green"><span id="speed">0.0</span> <small id="speed-unit">kn</small></div><div class="motion-label" id="speed-direction">STOPPED</div><div class="drift-label" id="drift">NO SIDEWAYS DRIFT</div></div><div><div class="section-label" id="heading-label">BOW HEADING</div><div class="reading"><span id="heading">090</span><small>°</small></div></div><div><div class="section-label" id="contact-count-label">CONTACTS</div><div class="reading"><span id="contacts">0</span></div></div><div><div class="section-label" id="engine-output-label">ENGINE OUTPUT</div><div class="reading"><span id="engine-read">0</span><small>%</small></div></div></div>
@@ -91,6 +96,10 @@
 <script src="src/rail-scenery.js"></script>
 <script src="src/rail-presentation.js"></script>
 <script src="src/rail-view.js"></script>
+<script src="src/polar-levels.js"></script>
+<script src="src/polar-grid.js"></script>
+<script src="src/polar.js"></script>
+<script src="src/polar-view.js"></script>
 <script src="src/levels.js"></script>
 <script src="src/jobs.js"></script>
 <script src="src/compatibility.js"></script>
@@ -107,5 +116,6 @@
 <script src="src/console.js"></script>
 <script src="src/simulations.js"></script>
 <script src="src/rail-adapter.js"></script>
+<script src="src/polar-adapter.js"></script>
 <script src="src/game.js"></script>
 </body></html>

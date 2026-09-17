@@ -168,7 +168,7 @@ test('integration remains close when substep is halved', () => {
     assert.ok(Math.abs(a.a - b.a) < .001);
 });
 test('all 36 spawns and target hulls are clear of fixed geometry', () => {
-    const harborLevels = levels.filter(l => !l.space && !l.rampage && !l.rail);
+    const harborLevels = levels.filter(l => !l.space && !l.rampage && !l.rail && !l.polar);
     assert.equal(harborLevels.length, 36);
     for (const l of harborLevels) {
         const spawn = P.ship(...l.start, l.spec), target = P.ship(l.berth.x, l.berth.y, l.berth.a, l.spec);

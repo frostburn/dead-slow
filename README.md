@@ -5,7 +5,7 @@ Report [bugs and feature requests](https://github.com/frostburn/dead-slow/issues
 
 **Neutral is not a brake.** A top-down ship-handling game about arriving slowly,
 with enough room left to stop—at sea, in vacuum, inside a giant hamster ball, or along a freight railway.
-Version 6 has seventy-two circuit stages across six playable worlds in an eight-world atlas, a separate Century Ship bonus, local speedrun
+Version 6 has seventy-two circuit stages across six playable worlds in an eight-world atlas, a separate Century Ship bonus, three opening Pale Reach assignments, local speedrun
 records, personal-best ghosts, keyboard controls and a multitouch helm.
 
 ## The eight-world atlas
@@ -18,13 +18,24 @@ records, personal-best ghosts, keyboard controls and a multitouch helm.
 | 4 | Gerbozilla’s Rampage | 12 playable courses |
 | 5 | The Long Grade | 12 playable assignments |
 | 6 | The Black Meridian | 12 playable sectors + the Century Ship bonus |
-| 7 | Race for the Pale Reach | Coming soon — 12 named placeholders |
+| 7 | Race for the Pale Reach | First 3 playable assignments; 9 planned |
 | 8 | Tow the Impossible | Coming soon — 12 named placeholders |
 
-Gray chapters can be inspected but not launched. The 24 placeholder missions
+Gray chapters can be inspected but not launched. The 21 placeholder missions
 are not counted as playable levels or included in circuits. The Grand Tour visits
 **1 → 2 → 3 → 4 → 5 → 6**, seventy-two assignments; the Century Ship remains separate.
-There are **73 playable assignments and 41 author recordings**. Every complete world has its own twelve-stage circuit.
+There are **76 playable assignments and 41 author recordings**. Every complete world has its own twelve-stage circuit.
+
+World 7 opens **Race for the Pale Reach** with The First Fracture, Borrowed Water,
+and Deliveries Beyond the Map. Cut sheet ice bow first, widen a turning pocket,
+keep a laden supply ship behind an independent icebreaker, then prepare routes
+for two Council supply ships. Hold and Proceed are physical captain’s orders;
+both deliveries **and both returns** are required. Broken channels visibly fill
+with slush, while substantial floes and the crossing iceberg remain solid moving
+objects. Pausing freezes all ships and ice together. The first three assignments
+have individual records and ghosts; they remain outside the Grand Tour and do
+not yet form a World 7 circuit. The remaining nine missions are named plans,
+including later towing, combat and submarine operations.
 
 World 5 starts with collecting two quarry wagons, then a station run-around, then a heavy descent with a gentler branch and cooling loop. W/S changes power, A/D the train brake, Q/E the locomotive brake, X reverses at rest, F couples, and B sets or releases the selected cut’s handbrakes. Click a link in the train strip to uncouple. Point buttons lock while occupied. The map shows the head and tail; the strip shows each wagon’s grade. Enter `DeadSlow.watch("long-grade-1", 8)` in the browser console to watch the tutorial recording. `DeadSlow.normal()` starts a fresh attempt at normal speed. See [rail engine notes](docs/RAILWAY.md) for architecture and validation.
 
@@ -156,7 +167,7 @@ Run one at a time. All twelve courses have input-only reference recordings; the
 ten revised-map recordings are verified for version 5.0.0. They are not
 claimed optimal. Read the [field guide](docs/GERBOZILLA.md) for mechanics and tests.
 
-There are **41 recordings and 73 selectable assignments**. All six playable worlds
+There are **41 recordings and 76 selectable assignments**. All six playable worlds
 have twelve-stage circuits; the **Grand Tour has 72 stages**. The Century Ship
 is the single bonus, excluded from every circuit. Each route has separate
 overall and clean records. The World 4 HUD, result screen and field log show

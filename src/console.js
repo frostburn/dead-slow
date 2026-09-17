@@ -50,7 +50,7 @@
             const id = typeof worldOrId === 'number'
                 ? bridge.levels.find(l => l.worldNumber === worldOrId)?.campaign : worldOrId;
             if (id !== 'grand-tour' && !bridge.levels.some(l => l.campaign === id && !l.bonus && !l.standalone))
-                throw new RangeError('Circuit unavailable. Worlds 1, 2, 3, 4 and 6 are playable; 5, 7 and 8 are coming soon.');
+                throw new RangeError('Circuit unavailable. Worlds 1–6 have complete circuits; World 7 has three individual assignments and World 8 is planned.');
             unlocked = true; rate = speed; playback = null; lastReport = null;
             launching = true;
             try { bridge.circuit(id); } finally { launching = false; }
@@ -122,6 +122,7 @@
                 const commands = [
                     ['DeadSlow.tour(8)', 'Start a manual 72-stage Grand Tour at 8×, unranked from departure.'],
                     ['DeadSlow.circuit(3, 8)', 'Start a twelve-stage world playtest; keep speed across retry/next.'],
+                    ['DeadSlow.convoy("morrow", "proceed")', 'Order a World 7 supply captain to proceed or hold; practice only.'],
                     ['DeadSlow.progress()', 'Compact current mission, circuit clock and completed sector splits.'],
                     ['DeadSlow.levels()', 'List all assignments; world and stage numbers start at 1.'],
                     ['DeadSlow.level(3, 4)', 'Start The Floating Sauna as unranked practice (or supply an id).'],
@@ -177,6 +178,11 @@
                 practice('railway command');return bridge.rail(name,value);
             },
             line() { live(); practice('line override'); bridge.line(); },
+            convoy(id,order) {
+                live();
+                if(!bridge.state().run.polar||!bridge.state().run.polar.fleet.some(f=>f.id===id&&!f.leader)||!['hold','proceed'].includes(order))throw new RangeError('Choose a supply vessel ID and hold or proceed.');
+                practice('convoy order');return bridge.convoy(id,order);
+            },
             warp(x, y, degrees = 0) {
                 if (bridge.state().run.rail) throw new Error('Rail vehicles stay on their track. Retry to reset the train.');
                 const [w, h] = bridge.state().level.world;

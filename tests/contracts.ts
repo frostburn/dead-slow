@@ -12,3 +12,9 @@ const missingPassenger:Task={id:'meet',text:'Meet',type:'traffic'};
 // @ts-expect-error adapters must expose readiness and cleanliness
 const incomplete:Adapter<object>={id:'new-world',create:()=>({}),step:()=>{}};
 void [command,task,badPower,staleLink,missingPassenger,incomplete];
+
+import type {PolarPort} from '../src/contracts.js';
+declare const polar:PolarPort;
+declare const polarRun:Parameters<PolarPort['command']>[0];
+// @ts-expect-error convoy orders are intentionally limited to hold and proceed
+polar.command(polarRun,'morrow','warp');

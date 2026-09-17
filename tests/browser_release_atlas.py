@@ -3,6 +3,7 @@ from pathlib import Path
 import json,shutil
 from playwright.sync_api import sync_playwright
 from browser_rail import check_railway
+from browser_polar import check_polar
 ROOT=Path(__file__).resolve().parents[1];OUT=ROOT/'reports/release';OUT.mkdir(parents=True,exist_ok=True)
 checks=[]
 def check(name,ok):
@@ -40,7 +41,7 @@ with sync_playwright() as p:
     check('World 5 offers its complete circuit',page.locator('[data-action=marathon]').is_enabled())
     for w in [7,8]:
         page.evaluate('(w)=>DeadSlowTest.courses(w)',w)
-        check(f'World {w} shows 12 disabled future missions',page.locator('.level-card:disabled').count()==12 and 'COMING SOON' in page.locator('#dialog').inner_text())
+        check(f'World {w} separates playable and planned missions',page.locator('.level-card:disabled').count()==(9 if w==7 else 12) and page.locator('.level-card:not(:disabled)').count()==(3 if w==7 else 0) and 'COMING SOON' in page.locator('#dialog').inner_text())
         check(f'World {w} cannot start a circuit',page.locator('[data-action=marathon]').is_disabled())
     check('Eight chapter tabs remain inspectable',page.locator('.world-tab').count()==8)
     page.screenshot(path=str(OUT/'eight-world-atlas.png'))
@@ -104,14 +105,14 @@ with sync_playwright() as p:
     check_railway(page,check,OUT)
     # Return to the same CSS size after another renderer changes the bitmap.
     page.set_viewport_size({'width':1440,'height':1000})
-    for world in [1,2,3,4,6]:
+    for world in [1,2,3,4,6,7]:
         for destination in [world,5,world]:
             page.evaluate('(w)=>{DeadSlow.level(w,1);DeadSlow.speed(0)}',destination)
             page.wait_for_timeout(60)
         check(f'Train to World {world} restores the canvas bitmap',page.evaluate("""(()=>{const c=document.querySelector('#sea'),r=c.getBoundingClientRect(),d=Math.min(devicePixelRatio,2);return c.width===Math.round(r.width*d)&&c.height===Math.round(r.height*d)})()"""))
         check(f'Train-only panels disappear in World {world}',not page.locator('#rail-info').is_visible() and not page.locator('#rail-grade').is_visible() and not page.locator('#rail-panel').is_visible())
     page.screenshot(path=str(OUT/'rail-to-marine.png'))
-    for world in [1,2,3,4,5,6]:
+    for world in [1,2,3,4,5,6,7]:
         page.evaluate('(w)=>{DeadSlow.level(w,1);DeadSlow.speed(0);const r=DeadSlowTest.state.run;r.time=12.5;DeadSlowTest.finish();const s=DeadSlowTest.state;s.storage.stages[s.level.id].runs=[{time:10,contacts:0,clean:true},{time:15,contacts:1,clean:false}]}',world)
         check(f'World {world} completion offers consistent actions',page.locator('#dialog [data-action="log"]').count()==1 and page.locator('#dialog [data-action="retry"]').count()==1 and page.locator('#dialog [data-action="courses"]').count()==1 and page.locator('#dialog .primary').get_attribute('data-action')=='next')
         page.locator('#dialog [data-action="log"]').click()
@@ -124,6 +125,7 @@ with sync_playwright() as p:
             page.screenshot(path=str(OUT/'rail-result.png'))
             page.locator('#dialog [data-action="log"]').click()
             page.screenshot(path=str(OUT/'rail-logbook.png'))
+    check_polar(page,check,OUT)
     check('No page errors',not errors)
     browser.close()
 (OUT/'browser-atlas.json').write_text(json.dumps({'passed':len(checks),'checks':checks},indent=2))

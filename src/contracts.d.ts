@@ -67,3 +67,39 @@ export interface RailServices {
     finish():void;
     fail():void;
 }
+
+export interface PolarInput {rudder:number;thruster:number}
+export interface PolarState {
+    level:Level;
+    contacts:number;
+    fleet:{ship:{hull:number}}[];
+    failure:string|null;
+    complete:boolean;
+    stats:Record<string,number>;
+}
+export interface PolarRun {polar:PolarState;ship:{hull:number}}
+export interface PolarPort {
+    create(level:Level):PolarRun;
+    step(level:Level,run:PolarRun,input:PolarInput,dt:number):void;
+    ready(run:PolarRun):boolean;
+    command(run:PolarRun,id:string,order:'hold'|'proceed'):boolean;
+}
+export interface PolarViewPort {
+    update(level:Level,run:PolarRun,status:string,format:Format):void;
+    render(canvas:HTMLCanvasElement,level:Level,run:PolarRun,zoom:number,options?:unknown):void;
+    dialog(kind:string,level:Level,run:PolarRun,format:Format,hasNext?:boolean,race?:unknown,actions?:string):string;
+}
+export interface PolarAdapter extends Adapter<PolarRun> {
+    command:PolarPort['command'];
+    update:PolarViewPort['update'];
+    render:PolarViewPort['render'];
+    dialog:PolarViewPort['dialog'];
+    result(run:PolarRun):{polar:Record<string,number>};
+}
+export interface PolarServices {
+    polar:PolarPort;
+    view:PolarViewPort;
+    input:PolarInput;
+    finish():void;
+    fail():void;
+}

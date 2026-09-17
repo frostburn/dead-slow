@@ -21,7 +21,8 @@
             clean:()=>run.contacts===0&&run.wakes===0&&run.groundings===0&&run.jobs.stats.lineBreaks===0},
         {id:'rolling', create(l) { const state=createMarineState(l); state.rampage=B.create(l,state.ship); return state; },
             step:(_run,dt)=>advanceRampage(dt), ready:()=>B.ready(run), clean:()=>run.rampage.stats.damage===0},
-        railSimulation
+        railSimulation,
+        PolarSimulation.create({polar:PaleReach,view:PaleReachView,input,finish,fail(){status='failed';clearInput();audio.tick(run.ship,false);showFailure();}})
     ]);
     let simulation;
     function createMarineState(l) {
@@ -50,7 +51,7 @@
     }
     function applyTheme() {
         document.body.dataset.theme = level.theme;
-        $('world-label').textContent = `WORLD ${level.worldNumber} · ${level.rail ? 'THE LONG GRADE' : level.rampage ? 'GERBOZILLA’S RAMPAGE' : level.space ? 'THE BLACK MERIDIAN' : level.theme === 'night' ? 'NIGHT SHIFT' : level.theme === 'archipelago' ? 'SUMMER SERVICE' : 'DAY WATCH'}`;
+        $('world-label').textContent = `WORLD ${level.worldNumber} · ${level.polar ? 'THE PALE REACH' : level.rail ? 'THE LONG GRADE' : level.rampage ? 'GERBOZILLA’S RAMPAGE' : level.space ? 'THE BLACK MERIDIAN' : level.theme === 'night' ? 'NIGHT SHIFT' : level.theme === 'archipelago' ? 'SUMMER SERVICE' : 'DAY WATCH'}`;
     }
     function hasNext() {
         return marathon ? marathon.position + 1 < marathon.route.length : LEVELS[index + 1]?.campaign === level.campaign && !LEVELS[index + 1]?.bonus;
@@ -129,6 +130,7 @@
         HarborSpaceUI.prepare(level);
         G.prepare(level);
         (simulation.prepare || V.prepare)(level, railCommand);
+        PaleReachView.prepare(level,convoyCommand);
         // An assisted circuit stays assisted at 1× too, before begin() records
         // a departure. Otherwise later individual PBs could leak out of a tour.
         if (marathon?.practice) markPractice('Practice circuit');
@@ -300,6 +302,10 @@
         if (status !== 'running' || !run.rail) return false;
         const ok = simulation.command(run,name,value);
         updateHud(); return ok;
+    }
+    function convoyCommand(id,order) {
+        if(status!=='running'||!run.polar)return false;
+        const ok=simulation.command(run,id,order);updateHud();return ok;
     }
     function advance(dt) {
         if (status !== 'running')
@@ -567,7 +573,7 @@
  <div class="result-time">${format(run.time)}</div><div class="dialog-actions"><button class="primary" data-action="resume" autofocus>Resume practice</button><button data-action="retry">Retry fresh<span class="key-hint"> · Shift+R</span></button><button class="secondary" data-action="courses">${wording("Harbors", "Sectors")}</button></div>`);
     }
     function completionActions() {
-        const next=hasNext(),label=level.rail?'Next assignment →':level.rampage?'Next course →':run.space?'Next sector →':'Next harbor →';
+        const next=hasNext(),label=level.rail||level.polar?'Next assignment →':level.rampage?'Next course →':run.space?'Next sector →':'Next harbor →';
         return `<div class="dialog-actions"><button class="primary" data-action="${next?'next':'courses'}" autofocus>${next?label:'World map'}</button><button data-action="retry">Retry<span class="key-hint"> · Shift+R</span></button><button class="secondary small" data-action="log">Logbook</button>${next?'<button class="secondary small" data-action="courses">World map</button>':''}</div>`;
     }
     function runComparison(runs,filter) {
@@ -619,14 +625,14 @@
         const bonusArrivals = bonuses.filter(l => store.best(l.id)).length;
         openDialog('courses', `${topModal(w.name, `WORLD ${w.number} · ${w.subtitle}`)}
  <div class="world-tabs" role="tablist" aria-label="Select world">${WORLDS.map(v => `<button role="tab" aria-selected="${v.number === selectedWorld}" class="world-tab ${v.comingSoon ? 'coming-soon' : ''} ${v.number === selectedWorld ? 'active' : ''}" data-world="${v.number}"><span>WORLD ${v.number}</span><strong>${v.name}</strong><small>${v.subtitle}</small></button>`).join('')}</div>
- <p>${w.description}</p><div class="world-progress">${w.comingSoon ? '<span>12 PLANNED ASSIGNMENTS · COMING SOON</span><span>NOT YET PLAYABLE</span>' : `<span>${arrivals} / ${sectors.length} ${w.theme === 'rail' ? 'DELIVERIES COMPLETE' : w.theme === 'rampage' ? 'COURSES COMPLETE' : w.theme === 'space' ? 'SECTORS CLEARED' : 'HARBORS MOORED'}</span>${bonuses.length ? `<span>${bonusArrivals} / ${bonuses.length} BONUS CLEARED</span>` : ''}<span>${w.partial ? '3 OF 12 AVAILABLE' : 'ALL STAGES AVAILABLE'}</span>`}</div>
+ <p>${w.description}</p><div class="world-progress">${w.comingSoon ? '<span>12 PLANNED ASSIGNMENTS · COMING SOON</span><span>NOT YET PLAYABLE</span>' : `<span>${arrivals} / ${sectors.length} ${w.theme === 'polar' ? 'ASSIGNMENTS COMPLETE' : w.theme === 'rail' ? 'DELIVERIES COMPLETE' : w.theme === 'rampage' ? 'COURSES COMPLETE' : w.theme === 'space' ? 'SECTORS CLEARED' : 'HARBORS MOORED'}</span>${bonuses.length ? `<span>${bonusArrivals} / ${bonuses.length} BONUS CLEARED</span>` : ''}<span>${w.partial ? '3 OF 12 AVAILABLE' : 'ALL STAGES AVAILABLE'}</span>`}</div>
  ${marathon ? '<p class="subtle">Selecting an assignment starts an individual trial and ends your current circuit.</p>' : ''}
  <div class="level-grid">${stages.map(l => {
             if (l.comingSoon) return `<button class="level-card coming-soon" disabled aria-disabled="true"><span class="number">W${l.worldNumber} · ${String(l.stageNumber).padStart(2,'0')}</span><span class="name">${esc(l.name)}</span><span class="kind">Planned assignment</span><span class="pb">COMING SOON</span></button>`;
             const i = LEVELS.indexOf(l), b = store.best(l.id);
-            return `<button class="level-card ${i === index ? 'selected' : ''}" data-stage="${i}"><span class="number">W${l.worldNumber} · ${l.bonus ? 'BONUS' : (l.rail ? 'FREIGHT ' : l.rampage ? 'COURSE ' : l.space ? 'SECTOR ' : 'HARBOR ') + String(l.stageNumber).padStart(2, '0')}${store.best(l.id, true) ? ' · CLEAN' : ''}</span><span class="name">${l.name}</span><span class="kind">${l.kind}</span><span class="pb">${b ? 'PB ' + format(b.time) : 'NO TIME ON FILE'}</span></button>`;
+            return `<button class="level-card ${i === index ? 'selected' : ''}" data-stage="${i}"><span class="number">W${l.worldNumber} · ${l.bonus ? 'BONUS' : (l.polar ? 'ASSIGNMENT ' : l.rail ? 'FREIGHT ' : l.rampage ? 'COURSE ' : l.space ? 'SECTOR ' : 'HARBOR ') + String(l.stageNumber).padStart(2, '0')}${store.best(l.id, true) ? ' · CLEAN' : ''}</span><span class="name">${l.name}</span><span class="kind">${l.kind}</span><span class="pb">${b ? 'PB ' + format(b.time) : 'NO TIME ON FILE'}</span></button>`;
         }).join('')}</div>
- <div class="dialog-actions"><button class="primary" data-action="marathon" ${w.comingSoon || w.partial ? 'disabled aria-disabled="true"' : ''}>${w.comingSoon || w.partial ? 'Coming soon · ' : ''}World ${w.number} run · 12 ${w.theme === 'rail' ? 'assignments' : w.theme === 'rampage' ? 'courses' : w.theme === 'space' ? 'sectors' : 'harbors'} →</button><button data-action="grand-tour">Grand Tour · all ${LEVELS.filter(l => !l.bonus && !l.standalone).length}</button><button class="secondary small" data-action="back">Back</button><button class="secondary small" data-action="log">Logbook</button></div>
+ <div class="dialog-actions"><button class="primary" data-action="marathon" ${w.comingSoon || w.partial ? 'disabled aria-disabled="true"' : ''}>${w.comingSoon || w.partial ? 'Coming soon · ' : ''}World ${w.number} run · 12 ${w.theme === 'rail' || w.theme === 'polar' ? 'assignments' : w.theme === 'rampage' ? 'courses' : w.theme === 'space' ? 'sectors' : 'harbors'} →</button><button data-action="grand-tour">Grand Tour · all ${LEVELS.filter(l => !l.bonus && !l.standalone).length}</button><button class="secondary small" data-action="back">Back</button><button class="secondary small" data-action="log">Logbook</button></div>
  <p class="subtle" style="margin-top:13px">Each circuit has overall and clean records. Retries count toward your time; between-stage menus do not. Pausing makes the circuit practice.</p>`, true);
         $('dialog').dataset.theme = w.theme;
     }
@@ -1239,7 +1245,7 @@
         }
         if (now > toastUntil)
             $('toast').classList.remove('visible');
-        if (simulation.render) simulation.render($('sea'),level,run,zoom);
+        if (simulation.render) simulation.render($('sea'),level,run,zoom,{settings,ghost:store.stage(level.id).ghost});
         else renderer.render({
             level, run, index, status, input, zoom, settings, ghost: store.stage(level.id).ghost, visualTime: now / 1000
         });
@@ -1261,7 +1267,7 @@
                 time: marathon.total + (status === 'complete' ? 0 : run.time),
                 splits: marathon.splits.map(s => ({ ...s })) };
         },
-        practice: markPractice, advance: advanceSeconds, throttle, line: lineAction, rail: railCommand,
+        practice: markPractice, advance: advanceSeconds, throttle, line: lineAction, rail: railCommand, convoy:convoyCommand,
         input(values) {
             for (const key of ['rudder', 'thruster', 'winch'])
                 if (values[key] !== undefined) input[key] = values[key];
@@ -1289,7 +1295,7 @@
             }, start: begin, advance: advanceSeconds, cheats: developer.menu, frame,
             setShip(values) {
                 Object.assign(run.ship, values);
-            }, railCommand, throttle, lineAction, signal, finish, pause: showPause, retry, requestRetry: retry, marathon: startMarathon, next: nextHarbor, format, zoom: zoomChart, hud: updateHud, courses: showCourses
+            }, railCommand, convoyCommand, throttle, lineAction, signal, finish, pause: showPause, retry, requestRetry: retry, marathon: startMarathon, next: nextHarbor, format, zoom: zoomChart, hud: updateHud, courses: showCourses
         };
     }
 })();
