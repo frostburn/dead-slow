@@ -5,7 +5,7 @@ Report [bugs and feature requests](https://github.com/frostburn/dead-slow/issues
 
 **Neutral is not a brake.** A top-down ship-handling game about arriving slowly,
 with enough room left to stop—at sea, in vacuum, inside a giant hamster ball, or along a freight railway.
-Version 6 has eighty-four circuit stages across seven playable worlds in an eight-world atlas, a separate Century Ship bonus, local speedrun
+Version 7 has eighty-four circuit stages across seven playable worlds in an eight-world atlas, a separate Century Ship bonus, local speedrun
 records, personal-best ghosts, keyboard controls and a multitouch helm.
 
 ## The eight-world atlas
@@ -38,6 +38,13 @@ Pausing freezes all ships, sonar, mission clocks and ice together. All twelve
 assignments have individual records and ghosts, form the World 7 circuit and
 join the Grand Tour. Earlier 72-stage tour records are archived separately;
 individual mission records and the first six campaign circuits are retained.
+
+World 7's folding **Bridge watch** window holds vessel status, contact details,
+fleet reports and elapsed splits. The sidebar contains orders; missions needing
+only the helm leave the full width to the chart. The watch starts folded on small
+screens. Submarines have rounded collision hulls and no horn; sonar uncertainty
+is drawn as circular range regions. Earlier submarine handling records and the
+old 7-11 ice-field records are archived separately after this geometry revision.
 
 **Buoys, Not Borders**, **Home Ice**, and **The Other Shore** add a physical survey
 tow under patrol pressure, defense of an unloading base, and a strike that requires
@@ -76,7 +83,8 @@ avoid the patrols that redeploy across the arrival route.
 three stranded groups carrying civilian, Compact and League crews, tow disabled
 Oriel out of the turning pocket, and bring every required hull to neutral water.
 Visible gunboats exchange travelling shells across the short cut. The protected
-southern route needs more breaking; there is no player gun or kill objective.
+southern route follows irregular fractured basins and needs more breaking;
+there is no player gun or kill objective.
 
 **The Passage Must Stay Open** has two legs on one 45-minute weather clock.
 Insert and recover the channel engineers with Petrel, secure the submarine,

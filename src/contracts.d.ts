@@ -91,7 +91,7 @@ export interface PolarPort {
     action(run:PolarRun,name:PolarAction,value?:string):boolean;
 }
 export interface PolarViewPort {
-    update(level:Level,run:PolarRun,status:string,format:Format):void;
+    update(level:Level,run:PolarRun,status:string,format:Format,race?:unknown):void;
     render(canvas:HTMLCanvasElement,level:Level,run:PolarRun,zoom:number,options?:unknown):void;
     dialog(kind:string,level:Level,run:PolarRun,format:Format,hasNext?:boolean,race?:unknown,actions?:string):string;
 }

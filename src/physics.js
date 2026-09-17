@@ -2,6 +2,7 @@
 (function (root) {
     'use strict';
     const TAU = Math.PI * 2;
+    const roundedCap=Array.from({length:7},(_,i)=>{const a=-Math.PI/2+i*Math.PI/6;return [Math.cos(a),Math.sin(a)];});
     const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
     const lerp = (a, b, t) => a + (b - a) * t;
     const wrap = a => ((a + Math.PI) % TAU + TAU) % TAU - Math.PI;
@@ -23,6 +24,15 @@
     }
     function hull(s, margin = 0) {
         const l = s.length / 2 + margin, b = s.beam / 2 + margin;
+        if (s.vessel === 'submarine') {
+            // A rounded pressure hull, shared by collision, clearance and chart.
+            const points=[],c=Math.cos(s.a),n=Math.sin(s.a);
+            for(const sign of [1,-1])for(const [dx,dy] of roundedCap){
+                const x=sign*(l-b+b*dx),y=sign*b*dy;
+                points.push({x:s.x+c*x-n*y,y:s.y+n*x+c*y});
+            }
+            return points;
+        }
         if (s.vessel === 'iceberg' || s.vessel === 'floe')
             return [[-l,-b*.25],[-l*.72,-b*.85],[-l*.1,-b],[l*.72,-b*.65],[l,b*.1],[l*.58,b*.83],[-l*.23,b],[-l*.9,b*.6]].map(p => localPoint(s,...p));
         if (s.vessel === 'ferry')

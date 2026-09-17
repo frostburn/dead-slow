@@ -6,7 +6,7 @@
     const tender={length:32,beam:9,mass:1.1,propulsion:1.4,dragScale:1.1};
     const cargo={length:36,beam:10,mass:1.5,propulsion:2,dragScale:1.05,iceClass:0};
     const berth=(x,y,a=Math.PI)=>({x,y,a,l:65,w:28,angle:15,speed:.35});
-    const chart=(n,name,kind,start,spec,world,polar,brief,tip,pace)=>({id:`pale-reach-${n}`,name,kind,start,spec,world,polar,simulation:'polar',courseRevision:1,rulesRevision:1,berth:polar.berth||berth(...start),brief,tip,pace});
+    const chart=(n,name,kind,start,spec,world,polar,brief,tip,pace)=>({id:`pale-reach-${n}`,name,kind,start,spec,world,polar,simulation:'polar',courseRevision:n===11?2:1,rulesRevision:n===11?1:2,berth:polar.berth||berth(...start),brief,tip,pace});
     const recovery=chart(10,'Bring Them Back','Moving extraction · two possible rendezvous',[135,580,0],petrel,[1180,800],{
         underwater:true,mission:'recovery',depth:48,floor:140,ceiling:5,home:{x:135,y:580,radius:65},
         shelves:[{name:'WEST SHOAL · 36 m',floor:36,poly:[[345,230],[465,210],[525,330],[465,435],[330,415]]},
@@ -31,13 +31,21 @@
         landmarks:[{x:140,y:680,text:'HOME WATER / TEAM MUST RETURN'},{x:720,y:125,text:'DEEP APPROACH ALONG ICE MARGIN'}]
     },'Recover the team already waiting on the ice. Choose the nearer shelter gap or the farther drifting margin; a rendezvous order gives the team time to relocate. Match the selected pickup’s depth and drift, then escape without a confirmed alarm. Patrols redeploy after the team boards.',
     'The shelter plates drift apart continuously. The near pickup remains possible after exposure, but loses its cover. The far pickup moves with the ice margin at 88 m. Choose the pickup with its bridge button, then F orders recovery. Match relative speed for eight seconds. The western patrol gap changes after pickup; plan a different return.',[1500,2100,2800]);
-    const protectedRoute=[[205,590],[350,700],[550,730],[735,710],[805,610],[855,480],[850,320],[765,280]];
+    const protectedRoute=[[205,590],[292,650],[370,691],[465,704],[552,731],[650,730],[735,704],[791,644],[813,566],[852,493],[844,398],[872,337],[833,295],[765,280]];
     const rescue=chart(11,'No Flag on the Lifeboats','Neutral rescue · every required hull',[155,570,-Math.PI/2],kestrel,[1000,820],{
         mission:'rescue',cell:12,thickness:.85,closing:140,thinIce:.23,thinWidth:86,
-        route:[[205,520],[355,475],[620,445],[785,455]],secondary:{route:protectedRoute,width:105,thickness:.31,closing:440},
-        patches:[{x:685,y:245,w:145,h:80,thickness:.26},{x:710,y:430,w:140,h:230,thickness:.3}],
-        water:[{x:155,y:545,rx:130,ry:220},{x:765,y:280,rx:86,ry:67},{x:785,y:455,rx:80,ry:63},{x:760,y:635,rx:75,ry:65}],
-        openWaterRoutes:[{route:[[550,125],[550,620]],width:62}],ridges:[{x:410,y:332,w:110,h:65}],
+        route:[[205,520],[295,513],[367,484],[432,460],[520,463],[592,439],[685,463],[738,447],[785,455]],secondary:{route:protectedRoute,width:105,thickness:.31,closing:440},
+        patches:[{poly:[[680,267],[719,223],[778,236],[816,261],[841,304],[793,335],[730,317],[694,327]],thickness:.26},
+            {poly:[[731,373],[810,394],[841,453],[825,512],[861,575],[826,643],[781,685],[708,660],[699,608],[731,556],[709,490],[720,431]],thickness:.3}],
+        water:[
+            {poly:[[65,305],[133,304],[200,342],[238,390],[254,435],[278,482],[285,565],[256,635],[219,654],[190,735],[116,764],[43,729],[18,641],[34,568],[9,493],[53,441],[38,367]]},
+            {poly:[[686,268],[713,237],[751,221],[793,236],[812,256],[850,266],[865,288],[887,307],[889,333],[869,351],[843,351],[811,329],[763,345],[733,326],[704,332],[692,303]]},
+            {poly:[[708,436],[732,401],[774,393],[801,408],[838,414],[858,453],[836,480],[844,509],[797,527],[762,510],[730,513],[699,472]]},
+            {poly:[[701,593],[742,569],[785,576],[805,601],[836,607],[845,643],[827,672],[795,680],[776,707],[737,691],[706,672],[685,628]]},
+            // A fractured central lead carries the gunboats' actual crossfire.
+            // Its ragged margins vary in width while the firing lane stays open.
+            {poly:[[527,88],[566,82],[588,132],[574,177],[593,218],[578,263],[585,313],[572,358],[598,405],[582,445],[590,492],[578,528],[585,585],[568,658],[527,650],[505,613],[518,568],[507,527],[521,478],[508,434],[519,389],[508,347],[521,302],[511,264],[522,218],[510,172],[520,131]]}
+        ],ridges:[{poly:[[405,352],[419,326],[448,337],[470,318],[506,343],[529,366],[515,385],[476,399],[450,382],[417,388]]}],
         berth:berth(150,570),docks:[],
         survey:{id:'oriel',name:'ORIEL · DISABLED RESCUE VESSEL',start:[210,520,-Math.PI/2],spec:{length:32,beam:10,mass:1.1,propulsion:0,disabled:true,iceClass:0},safe:{x:180,y:400,rx:82,ry:60},pocket:{x:220,y:520,rx:65,ry:60}},
         rescue:{protectedRoute,contactRange:72,hold:4},

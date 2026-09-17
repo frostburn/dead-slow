@@ -24,6 +24,17 @@
  <main class="workspace">
   <section class="sea-section" id="chart-section" aria-label="Harbor chart and ship">
    <details id="rail-info" class="rail-info" open hidden><summary id="rail-info-title">Train status</summary><div class="rail-info-body" id="rail-info-body"></div></details>
+   <details id="polar-info" class="polar-info" open hidden>
+    <summary><span>Bridge watch</span><strong id="polar-summary"></strong></summary>
+    <div class="polar-info-body">
+     <strong id="polar-phase" role="status" hidden></strong>
+     <div id="polar-dispatch" class="section-label"></div><strong id="polar-readout" role="status"></strong>
+     <div id="polar-ice"></div><p id="polar-notice" role="status"></p>
+     <div id="polar-surface-status"><div id="polar-tow-readout"></div><div id="polar-gun-readout" role="status"></div><div id="polar-fleet-readouts"></div></div>
+     <div id="polar-sub-status" hidden><div id="sub-depth-status" role="status"></div><div id="sub-noise" role="status"></div><div id="sub-solution" role="status"></div><p id="sub-track-detail"></p></div>
+     <details class="polar-notes"><summary>Assignment &amp; chart key</summary><p id="polar-brief"></p><p id="polar-tip"></p><p id="polar-legend"></p></details>
+    </div>
+   </details>
    <canvas id="sea" role="img" aria-label="Top-down harbor chart. Use keyboard or the helm buttons below to control the ship."></canvas>
    <div class="chart-heading"><div class="eyebrow" id="stage-tag"></div><div class="chart-title" id="chart-title"></div></div>
    <div class="chart-meta"><div><strong id="ship-name">MV PATIENCE</strong></div><div id="weather-text">CALM WATER</div><div class="desktop-only" id="chart-frame-label">N ↑ · METRIC CHART</div></div>
@@ -45,29 +56,26 @@
    <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </section>
   <aside class="sidebar">
-   <section id="polar-panel" class="polar-panel" aria-label="Polar passage and convoy orders" hidden>
-    <strong id="polar-phase" role="status" hidden></strong>
-    <div id="polar-dispatch" class="section-label"></div><strong id="polar-readout" role="status"></strong><div id="polar-ice"></div><p id="polar-notice" role="status"></p>
-    <div id="polar-actions" hidden>
-     <div id="polar-tow-controls" hidden><button data-polar-action="tow">Connect / release tow <span class="key-hint">· F</span></button><div class="polar-winch"><button data-hold="linein">Shorten <span class="key-hint">· J</span></button><button data-hold="lineout">Lengthen <span class="key-hint">· K</span></button></div><span id="polar-tow-readout"></span></div>
-     <div id="polar-gun-controls" hidden><div id="polar-targets" aria-label="Hostile targets"></div><div id="polar-gun-readout" role="status"></div><div class="polar-winch"><button data-polar-action="target">Next target <span class="key-hint">· T</span></button><button data-polar-action="fire" id="polar-fire">Fire <span class="key-hint">· B</span></button></div></div>
-     <div id="polar-sub-controls" hidden>
-      <div id="sub-pickups" aria-label="Team rendezvous" hidden></div>
-      <div class="section-label">DEPTH ORDER · Z / X</div><div class="sub-depths"><button data-sub-depth="0">Shallow · 18 m</button><button data-sub-depth="1">Working · 48 m</button><button data-sub-depth="2">Deep · 88 m</button></div>
-      <div id="sub-depth-status" role="status"></div><div id="sub-noise" role="status"></div>
-      <div class="polar-winch"><button id="sub-ping" data-polar-action="ping">Active pulse <span class="key-hint">· P</span></button><button data-polar-action="target">Next contact <span class="key-hint">· T</span></button></div>
-      <div id="sub-contacts" aria-label="Observed sonar tracks"></div><p id="sub-track-detail"></p>
-      <div class="polar-winch"><button id="sub-identify" data-polar-action="identify">Record identification <span class="key-hint">· I</span></button><button id="sub-fire" data-polar-action="fire">Torpedo <span class="key-hint">· B</span></button></div>
-      <div id="sub-solution" role="status"></div><button id="sub-team" data-polar-action="team">Insert team <span class="key-hint">· F</span></button>
-     </div>
-    </div>
-    <div id="polar-fleet"></div><p id="polar-legend"></p>
-    <details class="polar-mobile-splits"><summary>Split times · elapsed IGT</summary><div id="polar-splits" class="splits"></div></details>
-   </section>
-   <div class="section-label">CURRENT ASSIGNMENT</div><h1 class="mission-name" id="mission-name"></h1><p class="brief" id="brief"></p>
+   <div class="section-label assignment-label">CURRENT ASSIGNMENT</div><h1 class="mission-name" id="mission-name"></h1><p class="brief" id="brief"></p>
    <div class="rule"></div>
    <div class="instruments"><div><div class="section-label" id="speed-frame-label">SPEED / GROUND</div><div class="reading green"><span id="speed">0.0</span> <small id="speed-unit">kn</small></div><div class="motion-label" id="speed-direction">STOPPED</div><div class="drift-label" id="drift">NO SIDEWAYS DRIFT</div></div><div><div class="section-label" id="heading-label">BOW HEADING</div><div class="reading"><span id="heading">090</span><small>°</small></div></div><div><div class="section-label" id="contact-count-label">CONTACTS</div><div class="reading"><span id="contacts">0</span></div></div><div><div class="section-label" id="engine-output-label">ENGINE OUTPUT</div><div class="reading"><span id="engine-read">0</span><small>%</small></div></div></div>
    <div class="local-water"><span id="shelter-status">OPEN WATER</span><strong id="local-set">SET 0.0 kn</strong></div><div class="hull-row"><span id="hull-state-label">HULL INTEGRITY</span><span id="hull-label">100%</span></div><div class="bar"><i id="hull-bar"></i></div>
+   <section id="polar-panel" class="polar-panel" aria-label="Polar passage and convoy orders" hidden>
+    <div class="section-label">BRIDGE ORDERS</div>
+    <div id="polar-actions" hidden>
+     <div id="polar-tow-controls" hidden><button data-polar-action="tow">Connect / release tow <span class="key-hint">· F</span></button><div class="polar-winch"><button data-hold="linein">Shorten <span class="key-hint">· J</span></button><button data-hold="lineout">Lengthen <span class="key-hint">· K</span></button></div></div>
+     <div id="polar-gun-controls" hidden><div id="polar-targets" aria-label="Hostile targets"></div><div class="polar-winch"><button data-polar-action="target">Next target <span class="key-hint">· T</span></button><button data-polar-action="fire" id="polar-fire">Fire <span class="key-hint">· B</span></button></div></div>
+     <div id="polar-sub-controls" hidden>
+      <div id="sub-pickups" aria-label="Team rendezvous" hidden></div>
+      <div class="section-label">DEPTH ORDER · Z / X</div><div class="sub-depths"><button data-sub-depth="0">Shallow · 18 m</button><button data-sub-depth="1">Working · 48 m</button><button data-sub-depth="2">Deep · 88 m</button></div>
+      <div class="polar-winch"><button id="sub-ping" data-polar-action="ping">Active pulse <span class="key-hint">· P</span></button><button data-polar-action="target">Next contact <span class="key-hint">· T</span></button></div>
+      <div id="sub-contacts" aria-label="Select a sonar track"></div>
+      <div class="polar-winch"><button id="sub-identify" data-polar-action="identify">Record identification <span class="key-hint">· I</span></button><button id="sub-fire" data-polar-action="fire">Torpedo <span class="key-hint">· B</span></button></div>
+      <button id="sub-team" data-polar-action="team">Insert team <span class="key-hint">· F</span></button>
+     </div>
+    </div>
+    <div id="polar-fleet"></div>
+   </section>
    <div class="rule"></div><div class="section-label" id="dock-list-label">MOORING CHECKLIST</div>
    <div class="dock-checks"><div class="check" id="check-objectives">Clearance</div><div class="check" id="check-inside">Inside berth</div><div class="check" id="check-aligned">Bow aligned</div><div class="check" id="check-slow">Slow + neutral</div></div><div class="bar dock-bar"><i id="dock-bar"></i></div>
    <div class="rule"></div><div class="section-label">SECTOR SPLITS</div><div class="splits" id="splits"></div>
@@ -120,6 +128,7 @@
 <script src="src/submarine.js"></script>
 <script src="src/polar-finale.js"></script>
 <script src="src/polar.js"></script>
+<script src="src/polar-labels.js"></script>
 <script src="src/submarine-view.js"></script>
 <script src="src/polar-view.js"></script>
 <script src="src/levels.js"></script>

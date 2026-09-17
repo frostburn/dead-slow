@@ -8,8 +8,8 @@ const field=id=>L.find(l=>l.id===id).rampage;
 const sample={time:100,contacts:0,clean:true};
 const stage=()=>({runs:[{...sample}],ghost:[[0,100,150,0]],bestSplits:[10,20],clears:1,attempts:2});
 
-test('version 6 is a full release with seven twelve-stage circuits and one excluded bonus',()=>{
- assert.match(require('../package.json').version,/^6\.\d+\.\d+$/);
+test('version 7 is a full release with seven twelve-stage circuits and one excluded bonus',()=>{
+ assert.match(require('../package.json').version,/^7\.\d+\.\d+$/);
  assert.equal(require('../package-lock.json').version,require('../package.json').version);
  assert.equal(L.length,85);assert.equal(L.filter(l=>!l.bonus&&!l.standalone).length,84);
  assert.equal(L.filter(l=>l.bonus).length,1);
