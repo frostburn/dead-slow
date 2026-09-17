@@ -26,7 +26,7 @@ function navigate(n,{trace=false,pickup='far'}={}){
     const o=st.operation;
     if(phase===0&&pilot(2).arrived)phase=1;
     if(phase===1){steady(-Math.PI/2);if(Math.abs(P.wrap(s.a+Math.PI/2))<.1&&I.speed(s)<.12&&t.polarAction('tow')){phase=2;setRoute([[210,340]]);}}
-    if(phase===2&&pilot(1.6).arrived)phase=3;
+    if(phase===2){pilot(1.6);if(o.survey.safeNow)phase=3;}
     if(phase===3){steady(-Math.PI/2);if(o.survey.safeNow){t.polarAction('tow');phase=4;setRoute([[160,475],[205,590],...l.polar.rescue.protectedRoute.slice(1,-1),[790,320]]);}}
     if(phase===4&&pilot().arrived)phase=5;
     if(phase===5){steady(s.a);const f=st.fleet[rescues];if(f.rescued){t.convoyCommand(f.id,'proceed');rescues++;if(rescues===1){phase=4;setRoute([[850,320],[855,440],[785,500]]);}else if(rescues===2){phase=4;setRoute([[835,510],[805,585],[795,665]]);}else{phase=6;setRoute([[790,700],[720,745]]);}}}

@@ -5,7 +5,7 @@
     const sub={...spec,name:'UNIDENTIFIED SUBMARINE',length:34,mass:1.2,propulsion:1.15};
     const tender={length:32,beam:9,mass:1.1,propulsion:1.1,dragScale:1.05};
     const chart=(n,name,kind,start,world,config,brief,tip,pace)=>({id:`pale-reach-${n}`,name,kind,start,spec,world,simulation:'polar',standalone:true,
-        courseRevision:1,rulesRevision:1,berth:{x:start[0],y:start[1],a:Math.PI,l:70,w:35,speed:.35,angle:15},
+        courseRevision:1,rulesRevision:2,berth:{x:start[0],y:start[1],a:Math.PI,l:70,w:35,speed:.35,angle:15},
         polar:{underwater:true,depth:48,floor:130,ceiling:5,home:{x:start[0],y:start[1],radius:65},shelves:[],bergs:[],platforms:[],actors:[],...config},brief,tip,pace});
     const levels=[
         chart(7,'What the Ice Heard','Submarine watch · identify and intercept',[135,535,0],[1120,780],{

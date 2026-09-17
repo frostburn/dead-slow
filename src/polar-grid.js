@@ -37,6 +37,20 @@
         }
         return result;
     }
-    const api={create,indexAt,each,neighbors};
+    // Authored basin and ice-margin boundaries are in metres, independently of
+    // the staggered storage grid. Concave polygons allow fractured shorelines.
+    function contains(region,x,y){
+        if(region.poly){
+            const p=region.poly;let inside=false;
+            for(let i=0,j=p.length-1;i<p.length;j=i++){
+                const a=p[i],b=p[j];
+                if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])inside=!inside;
+            }
+            return inside;
+        }
+        if(region.rx!==undefined)return ((x-region.x)/region.rx)**2+((y-region.y)/region.ry)**2<=1;
+        return x>=region.x&&x<=region.x+region.w&&y>=region.y&&y<=region.y+region.h;
+    }
+    const api={create,indexAt,each,neighbors,contains};
     if(typeof module!=='undefined'&&module.exports)module.exports=api;root.PaleReachGrid=api;
 })(globalThis);

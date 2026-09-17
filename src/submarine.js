@@ -12,11 +12,11 @@
     const speed=s=>Math.hypot(s.vx,s.vy),distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
     const weapon=(ammo,damage=60)=>({ammo,damage,cooldown:0,solution:0,hold:4,range:360,arc:.58,reason:'Identify a submerged contact',aim:null});
     function actor(c){return {...c,active:true,waypoint:0,route:c.route?.map(p=>p.slice()),fix:null,quietNow:false,nextDecoy:75,
-        ship:P.ship(...c.start,{...c.spec,name:c.name||'ACOUSTIC SOURCE',id:c.id,depth:c.depth,depthTarget:c.depth,heave:0,hull:100,
+        ship:P.ship(...c.start,{...c.spec,...(c.kind==='submarine'?{vessel:'submarine'}:{}),name:c.name||'ACOUSTIC SOURCE',id:c.id,depth:c.depth,depthTarget:c.depth,heave:0,hull:100,
             ...(c.kind==='decoy'?{length:5,beam:3,mass:.3,vx:c.vx,vy:c.vy,disabled:true}:{}),required:false}),
         gun:c.armed?weapon(6,c.torpedoDamage||60):null};}
     function create(level){
-        const c=level.polar,ship=P.ship(...level.start,{...level.spec,depth:c.depth,depthTarget:c.depth,heave:0});
+        const c=level.polar,ship=P.ship(...level.start,{...level.spec,vessel:'submarine',depth:c.depth,depthTarget:c.depth,heave:0});
         const st={submarine:true,level,config:c,time:0,player:ship,contacts:0,damage:0,lastHits:{},fleet:[],failure:null,complete:false,
             actors:c.actors.map(actor),shelves:c.shelves.map(s=>({...s,poly:s.poly.map(([x,y])=>({x,y}))})),
             platforms:c.platforms.map(p=>({...p,poly:P.rect(p)})),bergs:c.bergs.map(b=>P.ship(b.x,b.y,0,{...b,vessel:'iceberg',depth:0,mass:80})),

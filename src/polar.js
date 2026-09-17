@@ -13,7 +13,6 @@
     }
     function routeDistance(x,y,route){let d=Infinity;for(let i=1;i<route.length;i++)d=Math.min(d,segmentDistance(x,y,route[i-1],route[i]));return d;}
     const inside=(x,y,e)=>((x-e.x)/e.rx)**2+((y-e.y)/e.ry)**2<=1;
-    const inRect=(x,y,r)=>x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h;
     function create(level){
         if(level.polar.finale)return F.create(level,api);
         if(level.polar.underwater)return U.create(level);
@@ -25,9 +24,9 @@
             if(routeDistance(x,y,c.route)<c.thinWidth/2)thickness=c.thinIce;
             if(c.secondary&&routeDistance(x,y,c.secondary.route)<c.secondary.width/2){thickness=c.secondary.thickness;closing=c.secondary.closing;}
             for(const cutter of c.cutters||[])if(routeDistance(x,y,cutter.route)<cutter.width/2)thickness=cutter.thickness;
-            for(const patch of c.patches||[])if(inRect(x,y,patch))thickness=patch.thickness;
-            if(c.water.some(e=>inside(x,y,e))||[...(c.openWaterRoutes||[]),...(c.patrolWater||[])].some(r=>routeDistance(x,y,r.route)<r.width/2))thickness=0;
-            if(c.ridges.some(r=>inRect(x,y,r)))thickness=2;
+            for(const patch of c.patches||[])if(G.contains(patch,x,y))thickness=patch.thickness;
+            if(c.water.some(e=>G.contains(e,x,y))||[...(c.openWaterRoutes||[]),...(c.patrolWater||[])].some(r=>routeDistance(x,y,r.route)<r.width/2))thickness=0;
+            if(c.ridges.some(r=>G.contains(r,x,y)))thickness=2;
             ice.thickness[k]=thickness;ice.closing[k]=closing;
         }
         const ship=P.ship(...level.start,level.spec);

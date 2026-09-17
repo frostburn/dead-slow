@@ -262,6 +262,7 @@
             hitEvent(body, obstacle, P.contact(body, obstacle));
     }
     function signal() {
+        if (run.polar?.submarine) return false;
         if (run.rampage) return lineAction();
         if (run.rail && R.availability(run.rail,'dispatch').enabled) return railCommand('dispatch');
         if (!run.space) return audio.horn();

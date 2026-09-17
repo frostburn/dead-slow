@@ -133,6 +133,10 @@ that state into the existing shell; `polar-view.js` draws the same collision
 grid and exposes captain, tow and gun orders. `polar-grid.js` shares tile polygons,
 point lookup and six-neighbor connectivity between rendering, collision and
 route planning. No marine job state is fabricated.
+Authored water basins, thin patches and pressure ridges can use concave polygons
+in metre coordinates. These are sampled at hex centres during initialization;
+rendering and collision retain the same grid without stretching either axis.
+The rescue chart uses these boundaries for irregular leads and waiting basins.
 The view retains a raster ice layer per live grid. Fractures repaint nearby
 96-metre regions immediately; slush appearance is sampled at 8 Hz in 32 bands.
 Each dirty region is repainted from opaque water, including neighboring hex
@@ -141,6 +145,10 @@ rebuild the raster. Ships and moving ice still draw every frame, while physics
 continues at 120 Hz with continuous slush density. Unchanged HUD text and split
 markup retain their DOM nodes. A draw-call budget guards against repainting the
 whole field per frame; CI also compares incremental ice updates with fresh pixels.
+The folding `polar-info` chart window owns status, briefings, fleet reports and
+elapsed splits. The sidebar holds only orders and selectable targets. Missions
+without extra orders collapse that sidebar. The same window survives the finale
+handoff, switching from submarine reports to the surface convoy's reports.
 
 Sheet fractures require forward momentum and a bow approach, cost speed and
 open a narrow shoulder beside the hull. Pressure ridges remain impassable.
@@ -202,6 +210,11 @@ with gradual depth changes between 18, 48 and 88 metres. Whole-hull overlap
 determines keel and seabed clearance. Invalid horizontal approaches collide;
 terrain never snaps a vessel into another depth band. Static hex chart texture
 is cached; moving keels and depth-dependent obstruction shading stay live.
+Player and hostile submarines use a rounded pressure-hull polygon in `physics.js`
+for drawing, collision and clearance. Precomputed cap directions keep it cheap.
+The shell rejects the horn action underwater and hides its button, restoring it
+on the surface bridge. Sonar uncertainty is isotropic: the chart uses the same
+circular radius as the stored estimate.
 
 `sonar.js` stores detached observations, never live actor references. Passive
 listening supplies uncertain position, motion and machinery clues; speed,

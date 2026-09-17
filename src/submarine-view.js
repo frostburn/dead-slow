@@ -44,9 +44,9 @@
         for(const b of $('polar-sub-controls').querySelectorAll('[data-sub-depth]')){const d=U.bands[Number(b.dataset.subDepth)].depth;b.disabled=!live||!U.depthAllowed(st,s,d);b.classList.toggle('selected',d===s.depthTarget);b.setAttribute('aria-pressed',String(d===s.depthTarget));}
         set('sub-noise',`SELF NOISE ${Math.round(st.noise*100)}% · ${st.noise<.35?'QUIET':st.noise<.65?'MACHINERY CARRYING':'LOUD · OTHER LISTENERS CAN HEAR'}`);
         const cooldown=Math.max(0,18-st.time+st.pulseAt);$('sub-ping').disabled=!live||cooldown>0;set('sub-ping',cooldown>0?'Pulse ready in '+Math.ceil(cooldown)+' s':'Active pulse · P');
-        html('sub-contacts',st.tracks.map(t=>{const f=U.Sonar.predict(t,st.time);return `<button data-sub-target="${t.id}" aria-pressed="${t.id===st.selected}" class="${t.id===st.selected?'selected':''}"><b>${t.id} · ${kind(t)}</b><span>${t.source.toUpperCase()} · ±${Math.ceil(f.radius)} m · ${Math.floor(f.age)} s old</span></button>`;}).join('')||'<p class="subtle">Listening. No usable returns yet.</p>');
+        html('sub-contacts',st.tracks.map(t=>`<button data-sub-target="${t.id}" aria-pressed="${t.id===st.selected}" class="${t.id===st.selected?'selected':''}"><b>${t.id}</b><span>${kind(t)}</span></button>`).join(''));
         const t=st.tracks.find(t=>t.id===st.selected),fix=t&&U.Sonar.predict(t,st.time);
-        set('sub-track-detail',t?`${t.id}: ${t.clue}. ${t.depth===null?'Depth unresolved':Math.round(t.depth)+' m observed depth'}. ${Math.floor(fix.quality)}% track confidence${fix.age>12?' · STALE: reacquire before firing':''}.`:'Select a track to inspect its motion clues. A pulse announces your position.');
+        set('sub-track-detail',t?`${t.id} · ${t.source.toUpperCase()} · ±${Math.ceil(fix.radius)} m · ${Math.floor(fix.age)} s old. ${t.clue}. ${t.depth===null?'Depth unresolved':Math.round(t.depth)+' m observed depth'}. ${Math.floor(fix.quality)}% track confidence${fix.age>12?' · STALE: reacquire before firing':''}.`:'Select a track to inspect its motion clues. A pulse announces your position.');
         $('sub-identify').disabled=!live||!t||t.category==='unknown'||fix.age>18||t.identified;
         const g=st.gun;set('sub-solution',st.recovery?`RECOVERY ${m.board.toFixed(1)} / 8 s · ${st.recovery.settled?'TEAM AT RENDEZVOUS':'TEAM RELOCATING ON ICE'}`:st.config.mission==='covert'?`TEAM WORK ${Math.floor(m.work)} / ${st.config.access.work} s · TRANSFER ${m.board.toFixed(1)} / 8 s`:`${g.ammo} TORPEDOES · ${g.cooldown>0?'RELOAD '+Math.ceil(g.cooldown)+' s':g.reason+' · '+g.solution.toFixed(1)+' / '+g.hold+' s'}`);
         for(const b of $('sub-pickups').querySelectorAll('[data-pickup]')){const selected=b.dataset.pickup===st.recovery?.selected;b.disabled=!live||m.team==='recovered';b.classList.toggle('selected',selected);b.setAttribute('aria-pressed',String(selected));}
@@ -107,9 +107,9 @@
         }
         for(const t of st.tracks){
             const f=U.Sonar.predict(t,st.time),color=t.id===st.selected?'#f6d097':t.identified&&t.category==='submarine'?'#e9a38b':t.identified&&t.category==='service'?'#a7d9ba':'#a6cfcc';
-            ctx.globalAlpha=Math.max(.2,1-f.age/160);ctx.beginPath();ctx.ellipse(f.x,f.y,f.radius,f.radius*.78,Math.atan2(t.vy,t.vx),0,Math.PI*2);ctx.fillStyle=color+'0c';ctx.fill();ctx.strokeStyle=color;ctx.lineWidth=t.id===st.selected?2:1;ctx.setLineDash(f.age>6?[4,7]:[2,5]);ctx.stroke();ctx.setLineDash([]);
+            ctx.globalAlpha=Math.max(.2,1-f.age/160);ctx.beginPath();ctx.arc(f.x,f.y,f.radius,0,Math.PI*2);ctx.fillStyle=color+'0c';ctx.fill();ctx.strokeStyle=color;ctx.lineWidth=t.id===st.selected?2:1;ctx.setLineDash(f.age>6?[4,7]:[2,5]);ctx.stroke();ctx.setLineDash([]);
             line({x:f.x-5,y:f.y},{x:f.x+5,y:f.y},color);line({x:f.x,y:f.y-5},{x:f.x,y:f.y+5},color);
-            line(f,{x:f.x+t.vx*35,y:f.y+t.vy*35},color,1.5);label(t.id+' · '+kind(t),f.x,f.y-f.radius*.78-12,color,9);label('±'+Math.ceil(f.radius)+' m · '+Math.floor(f.age)+' s',f.x,f.y+f.radius*.78+14,color,9);ctx.globalAlpha=1;
+            line(f,{x:f.x+t.vx*35,y:f.y+t.vy*35},color,1.5);label(t.id+' · '+kind(t),f.x,f.y-f.radius-12,color,9);label('±'+Math.ceil(f.radius)+' m · '+Math.floor(f.age)+' s',f.x,f.y+f.radius+14,color,9);ctx.globalAlpha=1;
         }
         for(const p of st.pulses)ring(p.x,p.y,Math.min(p.range,(st.time-p.at)*210),'#92dfdc99');
         for(const t of st.torpedoes){line({x:t.x-t.vx*1.5,y:t.y-t.vy*1.5},t,t.hostile?'#ff9d84':'#ffe4a3',2.5);ring(t.x,t.y,6,t.hostile?'#ffb097':'#ffedba');}
