@@ -18,7 +18,7 @@ def check_polar(page,check,out):
         if stage==4:
             check('Restricted mission exposes tow and winch but no gun',page.locator('#polar-tow-controls').is_visible() and not page.locator('#polar-gun-controls').is_visible())
             page.keyboard.press('f')
-            check('Tow key reaches the range and relative-speed check','within 55 m' in page.locator('#mission-status').inner_text())
+            check('Tow key reaches a visible range and relative-speed notice',page.locator('#polar-notice').is_visible() and 'within 55 m' in page.locator('#polar-notice').inner_text())
             check('Patrols and station exist on the playable chart',page.evaluate('DeadSlowTest.state.run.polar.operation.npcs.length===2 && DeadSlowTest.state.run.polar.operation.assets[0].team==="civilian"'))
         if stage in [5,6]:
             check(f'7-0{stage} exposes deliberate fire and hostile target controls',page.locator('#polar-gun-controls').is_visible() and page.locator('#polar-fire').is_disabled())

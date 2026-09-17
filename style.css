@@ -2499,6 +2499,7 @@ body[data-theme="polar"] .chart-bottom { display:none; }
 .polar-panel[hidden] { display:none; }
 #polar-readout { display:block; font:600 12px/1.5 var(--mono); color:var(--green); margin:8px 0; }
 #polar-readout.warning { color:var(--amber); }
+#polar-notice { margin:7px 0; font-size:11px; line-height:1.45; color:var(--amber); }
 #polar-ice,#polar-legend { font:10px/1.6 var(--mono); color:var(--muted); }
 #polar-legend { margin:9px 0 0; }
 .polar-order { border-top:1px solid var(--line); margin-top:12px; padding-top:10px; }

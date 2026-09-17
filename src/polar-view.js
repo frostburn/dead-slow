@@ -106,6 +106,7 @@
         set('telegraph-name',names[s.throttle+3]);set('telegraph-detail',s.throttle===0?'NEUTRAL · STILL COASTING':s.iceClass?'ICEBREAKING BOW · KEEP ROOM TO BRAKE':'LADEN HULL · CANNOT BREAK SHEET');
         html('notches',Array.from({length:8},(_,i)=>`<span class="notch ${i<3?'reverse':i===3?'zero':''} ${i===s.throttle+3?'active':''}"></span>`).join(''));
         set('mission-status',status==='paused'?'Paused · unranked practice':I.message(run));
+        set('polar-notice',$('mission-status').textContent);
         set('mobile-extra',g?`GAP ${Math.round(g.metres)}m`:`SLUSH ${Math.round(st.slush*100)}%`);
         set('polar-readout',g?`${Math.round(g.metres)} m HULL GAP · ${g.closing>0?'CLOSING':'OPENING'} ${Math.abs(g.closing).toFixed(1)} m/s`:
             o?.kind==='survey'?`RECORDERS ${o.survey.recovered?'ABOARD':Math.floor(o.survey.recorders)+' / 8 s'} · CALIPER ${Math.ceil(o.survey.ship.hull)}%`:o?.kind==='strike'?`${o.assets.filter(a=>a.team==='hostile'&&a.ship.hull<=0).length}/2 INSTALLATIONS DISABLED`:
