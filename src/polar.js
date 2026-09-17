@@ -227,7 +227,10 @@
         if(st.config.mission==='pocket'&&s.x>460&&st.broken>8)st.routeOpened=true;
         if(st.config.mission==='follow'){
             const gates=[[300,330],[485,265],[690,340]],g=gates[st.checkpoint];
-            if(g&&Math.hypot(s.x-g[0],s.y-g[1])<80)st.checkpoint++;
+            const leader=st.fleet[0],separation=gap(run);
+            const following=!leader.returned&&separation.metres>=15&&separation.metres<=100;
+            if(g&&following&&Math.hypot(s.x-g[0],s.y-g[1])<80)st.checkpoint++;
+            if(leader.returned&&st.checkpoint<gates.length)st.failure='Rime completed the lead without Lantern. Retry and stay with the icebreaker through the bends.';
         }
         run.thrusterTime=(run.thrusterTime||0)+Math.abs(input.thruster||0)*dt;
         run.contacts=st.contacts;run.distance+=Math.hypot(s.x-old.x,s.y-old.y);run.maxSpeed=Math.max(run.maxSpeed,speed(s));

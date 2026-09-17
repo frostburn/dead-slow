@@ -35,7 +35,7 @@
             dispatch:['NARROWS COMPACT / PASSAGE SERVICE','Rime will pilot the lead at working speed. The Shelf League’s survey marks disagree with ours; follow the water the breaker actually opens. Lantern’s cargo belongs to the Council. Give the breaker room to stop.'],
             objectives:['Follow Rime through the lead','Deliver Lantern’s cargo at Glass Quay']
         },'Lantern is heavily laden and cannot break a new route. Follow Rime through the winding lead. New water thickens into slush behind the icebreaker; crowding her bow-to-stern leaves no braking room when she meets compressed sheet.',
-        'Aim for 25–65 m of water between hulls. Read the gap and closing rate, anticipate the thick patch, and steer the stern through each bend. Slush slows you progressively; it never turns into a solid wall under your ship.',[360,500,700]),
+        'Aim for 25–65 m of water between hulls. Read the gap and closing rate, anticipate the thick patch, and steer the stern through each bend. Stay with Rime through the bends before she finishes the lead. Slush slows you progressively; it never turns into a solid wall under your ship.',[360,500,700]),
         base(3,'Deliveries Beyond the Map','Route preparation · two deliveries and returns',[155,375,0],breaker,[900,660],{
             mission:'convoy',cell:12,thickness:.88,closing:112,route:north,thinWidth:64,thinIce:.27,
             secondary:{route:south,width:70,thickness:.48,closing:240},

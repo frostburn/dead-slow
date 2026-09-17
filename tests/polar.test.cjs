@@ -81,3 +81,15 @@ test('polar departure hulls start clear and the whole required hull must stay on
  const r=state(3),s=r.polar.fleet[0].ship;s.x=1;s.y=380;s.vx=-.1;
  I.step(level(3),r,{},1/120);assert.match(r.polar.failure,/MORROW left the assignment chart/);assert.ok(s.x>0&&s.x<1,'exit fails before the centre leaves, without bouncing');
 });
+test('waiting until Rime finishes cannot complete Borrowed Water as a solo trip',()=>{
+ const t=create();t.load(L.indexOf(level(2)),true);t.advance(450);
+ assert.equal(t.state.status,'failed');assert.equal(t.state.run.polar.checkpoint,0);
+ assert.match(t.state.run.polar.failure,/stay with the icebreaker/);
+ assert.equal(t.state.storage.stages['pale-reach-2'].runs.length,0);
+});
+test('follow checkpoints need working separation from an unfinished leader',()=>{
+ const r=state(2);r.polar.ice.opened.fill(0);r.ship.x=300;r.ship.y=330;
+ I.step(level(2),r,{},1/120);assert.equal(r.polar.checkpoint,0,'distant leader does not count');
+ r.polar.fleet[0].ship.x=380;r.polar.fleet[0].ship.y=330;
+ I.step(level(2),r,{},1/120);assert.equal(r.polar.checkpoint,1,'nearby working leader does count');
+});
