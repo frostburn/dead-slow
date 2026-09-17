@@ -170,7 +170,7 @@ player-cut shortcut works for either side. No paths move hulls directly. Guns
 require range, bow arc, a clear line, low speed and rotation, and a timed solution.
 Each manual player shot has recoil, ammunition and a reload. Enemy solution lines
 announce attacks; shells travel independently and strike the first hull, fixed
-installation or solid ice they meet. Destroyed targets remain physical wrecks.
+installation or solid ice they meet. Exact hex intersections along a narrow ray strip block both solutions and shell flight on unopened sheet or pressure ridges, while opened slush remains transparent to fire. Destroyed targets remain physical wrecks.
 Defense ends with cargo ashore and both transports returned, regardless of live
 attackers. Strike completion also requires docking after both installations fall.
 

@@ -7,7 +7,7 @@ function navigate(n,{trace=false,defend=true}={}){
  const t=create(),l=L.find(l=>l.id===`pale-reach-${n}`);t.load(L.indexOf(l),true);
  const r=t.state.run,s=r.ship,o=r.polar.operation;
  let phase=0,wp=0,route=n===4?[[120,520],[260,570],[420,600],[580,550],[660,430],[660,320],[600,330]]:
-  n===5?[[295,390],[410,350]]:[[125,590],[265,570],[325,425],[395,245],[560,185],[710,200],[790,235]];
+  n===5?[[295,390],[320,345]]:[[125,590],[265,570],[325,425],[395,245],[560,185],[710,200],[790,235]];
  const apply=(order,input)=>{t.throttle(order-s.throttle);Object.assign(t.state.input,input);};
  const steer=a=>P.clamp(P.wrap(a-s.a)*2.5-s.r*35,-1,1);
  const steady=a=>{const u=P.groundMotion(s).surge;apply(Math.abs(u)<.05?0:u>.25?-2:u>0?-1:u<-.25?2:1,{rudder:steer(a),thruster:steer(a)});};

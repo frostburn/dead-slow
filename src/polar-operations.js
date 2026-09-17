@@ -2,6 +2,7 @@
 (function(root){
     'use strict';
     const P=typeof module!=='undefined'&&module.exports?require('./physics.js'):root.HarborPhysics;
+    const G=typeof module!=='undefined'&&module.exports?require('./polar-grid.js'):root.PaleReachGrid;
     const speed=s=>Math.hypot(s.vx,s.vy),distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
     const gun=c=>({...c,solution:0,cooldown:0,target:null,ammo:c.ammo??999,reason:'Select a hostile contact'});
     function along(x,y,route){
@@ -51,10 +52,24 @@
         if(Math.abs(P.wrap(Math.atan2(aim.y-s.y,aim.x-s.x)-s.a))>g.arc)return {ok:false,reason:'Outside the forward arc'};
         if(speed(s)>(g.maxSpeed??.1)||Math.abs(s.r)>(g.maxTurn??.001))return {ok:false,reason:'Slow and steady the hull'};
         const muzzle=P.localPoint(s,s.length*.55,0);
+        if(sheetHit(st,muzzle,aim)<1)return {ok:false,reason:'Intact sheet / pressure ridge blocks the shot'};
         for(const e of allEntities(st))if(e.id!==source.id&&e.id!==target.id&&segmentHit(muzzle,aim,e.poly||P.hull(e.ship))<1)return {ok:false,reason:e.team==='friendly'||e.team==='civilian'?'Friendly hull / installation in the firing line':'Firing line obstructed'};
         for(const b of [...st.bergs,...st.floes])if(segmentHit(muzzle,aim,P.hull(b))<1)return {ok:false,reason:'Solid drifting ice blocks the shot'};
         for(const d of st.config.docks)if(segmentHit(muzzle,aim,P.rect(d))<1)return {ok:false,reason:'Jetty blocks the shot'};
         return {ok:true,reason:'Stable firing solution',aim,muzzle};
+    }
+    // Walk short bounding boxes along the ray, including grazed hex corners.
+    // This visits a narrow strip, not the whole diagonal bounding rectangle.
+    function sheetHit(st,a,b){
+        const g=st.ice,dx=b.x-a.x,dy=b.y-a.y,count=Math.max(1,Math.ceil(Math.hypot(dx,dy)/g.cell)),seen=new Set();let first=Infinity;
+        for(let i=0;i<count&&first>i/count;i++){
+            const p={x:a.x+dx*i/count,y:a.y+dy*i/count},q={x:a.x+dx*(i+1)/count,y:a.y+dy*(i+1)/count};
+            G.each(g,{minX:Math.min(p.x,q.x),minY:Math.min(p.y,q.y),maxX:Math.max(p.x,q.x),maxY:Math.max(p.y,q.y)},(k,tile)=>{
+                if(seen.has(k))return;seen.add(k);
+                if(g.thickness[k]>0&&g.opened[k]<0)first=Math.min(first,segmentHit(a,b,tile.poly));
+            });
+        }
+        return first;
     }
     function launch(st,source,target,g){
         const aim=solution(st,source,target,g);if(!aim.ok||g.solution<g.hold||g.cooldown>0||g.ammo<=0)return false;
@@ -157,6 +172,7 @@
             const a={x:shot.x,y:shot.y},b={x:shot.x+shot.vx*dt,y:shot.y+shot.vy*dt};let hit=null,fraction=Infinity;
             for(const e of entities)if(e.id!==shot.source){const f=segmentHit(a,b,e.poly||P.hull(e.ship));if(f<fraction){fraction=f;hit=e;}}
             for(const solid of [...st.bergs,...st.floes,...st.config.docks]){const f=segmentHit(a,b,solid.w?P.rect(solid):P.hull(solid));if(f<fraction){fraction=f;hit={team:'ice'};}}
+            const sheet=sheetHit(st,a,b);if(sheet<fraction){fraction=sheet;hit={team:'ice'};}
             shot.x=b.x;shot.y=b.y;shot.life-=dt;
             if(hit){
                 shot.life=0;o.bursts.push({x:a.x+(b.x-a.x)*fraction,y:a.y+(b.y-a.y)*fraction,until:st.time+1.4});
@@ -180,6 +196,6 @@
         if(o.kind==='defense')return `${st.stats.deliveries}/2 cargoes ashore · ${st.stats.safeReturns}/2 transports safe. Give Proceed after unloading.`;
         return ready(st)?'Both military installations disabled. Withdraw to the green home berth.':'Disable the battery and fuel-transfer machinery; plan your exit before firing.';
     }
-    const api={create,bodies,targets,action,before,move,assetContacts,after,ready,progress,message,solution,segmentHit};
+    const api={create,bodies,targets,action,before,move,assetContacts,after,ready,progress,message,solution,segmentHit,sheetHit};
     if(typeof module!=='undefined'&&module.exports)module.exports=api;root.PaleReachOperations=api;
 })(globalThis);

@@ -81,6 +81,24 @@ test('gun solution rejects friendlies in the line; a fired shell hits the first 
  assert.equal(O.segmentHit({x:5,y:5},{x:8,y:5},P.rect({x:0,y:0,w:10,h:10})),0);
  assert.equal(O.segmentHit({x:-5,y:5},{x:15,y:5},P.rect({x:0,y:0,w:10,h:10})),.25);
 });
+test('intact hex ice blocks solutions and traveling shells, while opened slush permits fire',()=>{
+ for(const thickness of [.3,2]){
+  const r=firing(),st=r.polar,o=st.operation,g=o.gun,k=I.indexAt(st.ice,734,290);tick(r,3);
+  st.ice.thickness[k]=thickness;assert.match(O.solution(st,{id:'player',ship:r.ship},o.assets[0],g).reason,/sheet.*ridge/);assert.equal(I.action(r,'fire'),false);
+  st.ice.opened[k]=0;assert.equal(O.sheetHit(st,{x:734,y:250},{x:734,y:330}),Infinity);assert.ok(I.action(r,'fire'));
+  // Isolated collision fixture: put intact ice in the fired shell's path.
+  st.ice.opened[k]=-1;for(let i=0;i<240;i++){st.time+=1/120;O.after(st,r,1/120);}
+  assert.equal(o.assets[0].ship.hull,108);assert.equal(o.shells.length,0);
+ }
+ const r=firing(),st=r.polar;st.ice.thickness.fill(.3);st.ice.opened.fill(-1);
+ for(const [a,b] of [[{x:500,y:200},{x:800,y:380}],[{x:734,y:230},{x:734,y:230}]]){
+  const expected=Math.min(...st.ice.tiles.map(t=>O.segmentHit(a,b,t.poly)));
+  assert.equal(O.sheetHit(st,a,b),expected,'ray traversal agrees with exact hex polygons, including an occupied origin');
+ }
+ st.ice.opened.fill(0);const k=I.indexAt(st.ice,500,300),tile=st.ice.tiles[k];st.ice.opened[k]=-1;
+ const a={x:tile.x-300,y:tile.y+st.ice.radius-1e-6},b={x:tile.x+300,y:a.y};
+ const grazing=O.segmentHit(a,b,tile.poly);assert.ok(grazing>0&&grazing<1);assert.equal(O.sheetHit(st,a,b),grazing,'a nearly tangent corner is not skipped between ray samples');
+});
 test('response boats wait for the alarm and clear spawn water; destroyed batteries stop firing',()=>{
  const r=firing(),st=r.polar,o=st.operation,n=o.npcs[0];st.time=300;O.move(st,r,0,I);assert.equal(n.active,false);
  o.alarmAt=300;st.time=360;Object.assign(r.ship,{x:n.ship.x,y:n.ship.y});O.move(st,r,0,I);assert.equal(n.active,false);
