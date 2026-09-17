@@ -168,6 +168,7 @@
             tick(s, active, flight = null, rolling = null, freight = null) {
                 if (!ctx || !gain) return;
                 const now = ctx.currentTime;
+                if (rail && !active) { horn?.stop(); horn = null; }
                 gain.gain.setTargetAtTime(active && enabled && !space && !rampage && !rail ? .011 + Math.abs(s.engine) * .024 : 0, now, .13);
                 if (!space && !rail && s) engine.frequency.setTargetAtTime(35 + Math.abs(s.engine) * 27, now, .2);
                 drive?.tick({ ...flight?.firingJets, beam: flight?.beamForce }, active && enabled && space);
@@ -191,7 +192,7 @@
                 if (!enabled) return false;
                 init();
                 if (!ctx || horn && ctx.currentTime < horn.until) return false;
-                horn = soundHorn(ctx, master); return true;
+                horn = rail ? trainAudio.soundWhistle(ctx, master) : soundHorn(ctx, master); return true;
             }
         };
     }

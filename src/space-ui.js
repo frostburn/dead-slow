@@ -42,9 +42,9 @@
         set('work-progress-label', space ? 'PROPELLANT RESERVE' : 'JOB PROGRESS');
         set('courses-btn', space ? 'Sectors' : 'Harbors');
         set('work-panel-label', space ? 'FLIGHT COMPUTER' : 'ISLAND SERVICE');
-        set('line-action', space ? 'F · LOCK BEAM' : 'F · MAKE FAST');
-        set('line-in-label', space ? 'J · ATTRACT' : 'J · REEL IN');
-        set('line-out-label', space ? 'K · REPEL' : 'K · PAY OUT');
+        $('line-action').innerHTML = space ? '<span class="key-hint">F · </span>LOCK BEAM' : '<span class="key-hint">F · </span>MAKE FAST';
+        $('line-in-label').innerHTML = space ? '<span class="key-hint">J · </span>ATTRACT' : '<span class="key-hint">J · </span>REEL IN';
+        $('line-out-label').innerHTML = space ? '<span class="key-hint">K · </span>REPEL' : '<span class="key-hint">K · </span>PAY OUT';
         set('dock-list-label', space ? 'FINAL CAPTURE CHECKLIST' : 'MOORING CHECKLIST');
         set('check-slow', space ? 'Relative drift + jets off' : 'Slow + neutral');
         set('helm-warning', space ? 'CUTTING THRUST IS NOT BRAKING' : 'NEUTRAL IS NOT A BRAKE');
@@ -69,8 +69,8 @@
         $('work-progress').style.background = st.fuel < st.capacity * .15 ? 'var(--amber)' : 'var(--green)';
         $('manifest').innerHTML = `<span>REL ${relative.toFixed(2)} m/s</span><span>SPIN ${(s.r * 180 / Math.PI).toFixed(2)}°/s</span><span>${c.target ? 'SHOTS ' + st.stats.shots + ' · HITS ' + st.stats.hits : st.friendly ? 'FRIEND ' + Math.hypot(st.friendly.vx, st.friendly.vy).toFixed(2) + ' m/s' : 'BURN ' + st.stats.burnTime.toFixed(1) + ' s'}</span>`;
         $('tow-controls').hidden = !c.friendly;
-        set('line-action', st.beam ? 'F · RELEASE BEAM' : st.rescued ? 'CRAFT SECURED' : 'F · LOCK BEAM');
-        set('line-in-label', 'J · ATTRACT'); set('line-out-label', 'K · REPEL');
+        $('line-action').innerHTML = st.beam ? '<span class="key-hint">F · </span>RELEASE BEAM' : st.rescued ? 'CRAFT SECURED' : '<span class="key-hint">F · </span>LOCK BEAM';
+        $('line-in-label').innerHTML = '<span class="key-hint">J · </span>ATTRACT'; $('line-out-label').innerHTML = '<span class="key-hint">K · </span>REPEL';
         set('mobile-extra', `FUEL ${st.fuel.toFixed(0)}${c.flare ? ' · ' + (c.flare.continuous ? 'HEAT ' + Math.round(st.heat) + '%' : st.flare.active ? 'FLARE' : Math.ceil(st.flare.remaining) + 's') : ''}`);
         if (st.shelterWindow) {
             const w=st.shelterWindow, stamp=t=>`${Math.floor(t/60).toString().padStart(2,'0')}:${Math.floor(t%60).toString().padStart(2,'0')}`;

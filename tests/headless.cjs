@@ -3,14 +3,15 @@
 // This is a test harness, not a second implementation of the simulation.
 const vm = require('node:vm'), fs = require('node:fs'), path = require('node:path');
 const P = require('../src/physics.js'), L = require('../src/levels.js'), S = require('../src/storage.js');
-function create({fieldDialog=()=>''}={}) {
+function create({fieldDialog=()=>'',onBodyClass=()=>{}}={}) {
     const nodes = new Map();
     const node = id => {
         if (!nodes.has(id))
             nodes.set(id, {
                 textContent: '', innerHTML: '', hidden: false, dataset: {}, style: { setProperty() {
                     } }, classList: { toggle() {
-                    }, add() {
+                    }, add(name) {
+                        if(id==='body')onBodyClass(name);
                     }, remove() {
                     } }, setAttribute() {
                 }, addEventListener(type, handler) {

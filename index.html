@@ -30,7 +30,7 @@
    <section id="work-panel" class="work-panel" aria-label="Island job instruments" hidden>
     <div id="work-order" class="work-order"></div><div id="work-readout" class="work-readout"></div>
     <div class="bar"><i id="work-progress"></i></div><div id="manifest" class="manifest" aria-label="Vehicles aboard"></div>
-    <div id="tow-controls" class="tow-controls" hidden><button id="line-action" aria-label="Make or release towline">F · MAKE FAST</button><button id="line-in-label" data-hold="linein" aria-label="Hold winch to reel in towline">J · REEL IN</button><button id="line-out-label" data-hold="lineout" aria-label="Hold winch to pay out towline">K · PAY OUT</button></div>
+    <div id="tow-controls" class="tow-controls" hidden><button id="line-action" aria-label="Make or release towline"><span class="key-hint">F · </span>MAKE FAST</button><button id="line-in-label" data-hold="linein" aria-label="Hold winch to reel in towline"><span class="key-hint">J · </span>REEL IN</button><button id="line-out-label" data-hold="lineout" aria-label="Hold winch to pay out towline"><span class="key-hint">K · </span>PAY OUT</button></div>
    </section>
    <div class="mobile-instruments"><span><strong id="mobile-speed">0.0</strong> <span id="mobile-speed-unit">kn</span> <b id="mobile-direction">STOP</b></span><span>HULL <strong id="mobile-hull">100</strong>%</span><span>HITS <strong id="mobile-hits">0</strong></span><span id="mobile-extra">NEUTRAL</span></div>
    <div class="chart-bottom"><div class="mission-strip" id="mission-strip"><span class="status-dot"></span><span id="mission-status">Awaiting departure.</span></div><div class="chart-scale" id="scale-label">25 METRES</div></div>
@@ -67,7 +67,7 @@
     <button data-hold="rollsouth" aria-label="Push south">↓ <kbd>S</kbd></button>
     <button data-hold="rolleast" aria-label="Push east">→ <kbd>D</kbd></button>
    </div></div>
-   <div class="gerbo-shield-group"><button id="gerbo-shield">SHIELD READY · SPACE</button><span>3 s protection · 6 s recharge</span><button id="gerbo-fire" data-hold="breathe" aria-label="Hold to breathe fire" hidden>FIRE BREATH · HOLD H</button></div>
+   <div class="gerbo-shield-group"><button id="gerbo-shield">SHIELD READY<span class="key-hint"> · SPACE</span></button><span>3 s protection · 6 s recharge</span><button id="gerbo-fire" data-hold="breathe" aria-label="Hold to breathe fire" hidden>FIRE BREATH<span class="key-hint"> · HOLD H</span></button></div>
    <div class="gerbo-legend">BROWN · elevation contours<br>BLUE · no traction<br>GREEN · slow forest<br>BLACK · impassable rock</div>
   </div>
   <div class="helm-group engine"><div class="helm-heading"><span id="helm-engine-label">ENGINE TELEGRAPH</span><span class="key-hint">W / S · NOTCH UP / DOWN</span></div><div class="throttle-controls"><button id="throttle-down" aria-label="Decrease throttle one notch" title="More astern (S)">−</button><div class="telegraph-name"><span id="telegraph-name">STOP</span><small id="telegraph-detail">NEUTRAL · STILL COASTING</small><div class="notches" id="notches"></div></div><button id="throttle-up" aria-label="Increase throttle one notch" title="More ahead (W)">+</button></div><button class="neutral secondary" id="neutral-btn" title="Set neutral (Space)">NEUTRAL</button></div>

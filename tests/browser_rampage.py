@@ -21,7 +21,11 @@ with sync_playwright() as pw:
     page.evaluate('DeadSlowTest.courses(4)')
     check('World 4 selector has twelve real courses',page.locator('.level-card').count()==12 and '0 / 12 COURSES COMPLETE' in page.locator('#dialog').inner_text())
     check('Grand Tour now has 72 stages','all 72' in page.locator('#dialog').inner_text())
-    page.locator('.level-card').first.click();check('Ball introduction explains map controls and shields','W A S D' in page.locator('#dialog').inner_text() and 'shield' in page.locator('#dialog').inner_text())
+    page.locator('.level-card').first.click()
+    intro = page.locator('#dialog .control-summary').inner_text()
+    check('Ball introduction explains map controls and shields','Hold the direction buttons' in intro and 'Use Shield' in intro)
+    shortcuts = [text.strip() for text in page.locator('#dialog .key-hint:visible').all_inner_texts()]
+    check('Desktop ball introduction retains movement and shield shortcuts','(WASD / arrows)' in shortcuts and '(Space / F)' in shortcuts)
     check('Seedhaven introduction counts controls and districts as objectives','04\nMISSION OBJECTIVES' in page.locator('#dialog').inner_text())
     shot('gerbo-intro.png');page.click('[data-action="begin"]');page.evaluate('DeadSlow.speed(0)')
     check('Rolling UI is visible with a separate directional pad',page.locator('.rampage-helm').is_visible() and not page.locator('#throttle-up').is_visible())

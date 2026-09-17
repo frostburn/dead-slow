@@ -239,7 +239,7 @@
         if (level.space.depot && !st.refuelled)
             return { ok: false, message: 'Take dispatch fuel before collecting the tender.' };
         st.beam = true;
-        return { ok: true, message: 'Beam locked. Hold J to attract; K to repel. Neither removes momentum for free.' };
+        return { ok: true, message: 'Beam locked. Use Attract or Repel. Neither removes momentum for free.' };
     }
     function beamPhysics(run, input, dt) {
         const st = run.space, s = run.ship, b = st.friendly;
@@ -426,7 +426,7 @@
         if (cfg.depot && !st.refuelled) return `REFUEL · match the amber tanker · ${st.depotHold.toFixed(1)} / ${cfg.depot.hold || 6} s`;
         if (cfg.mother && st.phase < 2) return `ASSEMBLY ${st.phase + 1}/2 · dock ${run.ship.name} at the amber cradle · ${st.capture.toFixed(1)} / 2 s`;
         if (cfg.target && !st.targetHit) return st.shots.length ? 'SHOT IN FLIGHT · recover recoil' : `FIRING SOLUTION · enter box · face lead diamond · steady ${st.charge.toFixed(1)} / 3 s`;
-        if (cfg.friendly && !st.rescued) return st.beam ? 'BEAM LOCK · J attract / K repel · settle the friendly in its green cradle' : 'RESCUE · approach the friendly craft · F locks the beam';
+        if (cfg.friendly && !st.rescued) return st.beam ? 'BEAM LOCK · use Attract / Repel · settle the friendly in its green cradle' : 'RESCUE · approach the friendly craft · use Lock beam';
         if (cfg.mission === 'time' && st.phase < gates(cfg).length) {
             const gate = gates(cfg)[st.phase];
             return `CHRONOGATE ${gate.id} → ${gate.id}′ · capture ${st.capture.toFixed(1)}/2 s · ${st.histories.length} repeating histories`;
