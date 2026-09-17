@@ -524,9 +524,11 @@ git commit -m "Add Dead Slow harbor and archipelago trials"
 ```
 
 Create an empty GitHub repository, add its remote, and push `main`. The
-**Checks** workflow runs on pushes and pull requests. It includes Node tests on
-22 and 24, plus Chromium browser checks. These workflow files are supplied as
-configuration; a local test run is not a claim that remote CI has already run.
+**Checks** workflow runs on pull requests, pushes to `main`, and manual dispatch.
+It runs Node tests once using `.nvmrc` (Node 22), plus Chromium browser checks.
+Feature-branch pushes do not start a duplicate run alongside their pull request.
+These workflow files are supplied as configuration; a local test run is not a
+claim that remote CI has already run.
 
 For optional hosting, choose **Settings → Pages → Source: GitHub Actions**,
 then run **Actions → Deploy Pages → Run workflow**. This is a manual, opt-in
