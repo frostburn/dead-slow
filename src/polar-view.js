@@ -37,13 +37,21 @@
         });
         ctx.restore();
     }
+    function paintChunk(cache,ice,k,cols){
+        const x=k%cols*CHUNK,y=Math.floor(k/cols)*CHUNK;
+        paintIce(cache,ice,{minX:x,minY:y,maxX:Math.min(x+CHUNK,ice.width),maxY:Math.min(y+CHUNK,ice.height)});
+    }
     function iceSurface(st,resolution){
         const ice=st.ice;let cache=iceLayers.get(ice);
         if(!cache||cache.resolution!==resolution){
             const surface=document.createElement('canvas');surface.width=Math.ceil(ice.width*resolution);surface.height=Math.ceil(ice.height*resolution);
             const ctx=surface.getContext('2d');ctx.setTransform(resolution,0,0,resolution,0,0);
             cache={surface,ctx,resolution,bands:Int8Array.from(ice.thickness,(_,k)=>iceBand(st,k)),revision:ice.revision,hasSlush:ice.opened.some(t=>t>=0),nextRefresh:st.time+.125};
-            paintIce(cache,ice,{minX:0,minY:0,maxX:ice.width,maxY:ice.height});iceLayers.set(ice,cache);
+            // Use identical clipping for the first paint and later dirty regions;
+            // rasterizers can round clipped hex edges differently otherwise.
+            const cols=Math.ceil(ice.width/CHUNK),rows=Math.ceil(ice.height/CHUNK);
+            for(let k=0;k<cols*rows;k++)paintChunk(cache,ice,k,cols);
+            iceLayers.set(ice,cache);
         }else if(cache.revision!==ice.revision||cache.hasSlush&&st.time>=cache.nextRefresh){
             const dirty=new Set(),cols=Math.ceil(ice.width/CHUNK),rows=Math.ceil(ice.height/CHUNK),pad=ice.radius+1;
             for(let k=0;k<ice.thickness.length;k++){
@@ -53,7 +61,7 @@
                 for(let j=Math.max(0,Math.floor((y-pad)/CHUNK));j<=Math.min(rows-1,Math.floor((y+pad)/CHUNK));j++)
                     for(let i=Math.max(0,Math.floor((x-pad)/CHUNK));i<=Math.min(cols-1,Math.floor((x+pad)/CHUNK));i++)dirty.add(j*cols+i);
             }
-            for(const k of dirty){const x=k%cols*CHUNK,y=Math.floor(k/cols)*CHUNK;paintIce(cache,ice,{minX:x,minY:y,maxX:Math.min(x+CHUNK,ice.width),maxY:Math.min(y+CHUNK,ice.height)});}
+            for(const k of dirty)paintChunk(cache,ice,k,cols);
             cache.revision=ice.revision;cache.nextRefresh=st.time+.125;
         }
         return cache.surface;

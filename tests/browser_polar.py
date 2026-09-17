@@ -47,7 +47,16 @@ def check_polar_rendering(page,check):
         paint();
         const pixels=c=>c.getContext('2d').getImageData(0,0,c.width,c.height).data;
         const same=(a,b)=>a.every((v,i)=>v===b[i]);
-        const fresh=()=>{PaleReachView.render(b,level,{...r,polar:{...r.polar,ice:{...r.polar.ice}}},1);return same(pixels(a),pixels(b))};
+        const differences=[];
+        const fresh=()=>{
+            PaleReachView.render(b,level,{...r,polar:{...r.polar,ice:{...r.polar.ice}}},1);
+            const actual=pixels(a),expected=pixels(b);let channels=0,maxDelta=0;const samples=[];
+            for(let i=0;i<actual.length;i++)if(actual[i]!==expected[i]){
+                channels++;maxDelta=Math.max(maxDelta,Math.abs(actual[i]-expected[i]));
+                if(samples.length<5)samples.push({x:Math.floor(i/4)%a.width,y:Math.floor(i/4/a.width),actual:actual[i],expected:expected[i]});
+            }
+            differences.push({channels,maxDelta,samples});return channels===0;
+        };
         const before=pixels(a),ice=r.polar.ice;
         // Include hexagons on repaint-region boundaries, where stale edges hide.
         for(let k=0;k<ice.thickness.length;k++)if(ice.thickness[k]>0&&ice.tiles[k].x>280&&ice.tiles[k].x<420&&ice.tiles[k].y>210&&ice.tiles[k].y<355)ice.opened[k]=r.polar.time;
@@ -57,8 +66,10 @@ def check_polar_rendering(page,check):
         r.polar.time+=.2;paint();const reclear=fresh()&&same(opened,pixels(a));
         const split=document.querySelector('#splits').firstElementChild,notch=document.querySelector('#notches').firstElementChild;
         DeadSlowTest.hud();DeadSlowTest.hud();
-        return {fracture,ageing,reclear,stableHUD:split===document.querySelector('#splits').firstElementChild&&notch===document.querySelector('#notches').firstElementChild};
+        return {fracture,ageing,reclear,differences,stableHUD:split===document.querySelector('#splits').firstElementChild&&notch===document.querySelector('#notches').firstElementChild};
     }''')
+    import json
+    print('Polar cache comparison: '+json.dumps(result),flush=True)
     check('Cached fractures match a fresh chart without stale hex edges',result['fracture'])
     check('Cached slush visibly ages and matches a fresh chart',result['ageing'])
     check('Reclearing slush restores the chart without accumulating opacity',result['reclear'])
