@@ -19,6 +19,13 @@ html = (ROOT / 'dist/index.html').read_text()
 checks = []
 
 def check(name, condition):
+    if not condition:
+        print('FAILED: '+name,flush=True)
+        print('Page errors: '+json.dumps(errors),flush=True)
+        print('Bridge state: '+json.dumps(page.evaluate('''() => ({status:DeadSlowTest.state.status,level:DeadSlowTest.state.level.id,time:DeadSlowTest.state.run.time,throttle:DeadSlowTest.state.run.ship?.throttle,focus:document.activeElement?.outerHTML,hidden:document.hidden})''')),flush=True)
+        failure=ROOT/'reports'/'browser-failure.png'
+        failure.parent.mkdir(parents=True,exist_ok=True)
+        page.screenshot(path=str(failure))
     assert condition, name
     checks.append(name)
 

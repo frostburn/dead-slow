@@ -68,7 +68,8 @@ export interface RailServices {
     fail():void;
 }
 
-export interface PolarInput {rudder:number;thruster:number}
+export type PolarAction = 'tow'|'target'|'fire';
+export interface PolarInput {rudder:number;thruster:number;winch?:number}
 export interface PolarState {
     level:Level;
     contacts:number;
@@ -83,6 +84,7 @@ export interface PolarPort {
     step(level:Level,run:PolarRun,input:PolarInput,dt:number):void;
     ready(run:PolarRun):boolean;
     command(run:PolarRun,id:string,order:'hold'|'proceed'):boolean;
+    action(run:PolarRun,name:PolarAction,value?:string):boolean;
 }
 export interface PolarViewPort {
     update(level:Level,run:PolarRun,status:string,format:Format):void;
@@ -91,6 +93,8 @@ export interface PolarViewPort {
 }
 export interface PolarAdapter extends Adapter<PolarRun> {
     command:PolarPort['command'];
+    action:PolarPort['action'];
+    key(event:KeyboardEvent,run:PolarRun):boolean;
     update:PolarViewPort['update'];
     render:PolarViewPort['render'];
     dialog:PolarViewPort['dialog'];

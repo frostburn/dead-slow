@@ -1,7 +1,7 @@
 """Pale Reach UI checks, called once from the existing atlas browser job."""
 def check_polar(page,check,out):
     page.set_viewport_size({'width':1440,'height':1000})
-    for stage in [1,2,3]:
+    for stage in [1,2,3,4,5,6]:
         page.evaluate('(n)=>{DeadSlow.level(7,n);DeadSlow.speed(0)}',stage)
         page.wait_for_timeout(80)
         check(f'7-0{stage} exposes polar chart and hides railway panels',page.locator('#polar-panel').is_visible() and not page.locator('#rail-panel').is_visible())
@@ -15,7 +15,26 @@ def check_polar(page,check,out):
             check('Unfinished polar splits retain an empty time',page.locator('#splits .split-row').last.locator('span').last.inner_text()=='—')
         if stage==2:
             check('Following mission has live gap and closing rate','HULL GAP' in page.locator('#polar-readout').inner_text())
+        if stage==4:
+            check('Restricted mission exposes tow and winch but no gun',page.locator('#polar-tow-controls').is_visible() and not page.locator('#polar-gun-controls').is_visible())
+            page.keyboard.press('f')
+            check('Tow key reaches a visible range and relative-speed notice',page.locator('#polar-notice').is_visible() and 'within 55 m' in page.locator('#polar-notice').inner_text())
+            check('Patrols, visible icebreaker and station exist on the playable chart',page.evaluate('DeadSlowTest.state.run.polar.operation.npcs.filter(n=>n.team==="patrol").length===2 && DeadSlowTest.state.run.polar.operation.npcs.some(n=>n.cutter&&n.active&&n.ship.iceClass) && DeadSlowTest.state.run.polar.operation.assets[0].team==="civilian"'))
+        if stage in [5,6]:
+            check(f'7-0{stage} exposes deliberate fire and hostile target controls',page.locator('#polar-gun-controls').is_visible() and page.locator('#polar-fire').is_disabled())
+            page.keyboard.press('t');page.evaluate('DeadSlowTest.hud()')
+            check(f'7-0{stage} target key selects a hostile contact',page.locator('#polar-targets [aria-pressed=true]').count()==1)
+        if stage==5:
+            check('Base defense describes evacuation rather than docking',page.locator('#dock-list-label').inner_text()=='EVACUATION STATUS')
+            check('Unloading captains have physical cargo progress','Unloading' in page.locator('#polar-fleet').inner_text())
+        if stage==6:
+            page.locator('[data-polar-target=fuel]').click()
+            check('Target buttons select the named military installation',page.evaluate('DeadSlowTest.state.run.polar.operation.gun.target==="fuel"'))
+            page.keyboard.press('b')
+            check('An unprepared shot consumes no ammunition',page.evaluate('DeadSlowTest.state.run.polar.operation.gun.ammo===24'))
+            check('Strike restores the mooring checklist',page.locator('#check-inside').inner_text()=='Inside berth')
         page.screenshot(path=str(out/f'pale-reach-{stage}.png'))
+    page.evaluate('DeadSlow.level(7,3);DeadSlow.speed(0)')
     check_polar_rendering(page,check)
     check('Two captains have four order buttons',page.locator('#polar-fleet button').count()==4)
     page.locator('[data-convoy=morrow][data-order=proceed]').click()
@@ -35,6 +54,12 @@ def check_polar(page,check,out):
         page.locator('.polar-mobile-splits').evaluate('(d)=>d.open=true')
         check(f'Split times are accessible at {width}×{height}',page.locator('#polar-splits').is_visible() and page.locator('#polar-splits .split-row').count()==3)
         page.screenshot(path=str(out/f'pale-reach-{width}.png'))
+        for stage in [4,5,6]:
+            page.evaluate('(n)=>{DeadSlow.level(7,n);DeadSlow.speed(0)}',stage)
+            check(f'7-0{stage} operations fit {width}×{height}',page.evaluate('document.documentElement.scrollWidth<=innerWidth'))
+            check(f'7-0{stage} action buttons are usable at {width}×{height}',page.locator('#polar-actions button:visible').evaluate_all('(bs)=>bs.length>=3 && bs.every(b=>b.getBoundingClientRect().height>=40)'))
+            page.screenshot(path=str(out/f'pale-reach-{stage}-{width}.png'))
+        page.evaluate('DeadSlow.level(7,3);DeadSlow.speed(0)')
     page.set_viewport_size({'width':1440,'height':1000});page.evaluate('DeadSlow.level(1,1);DeadSlow.speed(0)')
     check('Leaving the polar world hides its convoy panel',not page.locator('#polar-panel').is_visible())
 

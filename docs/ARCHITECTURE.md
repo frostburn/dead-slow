@@ -126,11 +126,11 @@ only when two domains need the same behavior; preserve the offline HTML delivera
 
 ## Pale Reach surface service
 
-`polar-levels.js` declares the first three World 7 charts. `polar.js` owns a
+`polar-levels.js` declares the first six World 7 charts. `polar.js` owns a
 hexagonal sheet grid (144 m² per tile), per-cell opening times and closure rates, physical fleet
 ships, drifting solids, cargo states and completion. `polar-adapter.js` plugs
 that state into the existing shell; `polar-view.js` draws the same collision
-grid and exposes the two captain orders. `polar-grid.js` shares tile polygons,
+grid and exposes captain, tow and gun orders. `polar-grid.js` shares tile polygons,
 point lookup and six-neighbor connectivity between rendering, collision and
 route planning. No marine job state is fabricated.
 The view retains a raster ice layer per live grid. Fractures repaint nearby
@@ -158,9 +158,37 @@ hulls intact. Navigation may retain its last valid route when a conservative
 planning clearance rejects the current grid cell; physics still prevents
 crossing intact sheet. Paths are requests, never position constraints.
 
-Partial World 7 assignments have normal individual records and ghosts, with
-`polar:2:1` compatibility stamps. `standalone` excludes them from the existing
+`polar-operations.js` supplies the survey rescue, defense and strike state. A
+stern-to-bow spring/damper tow applies equal and opposite impulses and torque;
+winching, overload and obstacle chafe act on the physical line. Scientific
+recorders require sustained relative rest, and the whole rescued hull must stop
+in safe water. Pickets move, collide and issue warnings without firing.
+
+Each changing lead is cut by a visible physical icebreaker: Council cutter Awl
+in the rescue, three hostile Shelf cutters in defense, and Compact cutter Rime
+on the strike flank. Their captains use ordinary throttle, rudder and thruster
+orders, brake for traffic, and call the same bow-contact icebreaking code as the
+player. Chart dashes show intended routes, never a promise of cleared water.
+No timer opens hexes. Hostile cutters can be targeted; disabled ships coast to a
+stop, and their wrecks and opened wakes remain physical. Cutters park clear of
+their approaches after reaching open water.
+Hostile captains use the same connected-water planner as supply vessels, so a
+player-cut shortcut works for either side. No paths move hulls directly. Guns
+require range, bow arc, a clear line, low speed and rotation, and a timed solution.
+Each manual player shot has recoil, ammunition and a reload. Enemy solution lines
+announce attacks; shells travel independently and strike the first hull, fixed
+installation or solid ice they meet. Exact hex intersections along a narrow ray strip block both solutions and shell flight on unopened sheet or pressure ridges, while opened slush remains transparent to fire. Destroyed targets remain physical wrecks.
+Defense ends with cargo ashore and both transports returned, regardless of live
+attackers. Strike completion also requires docking after both installations fall.
+
+Borrowed Water has no arrival deadline: Rime waits at Glass Quay, late checkpoints
+still count, and heavy slush leaves retry to the player. Its rules revision is 2;
+all six charts use course revision 2. The physical cutter routes archive the
+previous timed-opening records for 7-04–7-06 only.
+Each assignment has normal individual records, elapsed split times and ghosts.
+`standalone` excludes them from the existing
 72-stage Grand Tour until the complete campaign exists; prior circuits keep
-their signatures. `tests/polar.test.cjs` covers boundaries and completes all
-three missions through ordinary controls at 120 Hz. Browser UI checks run
+their signatures. The polar tests cover boundaries and complete all six missions
+through ordinary controls at 120 Hz, including towing and physical projectile
+hits. A passive defense run loses a transport before it can leave. Browser UI checks run
 inside the existing atlas job; there is no additional CI matrix or job.

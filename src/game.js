@@ -130,7 +130,7 @@
         HarborSpaceUI.prepare(level);
         G.prepare(level);
         (simulation.prepare || V.prepare)(level, railCommand);
-        PaleReachView.prepare(level,convoyCommand);
+        PaleReachView.prepare(level,convoyCommand,polarAction);
         // An assisted circuit stays assisted at 1× too, before begin() records
         // a departure. Otherwise later individual PBs could leak out of a tour.
         if (marathon?.practice) markPractice('Practice circuit');
@@ -274,6 +274,7 @@
         return true;
     }
     function lineAction() {
+        if(run.polar)return polarAction('tow');
         if (!run.jobs) return false;
         if (status !== 'running')
             return;
@@ -306,6 +307,10 @@
     function convoyCommand(id,order) {
         if(status!=='running'||!run.polar)return false;
         const ok=simulation.command(run,id,order);updateHud();return ok;
+    }
+    function polarAction(name,value) {
+        if(status!=='running'||!run.polar)return false;
+        const ok=simulation.action(run,name,value);updateHud();return ok;
     }
     function advance(dt) {
         if (status !== 'running')
@@ -1295,7 +1300,7 @@
             }, start: begin, advance: advanceSeconds, cheats: developer.menu, frame,
             setShip(values) {
                 Object.assign(run.ship, values);
-            }, railCommand, convoyCommand, throttle, lineAction, signal, finish, pause: showPause, retry, requestRetry: retry, marathon: startMarathon, next: nextHarbor, format, zoom: zoomChart, hud: updateHud, courses: showCourses
+            }, railCommand, convoyCommand, polarAction, throttle, lineAction, signal, finish, pause: showPause, retry, requestRetry: retry, marathon: startMarathon, next: nextHarbor, format, zoom: zoomChart, hud: updateHud, courses: showCourses
         };
     }
 })();

@@ -3,6 +3,7 @@
     'use strict';
     const P=typeof module!=='undefined'&&module.exports?require('./physics.js'):root.HarborPhysics;
     const G=typeof module!=='undefined'&&module.exports?require('./polar-grid.js'):root.PaleReachGrid;
+    const O=typeof module!=='undefined'&&module.exports?require('./polar-operations.js'):root.PaleReachOperations;
     const clamp=P.clamp, speed=s=>Math.hypot(s.vx,s.vy);
     function segmentDistance(x,y,a,b){
         const dx=b[0]-a[0],dy=b[1]-a[1],t=clamp(((x-a[0])*dx+(y-a[1])*dy)/(dx*dx+dy*dy||1),0,1);
@@ -19,30 +20,32 @@
             let thickness=c.thickness,closing=c.closing;
             if(routeDistance(x,y,c.route)<c.thinWidth/2)thickness=c.thinIce;
             if(c.secondary&&routeDistance(x,y,c.secondary.route)<c.secondary.width/2){thickness=c.secondary.thickness;closing=c.secondary.closing;}
+            for(const cutter of c.cutters||[])if(routeDistance(x,y,cutter.route)<cutter.width/2)thickness=cutter.thickness;
             for(const patch of c.patches||[])if(inRect(x,y,patch))thickness=patch.thickness;
-            if(c.water.some(e=>inside(x,y,e)))thickness=0;
+            if(c.water.some(e=>inside(x,y,e))||[...(c.openWaterRoutes||[]),...(c.patrolWater||[])].some(r=>routeDistance(x,y,r.route)<r.width/2))thickness=0;
             if(c.ridges.some(r=>inRect(x,y,r)))thickness=2;
             ice.thickness[k]=thickness;ice.closing[k]=closing;
         }
         const ship=P.ship(...level.start,level.spec);
-        const fleet=(c.fleet||[]).map(f=>({...f,ship:P.ship(...f.start,f.spec),leg:'outbound',order:f.leader?'proceed':'hold',waypoint:0,unloaded:false,unloadProgress:0,returned:false,waiting:'Holding in safe water',input:{rudder:0,thruster:0}}));
+        const fleet=(c.fleet||[]).map(f=>({...f,ship:P.ship(...f.start,f.spec),leg:f.unloading?'unloading':'outbound',order:f.leader?'proceed':'hold',waypoint:0,unloaded:false,unloadProgress:0,returned:false,waiting:f.unloading?`Unloading 0 / ${f.unload} s`:'Holding in safe water',input:{rudder:0,thruster:0}}));
         const bergs=(c.bergs||[]).map(b=>P.ship(b.x,b.y,0,{...b,mass:80,hull:100,vessel:'iceberg'}));
         const pocket=[];
         if(c.pocket)for(let k=0;k<ice.thickness.length;k++){
             const {x,y}=ice.tiles[k];
             if(inside(x,y,c.pocket))pocket.push(k);
         }
-        return {ship,polar:{level,config:c,ice,fleet,bergs,floes:[],pendingFloes:[],pocket,time:0,broken:0,contacts:0,damage:0,slush:0,
+        return {ship,polar:{level,config:c,ice,fleet,bergs,operation:O.create(level),floes:[],pendingFloes:[],pocket,time:0,broken:0,contacts:0,damage:0,slush:0,
             routeOpened:false,notice:'Read the ice before committing your bow.',lastHits:{},failure:null,complete:false,
-            stats:{sheetArea:0,slushCleared:0,deliveries:0,safeReturns:0,orders:0},checkpoint:0},dock:P.docking(ship,level.berth,false)};
+            stats:{sheetArea:0,slushCleared:0,deliveries:0,safeReturns:0,orders:0,shots:0,hostilesDisabled:0,recorders:0,towBreaks:0,damageTaken:0},checkpoint:0},dock:P.docking(ship,level.berth,false)};
     }
     const indexAt=G.indexAt;
     function slushAt(st,k){return k<0||st.ice.opened[k]<0?0:clamp((st.time-st.ice.opened[k]-20)/st.ice.closing[k],0,.96);}
     function solidAt(st,x,y){const k=indexAt(st.ice,x,y);return k>=0&&st.ice.thickness[k]>0&&st.ice.opened[k]<0;}
-    function impact(st,s,id,hit){
+    function impact(st,s,id,hit,record=s.required!==false){
         if(!hit||hit.impact<.24||st.time-(st.lastHits[id]??-100)<1.2)return;
-        st.lastHits[id]=st.time;st.contacts++;
-        const damage=Math.max(.25,(hit.impact-.2)**2*2.4);s.hull=Math.max(0,s.hull-damage);st.damage+=damage;
+        st.lastHits[id]=st.time;
+        const damage=Math.max(.25,(hit.impact-.2)**2*2.4);s.hull=Math.max(0,s.hull-damage);
+        if(record){st.contacts++;st.damage+=damage;}
     }
     function iceContact(st,s,dt){
         // The pressure bow fractures a narrow shoulder beside the hull as it advances.
@@ -192,13 +195,14 @@
         }
     }
     function pocketClear(st){return st.pocket.length?st.pocket.filter(k=>!st.ice.thickness[k]||st.ice.opened[k]>=0).length/st.pocket.length:0;}
-    function ready(run){const st=run.polar;return st.config.mission==='pocket'?st.routeOpened&&pocketClear(st)>=st.config.pocket.required:st.config.mission==='follow'?st.checkpoint>=3&&st.fleet[0].returned:st.fleet.every(f=>f.unloaded&&f.returned);}
+    function ready(run){const st=run.polar;if(st.operation)return O.ready(st);return st.config.mission==='pocket'?st.routeOpened&&pocketClear(st)>=st.config.pocket.required:st.config.mission==='follow'?st.checkpoint>=3&&st.fleet[0].returned:st.fleet.every(f=>f.unloaded&&f.returned);}
     function step(level,run,input,dt){
         const st=run.polar;st.player=run.ship;st.time+=dt;run.time=st.time;
         const s=run.ship,old={x:s.x,y:s.y};
+        O.before(st,run,input,dt);
         P.integrate(s,input,{current:{x:0,y:0}},dt);st.slush=iceContact(st,s,dt);
-        fleetStep(st,dt);
-        const ships=[s,...st.fleet.map(f=>f.ship)];
+        fleetStep(st,dt);O.move(st,run,dt,api);
+        const ships=[s,...st.fleet.map(f=>f.ship),...O.bodies(st)];
         for(const b of [...st.bergs,...st.floes]){
             b.x+=b.vx*dt;b.y+=b.vy*dt;b.a=P.wrap(b.a+b.r*dt);
             if(b.range){if(b.y<b.range.y-b.range.ry&&b.vy<0||b.y>b.range.y+b.range.ry&&b.vy>0)b.vy=-b.vy;}
@@ -207,11 +211,12 @@
             for(const vessel of ships){const hit=b.vessel==='iceberg'?P.contact(vessel,{poly:P.hull(b),velocity:{x:b.vx,y:b.vy}}):P.collideBodies(vessel,b);impact(st,vessel,b.id+vessel.name,hit);}
         }
         for(let i=0;i<ships.length;i++){
-            for(let j=i+1;j<ships.length;j++){const hit=P.collideBodies(ships[i],ships[j]);impact(st,ships[i],'ship-'+i+'-'+j,hit);if(hit&&hit.impact>.24)ships[j].hull=Math.max(0,ships[j].hull-hit.impact**2*2);}
+            for(let j=i+1;j<ships.length;j++){const hit=P.collideBodies(ships[i],ships[j]);impact(st,ships[i],'ship-'+i+'-'+j,hit,ships[i].required!==false||ships[j].required!==false);if(hit&&hit.impact>.24)ships[j].hull=Math.max(0,ships[j].hull-hit.impact**2*2);}
             for(const dock of st.config.docks)impact(st,ships[i],'jetty-'+i,P.contact(ships[i],dock));
+            O.assetContacts(st,ships[i],api);
             const hull=P.hull(ships[i]);
-            if(hull.some(p=>p.x<0||p.y<0||p.x>level.world[0]||p.y>level.world[1]))st.failure=ships[i].name+' left the assignment chart.';
-            if(ships[i].hull<=0)st.failure=ships[i].name+' lost. Every required crew must come home.';
+            if(ships[i].required!==false&&hull.some(p=>p.x<0||p.y<0||p.x>level.world[0]||p.y>level.world[1]))st.failure=ships[i].name+' left the assignment chart.';
+            if(ships[i].required!==false&&ships[i].hull<=0)st.failure=ships[i].name+' lost. Every required crew must come home.';
         }
         for(let i=st.pendingFloes.length-1;i>=0;i--){
             const p=st.pendingFloes[i];
@@ -222,29 +227,28 @@
         if(st.config.mission==='pocket'&&s.x>460&&st.broken>8)st.routeOpened=true;
         if(st.config.mission==='follow'){
             const gates=[[300,330],[485,265],[690,340]],g=gates[st.checkpoint];
-            const leader=st.fleet[0],separation=gap(run);
-            const following=!leader.returned&&separation.metres>=15&&separation.metres<=100;
-            if(g&&following&&Math.hypot(s.x-g[0],s.y-g[1])<80)st.checkpoint++;
-            if(leader.returned&&st.checkpoint<gates.length)st.failure='Rime completed the lead without Lantern. Retry and stay with the icebreaker through the bends.';
+            if(g&&Math.hypot(s.x-g[0],s.y-g[1])<80)st.checkpoint++;
         }
+        O.after(st,run,dt);
         run.thrusterTime=(run.thrusterTime||0)+Math.abs(input.thruster||0)*dt;
         run.contacts=st.contacts;run.distance+=Math.hypot(s.x-old.x,s.y-old.y);run.maxSpeed=Math.max(run.maxSpeed,speed(s));
         run.focus={x:s.x,y:s.y,a:s.a};run.dock=P.docking(s,level.berth,ready(run));
         run.dock.ready=run.dock.ready&&s.throttle===0&&Math.abs(s.engine)<.15;
-        run.dockHold=run.dock.ready?run.dockHold+dt:0;st.complete=run.dockHold>=2&&!st.failure;
+        run.dockHold=run.dock.ready?run.dockHold+dt:0;st.complete=(st.config.mission==='defense'?ready(run):run.dockHold>=2)&&!st.failure;
         if(run.time>=run.sampleAt){run.sampleAt=run.time+.25;run.ghost.push([run.time,s.x,s.y,s.a]);if(run.ghost.length>16000)run.ghost.shift();}
         const objectives=progress(run);
         for(const o of objectives)if(o.done&&!run.splits.some(p=>p.name===o.text))run.splits.push({name:o.text,time:run.time});
     }
     function gap(run){const leader=run.polar.fleet.find(f=>f.leader);if(!leader)return null;const s=run.ship,b=leader.ship,dx=b.x-s.x,dy=b.y-s.y,d=Math.hypot(dx,dy);return {metres:d-(s.length+b.length)/2,closing:d?((s.vx-b.vx)*dx+(s.vy-b.vy)*dy)/d:0};}
     function progress(run){const st=run.polar,c=st.config;
-        return c.objectives.map((text,i)=>({text,done:c.mission==='pocket'?[st.routeOpened,pocketClear(st)>=c.pocket.required,st.complete][i]:c.mission==='follow'?[st.checkpoint>=3,st.complete][i]:i<2?st.fleet[i].returned:st.complete}));
+        return c.objectives.map((text,i)=>({text,done:st.operation?O.progress(st)[i]:c.mission==='pocket'?[st.routeOpened,pocketClear(st)>=c.pocket.required,st.complete][i]:c.mission==='follow'?[st.checkpoint>=3,st.complete][i]:i<2?st.fleet[i].returned:st.complete}));
     }
     function message(run){const st=run.polar;if(st.failure)return st.failure;if(st.complete)return 'Passage service complete. All required hulls secure.';if(st.noticeUntil>st.time)return st.notice;
+        if(st.operation)return O.message(st);
         if(st.config.mission==='pocket')return !st.routeOpened?'Cut the blue dogleg around the pressure ridge.':pocketClear(st)<st.config.pocket.required?`Turning pocket ${Math.floor(pocketClear(st)*100)}% / 86% · widen the amber area before docking.`:'Turning pocket open · slow and moor at the green jetty.';
-        if(st.config.mission==='follow'){const g=gap(run);return st.slush>.55?'HEAVY SLUSH · the lead is closing; recover spacing without crowding Rime.':g.metres<22?'TOO CLOSE · reduce speed; Rime needs room at the thick patch.':g.metres>70?'FALLING BEHIND · read the slush, keep the stern in the lead.':'Working separation · watch Rime’s speed and your stern.';}
+        if(st.config.mission==='follow'){const g=gap(run);if(st.fleet[0].returned)return 'Rime is holding at Glass Quay. Continue through the marked lead; retry when you choose.';return st.slush>.55?'HEAVY SLUSH · the lead is closing; recover spacing without crowding Rime.':g.metres<22?'TOO CLOSE · reduce speed; Rime needs room at the thick patch.':g.metres>70?'FALLING BEHIND · read the slush, keep the stern in the lead.':'Working separation · watch Rime’s speed and your stern.';}
         return ready(run)?'Both crews are home. Moor Kestrel in safe water.':`${st.stats.deliveries}/2 cargoes ashore · ${st.stats.safeReturns}/2 ships home. Clear return routes before sending Proceed.`;
     }
-    const api={create,step,ready,command,pilot,progress,message,gap,pocketClear,slushAt,solidAt,indexAt,iceContact,routeDistance,waterRoute,speed};
+    const api={create,step,ready,command,pilot,progress,message,gap,pocketClear,slushAt,solidAt,indexAt,iceContact,routeDistance,waterRoute,speed,clearance,impact,action:O.action,operations:O};
     if(typeof module!=='undefined'&&module.exports)module.exports=api;root.PaleReach=api;
 })(globalThis);

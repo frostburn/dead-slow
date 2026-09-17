@@ -41,7 +41,7 @@ with sync_playwright() as p:
     check('World 5 offers its complete circuit',page.locator('[data-action=marathon]').is_enabled())
     for w in [7,8]:
         page.evaluate('(w)=>DeadSlowTest.courses(w)',w)
-        check(f'World {w} separates playable and planned missions',page.locator('.level-card:disabled').count()==(9 if w==7 else 12) and page.locator('.level-card:not(:disabled)').count()==(3 if w==7 else 0) and 'COMING SOON' in page.locator('#dialog').inner_text())
+        check(f'World {w} separates playable and planned missions',page.locator('.level-card:disabled').count()==(6 if w==7 else 12) and page.locator('.level-card:not(:disabled)').count()==(6 if w==7 else 0) and 'COMING SOON' in page.locator('#dialog').inner_text())
         check(f'World {w} cannot start a circuit',page.locator('[data-action=marathon]').is_disabled())
     check('Eight chapter tabs remain inspectable',page.locator('.world-tab').count()==8)
     page.screenshot(path=str(OUT/'eight-world-atlas.png'))
