@@ -42,8 +42,8 @@ test('actual fixed-step frames keep speed on retry and stop precisely on complet
  t.cheats.warp(289,121,0);t.cheats.step(3);assert.equal(t.state.status,'complete');const done=t.state.run.time;
  t.frame(5100);near(t.state.run.time,done);t.next();assert.equal(t.cheats.speed(),0);assert.ok(t.state.run.pausedUsed);
 });
-test('all 73 assignments load with finite clean initial state and usable objectives',()=>{
- const t=create();assert.equal(L.length,73);
+test('all 76 assignments load with finite clean initial state and usable objectives',()=>{
+ const t=create();assert.equal(L.length,76);
  for(let i=0;i<L.length;i++){
   t.load(i,false);const {run,level:l}=t.state;
   assert.equal(t.state.status,'ready',l.id);
@@ -51,7 +51,7 @@ test('all 73 assignments load with finite clean initial state and usable objecti
   else assert.ok([run.ship.x,run.ship.y,run.ship.vx,run.ship.vy].every(Number.isFinite));
   assert.equal(run.contacts,0,l.id);assert.ok(l.brief&&l.tip&&l.pace.every(Number.isFinite));
   assert.ok(l.openSides.length>0,l.id);assert.equal(l.bonus===true,l.id==='century-ship');
-  if(!l.rail&&!l.rampage&&!l.space)for(const target of [run.ship,...run.jobs.bodies])for(const o of run.static)assert.equal(!!P.sat(P.hull(target),o.poly),false,`${l.id}: starting hull / ${o.id}`);
+  if(!l.rail&&!l.rampage&&!l.space&&!l.polar)for(const target of [run.ship,...run.jobs.bodies])for(const o of run.static)assert.equal(!!P.sat(P.hull(target),o.poly),false,`${l.id}: starting hull / ${o.id}`);
  }
 });
 test('Backwater is an offset dogleg and the fingers still fit the freighter',()=>{

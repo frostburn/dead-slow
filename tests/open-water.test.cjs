@@ -4,6 +4,7 @@ const P = require('../src/physics.js'), N = require('../src/navigation.js'), J =
 const L = require('../src/levels.js'), S = require('../src/storage.js');
 const { create } = require('./headless.cjs');
 for (const l of L) {
+    if(l.polar)continue; // Dedicated ice, fleet and full-hull checks live in polar.test.cjs.
     if(l.rail) {
         test(`${l.id}: every starting vehicle has an occupied track and finite motion`,()=>{
             const t=create();t.load(L.indexOf(l));
@@ -84,10 +85,10 @@ test('only changed departure routes are archived; tutorials and other worlds ret
     const run = { time: 200, contacts: 0, clean: true }, stage = { runs: [run], ghost: [[0, 88, 274, 0]], bestSplits: [80], clears: 1, attempts: 2 };
     // This v3 migration fixture predates the railway. Its schema-15 rail
     // archives are covered separately in rail-infrastructure.test.cjs.
-    const stages = Object.fromEntries(L.filter(l=>!l.rail).map(l => [l.id, stage]));
+    const stages = Object.fromEntries(L.filter(l=>!l.rail&&!l.polar).map(l => [l.id, stage]));
     const s = S.sanitize({ version: 3, stages, races: { coast: [run], northwatch: [run], archipelago: [run], 'grand-tour': [run] }, archivedRaces: { 'grand-tour-24': [run] } });
     assert.equal(s.version, S.VERSION); assert.equal(Object.keys(s.archivedStages).length, 11);
-    for (const l of L.filter(l=>!l.rail)) assert.equal(!!s.stages[l.id], !S.RESTARTED.includes(l.id) && l.id !== 'backwater', l.id);
+    for (const l of L.filter(l=>!l.rail&&!l.polar)) assert.equal(!!s.stages[l.id], !S.RESTARTED.includes(l.id) && l.id !== 'backwater', l.id);
     assert.deepEqual(s.archivedStages['backwater-approach-v1'].ghost, stage.ghost);
     assert.equal(s.archivedRaces['northwatch-approach-v1'][0].time, 200);
     assert.deepEqual(s.archivedStages['milk-run'].ghost, stage.ghost);

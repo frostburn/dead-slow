@@ -550,8 +550,9 @@
     const spaceLevels = typeof module !== 'undefined' && module.exports ? require('./space-levels.js') : root.HarborSpaceLevels;
     const rampageLevels = typeof module !== 'undefined' && module.exports ? require('./rampage.js').levels : root.GerboRampage.levels;
     const railLevels = typeof module !== 'undefined' && module.exports ? require('./rail-levels.js') : root.RailLevels;
+    const polarLevels = typeof module !== 'undefined' && module.exports ? require('./polar-levels.js').levels : root.PaleReachLevels.levels;
     const sources = { coast: levels.slice(), northwatch: night, archipelago: islandLevels,
-        gerbozilla: rampageLevels, 'long-grade': railLevels, meridian: spaceLevels };
+        gerbozilla: rampageLevels, 'long-grade': railLevels, meridian: spaceLevels, 'pale-reach': polarLevels };
     const worlds = [
         { id:'coast', number:1, name:'The Sheltered Coast', subtitle:'DAY WATCH · ROOM TO LEARN', theme:'coast', description:'Twelve working harbors. Wavebreak basins protect the current-heavy moorings without taking the weight out of the ship.' },
         { id:'northwatch', number:2, name:'Northwatch', subtitle:'NIGHT SHIFT · NO EASY WATER', theme:'night', description:'Twelve exposed night-shift trials: sluice jets, double booms, convoys, tight locks and the final lighthouse run.' },
@@ -559,7 +560,7 @@
         { id:'gerbozilla', number:4, name:'Gerbozilla’s Rampage', subtitle:'GIANT PET · TWELVE FIELD COURSES', theme:'rampage', description:'Twelve championship field courses: momentum, forest orienteering, volcanic crossings, giant pets and Lady Whiskerdoom’s journey home. Green slows rolling; black boulders are impassable.' },
         { id:'long-grade', number:5, name:'The Long Grade', subtitle:'HEAVY RAIL · TWELVE ASSIGNMENTS', theme:'rail', description:'A freight network from upland quarries to the coastal terminal. Work the yards, share the line, manage a mountain helper and bring every wagon home.' },
         { id:'meridian', number:6, name:'The Black Meridian', subtitle:'DEEP SPACE · NO FREE BRAKES', theme:'space', description:'Twelve spacecraft assignments: moving cradles, refuelling, assembly, recoil, beam rescue, stellar shadows and your own history. The Century Ship is a separate bonus, excluded from every circuit.' },
-        { id:'pale-reach', number:7, name:'Race for the Pale Reach', subtitle:'ICE & CONFLICT · COMING SOON', theme:'polar', comingSoon:true, description:'Coming soon: icebreakers, supply convoys and submarine operations in a wholly fictional polar conflict. Keep the passage open.' },
+        { id:'pale-reach', number:7, name:'Race for the Pale Reach', subtitle:'PASSAGE SERVICE · 3 OF 12 AVAILABLE', theme:'polar', partial:true, description:'Open a usable harbor, follow a working icebreaker, and bring two supply crews home. The Free Anchorage Council, Narrows Compact and Shelf League disagree over a changing polar basin. The first three assignments are playable; the full campaign circuit is still to come.' },
         { id:'megastructures', number:8, name:'Tow the Impossible', subtitle:'BUILD SOMETHING BIGGER · COMING SOON', theme:'platform', comingSoon:true, description:'Coming soon: floating hospitals, bridge spans and entire terminals. End the journey by placing the harbor itself.' }
     ];
     const planned = {

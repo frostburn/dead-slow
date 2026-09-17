@@ -17,6 +17,7 @@
     "src/rail-commands.js",
     "src/simulations.js",
     "src/rail-adapter.js",
+    "src/polar-adapter.js",
     "src/compatibility.js",
     "src/rail-levels.js",
     "tools/validate-rail.cjs",

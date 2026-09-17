@@ -123,3 +123,34 @@ Build new mechanics inside their domain engine, with a small command contract,
 validated level data and a presentation projection. Share the shell's clock,
 practice policy, input cleanup, circuits and records. Extract another abstraction
 only when two domains need the same behavior; preserve the offline HTML deliverable.
+
+## Pale Reach surface service
+
+`polar-levels.js` declares the first three World 7 charts. `polar.js` owns a
+12-metre sheet grid, per-cell opening times and closure rates, physical fleet
+ships, drifting solids, cargo states and completion. `polar-adapter.js` plugs
+that state into the existing shell; `polar-view.js` draws the same collision
+grid and exposes the two captain orders. No marine job state is fabricated.
+
+Sheet fractures require forward momentum and a bow approach, cost speed and
+open a narrow shoulder beside the hull. Pressure ridges remain impassable.
+Slush is a continuous resistance field after a 20-second grace period; an
+opened cell never becomes a solid collider under a vessel. Breaking can leave
+mass-bearing floes, spawned only after occupied hulls clear their location.
+Icebergs drift independently, collide as solid bodies, and already carry keel
+metadata; depth bands and sonar are reserved for later assignments.
+
+Supply captains plan connected cleared water with beam clearance, then apply
+the same engine lag, thrust, rudder, drag and collision model as the player.
+They brake for ice and traffic. Hold cannot erase velocity. They unload at
+rest, await a fresh Proceed for their return, and must get home with their
+hulls intact. Navigation may retain its last valid route when a conservative
+planning clearance rejects the current grid cell; physics still prevents
+crossing intact sheet. Paths are requests, never position constraints.
+
+Partial World 7 assignments have normal individual records and ghosts, with
+`polar:1:1` compatibility stamps. `standalone` excludes them from the existing
+72-stage Grand Tour until the complete campaign exists; prior circuits keep
+their signatures. `tests/polar.test.cjs` covers boundaries and completes all
+three missions through ordinary controls at 120 Hz. Browser UI checks run
+inside the existing atlas job; there is no additional CI matrix or job.

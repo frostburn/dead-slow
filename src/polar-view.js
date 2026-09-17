@@ -1,0 +1,121 @@
+/* Pale Reach chart and bridge UI. All collision geometry comes from the simulation. */
+(function(root){
+    'use strict';
+    const P=typeof module!=='undefined'&&module.exports?require('./physics.js'):root.HarborPhysics;
+    const I=typeof module!=='undefined'&&module.exports?require('./polar.js'):root.PaleReach;
+    const $=id=>document.getElementById(id),set=(id,v)=>$(id).textContent=v;
+    function prepare(level,command){
+        $('polar-panel').hidden=!level.polar;
+        if(!level.polar)return;
+        document.title='DEAD SLOW — Race for the Pale Reach';
+        $('sea').setAttribute('aria-label','Polar passage chart: blue thin ice, cream pressure ridges, closing slush and solid drifting ice.');
+        $('polar-fleet').innerHTML=(level.polar.fleet||[]).filter(f=>!f.leader).map(f=>`<div class="polar-order"><strong>${f.name}</strong><span id="polar-${f.id}-status"></span><div><button data-convoy="${f.id}" data-order="hold">Hold</button><button data-convoy="${f.id}" data-order="proceed">Proceed</button></div></div>`).join('');
+        $('polar-fleet').onclick=e=>{const b=e.target.closest('[data-convoy]');if(b&&!b.disabled)command(b.dataset.convoy,b.dataset.order);};
+        set('polar-dispatch',level.polar.dispatch[0]);
+        set('polar-legend','BLUE · thin sheet / CREAM · pressure ridge / SPECKLED · closing slush / WHITE · solid drifting ice');
+    }
+    function update(level,run,status,format){
+        const s=run.ship,st=run.polar,m=P.groundMotion(s),h=Math.max(0,Math.ceil(s.hull)),g=I.gap(run);
+        set('speed',(m.surge<0?'−':'')+(m.speed*1.94384).toFixed(1));set('mobile-speed',$('speed').textContent);
+        set('speed-direction',m.direction.toUpperCase());set('mobile-direction',m.direction.toUpperCase());
+        set('heading',String(Math.round((s.a*180/Math.PI+450)%360)).padStart(3,'0'));
+        set('drift',`SIDE DRIFT ${(Math.abs(m.sway)*1.94384).toFixed(1)} kn`);
+        set('shelter-status',st.slush>.15?'CHANNEL THICKENING':'POLAR PASSAGE');set('local-set','ICE DRIFT · WATCH THE FLOES');
+        set('weather-text','PALE REACH · VISIBILITY GOOD · ICE UNDER PRESSURE');
+        set('hull-label',h+'%');set('mobile-hull',h);set('contacts',run.contacts);set('mobile-hits',run.contacts);set('engine-read',Math.round(s.engine*100));
+        $('hull-bar').style.width=h+'%';$('hull-bar').style.background=h<35?'var(--red)':'var(--green)';
+        $('rudder-indicator').style.left=`calc(${50+s.rudder*47}% - 3px)`;
+        const names=['FULL ASTERN','HALF ASTERN','DEAD SLOW ASTERN','STOP','DEAD SLOW','SLOW AHEAD','HALF AHEAD','FULL AHEAD'];
+        set('telegraph-name',names[s.throttle+3]);set('telegraph-detail',s.throttle===0?'NEUTRAL · STILL COASTING':s.iceClass?'ICEBREAKING BOW · KEEP ROOM TO BRAKE':'LADEN HULL · CANNOT BREAK SHEET');
+        $('notches').innerHTML=Array.from({length:8},(_,i)=>`<span class="notch ${i<3?'reverse':i===3?'zero':''} ${i===s.throttle+3?'active':''}"></span>`).join('');
+        set('mission-status',status==='paused'?'Paused · unranked practice':I.message(run));
+        set('mobile-extra',g?`GAP ${Math.round(g.metres)}m`:`SLUSH ${Math.round(st.slush*100)}%`);
+        set('polar-readout',g?`${Math.round(g.metres)} m HULL GAP · ${g.closing>0?'CLOSING':'OPENING'} ${Math.abs(g.closing).toFixed(1)} m/s`:
+            st.config.mission==='pocket'?`TURNING POCKET ${Math.floor(I.pocketClear(st)*100)}% / 86%`:`${st.stats.deliveries}/2 DELIVERED · ${st.stats.safeReturns}/2 RETURNED`);
+        $('polar-readout').classList.toggle('warning',!!g&&(g.metres<22||g.metres>70));
+        set('polar-ice',`SLUSH LOAD ${Math.round(st.slush*100)}% · ${(st.stats.sheetArea/1000).toFixed(1)}k m² OPENED`);
+        for(const f of st.fleet.filter(f=>!f.leader)){
+            set('polar-'+f.id+'-status',`${f.waiting} · hull ${Math.ceil(f.ship.hull)}% · ${(I.speed(f.ship)*1.94384).toFixed(1)} kn`);
+            for(const b of $('polar-fleet').querySelectorAll(`[data-convoy="${f.id}"]`)){
+                b.disabled=status!=='running'||f.returned||f.leg==='unloading';b.classList.toggle('selected',f.order===b.dataset.order);b.setAttribute('aria-pressed',String(f.order===b.dataset.order));
+            }
+        }
+        $('splits').innerHTML=I.progress(run).map(o=>`<div class="split-row ${o.done?'done':''}"><span>${o.text}</span><span>${o.done?'✓':'—'}</span></div>`).join('');
+        $('check-objectives').classList.toggle('ok',I.ready(run));
+        for(const k of ['inside','aligned','slow'])$('check-'+k).classList.toggle('ok',!!run.dock[k]);
+        $('dock-bar').style.width=Math.min(100,run.dockHold*50)+'%';
+        set('clock',format(run.time));set('clock-label',run.pausedUsed?'PRACTICE · UNRANKED':'PASSAGE TIME · IGT');$('clock-label').classList.toggle('practice',run.pausedUsed);
+        set('delta','ALL REQUIRED HULLS MUST SURVIVE');$('race-banner').hidden=true;set('scale-label','100 METRES');
+    }
+    function dialog(kind,level,run,format,hasNext=false,race=null,actions=''){
+        const st=run.polar,c=level.polar,eyebrow=`<div class="eyebrow">WORLD 7 · PASSAGE SERVICE · ${String(level.stageNumber).padStart(2,'0')} / 12</div>`;
+        const retry='<button data-action="retry">Retry<span class="key-hint"> · Shift+R</span></button><button data-action="courses">World map</button>';
+        if(kind==='intro')return `${eyebrow}<h1>${level.name}</h1><p>${level.brief}</p><div class="polar-message"><strong>${c.dispatch[0]}</strong><p>${c.dispatch[1]}</p></div><p class="subtle">${level.tip}</p><div class="control-summary">Engine telegraph, rudder and bow thruster below.<span class="keyboard-only"><br>W / S engine · A / D rudder · Q / E bow thruster · Space neutral</span><br>${c.mission==='convoy'?'Hold and Proceed orders control each supply captain. Both return legs are required.':'Neutral does not brake. Use astern thrust early.'}</div><div class="dialog-actions"><button class="primary" data-action="begin" autofocus>Take the watch →</button><button data-action="help">Ice pilot’s notes</button><button data-action="courses">World map</button></div>`;
+        if(kind==='pause')return `${eyebrow}<h1>The watch is held.</h1><p>Vessels, drift and channel closure are paused together. This attempt is now unranked practice.</p><div class="dialog-actions"><button class="primary" data-action="resume" autofocus>Resume watch</button>${retry}</div>`;
+        if(kind==='failed')return `${eyebrow}<h1>A crew did not get through.</h1><p>${st.failure||'The assignment could not be completed.'}</p><div class="result-time">${format(run.time)}</div><div class="dialog-actions">${retry}</div>`;
+        if(kind==='result')return `${eyebrow}<h1>${c.mission==='convoy'?'Both crews are home.':c.mission==='follow'?'The cargo is ashore.':'A harbor, not just a channel.'}</h1><p>${c.mission==='convoy'?'Tern and Cinder have their supplies. The Council records two returning crews; the rival charts still disagree.':c.mission==='follow'?'Glass Quay’s crew can begin unloading Lantern. Rime holds clear while the lead thickens behind you.':'Thawmark now has turning room and a supply berth. The Council’s harbor master accepts the route as usable.'}</p><div class="result-time">${format(run.time)}</div><div class="result-badge">${run.pausedUsed?'UNRANKED PRACTICE':run.pb?'NEW PERSONAL BEST':'PASSAGE COMPLETE'}${run.result?.clean?' · CLEAN':''}</div>${actions}`;
+        return `${eyebrow}<h1>Read the water you make.</h1><p><b>Sheet ice.</b> Blue is thinner; pale sheet needs more momentum. Meet it bow first at 3–5 kn in Kestrel. The bow fractures sheet a little wider than the hull. Sideways or stern-first contact does not cut a new route. A loaded supply hull cannot break sheet. Cream pressure ridges are impassable.</p><p><b>Closing channels.</b> Broken water steadily fills with speckled slush. More slush means more drag, not an invisible gate. It never solidifies underneath a hull. Passing an icebreaker through it clears it again. Watch the whole stern, especially on bends.</p><p><b>Solid moving ice.</b> A few substantial floes remain after breaking. The large striped iceberg moves independently and cannot be broken; leave room for its projected drift. Floe and hull collisions transfer momentum and damage vessels.</p><p><b>Working separation.</b> In Borrowed Water, keep roughly 25–65 m between hulls. Closing rate matters as much as gap. The leader slows physically against compressed ice and never waits just to preserve your spacing.</p><p><b>Two supply captains.</b> Dashed outbound and return routes are requests for cleared water, not guaranteed safe tracks. Captains choose connected cleared water toward their destination and brake for intact ice, ships and icebergs. Hold also takes time to stop. Unloading needs a slow, stable hull; after it finishes, the captain waits for another Proceed before returning. You can reopen slushy return leads. Both supply ships must regain safe water before Kestrel docks.</p><p>Individual records and ghosts are saved. These three opening assignments sit outside the 72-stage Grand Tour until the full Pale Reach campaign is ready.</p><div class="dialog-actions"><button class="primary" data-action="back" autofocus>Back to the bridge</button></div>`;
+    }
+    function render(canvas,level,run,zoom,options={}){
+        const box=canvas.getBoundingClientRect(),dpr=Math.min(root.devicePixelRatio||1,2),w=Math.round(box.width*dpr),h=Math.round(box.height*dpr);
+        if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
+        const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+        const W=box.width,H=box.height,st=run.polar,c=st.config,ice=st.ice,z=ice.cell;
+        const scale=Math.min((W-32)/level.world[0],(H-64)/level.world[1])*zoom;
+        let ox=(W-level.world[0]*scale)/2,oy=(H-level.world[1]*scale)/2+12;
+        if(zoom>1){ox=W/2-run.ship.x*scale;oy=H/2-run.ship.y*scale;}
+        ctx.fillStyle='#102d38';ctx.fillRect(0,0,W,H);ctx.save();ctx.translate(ox,oy);ctx.scale(scale,scale);
+        const line=(points,color,width=1,dash=[])=>{ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash);ctx.stroke();ctx.setLineDash([]);};
+        const label=(text,x,y,color='#8fb9c3',size=10)=>{ctx.fillStyle=color;ctx.font=`${size}px ui-monospace, monospace`;ctx.textAlign='center';ctx.fillText(text,x,y);};
+        ctx.fillStyle='#173e4a';ctx.fillRect(0,0,...level.world);
+        for(let k=0;k<ice.thickness.length;k++){
+            const t=ice.thickness[k];if(!t)continue;
+            const x=k%ice.cols*z,y=Math.floor(k/ice.cols)*z;
+            if(x*scale+ox>W||y*scale+oy>H||(x+z)*scale+ox<0||(y+z)*scale+oy<0)continue;
+            if(ice.opened[k]>=0){
+                const density=I.slushAt(st,k);ctx.fillStyle=`rgba(154,195,199,${.08+density*.49})`;ctx.fillRect(x,y,z+.3,z+.3);
+                if(density>.12){ctx.fillStyle=`rgba(215,232,225,${density*.8})`;ctx.fillRect(x+3,y+3,2,1.6);ctx.fillRect(x+8,y+8,2.5,1.6);}
+            }else{
+                ctx.fillStyle=t>=1?'#cbd0bd':t>.7?'#bad1d1':t>.4?'#8eb8c2':'#648f9f';ctx.fillRect(x,y,z+.3,z+.3);
+                if(k%7===0)line([[x+2,y+1],[x+6,y+6],[x+4,y+11]],t>=1?'#929b87':'#47708055',.7);
+                if(t>=1&&k%3===0)line([[x+2,y+10],[x+6,y+3],[x+10,y+10]],'#89927d',1);
+            }
+        }
+        // Open-water contours are chart marks, never collision borders.
+        for(const e of c.water){ctx.beginPath();ctx.ellipse(e.x,e.y,e.rx,e.ry,0,0,Math.PI*2);ctx.strokeStyle='#6d9caa30';ctx.lineWidth=1;ctx.stroke();}
+        const route=(r,color)=>{line(r,color,1.3,[6,7]);for(let i=1;i<r.length;i++){const a=r[i-1],b=r[i],x=(a[0]+b[0])/2,y=(a[1]+b[1])/2,ang=Math.atan2(b[1]-a[1],b[0]-a[0]);line([[x-6*Math.cos(ang-.5),y-6*Math.sin(ang-.5)],[x,y],[x-6*Math.cos(ang+.5),y-6*Math.sin(ang+.5)]],color,1);}};
+        if(c.mission!=='convoy')route(c.route,'#f0d394a0');
+        for(const f of st.fleet.filter(f=>!f.leader)){route(f.route,'#eec98db0');route(f.home,'#7ed5c19a');}
+        if(c.pocket){const e=c.pocket;ctx.beginPath();ctx.ellipse(e.x,e.y,e.rx,e.ry,0,0,Math.PI*2);ctx.fillStyle='#edc27310';ctx.fill();ctx.setLineDash([5,5]);ctx.lineWidth=2;ctx.strokeStyle=I.pocketClear(st)>=e.required?'#8cdbc5':'#f3cc89';ctx.stroke();ctx.setLineDash([]);label('TURNING POCKET',e.x,e.y-e.ry-10,'#ffe0a5',10);}
+        for(const dock of c.docks){ctx.fillStyle='#41525a';ctx.fillRect(dock.x,dock.y,dock.w,dock.h);ctx.strokeStyle='#a1aea8';ctx.lineWidth=2;ctx.strokeRect(dock.x,dock.y,dock.w,dock.h);label(dock.name,dock.x-25,dock.y-14,'#ecdfb6',10);}
+        const b=level.berth;ctx.save();ctx.translate(b.x,b.y);ctx.rotate(b.a);ctx.strokeStyle='#8ce0b8';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.strokeRect(-b.l/2,-b.w/2,b.l,b.w);ctx.setLineDash([]);line([[-8,-5],[5,0],[-8,5]],'#8ce0b8',2);ctx.restore();
+        for(const mark of c.landmarks)label(mark.text,mark.x,mark.y,'#365b65',10);
+        for(const iceBody of [...st.floes,...st.bergs]){
+            if(iceBody.vessel==='iceberg'){
+                const x=iceBody.x+iceBody.vx*90,y=iceBody.y+iceBody.vy*90;line([[iceBody.x,iceBody.y],[x,y]],'#efd29b',2,[4,4]);label('DRIFT · 90s',x+32,y,'#f7dbae',9);
+                ctx.beginPath();ctx.ellipse(iceBody.x,iceBody.y,iceBody.length*.73,iceBody.beam*.83,iceBody.a,0,Math.PI*2);ctx.fillStyle='#9edbd133';ctx.fill();
+            }
+            const hull=P.hull(iceBody);ctx.beginPath();hull.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle='#e9f0e4';ctx.fill();ctx.strokeStyle='#a6c3c0';ctx.lineWidth=2;ctx.stroke();
+            line([[iceBody.x-10,iceBody.y+4],[iceBody.x,iceBody.y-6],[iceBody.x+11,iceBody.y+2]],'#9bbbbb',1.5);
+        }
+        function vessel(s,player=false){
+            const hull=P.hull(s);ctx.beginPath();hull.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle=player?'#f2bb76':s.iceClass?'#dae7dd':'#93c4b1';ctx.fill();ctx.strokeStyle='#16313b';ctx.lineWidth=1.5;ctx.stroke();
+            ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.a);ctx.fillStyle='#324f59';ctx.fillRect(-s.length*.2,-s.beam*.29,s.length*.25,s.beam*.58);line([[s.length*.17,0],[s.length*.35,0]],'#233e47',1);ctx.restore();
+            if(player){ctx.beginPath();ctx.arc(s.x,s.y,Math.max(s.length,s.beam)*.7,0,Math.PI*2);ctx.strokeStyle='#fbd69a70';ctx.lineWidth=1;ctx.stroke();}
+            label(player?'KESTREL'===s.name?'KESTREL':s.name.split(' · ').at(-1):s.name,s.x,s.y+s.beam+16,player?'#ffe1b3':'#eef2da',10);
+            if(I.speed(s)>.3)line([[s.x,s.y],[s.x+s.vx*12,s.y+s.vy*12]],'#f5e4b866',1,[3,3]);
+        }
+        const ghost=options.ghost;
+        if(options.settings?.ghost&&ghost?.length&&run.time<=ghost.at(-1)[0]){
+            let lo=0,hi=ghost.length-1;while(lo<hi){const mid=Math.ceil((lo+hi)/2);if(ghost[mid][0]<=run.time)lo=mid;else hi=mid-1;}
+            const a=ghost[lo],b=ghost[Math.min(lo+1,ghost.length-1)],t=b[0]===a[0]?0:P.clamp((run.time-a[0])/(b[0]-a[0]),0,1);
+            const s={...run.ship,x:a[1]+(b[1]-a[1])*t,y:a[2]+(b[2]-a[2])*t,a:a[3]+P.wrap(b[3]-a[3])*t};
+            ctx.save();ctx.globalAlpha=.28;const h=P.hull(s);ctx.beginPath();h.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle='#d4fbe0';ctx.fill();ctx.restore();
+        }
+        for(const f of st.fleet)vessel(f.ship);vessel(run.ship,true);
+        ctx.restore();ctx.fillStyle='#abc5c9';ctx.font='10px ui-monospace, monospace';ctx.textAlign='left';
+        ctx.fillText('PALE REACH / COUNCIL PASSAGE CHART',16,H-17);
+        ctx.strokeStyle='#abc5c9';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(W-120,H-22);ctx.lineTo(W-120+100*scale,H-22);ctx.stroke();
+    }
+    const api={prepare,update,render,dialog};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.PaleReachView=api;
+})(globalThis);

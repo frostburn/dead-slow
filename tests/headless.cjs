@@ -40,6 +40,7 @@ function create({fieldDialog=()=>'',onBodyClass=()=>{}}={}) {
     };
     const ctx = {
         DeadSlowSimulations: require('../src/simulations.js'), RailSimulation: require('../src/rail-adapter.js'),
+        PolarSimulation:require('../src/polar-adapter.js'), PaleReach:require('../src/polar.js'), PaleReachView:{prepare:noop,update:noop,dialog:require('../src/polar-view.js').dialog},
         Railway: require('../src/rail.js'), RailView: {prepare:noop, update:noop, key:()=>false, dialog:()=>''},
         GerboRampage: require('../src/rampage.js'), GerboView: {prepare:noop, update:noop, dialog:fieldDialog},
         HarborSpace: require('../src/space.js'), HarborSpaceUI: { prepare: noop, update: noop },
