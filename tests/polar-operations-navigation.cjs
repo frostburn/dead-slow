@@ -7,7 +7,7 @@ function navigate(n,{trace=false,defend=true}={}){
  const t=create(),l=L.find(l=>l.id===`pale-reach-${n}`);t.load(L.indexOf(l),true);
  const r=t.state.run,s=r.ship,o=r.polar.operation;
  let phase=0,wp=0,route=n===4?[[120,520],[260,570],[420,600],[580,550],[660,430],[660,320],[600,330]]:
-  n===5?[[295,390],[320,345]]:[[125,590],[265,570],[325,425],[395,245],[560,185],[710,200],[790,235]];
+  n===5?[[295,390],[305,335],[270,330]]:[[125,590],[265,570],[325,425],[395,245],[560,185],[710,200],[790,235]];
  const apply=(order,input)=>{t.throttle(order-s.throttle);Object.assign(t.state.input,input);};
  const steer=a=>P.clamp(P.wrap(a-s.a)*2.5-s.r*35,-1,1);
  const steady=a=>{const u=P.groundMotion(s).surge;apply(Math.abs(u)<.05?0:u>.25?-2:u>0?-1:u<-.25?2:1,{rudder:steer(a),thruster:steer(a)});};
@@ -23,9 +23,13 @@ function navigate(n,{trace=false,defend=true}={}){
    }else if(n===5){
     for(const f of r.polar.fleet)if(f.unloaded&&!f.returned&&f.order==='hold')t.convoyCommand(f.id,'proceed');
     if(defend){
-     const target=I.operations.targets(r.polar).sort((a,b)=>Math.hypot(a.ship.x-240,a.ship.y-390)-Math.hypot(b.ship.x-240,b.ship.y-390))[0];
+     // Guard the transports against armed boats; the cutters' wakes stay usable
+     // after they are disabled, so firing at them first can waste the gun's arc.
+     const threats=I.operations.targets(r.polar).filter(n=>n.gun);
+     const target=threats.find(n=>n.id===o.gun.target&&Math.hypot(n.ship.x-s.x,n.ship.y-s.y)<o.gun.range)||threats.sort((a,b)=>a.ship.x-b.ship.x)[0];
      if(!phase){if(pilot().arrived)phase=1;}
      else if(target){if(o.gun.target!==target.id)t.polarAction('target',target.id);steady(Math.atan2(target.ship.y-s.y,target.ship.x-s.x));if(o.gun.solution>=o.gun.hold)t.polarAction('fire');}
+     else steady(s.a);
     }
    }else{
     if(!phase&&pilot().arrived)phase=1;

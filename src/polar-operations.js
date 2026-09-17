@@ -5,28 +5,13 @@
     const G=typeof module!=='undefined'&&module.exports?require('./polar-grid.js'):root.PaleReachGrid;
     const speed=s=>Math.hypot(s.vx,s.vy),distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
     const gun=c=>({...c,solution:0,cooldown:0,target:null,ammo:c.ammo??999,reason:'Select a hostile contact'});
-    function along(x,y,route){
-        let best=Infinity,at=0,total=0;
-        for(let i=1;i<route.length;i++){
-            const a=route[i-1],b=route[i],dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy),t=P.clamp(((x-a[0])*dx+(y-a[1])*dy)/(len*len||1),0,1),d=Math.hypot(x-a[0]-dx*t,y-a[1]-dy*t);
-            if(d<best){best=d;at=total+len*t;}total+=len;
-        }
-        return {distance:best,fraction:at/(total||1)};
-    }
-    function create(level,ice){
+    function create(level){
         const c=level.polar;if(!['survey','defense','strike'].includes(c.mission))return null;
-        const entity=(n,team)=>({...n,team,active:team==='patrol'||n.spawn===0,waypoint:0,planAt:0,route:n.route?.map(p=>p.slice()),ship:P.ship(...n.start,{...n.spec,id:n.id,name:n.name,required:false,hostile:team==='hostile',hull:team==='hostile'?72:100,maxHull:team==='hostile'?72:100}),gun:team==='hostile'?gun({range:215,arc:.95,hold:3.5,reload:18,damage:18,shellSpeed:48,maxSpeed:.9,maxTurn:.025}):null});
+        const entity=(n,team)=>({...n,team,active:!!n.cutter||team==='patrol'||n.spawn===0,waypoint:0,planAt:0,route:n.route?.map(p=>p.slice()),ship:P.ship(...n.start,{...n.spec,id:n.id,name:n.name,required:false,hostile:team==='hostile',hull:team==='hostile'?72:100,maxHull:team==='hostile'?72:100}),gun:team==='hostile'&&!n.cutter?gun({range:215,arc:.95,hold:3.5,reload:18,damage:18,shellSpeed:48,maxSpeed:.9,maxTurn:.025}):null});
         const assets=(c.assets||[]).map(a=>({...a,active:true,fixed:true,poly:P.rect(a),ship:P.ship(a.x+a.w/2,a.y+a.h/2,a.a||0,{id:a.id,name:a.name,length:a.w,beam:a.h,mass:1e6,hull:a.hp,maxHull:a.hp,moored:true}),gun:a.gun?gun(a.gun):null}));
-        const melts=(c.melts||[]).map(m=>({...m,opened:0,total:0})),thaw=[];
-        for(let k=0;k<ice.tiles.length;k++)if(ice.thickness[k]>0&&ice.thickness[k]<1){
-            const p=ice.tiles[k];let next=null;
-            for(const m of melts){const a=along(p.x,p.y,m.route);if(a.distance<m.width/2){const at=m.start+(1-a.fraction)*m.duration;if(!next||at<next.at)next={k,at,id:m.id};}}
-            if(next){thaw.push(next);melts.find(m=>m.id===next.id).total++;}
-        }
-        thaw.sort((a,b)=>a.at-b.at||a.k-b.k);
-        return {kind:c.mission,assets,npcs:[...(c.patrols||[]).map(n=>entity(n,'patrol')),...(c.raiders||[]).map(n=>entity(n,'hostile'))],
+        return {kind:c.mission,assets,npcs:[...(c.patrols||[]).map(n=>entity(n,'patrol')),...(c.raiders||[]).map(n=>entity(n,'hostile')),...(c.cutters||[]).map(n=>entity({...n,cutter:true,status:'HOLDING'},n.team))],
             survey:c.survey?{...c.survey,ship:P.ship(...c.survey.start,{...c.survey.spec,id:c.survey.id,name:c.survey.name,required:true}),recorders:0,recovered:false,safeNow:false}:null,
-            line:null,gun:c.gun?gun(c.gun):null,shells:[],bursts:[],alarmAt:null,melts,thaw,thawIndex:0,warning:'',serial:0};
+            line:null,gun:c.gun?gun(c.gun):null,shells:[],bursts:[],alarmAt:null,warning:'',serial:0};
     }
     function bodies(st){const o=st.operation;return o?[...o.npcs.filter(n=>n.active).map(n=>n.ship),...(o.survey?[o.survey.ship]:[])]:[];}
     function targets(st){const o=st.operation;return !o?[]:[...o.assets,...o.npcs.filter(n=>n.active)].filter(n=>n.team==='hostile'&&n.ship.hull>0);}
@@ -98,10 +83,6 @@
     }
     function before(st,run,input,dt){
         const o=st.operation;if(!o)return;
-        while(o.thawIndex<o.thaw.length&&o.thaw[o.thawIndex].at<=st.time){
-            const t=o.thaw[o.thawIndex++];o.melts.find(m=>m.id===t.id).opened++;
-            if(st.ice.opened[t.k]<0){st.ice.opened[t.k]=st.time;st.ice.revision++;}
-        }
         if(o.line){
             o.line.length=P.clamp(o.line.length+(input.winch||0)*4*dt,18,65);
             const f=P.towForce(run.ship,o.survey.ship,o.line,dt);o.line.tension=f.force/o.line.strength;
@@ -120,8 +101,19 @@
                 if(due&&[run.ship,...st.fleet.map(f=>f.ship),...bodies(st)].every(s=>distance(s,n.ship)>(s.length+n.ship.length)/2+8))n.active=true;else continue;
             }
             const s=n.ship;let control;
-            if(s.hull<=0){s.disabled=true;s.throttle=0;control={input:{}};}
-            else if(n.team==='patrol'){
+            if(s.hull<=0||s.disabled){s.disabled=true;s.throttle=0;n.status='DISABLED';control={input:{}};}
+            else if(n.cutter){
+                let hold=st.time<(n.depart||0)||n.finished;n.status=hold?'HOLDING':'CUTTING LEAD';
+                const axis=P.axes(s);
+                for(const other of [run.ship,...st.fleet.map(f=>f.ship),...bodies(st),...st.bergs,...st.floes]){
+                    if(other===s)continue;
+                    const delta={x:other.x-s.x,y:other.y-s.y},ahead=P.dot(delta,axis.f),side=Math.abs(P.dot(delta,axis.n));
+                    if(ahead>0&&ahead<(s.length+other.length)/2+speed(s)**2/.12+9&&side<(s.beam+other.beam)/2+6){hold=true;n.status='TRAFFIC · BRAKING';break;}
+                }
+                control=I.pilot(s,n.route,n.waypoint,n.cruise,hold,35);n.waypoint=control.waypoint;
+                if(control.arrived&&!hold){n.finished=true;n.status='LEAD COMPLETE';}
+                else if(n.finished)n.status='LEAD COMPLETE';
+            }else if(n.team==='patrol'){
                 control=I.pilot(s,n.route,n.waypoint,n.cruise);n.waypoint=control.waypoint;
                 if(control.arrived){n.route.reverse();n.waypoint=0;}
                 if(distance(s,run.ship)<180)o.warning=n.name+': ALTER COURSE. EXCLUSION BUOYS ARE BEING LAID. Weapons restricted.';

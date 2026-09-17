@@ -20,6 +20,7 @@
             let thickness=c.thickness,closing=c.closing;
             if(routeDistance(x,y,c.route)<c.thinWidth/2)thickness=c.thinIce;
             if(c.secondary&&routeDistance(x,y,c.secondary.route)<c.secondary.width/2){thickness=c.secondary.thickness;closing=c.secondary.closing;}
+            for(const cutter of c.cutters||[])if(routeDistance(x,y,cutter.route)<cutter.width/2)thickness=cutter.thickness;
             for(const patch of c.patches||[])if(inRect(x,y,patch))thickness=patch.thickness;
             if(c.water.some(e=>inside(x,y,e))||[...(c.openWaterRoutes||[]),...(c.patrolWater||[])].some(r=>routeDistance(x,y,r.route)<r.width/2))thickness=0;
             if(c.ridges.some(r=>inRect(x,y,r)))thickness=2;
@@ -33,7 +34,7 @@
             const {x,y}=ice.tiles[k];
             if(inside(x,y,c.pocket))pocket.push(k);
         }
-        return {ship,polar:{level,config:c,ice,fleet,bergs,operation:O.create(level,ice),floes:[],pendingFloes:[],pocket,time:0,broken:0,contacts:0,damage:0,slush:0,
+        return {ship,polar:{level,config:c,ice,fleet,bergs,operation:O.create(level),floes:[],pendingFloes:[],pocket,time:0,broken:0,contacts:0,damage:0,slush:0,
             routeOpened:false,notice:'Read the ice before committing your bow.',lastHits:{},failure:null,complete:false,
             stats:{sheetArea:0,slushCleared:0,deliveries:0,safeReturns:0,orders:0,shots:0,hostilesDisabled:0,recorders:0,towBreaks:0,damageTaken:0},checkpoint:0},dock:P.docking(ship,level.berth,false)};
     }

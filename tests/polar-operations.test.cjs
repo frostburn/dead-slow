@@ -49,15 +49,38 @@ test('unrelated patrol ice contacts do not count against the player’s clean re
  I.impact(st,s,'picket-ice',{impact:1});assert.ok(s.hull<100);assert.equal(st.contacts,0);
  I.impact(st,s,'picket-survey',{impact:1},true);assert.equal(st.contacts,1,'contact involving the required survey vessel still counts');
 });
-test('opening approaches share the same navigable ice as player cuts and never refreeze a hull',()=>{
- const r=state(5),st=r.polar,o=st.operation,s=o.npcs[0].ship,goal=[170,310];st.player=r.ship;
- assert.equal(I.waterRoute(st,s,goal),null);
- const total=o.thaw.length;st.time=40;O.before(st,r,{},0);assert.ok(o.thawIndex>0&&o.thawIndex<total);
- st.time=90;O.before(st,r,{},0);assert.ok(I.waterRoute(st,s,goal));
- assert.ok(o.melts[0].opened===o.melts[0].total);assert.ok(o.melts[2].opened===0);
- const opened=st.ice.opened.slice();st.time=10000;O.before(st,r,{},0);
- for(let k=0;k<opened.length;k++)if(opened[k]>=0)assert.ok(st.ice.opened[k]>=0);
- const cut=state(5);cut.polar.ice.opened.fill(0);assert.ok(I.waterRoute(cut.polar,cut.polar.operation.npcs[0].ship,goal),'raiders can navigate any player-cleared connection');
+test('elapsed time and disabled cutters cannot open remote ice on any new chart',()=>{
+ for(const n of [4,5,6]){
+  const r=state(n),st=r.polar,cutters=st.operation.npcs.filter(n=>n.cutter),opened=st.ice.opened.slice();st.player=r.ship;
+  assert.ok(cutters.length&&cutters.every(n=>n.active&&O.bodies(st).includes(n.ship)),'cutters are visible physical hulls from departure');
+  st.time=10000;O.before(st,r,{},0);assert.deepEqual(st.ice.opened,opened,'no timed opening, even after a large clock jump');
+  cutters.forEach(n=>n.ship.disabled=true);tick(r,5);
+  assert.deepEqual(st.ice.opened,opened,'stationary disabled icebreakers cannot open their intended routes');
+ }
+});
+test('visible cutters fracture only sheet touching their advancing bows and create navigable water',()=>{
+ for(const n of [4,5,6]){
+  const r=state(n),st=r.polar,o=st.operation,cutters=o.npcs.filter(n=>n.cutter),cuts=new Map(cutters.map(n=>[n.ship,0]));st.player=r.ship;
+  const before=st.ice.opened.slice();let revision=st.ice.revision;
+  const checked={...I,iceContact(st,s,dt){
+   const footprint=P.hull({...s,beam:s.beam+18}),f=P.axes(s).f,forward=s.vx*f.x+s.vy*f.y;
+   I.iceContact(st,s,dt);
+   if(st.ice.revision!==revision)for(let k=0;k<before.length;k++)if(before[k]<0&&st.ice.opened[k]>=0){
+    const tile=st.ice.tiles[k];assert.ok(cuts.has(s),'only a visible icebreaker may cut sheet');
+    assert.ok(P.sat(footprint,tile.poly),'new water must touch the cutter, never appear ahead of it');
+    assert.ok((tile.x-s.x)*f.x+(tile.y-s.y)*f.y>0&&forward>=.8+st.ice.thickness[k]*1.5,'bow-first momentum is required');
+    cuts.set(s,cuts.get(s)+1);before[k]=st.ice.opened[k];
+   }
+   revision=st.ice.revision;
+  }};
+  // The real captain, engine and contact code, at 120 Hz; no scripted tile edits.
+  for(let i=0;i<120*340;i++){st.time+=1/120;O.before(st,r,{},1/120);O.move(st,r,1/120,checked);}
+  for(const cutter of cutters)assert.ok(cuts.get(cutter.ship)>25,`${n}: ${cutter.name} must make a substantial physical cut`);
+  if(n===5)assert.ok(I.waterRoute(st,o.npcs[0].ship,[170,310]),'raiders can use the physically opened lead');
+  const opened=st.ice.opened.slice();st.time=10000;O.before(st,r,{},0);
+  for(let k=0;k<opened.length;k++)if(opened[k]>=0)assert.ok(st.ice.opened[k]>=0,'old wakes stay slush, never refreeze into a wall');
+ }
+ const cut=state(5);cut.polar.ice.opened.fill(0);assert.ok(I.waterRoute(cut.polar,cut.polar.operation.npcs[0].ship,[170,310]),'raiders can also use player-cleared connections');
 });
 test('guns need an arc, a stable solution and a fresh fire order; shells take time and reload',()=>{
  const r=firing(),st=r.polar,g=st.operation.gun,target=st.operation.assets[0],source={id:'player',ship:r.ship};
@@ -116,7 +139,8 @@ test('pause freezes the new operations and rejects fire/tow orders; retry restor
  const t=create();t.load(L.indexOf(level(6)),true);t.advance(2);const r=t.state.run;t.polarAction('target','battery');t.pause();
  const snapshot=JSON.stringify(r.polar.operation);t.advance(20);assert.equal(JSON.stringify(r.polar.operation),snapshot);
  assert.equal(t.polarAction('target','fuel'),false);assert.equal(t.polarAction('fire'),false);t.retry();assert.equal(t.state.run.polar.operation.gun.target,null);
- assert.equal(t.state.run.polar.operation.thawIndex,0);assert.equal(t.state.run.polar.operation.assets[0].ship.hull,108);
+ const cutter=t.state.run.polar.operation.npcs.find(n=>n.cutter);assert.equal(cutter.waypoint,0);assert.deepEqual([cutter.ship.x,cutter.ship.y,cutter.ship.a],cutter.start);
+ assert.equal(t.state.run.polar.ice.revision,0);assert.equal(t.state.run.polar.operation.assets[0].ship.hull,108);
 });
 for(const n of [4,5,6])test(`7-0${n}: complete mission with ordinary helm, tow, gun and captain orders`,()=>{
  const t=require('./polar-operations-navigation.cjs').navigate(n),r=t.state.run;
@@ -125,7 +149,7 @@ for(const n of [4,5,6])test(`7-0${n}: complete mission with ordinary helm, tow, 
  assert.equal(t.state.storage.stages[t.state.level.id].runs.length,1);
  if(n===4){assert.ok(r.polar.operation.survey.ship.hull>90);assert.equal(r.polar.stats.recorders,1);assert.equal(r.polar.stats.towBreaks,0);assert.equal(r.polar.operation.assets[0].ship.hull,100);}
  if(n===5){assert.equal(r.polar.stats.deliveries,2);assert.equal(r.polar.stats.safeReturns,2);assert.ok(r.polar.fleet.every(f=>f.ship.hull===100));assert.ok(r.polar.stats.shots>0);}
- if(n===6){assert.ok(r.polar.operation.assets.every(a=>a.ship.hull===0));assert.ok(r.polar.operation.npcs.some(n=>n.active&&n.ship.hull>0),'withdrawal succeeds with live reinforcements');assert.equal(r.polar.stats.shots,6);}
+ if(n===6){assert.ok(r.polar.operation.assets.every(a=>a.ship.hull===0));assert.ok(r.polar.operation.npcs.some(n=>n.team==='hostile'&&n.active&&n.ship.hull>0),'withdrawal succeeds with live reinforcements');assert.equal(r.polar.stats.shots,6);}
 });
 test('Home Ice cannot be completed by ignoring the attack and only ordering departures',()=>{
  const t=require('./polar-operations-navigation.cjs').navigate(5,{defend:false});assert.equal(t.state.status,'failed');assert.ok(t.state.run.polar.fleet.some(f=>f.ship.hull===0));

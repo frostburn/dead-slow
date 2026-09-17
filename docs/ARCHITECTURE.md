@@ -164,7 +164,14 @@ winching, overload and obstacle chafe act on the physical line. Scientific
 recorders require sustained relative rest, and the whole rescued hull must stop
 in safe water. Pickets move, collide and issue warnings without firing.
 
-Thaw is a precomputed, time-ordered set of hex openings, visible on the chart.
+Each changing lead is cut by a visible physical icebreaker: Council cutter Awl
+in the rescue, three hostile Shelf cutters in defense, and Compact cutter Rime
+on the strike flank. Their captains use ordinary throttle, rudder and thruster
+orders, brake for traffic, and call the same bow-contact icebreaking code as the
+player. Chart dashes show intended routes, never a promise of cleared water.
+No timer opens hexes. Hostile cutters can be targeted; disabled ships coast to a
+stop, and their wrecks and opened wakes remain physical. Cutters park clear of
+their approaches after reaching open water.
 Hostile captains use the same connected-water planner as supply vessels, so a
 player-cut shortcut works for either side. No paths move hulls directly. Guns
 require range, bow arc, a clear line, low speed and rotation, and a timed solution.
@@ -176,7 +183,8 @@ attackers. Strike completion also requires docking after both installations fall
 
 Borrowed Water has no arrival deadline: Rime waits at Glass Quay, late checkpoints
 still count, and heavy slush leaves retry to the player. Its rules revision is 2;
-the first three charts retain course revision 2, and the next three start at 1.
+all six charts use course revision 2. The physical cutter routes archive the
+previous timed-opening records for 7-04–7-06 only.
 Each assignment has normal individual records, elapsed split times and ghosts.
 `standalone` excludes them from the existing
 72-stage Grand Tour until the complete campaign exists; prior circuits keep

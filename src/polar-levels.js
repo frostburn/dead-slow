@@ -6,9 +6,10 @@
     const armed={...breaker,name:'COUNCIL ESCORT · KESTREL',mass:1.5};
     const patrol={length:29,beam:9,mass:.8,propulsion:1.3,dragScale:1.1,iceClass:0};
     const raider={length:24,beam:8,mass:.65,propulsion:1.4,dragScale:1.15,iceClass:0};
+    const cutter={length:44,beam:22,mass:1.8,propulsion:3,dragScale:1.15,iceClass:1};
     const berth=(x,y,a=0)=>({x,y,a,l:64,w:27,angle:12,speed:.32});
     const base=(n,name,kind,start,spec,world,polar,brief,tip,pace)=>({id:`pale-reach-${n}`,name,kind,start,spec,world,polar,
-        simulation:'polar',standalone:true,courseRevision:n<=3?2:1,rulesRevision:n===2?2:1,berth:polar.berth,brief,tip,pace});
+        simulation:'polar',standalone:true,courseRevision:2,rulesRevision:n===2?2:1,berth:polar.berth,brief,tip,pace});
     const firstRoute=[[105,390],[210,365],[280,275],[350,220],[445,235],[530,275],[640,280]];
     const lead=[[115,380],[210,380],[290,330],[385,265],[485,265],[585,320],[690,340],[795,310]];
     const north=[[160,355],[275,290],[355,230],[450,185],[570,165],[690,170]];
@@ -71,45 +72,50 @@
             ],
             patrolWater:[{route:[[390,272],[480,315],[505,366],[405,308]],width:85},{route:[[390,272],[260,425],[120,510]],width:85}],
             exclusion:[[357,250],[420,292],[487,337],[531,384]],
-            melts:[{id:'north-lead',name:'NORTH LEAD',route:[[600,280],[500,245],[405,180],[290,205]],width:46,start:10,duration:50}],
+            cutters:[{id:'awl',name:'AWL · COUNCIL ICEBREAKER',team:'friendly',start:[135,455,-1.2],spec:cutter,cruise:2.8,
+                route:[[135,455],[170,340],[290,205],[405,180],[500,245],[565,335]],width:80,thickness:.28}],
             landmarks:[{x:145,y:637,text:'COUNCIL SAFE WATER'},{x:363,y:473,text:'LONG SOUTHERN ROUTE'},{x:332,y:140,text:'NARROW OPENING LEAD'}],
             dispatch:['FREE ANCHORAGE COUNCIL / 11:10','Caliper’s steering gear has failed beside the shelf observatory. Recover her scientific recorders and tow the vessel home. Shelf League pickets are placing exclusion buoys across the direct exit. They call this a survey precaution; the Council has not agreed. No weapons are authorized.'],
             objectives:['Recover Caliper’s scientific recorders','Tow Caliper into safe water','Moor Kestrel without damaging the station']
-        },'Rival pickets obstruct the direct passage and demand course changes. Approach Caliper slowly to transfer her recorders, then connect Kestrel’s stern towline to her bow. Choose the narrow northern lead or the long open southern route. Protect the civilian station.',
+        },'Rival pickets obstruct the direct passage and demand course changes. Awl is cutting a narrow northern lead; follow her actual wake or take the long open southern route. Approach Caliper slowly to transfer her recorders, then connect Kestrel’s stern towline to her bow. Protect the civilian station.',
         'F connects or releases the line when the towing points are within 55 m and relative speed is low. J/K shorten/lengthen it. Recorder transfer takes eight steady seconds nearby. The tow has inertia and can swing into ice; its whole hull must return.',[800,1100,1500]),
         base(5,'Home Ice','Armed escort · defend the unloading window',[295,390,0],armed,[1000,760],{
             mission:'defense',cell:12,thickness:.8,closing:260,thinIce:.35,thinWidth:66,
             route:[[235,390],[425,390],[655,390],[820,390]],
             water:[{x:180,y:390,rx:190,ry:210},{x:820,y:385,rx:150,ry:280}],
             ridges:[],berth:berth(280,390,Math.PI),docks:[],
-            melts:[
-                {id:'north',name:'NORTH APPROACH',route:[[270,300],[440,245],[650,205],[825,200]],width:80,start:8,duration:72},
-                {id:'middle',name:'CENTRAL APPROACH',route:[[270,390],[470,390],[650,390],[825,390]],width:82,start:70,duration:90},
-                {id:'south',name:'SOUTH APPROACH',route:[[270,475],[460,545],[650,585],[825,570]],width:88,start:135,duration:80}
+            cutters:[
+                {id:'north-cutter',name:'SHELF ICEBREAKER N',team:'hostile',start:[750,205,Math.PI],spec:cutter,cruise:2.8,depart:8,
+                    route:[[750,205],[650,205],[440,245],[270,300],[230,230]],width:80,thickness:.28},
+                {id:'middle-cutter',name:'SHELF ICEBREAKER C',team:'hostile',start:[750,390,Math.PI],spec:cutter,cruise:2.8,depart:70,
+                    route:[[750,390],[650,390],[470,390],[350,390],[310,520]],width:82,thickness:.28},
+                {id:'south-cutter',name:'SHELF ICEBREAKER S',team:'hostile',start:[775,570,Math.PI],spec:cutter,cruise:2.8,depart:135,
+                    route:[[775,570],[650,585],[460,545],[270,475],[250,540]],width:88,thickness:.28}
             ],
             assets:[{id:'base',name:'THAWMARK SUPPLY BASE',x:215,y:362,w:42,h:56,hp:140,team:'friendly',essential:true}],
             fleet:[
-                {id:'hearth',name:'HEARTH · HEATING FUEL',start:[170,310,Math.PI],spec:{...supply,name:'HEARTH',length:36,mass:1.6},cruise:1.8,unload:240,unloading:true,route:[[170,310]],home:[[95,310]]},
-                {id:'pantry',name:'PANTRY · FOOD & MEDICINES',start:[170,465,Math.PI],spec:{...supply,name:'PANTRY',length:37,mass:1.7},cruise:1.7,unload:450,unloading:true,route:[[170,465]],home:[[95,465]]}
+                {id:'hearth',name:'HEARTH · HEATING FUEL',start:[170,310,Math.PI],spec:{...supply,name:'HEARTH',length:36,mass:1.6},cruise:1.8,unload:360,unloading:true,route:[[170,310]],home:[[95,310]]},
+                {id:'pantry',name:'PANTRY · FOOD & MEDICINES',start:[170,465,Math.PI],spec:{...supply,name:'PANTRY',length:37,mass:1.7},cruise:1.7,unload:600,unloading:true,route:[[170,465]],home:[[95,465]]}
             ],
             gun:{range:290,arc:1.05,hold:2.5,reload:9,damage:36,ammo:28,shellSpeed:55,maxSpeed:1.25,maxTurn:.02},
             raiders:[
-                {id:'north-boat',name:'NORTH RAIDER',start:[750,205,Math.PI],spec:raider,cruise:2.4,spawn:0},
-                {id:'middle-boat',name:'CENTRAL RAIDER',start:[770,390,Math.PI],spec:raider,cruise:2.3,spawn:55},
-                {id:'south-boat',name:'SOUTH RAIDER',start:[760,585,Math.PI],spec:raider,cruise:2.4,spawn:125}
+                {id:'north-boat',name:'NORTH RAIDER',start:[830,205,Math.PI],spec:raider,cruise:2.4,spawn:0},
+                {id:'middle-boat',name:'CENTRAL RAIDER',start:[830,390,Math.PI],spec:raider,cruise:2.3,spawn:55},
+                {id:'south-boat',name:'SOUTH RAIDER',start:[850,585,Math.PI],spec:raider,cruise:2.4,spawn:125}
             ],
             landmarks:[{x:108,y:615,text:'TRANSPORT SAFE WATER'},{x:800,y:89,text:'SHELF LEAGUE APPROACHES'}],
             dispatch:['COUNCIL HARBOR DEFENSE / 14:35','The League calls the depot a Compact fuel dump. Hearth carries heating oil; Pantry carries food and medicines. Their captains need time at the hoses and cranes. Weapons are now authorized against attacking craft. Get the essential cargo ashore and both ships clear.'],
             objectives:['Land Hearth’s and Pantry’s essential cargo','Get both transports into safe water']
-        },'Three ice approaches are opening at different times. Raiders use connected water, including any shortcuts you cut. Defend the unloading transports with Kestrel’s forward gun, then give each captain Proceed to escape. Destroying every raider is not required.',
-        'Select a hostile contact with T or the target buttons. Hold a steady bow solution below 2.4 kn; B fires one round. Red solution lines warn of enemy fire. Hold/Proceed lets you time each transport’s departure after unloading.',[460,600,850]),
+        },'Three visible Shelf icebreakers are opening approaches for the raiders. Disabled cutters coast to a stop, but their wakes remain open. Raiders use connected water, including any shortcuts you cut. Defend the unloading transports, then give each captain Proceed to escape. Destroying every attacker is not required.',
+        'Select a hostile contact with T or the target buttons. Hold a steady bow solution below 2.4 kn; B fires one round. Red solution lines warn of enemy fire. Hold/Proceed lets you time each transport’s departure after unloading.',[620,800,1100]),
         base(6,'The Other Shore','Military strike · disable and withdraw',[125,590,0],armed,[1080,780],{
             mission:'strike',cell:12,thickness:.82,closing:170,thinIce:.35,thinWidth:80,
             route:[[125,590],[340,540],[520,445],[685,370],[825,350]],
             openWaterRoutes:[{route:[[125,590],[340,540],[520,445],[685,370],[825,350]],width:120},{route:[[825,350],[940,480],[965,640]],width:120}],
             water:[{x:125,y:590,rx:125,ry:112},{x:802,y:280,rx:125,ry:105},{x:965,y:650,rx:100,ry:90}],
             ridges:[{x:434,y:282,w:180,h:80}],berth:berth(125,590,Math.PI),docks:[],
-            melts:[{id:'flank',name:'MELTING FLANK',route:[[265,570],[325,425],[395,245],[560,185],[710,200],[820,265]],width:70,start:0,duration:100}],
+            cutters:[{id:'rime',name:'RIME · COMPACT ICEBREAKER',team:'friendly',start:[260,550,-1.09],spec:cutter,cruise:3.1,
+                route:[[260,550],[325,425],[395,245],[560,185],[710,200],[855,265]],width:80,thickness:.28}],
             assets:[
                 {id:'battery',name:'COASTAL BATTERY',x:716,y:330,w:36,h:38,hp:108,team:'hostile',gun:{range:340,arc:.75,hold:4,reload:18,damage:18,shellSpeed:48},a:Math.PI},
                 {id:'fuel',name:'FUEL-TRANSFER MACHINERY',x:884,y:317,w:33,h:57,hp:90,team:'hostile'}
@@ -121,10 +127,10 @@
             ],
             fragments:4,fragmentFromX:510,
             bergs:[{id:'inlet-berg',x:579,y:438,vx:0,vy:.11,length:47,beam:25,keel:18,range:{x:579,y:454,rx:0,ry:58}}],
-            landmarks:[{x:134,y:736,text:'WITHDRAWAL / SAFE WATER'},{x:510,y:141,text:'MELTING FLANK LEAD'},{x:762,y:435,text:'EXPOSED MAIN INLET'}],
+            landmarks:[{x:134,y:736,text:'WITHDRAWAL / SAFE WATER'},{x:510,y:141,text:'RIME’S FLANK CUT'},{x:762,y:435,text:'EXPOSED MAIN INLET'}],
             dispatch:['NARROWS COMPACT / COUNCIL LIAISON / 17:05','Disable the League battery and the military fuel-transfer plant at Ravel Shelf, then withdraw. The Council’s liaison has removed civilian berths from the target list. The flank chart is already out of date; send no crew through on momentum alone. Reinforcements are expected once the battery reports contact.'],
             objectives:['Disable the coastal battery','Disable the military fuel-transfer machinery','Withdraw and secure Kestrel']
-        },'The main inlet is open and covered by the coastal battery. A narrower flank is melting north of the shelf. Establish a stable firing position, disable both military installations, and withdraw to the green home berth. Incoming response boats and drifting ice can block the water you entered through.',
+        },'The main inlet is open and covered by the coastal battery. Rime is cutting the thinner northern flank; the dashed line is her intended route, not open water. Follow the icebreaker or prepare your own approach. Disable both military installations and withdraw to the green home berth. Response boats and drifting ice can obstruct your return.',
         'The forward gun needs a clear arc and 2.5 seconds below 2.4 kn with little turn. T selects, B fires. The battery announces its firing solution before launching a visible shell. Plan a retreat while opening your approach.',[650,900,1250])
     ];
     const api={levels,breaker,supply};

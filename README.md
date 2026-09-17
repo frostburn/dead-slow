@@ -41,8 +41,13 @@ including submarine operations and the final relief convoy.
 
 **Buoys, Not Borders**, **Home Ice**, and **The Other Shore** add a physical survey
 tow under patrol pressure, defense of an unloading base, and a strike that requires
-disabling two military installations and withdrawing. F connects/releases the tow;
-J/K operate its winch. T selects a hostile target and B fires a single round. Guns
+disabling two military installations and withdrawing. Visible icebreakers
+physically cut the changing leads on all three charts. Dashed
+lines mark their intended routes; only moving bows open ice. Awl opens the rescue
+lead, Shelf cutters lead the attackers, and Rime prepares the strike flank.
+Disabled cutters coast to a stop; their wakes and wrecks remain in place.
+F connects/releases the tow; J/K operate its winch. T selects a hostile target
+and B fires a single round. Guns
 need a forward arc, a steady solution, and time to reload; incoming shells remain
 visible and avoidable. The same orders are available as touch buttons. Each
 completed objective records its elapsed split time.
