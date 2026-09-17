@@ -210,7 +210,7 @@ def check_railway(page, check, out):
         DeadSlowTest.state.storage.races['grand-tour']=[{time:456,clean:true}];
     }''')
     page.click('#log-btn')
-    check('Railway logbook shows railway and tour records',all(label in page.locator('#dialog').inner_text() for label in ['World 5 · The Long Grade','Grand Tour · 72','02:03.00','02:15.00','07:36.00']))
+    check('Railway logbook shows railway and tour records',all(label in page.locator('#dialog').inner_text() for label in ['World 5 · The Long Grade','Grand Tour · 84','02:03.00','02:15.00','07:36.00']))
     for number,label in [(10,'balance reserve'),(11,'Low Crossing'),(12,'Coastal passenger')]:
         page.evaluate('(n)=>{DeadSlow.level(5,n);DeadSlow.speed(0)}',number)
         check(f'5-{number} shows its operating constraint',label in rail_detail(page, '#rail-operations'))

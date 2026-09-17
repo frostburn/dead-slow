@@ -14,7 +14,7 @@ const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-7,`${a} != ${b}`);
 test('twelve real courses end with avoidance, pursuit and a free-start escort',()=>{
  const rows=L.filter(l=>l.rampage);assert.equal(rows.length,12);
  assert.deepEqual(rows.map(l=>l.stageNumber),Array.from({length:12},(_,i)=>i+1));
- assert.equal(L.filter(l=>!l.standalone&&!l.bonus).length,72);
+ assert.equal(L.filter(l=>!l.standalone&&!l.bonus).length,84);
  for(const l of rows.slice(-3)){assert.ok(l.rampage.monsters.some(m=>m.invulnerable));assert.equal(l.rampage.districts.length,0);}
  assert.equal(rows[11].rampage.rescue.free,true);
 });

@@ -57,9 +57,9 @@ with sync_playwright() as pw:
     check('Preview and earlier terrain archives remain separately accessible','Preview field map records (archived)' in text and 'Earlier terrain records (archived)' in text)
     check('Old forty-eight-stage circuit is visible in the rolling field log','48-stage Grand Tour (archived)' in text)
     page.evaluate('DeadSlow.normal();DeadSlowTest.marathon("grand-tour")')
-    page.evaluate('''() => {for(let i=0;i<72;i++){DeadSlowTest.state.run.time=1;DeadSlowTest.finish();if(i<71)DeadSlowTest.next();}}''')
-    check('Grand Tour ends in space after the field championship',page.evaluate('DeadSlowTest.state.level.id==="perihelion-dispatch" && DeadSlowTest.state.marathon.stages===72'))
-    check('Final result celebrates all six worlds with the full circuit time','Six worlds.' in page.locator('#dialog').inner_text() and 'GRAND TOUR 72/72' in page.locator('#dialog').inner_text())
+    page.evaluate('''() => {for(let i=0;i<84;i++){DeadSlowTest.state.run.time=1;DeadSlowTest.finish();if(i<83)DeadSlowTest.next();}}''')
+    check('Grand Tour ends with the relief passage after the field championship',page.evaluate('DeadSlowTest.state.level.id==="pale-reach-12" && DeadSlowTest.state.marathon.stages===84'))
+    check('Final result celebrates the open route with the full circuit time','The route is open.' in page.locator('#dialog').inner_text() and 'GRAND TOUR 84/84' in page.locator('#dialog').inner_text())
     page.evaluate('DeadSlow.level(4,10);DeadSlow.speed(0)')
     for w,h in [(390,844),(320,740),(844,390)]:
         page.set_viewport_size({'width':w,'height':h});page.wait_for_timeout(90)

@@ -10,7 +10,7 @@ function isolated(){const l=JSON.parse(JSON.stringify(L.find(l=>l.rampage)));l.r
 function step(a,input={},duration=1){for(let i=0;i<Math.round(duration*120);i++){a.run.time+=1/120;R.update(a.level,a.run,input,1/120);}}
 test('World 4 supplies twelve championship courses',()=>{
  const rows=L.filter(l=>l.worldNumber===4);assert.equal(rows.length,12);assert.ok(rows.every(l=>!l.standalone));assert.ok(!L.worlds.find(w=>w.id==='gerbozilla').comingSoon);
- const t=start();t.marathon('grand-tour');assert.equal(t.state.marathon.route.length,72);assert.equal(t.state.marathon.route.filter(i=>L[i].rampage).length,12);
+ const t=start();t.marathon('grand-tour');assert.equal(t.state.marathon.route.length,84);assert.equal(t.state.marathon.route.filter(i=>L[i].rampage).length,12);
  t.marathon('gerbozilla');assert.equal(t.state.marathon.route.length,12);assert.ok(t.state.run.rampage);
 });
 test('a rolling circuit result defaults to its next course',()=>{
