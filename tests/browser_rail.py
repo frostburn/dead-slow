@@ -40,6 +40,7 @@ def check_railway(page, check, out):
     page.evaluate('''(()=>{const r=DeadSlowTest.state.run,t=r.rail.config.tasks[0];r.rail.completed.push(t.id);r.splits.push({name:t.text,time:12.5});DeadSlowTest.hud()})()''')
     check('Completed railway split displays its timestamp',page.locator('#rail-tasks .done').inner_text().find('12.50')>=0)
     page.evaluate('DeadSlowTest.state.run.rail.completed=[];DeadSlowTest.hud()')
+    # Read rows and styles together: the HUD replaces these children each frame.
     invalidated = page.locator('#rail-tasks .invalidated').evaluate_all('''rows=>rows.map(row=>({text:row.innerText,decoration:getComputedStyle(row.firstElementChild).textDecorationLine}))''')
     check(f'Invalidated split retains its first time and strikes out the objective: {invalidated}',len(invalidated)==1 and '12.50' in invalidated[0]['text'] and invalidated[0]['decoration']=='line-through')
     page.evaluate('DeadSlow.level(5,1);DeadSlow.speed(0)')
@@ -99,7 +100,7 @@ def check_railway(page, check, out):
     page.evaluate('''() => {const st=DeadSlowTest.state.run.rail;st.reverser=-1;Railway.engineGroup(st).cars[0].v=.7;DeadSlowTest.hud();}''')
     check('Rollback speed is signed against the selected driving end',page.locator('#rail-speed').inner_text()=='-2.5')
     page.evaluate('DeadSlow.level(5,4);DeadSlow.speed(0)')
-    check('Passenger waits for a visible departure signal','Awaiting your signal' in rail_detail(page, '#rail-operations') and page.locator('[data-rail="dispatch"]').is_enabled())
+    check('Passenger waits for a visible departure signal','Awaiting Signal departure' in rail_detail(page, '#rail-operations') and page.locator('[data-rail="dispatch"]').is_enabled())
     page.keyboard.press('h')
     check('H signals the passenger and disables repeated dispatch',page.evaluate('DeadSlowTest.state.run.rail.traffic[0].released') and page.locator('[data-rail="dispatch"]').is_disabled())
     page.evaluate('DeadSlow.level(5,5);DeadSlow.speed(0)')
@@ -139,7 +140,7 @@ def check_railway(page, check, out):
     check('Split controls wait for wagon brake pressure',page.locator('[data-rail="uncouple"]:disabled').count()==6 and '10%' in rail_detail(page, '#rail-cut-status'))
     page.evaluate('DeadSlow.level(5,3);DeadSlow.speed(0)')
     page.click('#rail-reverse')
-    check('Reverse is an action label in either direction',page.locator('#rail-reverse').inner_text()=='Reverse · X' and page.evaluate('DeadSlowTest.state.run.rail.reverser===-1'))
+    check('Reverse is an action label in either direction',' '.join(page.locator('#rail-reverse').inner_text().split())=='Reverse · X' and page.evaluate('DeadSlowTest.state.run.rail.reverser===-1'))
     page.click('#rail-reverse')
     page.evaluate('''() => {
         const st=DeadSlowTest.state.run.rail,g=Railway.engineGroup(st);
