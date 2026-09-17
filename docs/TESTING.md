@@ -137,10 +137,13 @@ and for making no network requests. The page-error listeners must stay empty.
 
 ## CI and release boundaries
 
-The included GitHub workflow runs core checks on Node 22 and 24, and browser
-checks through an HTTP-served build. That is configured coverage; it is not a
-claim that GitHub has executed it before this repository is pushed. Pages
-publishing is a separate, manually triggered workflow.
+The included GitHub workflow runs core checks once using the Node version in
+`.nvmrc` (Node 22), alongside Chromium browser checks, including an HTTP-served
+build. It runs on pull requests, pushes to `main`, and manual dispatch;
+feature-branch pushes do not start a duplicate run alongside their pull request.
+That is configured coverage; it is not a claim that GitHub has executed it before
+this repository is pushed. Pages publishing is a separate, manually triggered
+workflow.
 
 Local multiplayer, online records, physical hydrodynamic calibration, arbitrary
 rope wrapping, all browser engines and every human-played medal route are not
