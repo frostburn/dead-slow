@@ -19,6 +19,16 @@ function park(s, b) {
         x: b.x, y: b.y, a: b.a, vx: 0, vy: 0, r: 0, engine: 0, throttle: 0
     });
 }
+test('tow instructions name controls before and after attaching the line', () => {
+    const { l, s, w } = setup();
+    assert.match(l.brief, /use Make fast/);
+    assert.doesNotMatch(l.brief + l.tip, /\bwith F\b|\bHold J\b|\bK to\b/);
+    assert.match(J.message(l, w, s), /Make fast to attach the towline/);
+    assert.ok(J.toggleLine(l, w, s).ok);
+    const message = J.message(l, w, s);
+    assert.match(message, /0% line load · Reel in \/ Pay out/);
+    assert.doesNotMatch(message, /J \/ K/);
+});
 test('stage and world descriptions contain no development-history references', () => {
     const phrases = /\b(original|newly|v1|v2|moved from|used to be|version [12])\b/i;
     for (const l of L)
