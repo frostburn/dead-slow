@@ -5,6 +5,7 @@ export interface Vehicle {
 }
 export interface Track {
     id:string; a:string; b:string; points?:Point[]; limit:number; adhesion?:number;
+    tangentStart?:[number,number]; tangentEnd?:[number,number];
     restrictions?:{from:number;to:number;limit:number}[];
     closedFrom?:number; catchFrom?:number;
     tunnel?:{from:number;name:string};
@@ -29,6 +30,7 @@ export interface RailConfig {
     groups:{cars:Vehicle[];secured?:boolean;brake?:number;speed?:number}[];
     zones:Zone[]; tasks:Task[];
     traffic?:{id:string;name:string;speed:number;route:[string,1|-1][];head:number;length:number}[];
+    terrain?:{interval:number;heights:Point[]};
     river?:[number,number][];
     ferry?:{decks:string[];start:number;maxDifference:number};
     floods?:{name:string;edge:string;from:number;to:number;at:number}[];

@@ -117,7 +117,17 @@
         }
         return best?.blocked===0?{...best,fallback:false}:{x:right,y:top,w:width,h:height,fallback:true,protectedAreas};
     }
-    const api={profile,statusPlacement,snapshot,indicators,displayDirection,signedSpeed,actionEnabled};
+    const scenery=typeof module!=='undefined'&&module.exports?require('./rail-scenery.js'):root.RailScenery;
+    const landscapes=new WeakMap();
+    // Interpolation and river intersections are precomputed during the build.
+    // Only expand this level's compact coordinates on its first visit.
+    function landscape(level) {
+        if(landscapes.has(level))return landscapes.get(level);
+        const data=scenery[level.id];
+        const result={...data,contours:data.contours.map(([x,y,u,v])=>[{x,y},{x:u,y:v}])};
+        landscapes.set(level,result);return result;
+    }
+    const api={profile,landscape,statusPlacement,snapshot,indicators,displayDirection,signedSpeed,actionEnabled};
     if(typeof module!=='undefined'&&module.exports)module.exports=api;
     root.RailPresentation=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

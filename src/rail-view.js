@@ -6,7 +6,7 @@
     const Presentation=typeof module!=='undefined'&&module.exports?require('./rail-presentation.js'):root.RailPresentation;
     const {indicators,displayDirection,signedSpeed,actionEnabled}=Presentation;
     function swept(st) {
-        const key=Math.floor(st.time*4)+':'+st.reverser+':'+st.net.switches.map(s=>s.selected).join();
+        const key=Math.floor(st.time*4)+':'+st.reverser+':'+st.net.switches.map(s=>s.selected).join()+':'+R.engineGroup(st).cars.map(c=>c.id).join();
         if(key!==clearanceKey){clearanceKey=key;clearanceCache=R.clearance(st);}
         return clearanceCache;
     }
@@ -180,26 +180,28 @@
             panel.dataset.fallback=String(box.fallback);
         }
         const stroke=(points,color,width)=>{ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();};
-        // Survey contours and tree stands are seeded from map coordinates.
+        const landscape=Presentation.landscape(level,st.net);
         ctx.lineCap='round';ctx.lineJoin='round';
-        for(let i=0;i<20;i++) {
-            const points=Array.from({length:35},(_,j)=>({x:j*level.world[0]/34,y:i*90-200+Math.sin(j*.17+i*.21)*95+Math.cos(j*.28-i*.13)*40}));
-            stroke(points,'#bdbb9e',1/scale);
-        }
+        ctx.beginPath();
+        for(const [a,b] of landscape.contours){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);}
+        ctx.strokeStyle='#bdbb9e';ctx.lineWidth=1/scale;ctx.stroke();
         for(let i=0;i<150;i++) {
             const tx=(Math.sin(i*43.1)*43758.5%1+1)%1*level.world[0],ty=(Math.sin(i*19.3)*9645.2%1+1)%1*level.world[1];
             if(Object.values(st.net.edges).some(e=>e.samples.some(p=>Math.hypot(p.x-tx,p.y-ty)<36)))continue;
             ctx.fillStyle=i%3?'#929d7b':'#a2a988';ctx.beginPath();ctx.ellipse(tx,ty,8+i%8,12+i%9,-.35,0,Math.PI*2);ctx.fill();
         }
         if(st.config.scenery==='valley') {
-            const water=st.config.river?st.config.river.map(([x,y])=>({x,y})):Array.from({length:45},(_,i)=>({x:i*level.world[0]/40-70,y:level.world[1]*.89+Math.sin(i*.13)*85}));
+            const water=landscape.river;
             stroke(water,'#b5bfa3',45);stroke(water,'#83aaa9',28);stroke(water,'#adcbc1',2);
         }
         if(st.config.ferry) {
             const deck=R.ferry(st),points=deck.decks.flatMap(id=>st.net.edges[id].samples.filter(p=>p.s>=deck.start));
             const left=Math.min(...points.map(p=>p.x))-12,right=Math.max(...points.map(p=>p.x))+35;
             const top=Math.min(...points.map(p=>p.y))-42,bottom=Math.max(...points.map(p=>p.y))+42;
-            ctx.fillStyle='#7da3ac';ctx.fillRect(left-20,0,level.world[0]-left+20,level.world[1]);
+            // The quay widens south of the ramps to carry the run-around loop.
+            ctx.fillStyle='#7da3ac';ctx.beginPath();ctx.moveTo(left-20,0);ctx.lineTo(level.world[0],0);
+            ctx.lineTo(level.world[0],level.world[1]);ctx.lineTo(left+50,level.world[1]);
+            ctx.lineTo(left+50,bottom+25);ctx.lineTo(left+20,top+100);ctx.lineTo(left-20,top+60);ctx.closePath();ctx.fill();
             ctx.fillStyle='#48605b';ctx.beginPath();ctx.moveTo(left,top);ctx.lineTo(right-35,top);ctx.quadraticCurveTo(right+25,(top+bottom)/2,right-35,bottom);ctx.lineTo(left,bottom);ctx.closePath();ctx.fill();
             ctx.strokeStyle='#e2d3a5';ctx.lineWidth=3;ctx.stroke();ctx.fillStyle='#a5afa0';ctx.fillRect(left+8,top+9,right-left-42,bottom-top-18);
             ctx.fillStyle='#526c64';ctx.fillRect(right-100,top+25,48,bottom-top-50);
@@ -209,6 +211,7 @@
         const buildings=st.config.scenery==='yard'?[[90,490,43,76],[135,540,20,34],[830,150,65,33],[830,95,42,24]]:
             st.config.scenery==='valley'?[[1450,1030,80,28],[1550,1050,66,25]]:[[700,95,48,26],[200,390,45,32]];
         for(const [bx,by,bw,bh] of buildings) {
+            if(Object.values(st.net.edges).some(e=>e.samples.some(p=>p.x>bx-24&&p.x<bx+bw+24&&p.y>by-24&&p.y<by+bh+24)))continue;
             ctx.fillStyle='#9a9780';ctx.fillRect(bx+4,by+5,bw,bh);ctx.fillStyle='#786958';ctx.fillRect(bx,by,bw,bh);
             stroke([{x:bx+4,y:by+bh/2},{x:bx+bw-4,y:by+bh/2}],'#b2a183',2);
         }
@@ -227,9 +230,13 @@
                 const passenger=st.traffic.some(t=>!t.finished&&R.segments(st,t).some(p=>p.edge===edge.id)),freight=st.groups.some(g=>R.segments(st,g).some(p=>p.edge===edge.id));
                 stroke(edge.samples,passenger?'#75a9c3':freight?'#d0a465':'#9eaf8b',24);
             }
-            if(edge.bridge) {
-                stroke(edge.samples,'#5c665f',38);stroke(edge.samples,'#e1d8bb',30);
-                for(let s=15;s<edge.length;s+=32){const p=R.at(st.net,edge.id,s);ctx.fillStyle='#666655';ctx.fillRect(p.x-7,p.y-23,14,46);}
+            const spans=edge.bridge?[{from:0,to:edge.length}]:landscape.bridges.filter(b=>b.edge===edge.id);
+            for(const span of spans) {
+                const points=Array.from({length:Math.ceil((span.to-span.from)/6)+1},(_,i)=>i);
+                const deck=points.map((_,i)=>R.at(st.net,edge.id,span.from+(span.to-span.from)*i/(points.length-1)));
+                stroke(deck,'#5c665f',38);stroke(deck,'#e1d8bb',30);
+                for(const s of [span.from,span.to]){const p=R.at(st.net,edge.id,s),dx=Math.sin(p.a)*23,dy=Math.cos(p.a)*23;
+                    stroke([{x:p.x-dx,y:p.y+dy},{x:p.x+dx,y:p.y-dy}],'#666655',10);}
             }
             if(edge.adhesion<.06)stroke(edge.samples,'#68785a',30);
             stroke(edge.samples,'#b4ad97',17);stroke(edge.samples,'#78796e',10);

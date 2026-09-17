@@ -10,9 +10,15 @@
             const controls=track.points||[config.nodes[track.a],config.nodes[track.b]],samples=[];
             // Catmull-Rom centreline, sampled once by arc length. Elevation is
             // linear between survey points to avoid inventing crests at knots.
+            // Optional endpoint directions make return loops tangent to adjoining rails.
             for(let i=0;i<controls.length-1;i++)for(let j=0;j<24;j++) {
                 const t=j/24,p=controls[Math.max(0,i-1)],a=controls[i],b=controls[i+1],q=controls[Math.min(controls.length-1,i+2)];
-                const point=k=>.5*((2*a[k])+(-p[k]+b[k])*t+(2*p[k]-5*a[k]+4*b[k]-q[k])*t*t+(-p[k]+3*a[k]-3*b[k]+q[k])*t*t*t);
+                const tangent=(v,k)=>v[k]/Math.hypot(...v)*Math.hypot(b[0]-a[0],b[1]-a[1]);
+                const point=k=>{
+                    const m0=i===0&&track.tangentStart?tangent(track.tangentStart,k):(b[k]-p[k])/2;
+                    const m1=i===controls.length-2&&track.tangentEnd?tangent(track.tangentEnd,k):(q[k]-a[k])/2;
+                    return (2*t*t*t-3*t*t+1)*a[k]+(t*t*t-2*t*t+t)*m0+(-2*t*t*t+3*t*t)*b[k]+(t*t*t-t*t)*m1;
+                };
                 samples.push({x:point(0),y:point(1),z:a[2]+(b[2]-a[2])*t});
             }
             const end=controls[controls.length-1];samples.push({x:end[0],y:end[1],z:end[2]});
@@ -414,6 +420,7 @@
     }
     function clearance(st) {
         if(!st.config.cargo)return null;
+        if(groupFor(st,st.config.cargo.cars[0])!==engineGroup(st))return null;
         const original=groupFor(st,st.config.cargo.cars[0]),group={...original,path:original.path.map(p=>({...p}))};
         const eg=engineGroup(st),engine=eg.cars.find(c=>c.id==='engine'),dir=st.reverser*engine.face;
         for(let i=0;i<16;i++)if(!extend(st,group,dir>0))break;
