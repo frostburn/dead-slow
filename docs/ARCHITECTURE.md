@@ -133,6 +133,14 @@ that state into the existing shell; `polar-view.js` draws the same collision
 grid and exposes the two captain orders. `polar-grid.js` shares tile polygons,
 point lookup and six-neighbor connectivity between rendering, collision and
 route planning. No marine job state is fabricated.
+The view retains a raster ice layer per live grid. Fractures repaint nearby
+96-metre regions immediately; slush appearance is sampled at 8 Hz in 32 bands.
+Each dirty region is repainted from opaque water, including neighboring hex
+edges, so clearing slush cannot leave old opacity behind. Zoom/DPR changes
+rebuild the raster. Ships and moving ice still draw every frame, while physics
+continues at 120 Hz with continuous slush density. Unchanged HUD text and split
+markup retain their DOM nodes. A draw-call budget guards against repainting the
+whole field per frame; CI also compares incremental ice updates with fresh pixels.
 
 Sheet fractures require forward momentum and a bow approach, cost speed and
 open a narrow shoulder beside the hull. Pressure ridges remain impassable.

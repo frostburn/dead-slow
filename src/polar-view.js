@@ -3,7 +3,61 @@
     'use strict';
     const P=typeof module!=='undefined'&&module.exports?require('./physics.js'):root.HarborPhysics;
     const I=typeof module!=='undefined'&&module.exports?require('./polar.js'):root.PaleReach;
-    const $=id=>document.getElementById(id),set=(id,v)=>$(id).textContent=v;
+    const G=typeof module!=='undefined'&&module.exports?require('./polar-grid.js'):root.PaleReachGrid;
+    const $=id=>document.getElementById(id);
+    const set=(id,v)=>{const node=$(id),text=String(v);if(node.textContent!==text)node.textContent=text;};
+    const html=(id,v)=>{const node=$(id);if(node.innerHTML!==v)node.innerHTML=v;};
+    const iceLayers=new WeakMap(),CHUNK=96,SLUSH_BANDS=32;
+    function iceBand(st,k){return !st.ice.thickness[k]?-2:st.ice.opened[k]<0?-1:Math.round(I.slushAt(st,k)*SLUSH_BANDS);}
+    function paintIce(cache,ice,b){
+        const ctx=cache.ctx;
+        ctx.save();ctx.beginPath();ctx.rect(b.minX,b.minY,b.maxX-b.minX,b.maxY-b.minY);ctx.clip();
+        // Repaint from opaque water so fading slush cannot accumulate opacity.
+        ctx.fillStyle='#173e4a';ctx.fillRect(b.minX,b.minY,b.maxX-b.minX,b.maxY-b.minY);
+        G.each(ice,{minX:b.minX-1,minY:b.minY-1,maxX:b.maxX+1,maxY:b.maxY+1},(k,{x,y,poly})=>{
+            const band=cache.bands[k],t=ice.thickness[k];if(band===-2)return;
+            ctx.beginPath();poly.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();
+            if(band>=0){
+                const density=band/SLUSH_BANDS;
+                ctx.fillStyle=`rgba(154,195,199,${.08+density*.49})`;ctx.fill();
+                ctx.strokeStyle=`rgba(154,195,199,${.06+density*.18})`;ctx.lineWidth=.65;ctx.stroke();
+                if(density>.12){ctx.fillStyle=`rgba(215,232,225,${density*.8})`;ctx.fillRect(x-3,y-3,2,1.6);ctx.fillRect(x+1,y+2,2.5,1.6);}
+            }else{
+                ctx.fillStyle=t>=1?'#cbd0bd':t>.7?'#bad1d1':t>.4?'#8eb8c2':'#648f9f';ctx.fill();
+                ctx.strokeStyle=t>=1?'#929b8755':'#345e7048';ctx.lineWidth=.8;ctx.stroke();
+                if(k%7===0){
+                    ctx.beginPath();for(let a=0;a<3;a++){
+                        const dx=Math.cos(a*Math.PI/3)*3,dy=Math.sin(a*Math.PI/3)*3;
+                        ctx.moveTo(x-dx,y-dy);ctx.lineTo(x+dx,y+dy);
+                    }
+                    ctx.strokeStyle=t>=1?'#929b87':'#47708088';ctx.lineWidth=.7;ctx.stroke();
+                }
+                if(t>=1&&k%3===0){ctx.beginPath();ctx.moveTo(x-3,y+3);ctx.lineTo(x,y-3);ctx.lineTo(x+3,y+3);ctx.strokeStyle='#89927d';ctx.lineWidth=1;ctx.stroke();}
+            }
+        });
+        ctx.restore();
+    }
+    function iceSurface(st,resolution){
+        const ice=st.ice;let cache=iceLayers.get(ice);
+        if(!cache||cache.resolution!==resolution){
+            const surface=document.createElement('canvas');surface.width=Math.ceil(ice.width*resolution);surface.height=Math.ceil(ice.height*resolution);
+            const ctx=surface.getContext('2d');ctx.setTransform(resolution,0,0,resolution,0,0);
+            cache={surface,ctx,resolution,bands:Int8Array.from(ice.thickness,(_,k)=>iceBand(st,k)),revision:ice.revision,hasSlush:ice.opened.some(t=>t>=0),nextRefresh:st.time+.125};
+            paintIce(cache,ice,{minX:0,minY:0,maxX:ice.width,maxY:ice.height});iceLayers.set(ice,cache);
+        }else if(cache.revision!==ice.revision||cache.hasSlush&&st.time>=cache.nextRefresh){
+            const dirty=new Set(),cols=Math.ceil(ice.width/CHUNK),rows=Math.ceil(ice.height/CHUNK),pad=ice.radius+1;
+            for(let k=0;k<ice.thickness.length;k++){
+                const band=iceBand(st,k);if(band===cache.bands[k])continue;
+                cache.bands[k]=band;if(band>=0)cache.hasSlush=true;
+                const {x,y}=ice.tiles[k];
+                for(let j=Math.max(0,Math.floor((y-pad)/CHUNK));j<=Math.min(rows-1,Math.floor((y+pad)/CHUNK));j++)
+                    for(let i=Math.max(0,Math.floor((x-pad)/CHUNK));i<=Math.min(cols-1,Math.floor((x+pad)/CHUNK));i++)dirty.add(j*cols+i);
+            }
+            for(const k of dirty){const x=k%cols*CHUNK,y=Math.floor(k/cols)*CHUNK;paintIce(cache,ice,{minX:x,minY:y,maxX:Math.min(x+CHUNK,ice.width),maxY:Math.min(y+CHUNK,ice.height)});}
+            cache.revision=ice.revision;cache.nextRefresh=st.time+.125;
+        }
+        return cache.surface;
+    }
     function splitRows(run,format){
         return I.progress(run).map(o=>{
             const split=run.splits.find(p=>p.name===o.text),done=!!split;
@@ -35,7 +89,7 @@
         $('rudder-indicator').style.left=`calc(${50+s.rudder*47}% - 3px)`;
         const names=['FULL ASTERN','HALF ASTERN','DEAD SLOW ASTERN','STOP','DEAD SLOW','SLOW AHEAD','HALF AHEAD','FULL AHEAD'];
         set('telegraph-name',names[s.throttle+3]);set('telegraph-detail',s.throttle===0?'NEUTRAL · STILL COASTING':s.iceClass?'ICEBREAKING BOW · KEEP ROOM TO BRAKE':'LADEN HULL · CANNOT BREAK SHEET');
-        $('notches').innerHTML=Array.from({length:8},(_,i)=>`<span class="notch ${i<3?'reverse':i===3?'zero':''} ${i===s.throttle+3?'active':''}"></span>`).join('');
+        html('notches',Array.from({length:8},(_,i)=>`<span class="notch ${i<3?'reverse':i===3?'zero':''} ${i===s.throttle+3?'active':''}"></span>`).join(''));
         set('mission-status',status==='paused'?'Paused · unranked practice':I.message(run));
         set('mobile-extra',g?`GAP ${Math.round(g.metres)}m`:`SLUSH ${Math.round(st.slush*100)}%`);
         set('polar-readout',g?`${Math.round(g.metres)} m HULL GAP · ${g.closing>0?'CLOSING':'OPENING'} ${Math.abs(g.closing).toFixed(1)} m/s`:
@@ -48,7 +102,7 @@
                 b.disabled=status!=='running'||f.returned||f.leg==='unloading';b.classList.toggle('selected',f.order===b.dataset.order);b.setAttribute('aria-pressed',String(f.order===b.dataset.order));
             }
         }
-        const splits=splitRows(run,format);$('splits').innerHTML=splits;$('polar-splits').innerHTML=splits;
+        const splits=splitRows(run,format);html('splits',splits);html('polar-splits',splits);
         $('check-objectives').classList.toggle('ok',I.ready(run));
         for(const k of ['inside','aligned','slow'])$('check-'+k).classList.toggle('ok',!!run.dock[k]);
         $('dock-bar').style.width=Math.min(100,run.dockHold*50)+'%';
@@ -75,28 +129,10 @@
         ctx.fillStyle='#102d38';ctx.fillRect(0,0,W,H);ctx.save();ctx.translate(ox,oy);ctx.scale(scale,scale);
         const line=(points,color,width=1,dash=[])=>{ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash);ctx.stroke();ctx.setLineDash([]);};
         const label=(text,x,y,color='#8fb9c3',size=10)=>{ctx.fillStyle=color;ctx.font=`${size}px ui-monospace, monospace`;ctx.textAlign='center';ctx.fillText(text,x,y);};
-        ctx.fillStyle='#173e4a';ctx.fillRect(0,0,...level.world);
-        ctx.save();ctx.beginPath();ctx.rect(0,0,...level.world);ctx.clip();
-        for(let k=0;k<ice.thickness.length;k++){
-            const t=ice.thickness[k];if(!t)continue;
-            const {x,y,poly}=ice.tiles[k],r=ice.radius;
-            if((x-r)*scale+ox>W||(y-r)*scale+oy>H||(x+r)*scale+ox<0||(y+r)*scale+oy<0)continue;
-            ctx.beginPath();poly.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();
-            if(ice.opened[k]>=0){
-                const density=I.slushAt(st,k);ctx.fillStyle=`rgba(154,195,199,${.08+density*.49})`;ctx.fill();
-                ctx.strokeStyle=`rgba(154,195,199,${.06+density*.18})`;ctx.lineWidth=.65;ctx.stroke();
-                if(density>.12){ctx.fillStyle=`rgba(215,232,225,${density*.8})`;ctx.fillRect(x-3,y-3,2,1.6);ctx.fillRect(x+1,y+2,2.5,1.6);}
-            }else{
-                ctx.fillStyle=t>=1?'#cbd0bd':t>.7?'#bad1d1':t>.4?'#8eb8c2':'#648f9f';ctx.fill();
-                ctx.strokeStyle=t>=1?'#929b8755':'#345e7048';ctx.lineWidth=.8;ctx.stroke();
-                if(k%7===0)for(let a=0;a<3;a++){
-                    const dx=Math.cos(a*Math.PI/3)*3,dy=Math.sin(a*Math.PI/3)*3;
-                    line([[x-dx,y-dy],[x+dx,y+dy]],t>=1?'#929b87':'#47708088',.7);
-                }
-                if(t>=1&&k%3===0)line([[x-3,y+3],[x,y-3],[x+3,y+3]],'#89927d',1);
-            }
-        }
-        ctx.restore();
+        // The changing chart is one bitmap per frame; new fractures dirty nearby
+        // chunks immediately, while slow slush ageing is sampled at 8 Hz.
+        const surface=iceSurface(st,Math.min(4,Math.max(1,Math.ceil(scale*dpr))));
+        ctx.drawImage(surface,0,0,ice.width,ice.height);
         // Open-water contours are chart marks, never collision borders.
         for(const e of c.water){ctx.beginPath();ctx.ellipse(e.x,e.y,e.rx,e.ry,0,0,Math.PI*2);ctx.strokeStyle='#6d9caa30';ctx.lineWidth=1;ctx.stroke();}
         const route=(r,color)=>{line(r,color,1.3,[6,7]);for(let i=1;i<r.length;i++){const a=r[i-1],b=r[i],x=(a[0]+b[0])/2,y=(a[1]+b[1])/2,ang=Math.atan2(b[1]-a[1],b[0]-a[0]);line([[x-6*Math.cos(ang-.5),y-6*Math.sin(ang-.5)],[x,y],[x-6*Math.cos(ang+.5),y-6*Math.sin(ang+.5)]],color,1);}};

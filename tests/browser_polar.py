@@ -16,6 +16,7 @@ def check_polar(page,check,out):
         if stage==2:
             check('Following mission has live gap and closing rate','HULL GAP' in page.locator('#polar-readout').inner_text())
         page.screenshot(path=str(out/f'pale-reach-{stage}.png'))
+    check_polar_rendering(page,check)
     check('Two captains have four order buttons',page.locator('#polar-fleet button').count()==4)
     page.locator('[data-convoy=morrow][data-order=proceed]').click()
     check('Proceed orders reach the physical captain',page.evaluate('DeadSlowTest.state.run.polar.fleet[0].order==="proceed"'))
@@ -36,3 +37,29 @@ def check_polar(page,check,out):
         page.screenshot(path=str(out/f'pale-reach-{width}.png'))
     page.set_viewport_size({'width':1440,'height':1000});page.evaluate('DeadSlow.level(1,1);DeadSlow.speed(0)')
     check('Leaving the polar world hides its convoy panel',not page.locator('#polar-panel').is_visible())
+
+def check_polar_rendering(page,check):
+    result=page.evaluate('''() => {
+        const {level,run}=DeadSlowTest.state;
+        const r={...run,polar:{...run.polar,ice:{...run.polar.ice,opened:run.polar.ice.opened.slice()}}};
+        function canvas(){const c=document.createElement('canvas');c.getBoundingClientRect=()=>({width:900,height:700});c.getContext('2d',{willReadFrequently:true});return c}
+        const a=canvas(),b=canvas(),paint=()=>PaleReachView.render(a,level,r,1);
+        paint();
+        const pixels=c=>c.getContext('2d').getImageData(0,0,c.width,c.height).data;
+        const same=(a,b)=>a.every((v,i)=>v===b[i]);
+        const fresh=()=>{PaleReachView.render(b,level,{...r,polar:{...r.polar,ice:{...r.polar.ice}}},1);return same(pixels(a),pixels(b))};
+        const before=pixels(a),ice=r.polar.ice;
+        // Include hexagons on repaint-region boundaries, where stale edges hide.
+        for(let k=0;k<ice.thickness.length;k++)if(ice.thickness[k]>0&&ice.tiles[k].x>280&&ice.tiles[k].x<420&&ice.tiles[k].y>210&&ice.tiles[k].y<355)ice.opened[k]=r.polar.time;
+        ice.revision++;paint();const fracture=fresh()&&!same(before,pixels(a));
+        const opened=pixels(a);r.polar.time+=70;paint();const ageing=fresh()&&!same(opened,pixels(a));
+        for(let k=0;k<ice.opened.length;k++)if(ice.opened[k]>=0)ice.opened[k]=r.polar.time;
+        r.polar.time+=.2;paint();const reclear=fresh()&&same(opened,pixels(a));
+        const split=document.querySelector('#splits').firstElementChild,notch=document.querySelector('#notches').firstElementChild;
+        DeadSlowTest.hud();DeadSlowTest.hud();
+        return {fracture,ageing,reclear,stableHUD:split===document.querySelector('#splits').firstElementChild&&notch===document.querySelector('#notches').firstElementChild};
+    }''')
+    check('Cached fractures match a fresh chart without stale hex edges',result['fracture'])
+    check('Cached slush visibly ages and matches a fresh chart',result['ageing'])
+    check('Reclearing slush restores the chart without accumulating opacity',result['reclear'])
+    check('Unchanged split and telegraph nodes survive HUD refreshes',result['stableHUD'])
