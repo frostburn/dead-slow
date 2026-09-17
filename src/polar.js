@@ -66,12 +66,12 @@
             if(s.iceClass&&g.thickness[k]<1&&forward>=.8+g.thickness[k]*1.5&&bow>0&&-P.dot(f,hit.normal)>.08){
                 g.opened[k]=st.time;g.revision++;st.broken++;st.stats.sheetArea+=z*z;
                 const loss=1-.045*g.thickness[k];s.vx*=loss;s.vy*=loss;
-                if(st.config.fragments&&st.floes.length+st.pendingFloes.length<st.config.fragments&&st.broken%18===0)
+                if(st.config.fragments&&st.floes.length+st.pendingFloes.length<st.config.fragments&&x>=(st.config.fragmentFromX||0)&&st.broken%4===0)
                     st.pendingFloes.push({x:x+z/2,y:y+z/2,k});
             }else{
                 const collision=P.contact(s,rect);
                 impact(st,s,'ice-'+(s.name||'ship'),collision);
-                if(s===st.player)st.notice=g.thickness[k]>=1?'PRESSURE RIDGE · take the thin dogleg':s.iceClass?'Back off, build momentum, meet the sheet bow first.':'Intact sheet · this hull needs an opened channel.';
+                if(s===st.player&&collision){st.notice=g.thickness[k]>=1?'PRESSURE RIDGE · take the thin dogleg':s.iceClass?'Back off, build momentum, meet the sheet bow first.':'Intact sheet · this hull needs an opened channel.';st.noticeUntil=st.time+3;}
             }
         });
         const density=samples?slush/samples:0;
@@ -117,7 +117,7 @@
         const st=run.polar,f=st.fleet.find(f=>f.id===id&&!f.leader);
         if(!f||f.returned||!['hold','proceed'].includes(order))return false;
         if(f.order===order)return true;
-        f.order=order;st.stats.orders++;st.notice=f.ship.name+': '+(order==='hold'?'braking to hold; allow stopping room.':'proceeding on the marked route.');
+        f.order=order;st.stats.orders++;st.noticeUntil=st.time+4;st.notice=f.ship.name+': '+(order==='hold'?'braking to hold; allow stopping room.':'proceeding on the marked route.');
         return true;
     }
     // Route requests are destination orders. Captains use the water actually cut,
@@ -242,7 +242,7 @@
     function progress(run){const st=run.polar,c=st.config;
         return c.objectives.map((text,i)=>({text,done:c.mission==='pocket'?[st.routeOpened,pocketClear(st)>=c.pocket.required,st.complete][i]:c.mission==='follow'?[st.checkpoint>=3,st.complete][i]:i<2?st.fleet[i].returned:st.complete}));
     }
-    function message(run){const st=run.polar;if(st.failure)return st.failure;if(st.complete)return 'Passage service complete. All required hulls secure.';
+    function message(run){const st=run.polar;if(st.failure)return st.failure;if(st.complete)return 'Passage service complete. All required hulls secure.';if(st.noticeUntil>st.time)return st.notice;
         if(st.config.mission==='pocket')return !st.routeOpened?'Cut the blue dogleg around the pressure ridge.':pocketClear(st)<st.config.pocket.required?`Turning pocket ${Math.floor(pocketClear(st)*100)}% / 86% · widen the amber area before docking.`:'Turning pocket open · slow and moor at the green jetty.';
         if(st.config.mission==='follow'){const g=gap(run);return st.slush>.55?'HEAVY SLUSH · the lead is closing; recover spacing without crowding Rime.':g.metres<22?'TOO CLOSE · reduce speed; Rime needs room at the thick patch.':g.metres>70?'FALLING BEHIND · read the slush, keep the stern in the lead.':'Working separation · watch Rime’s speed and your stern.';}
         return ready(run)?'Both crews are home. Moor Kestrel in safe water.':`${st.stats.deliveries}/2 cargoes ashore · ${st.stats.safeReturns}/2 ships home. Clear return routes before sending Proceed.`;

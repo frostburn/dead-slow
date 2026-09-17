@@ -23,6 +23,8 @@
     }
     function hull(s, margin = 0) {
         const l = s.length / 2 + margin, b = s.beam / 2 + margin;
+        if (s.vessel === 'iceberg' || s.vessel === 'floe')
+            return [[-l,-b*.25],[-l*.72,-b*.85],[-l*.1,-b],[l*.72,-b*.65],[l,b*.1],[l*.58,b*.83],[-l*.23,b],[-l*.9,b*.6]].map(p => localPoint(s,...p));
         if (s.vessel === 'ferry')
             return [[-l, -b * .65], [-l * .8, -b], [l * .8, -b], [l, -b * .65], [l, b * .65], [l * .8, b], [-l * .8, b], [-l, b * .65]].map(p => localPoint(s, ...p));
         return [[-l, -b * .86], [l * .5, -b], [l, 0], [l * .5, b], [-l, b * .86]].map(p => localPoint(s, ...p));

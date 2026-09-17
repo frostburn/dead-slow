@@ -70,3 +70,14 @@ for(const n of [1,2,3])test(`7-0${n}: complete fixed-step trip using helm and ca
  if(n===2){assert.equal(r.polar.checkpoint,3);assert.ok(r.polar.fleet[0].returned);assert.ok(closedLoad>.1);assert.equal(r.ship.hull,100);}
  if(n===3){assert.equal(r.polar.stats.deliveries,2);assert.equal(r.polar.stats.safeReturns,2);assert.ok(r.polar.fleet.every(f=>f.ship.hull===100));assert.ok(bergWait);}
 });
+test('polar departure hulls start clear and the whole required hull must stay on the chart',()=>{
+ for(const n of [1,2,3]){
+  const r=state(n),l=level(n);
+  for(const s of [r.ship,...r.polar.fleet.map(f=>f.ship)]){
+   assert.ok(P.hull(s).every(p=>p.x>=0&&p.y>=0&&p.x<=l.world[0]&&p.y<=l.world[1]));
+   const x=s.x,y=s.y;I.iceContact(r.polar,s,1/120);assert.equal(s.x,x);assert.equal(s.y,y);assert.equal(s.hull,100);
+  }
+ }
+ const r=state(3),s=r.polar.fleet[0].ship;s.x=1;s.y=380;s.vx=-.1;
+ I.step(level(3),r,{},1/120);assert.match(r.polar.failure,/MORROW left the assignment chart/);assert.ok(s.x>0&&s.x<1,'exit fails before the centre leaves, without bouncing');
+});

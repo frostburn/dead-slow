@@ -8,6 +8,8 @@
         $('polar-panel').hidden=!level.polar;
         if(!level.polar)return;
         document.title='DEAD SLOW — Race for the Pale Reach';
+        set('courses-btn','World map');set('check-objectives','Passage objectives');
+        $('chart-section').setAttribute('aria-label','Polar passage chart and vessels');
         $('sea').setAttribute('aria-label','Polar passage chart: blue thin ice, cream pressure ridges, closing slush and solid drifting ice.');
         $('polar-fleet').innerHTML=(level.polar.fleet||[]).filter(f=>!f.leader).map(f=>`<div class="polar-order"><strong>${f.name}</strong><span id="polar-${f.id}-status"></span><div><button data-convoy="${f.id}" data-order="hold">Hold</button><button data-convoy="${f.id}" data-order="proceed">Proceed</button></div></div>`).join('');
         $('polar-fleet').onclick=e=>{const b=e.target.closest('[data-convoy]');if(b&&!b.disabled)command(b.dataset.convoy,b.dataset.order);};

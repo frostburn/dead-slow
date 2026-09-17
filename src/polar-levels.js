@@ -19,7 +19,7 @@
             pocket:{x:666,y:280,rx:49,ry:42,required:.86},berth:berth(746,280),
             docks:[{x:778,y:238,w:22,h:87,name:'THAWMARK SUPPLY JETTY'}],
             landmarks:[{x:112,y:462,text:'WINTER ANCHORAGE'},{x:355,y:385,text:'PRESSURE RIDGE'},{x:359,y:181,text:'THIN DOGLEG'}],
-            fragments:4,
+            fragments:4,fragmentFromX:460,
             dispatch:['FREE ANCHORAGE COUNCIL / 06:20','Thawmark has three days of heating fuel. The Council will accept the delivery without accepting either authority’s new passage chart. Open room to turn, not just room to arrive.'],
             objectives:['Open the thin dogleg','Widen the turning pocket','Moor at Thawmark jetty']
         },'The winter anchorage has opened, but Thawmark’s supply jetty is still behind a pressure ridge. Take Kestrel through the thinner dogleg. Broken sheet leaves slush and drifting floes; slow as you enter the basin. Widen the marked turning pocket before docking.',

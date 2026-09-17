@@ -9,8 +9,8 @@ function navigate(n){
  const r=t.state.run;
  let phase=0,wp=0,docking=false,route=n===1?[...l.polar.route.slice(0,6),[660,253],[739,253]]:
   n===2?[...l.polar.route.slice(0,-1),[752,336],[827,336]]:l.polar.route;
- const routes=n===3?[l.polar.route,[...l.polar.route.slice().reverse(),[173,365]],[[173,365],...l.polar.secondary.route.slice(1)],
-  [...l.polar.secondary.route.slice().reverse(),[180,385]],[[180,385],[107,384]]]:null;
+ const routes=n===3?[l.polar.route,[...l.polar.route.slice(1).reverse(),[173,365]],[[173,365],...l.polar.secondary.route.slice(1)],
+  [...l.polar.secondary.route.slice(1).reverse(),[180,385]],[[180,385],[107,398]]]:null;
  let earlyPocket=null,closedLoad=0,bergWait=false;
  for(let tick=0;tick<120*(n===3?2500:850)&&t.state.status==='running';tick++){
   if(tick%30===0){
