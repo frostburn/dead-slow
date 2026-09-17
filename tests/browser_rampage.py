@@ -20,7 +20,7 @@ with sync_playwright() as pw:
             args.screenshots.mkdir(parents=True,exist_ok=True);page.screenshot(path=str(args.screenshots/name))
     page.evaluate('DeadSlowTest.courses(4)')
     check('World 4 selector has twelve real courses',page.locator('.level-card').count()==12 and '0 / 12 COURSES COMPLETE' in page.locator('#dialog').inner_text())
-    check('Grand Tour now has 72 stages','all 72' in page.locator('#dialog').inner_text())
+    check('Grand Tour now has 84 stages','all 84' in page.locator('#dialog').inner_text())
     page.locator('.level-card').first.click()
     intro = page.locator('#dialog .control-summary').inner_text()
     check('Ball introduction explains map controls and shields','Hold the direction buttons' in intro and 'Use Shield' in intro)

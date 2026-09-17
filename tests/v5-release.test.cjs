@@ -8,10 +8,10 @@ const field=id=>L.find(l=>l.id===id).rampage;
 const sample={time:100,contacts:0,clean:true};
 const stage=()=>({runs:[{...sample}],ghost:[[0,100,150,0]],bestSplits:[10,20],clears:1,attempts:2});
 
-test('version 6 is a full release with six twelve-stage circuits and one excluded bonus',()=>{
+test('version 6 is a full release with seven twelve-stage circuits and one excluded bonus',()=>{
  assert.match(require('../package.json').version,/^6\.\d+\.\d+$/);
  assert.equal(require('../package-lock.json').version,require('../package.json').version);
- assert.equal(L.length,79);assert.equal(L.filter(l=>!l.bonus&&!l.standalone).length,72);
+ assert.equal(L.length,85);assert.equal(L.filter(l=>!l.bonus&&!l.standalone).length,84);
  assert.equal(L.filter(l=>l.bonus).length,1);
  for(const w of L.worlds.filter(w=>!w.comingSoon&&!w.partial)){assert.ok(!w.preview);assert.equal(L.filter(l=>l.campaign===w.id&&!l.bonus&&!l.standalone).length,12);}
 });
@@ -113,12 +113,12 @@ test('practice taints an entire rolling circuit and a failed course cannot be sk
  for(let i=0;i<12;i++){t.state.run.time=1;t.finish();if(i<11)t.next();}
  assert.equal(t.state.storage.races.gerbozilla.length,0);
 });
-test('Grand Tour includes rolling stages before space and records seventy-two stages, not the bonus',()=>{
- const t=create();t.marathon('grand-tour');assert.equal(t.state.marathon.route.length,72);
+test('Grand Tour reaches the polar finale and records eighty-four stages, not the bonus',()=>{
+ const t=create();t.marathon('grand-tour');assert.equal(t.state.marathon.route.length,84);
  assert.ok(t.state.marathon.route.every(i=>!L[i].bonus));
- for(let i=0;i<72;i++){t.state.run.time=1;t.finish();if(i<71)t.next();}
- assert.equal(t.state.level.id,'perihelion-dispatch');const r=t.state.storage.races['grand-tour'][0];
- assert.equal(r.stages,72);assert.equal(r.time,72);
+ for(let i=0;i<84;i++){t.state.run.time=1;t.finish();if(i<83)t.next();}
+ assert.equal(t.state.level.id,'pale-reach-12');const r=t.state.storage.races['grand-tour'][0];
+ assert.equal(r.stages,84);assert.equal(r.time,84);
 });
 test('shipped reference module is synchronized exactly with its fixture source',()=>{
  assert.equal(fs.readFileSync(require.resolve('../src/verification.js'),'utf8'),require('../tools/sync-replays.cjs').source());

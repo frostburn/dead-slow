@@ -5,7 +5,7 @@ Report [bugs and feature requests](https://github.com/frostburn/dead-slow/issues
 
 **Neutral is not a brake.** A top-down ship-handling game about arriving slowly,
 with enough room left to stop—at sea, in vacuum, inside a giant hamster ball, or along a freight railway.
-Version 6 has seventy-two circuit stages across six playable worlds in an eight-world atlas, a separate Century Ship bonus, six opening Pale Reach assignments, local speedrun
+Version 6 has eighty-four circuit stages across seven playable worlds in an eight-world atlas, a separate Century Ship bonus, local speedrun
 records, personal-best ghosts, keyboard controls and a multitouch helm.
 
 ## The eight-world atlas
@@ -18,13 +18,13 @@ records, personal-best ghosts, keyboard controls and a multitouch helm.
 | 4 | Gerbozilla’s Rampage | 12 playable courses |
 | 5 | The Long Grade | 12 playable assignments |
 | 6 | The Black Meridian | 12 playable sectors + the Century Ship bonus |
-| 7 | Race for the Pale Reach | First 6 playable assignments; 6 planned |
+| 7 | Race for the Pale Reach | 12 playable assignments, including a two-leg finale |
 | 8 | Tow the Impossible | Coming soon — 12 named placeholders |
 
-Gray chapters can be inspected but not launched. The 18 placeholder missions
+Gray chapters can be inspected but not launched. World 8's 12 placeholder missions
 are not counted as playable levels or included in circuits. The Grand Tour visits
-**1 → 2 → 3 → 4 → 5 → 6**, seventy-two assignments; the Century Ship remains separate.
-There are **79 playable assignments and 41 author recordings**. Every complete world has its own twelve-stage circuit.
+**1 → 2 → 3 → 4 → 5 → 6 → 7**, eighty-four assignments; the Century Ship remains separate.
+There are **85 playable assignments and 41 author recordings**. Every complete world has its own twelve-stage circuit.
 
 World 7 opens **Race for the Pale Reach** with The First Fracture, Borrowed Water,
 and Deliveries Beyond the Map. Cut sheet ice bow first, widen a turning pocket,
@@ -34,10 +34,10 @@ both deliveries **and both returns** are required. Broken channels visibly fill
 with slush, while substantial floes and the crossing iceberg remain solid moving
 objects. Rime finishing her passage no longer fails Borrowed Water: she waits
 at Glass Quay, and you choose whether to continue through slush or retry.
-Pausing freezes all ships and ice together. The first six assignments
-have individual records and ghosts; they remain outside the Grand Tour and do
-not yet form a World 7 circuit. The remaining six missions are named plans,
-including submarine operations and the final relief convoy.
+Pausing freezes all ships, sonar, mission clocks and ice together. All twelve
+assignments have individual records and ghosts, form the World 7 circuit and
+join the Grand Tour. Earlier 72-stage tour records are archived separately;
+individual mission records and the first six campaign circuits are retained.
 
 **Buoys, Not Borders**, **Home Ice**, and **The Other Shore** add a physical survey
 tow under patrol pressure, defense of an unloading base, and a strike that requires
@@ -51,6 +51,40 @@ and B fires a single round. Guns
 need a forward arc, a steady solution, and time to reload; incoming shells remain
 visible and avoidable. The same orders are available as touch buttons. Each
 completed objective records its elapsed split time.
+
+**What the Ice Heard**, **Under the Listening Post**, and **Three Echoes Too Many**
+introduce Petrel, a submarine with three readable depth bands. Z/X orders shallower
+or deeper water; iceberg keels and seabed shelves restrict the whole hull.
+Passive contacts are uncertain estimates that expand when lost. P sends an active
+pulse for clearer echoes, but listeners receive your emission position. T selects
+a track, I records its identification, and B launches a torpedo only with a fresh,
+identified submarine contact, suitable depth, bow arc and a steady solution.
+All orders also have touch controls. F inserts or recovers the team at the relay
+hatch; its work advances while Petrel is clear of the exposed area. Quiet handling
+lets suspicion fall, but a confirmed alarm fails the covert assignment. The
+minelayer releases decoys and goes quiet; interrupting its approach and letting
+it withdraw can protect the passage without pursuing it. Every mission requires
+Petrel and any deployed team to return to safe water.
+
+**Bring Them Back** starts with a team already waiting on breaking ice. The two
+pickup choices are a nearby shelter gap that becomes exposed and a farther
+rendezvous drifting with the ice margin at deep depth. Changing the choice
+takes real relocation time. Match the beacon's drift, recover the team, then
+avoid the patrols that redeploy across the arrival route.
+
+**No Flag on the Lifeboats** returns to Kestrel. Establish rescue contact with
+three stranded groups carrying civilian, Compact and League crews, tow disabled
+Oriel out of the turning pocket, and bring every required hull to neutral water.
+Visible gunboats exchange travelling shells across the short cut. The protected
+southern route needs more breaking; there is no player gun or kill objective.
+
+**The Passage Must Stay Open** has two legs on one 45-minute weather clock.
+Insert and recover the channel engineers with Petrel, secure the submarine,
+then take Kestrel and escort three inspection and relief ships through the exit.
+The same surface sea advances throughout the underwater operation: Rime makes
+physical cuts, channels thicken and the iceberg drifts. The handoff preserves
+that state and every elapsed split. Kestrel must cut the final section and
+reopen the aging wake. The final relief ship clearing the passage ends the watch.
 
 World 5 starts with collecting two quarry wagons, then a station run-around, then a heavy descent with a gentler branch and cooling loop. W/S changes power, A/D the train brake, Q/E the locomotive brake, X reverses at rest, F couples, and B sets or releases the selected cut’s handbrakes. Click a link in the train strip to uncouple. Point buttons lock while occupied. The map shows the head and tail; the strip shows each wagon’s grade. Enter `DeadSlow.watch("long-grade-1", 8)` in the browser console to watch the tutorial recording. `DeadSlow.normal()` starts a fresh attempt at normal speed. See [rail engine notes](docs/RAILWAY.md) for architecture and validation.
 
@@ -182,8 +216,8 @@ Run one at a time. All twelve courses have input-only reference recordings; the
 ten revised-map recordings are verified for version 5.0.0. They are not
 claimed optimal. Read the [field guide](docs/GERBOZILLA.md) for mechanics and tests.
 
-There are **41 recordings and 79 selectable assignments**. All six playable worlds
-have twelve-stage circuits; the **Grand Tour has 72 stages**. The Century Ship
+There are **41 recordings and 85 selectable assignments**. All seven playable worlds
+have twelve-stage circuits; the **Grand Tour has 84 stages**. The Century Ship
 is the single bonus, excluded from every circuit. Each route has separate
 overall and clean records. The World 4 HUD, result screen and field log show
 the circuit clock and records, including failed-attempt time and retries.
@@ -206,7 +240,7 @@ all sea/space course records remain active. Export before moving HTML files.
 ## Accelerated playtest
 
 ```js
-DeadSlow.tour(8)          // Start the 72-stage Grand Tour as manual 8× practice.
+DeadSlow.tour(8)          // Start the 84-stage Grand Tour as manual 8× practice.
 DeadSlow.circuit(3, 8)    // Or play a single world's circuit.
 DeadSlow.progress()      // Mission, total clock, retries and completed splits.
 ```
@@ -280,7 +314,7 @@ reach their first ramp; tugs start outside line-passing range and must approach
 the casualty. The positioning leg is part of the clock, not skipped setup.
 
 Every stage is selectable immediately. World circuits each cover twelve stages;
-the **Grand Tour** visits all seventy-two non-bonus stages. Each route has its own record table.
+the **Grand Tour** visits all eighty-four non-bonus stages. Each route has its own record table.
 
 ![Borderless archipelago chart, with the tug departing away from its tow](docs/images/open-archipelago.webp)
 
@@ -411,7 +445,7 @@ Complete all clearance and service jobs. Fit your own hull inside the final
 order neutral, let engine output drop below 15%, and hold for two seconds. In
 space, match the cradle's velocity, keep relative spin below 0.012 rad/s and
 cut all jets (main output below 2%). Each world has a twelve-stage circuit; the
-Grand Tour has 72 stages. The Century Ship never enters either route.
+Grand Tour has 84 stages. The Century Ship never enters either route.
 
 The clock is fixed-step **in-game time (120 Hz)**. Gates, traffic, tides and
 current pulses reset to identical phases on retry. Circuit clocks retain failed
@@ -448,7 +482,7 @@ Hairpin; schema 8 retains superseded Banking/Lake District routes separately. Sc
 splits for the five redesigned missions (`vacuum`, `umbra`, `perihelion-dispatch`,
 `yesterday`, `century-ship`), plus their affected Meridian and Grand Tour circuits.
 These are not comparable routes. Unchanged stages and circuits retain active records. Archives remain visible in the logbook and exports.
-The earlier **36-stage Grand Tour** also remains separate from the current 72-stage route.
+The earlier **36-stage Grand Tour** also remains separate from the current 84-stage route.
 
 Older schema migrations still preserve dock-side island departure records and
 24-stage circuits in their existing archives; none are deleted. The logbook

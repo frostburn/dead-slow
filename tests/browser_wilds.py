@@ -18,7 +18,7 @@ with sync_playwright() as pw:
     def shot(name):
         page.wait_for_timeout(100);page.screenshot(path=str(shots/(name+'.png')))
     page.evaluate('DeadSlowTest.courses(4)')
-    check('World 4 has exactly twelve courses and a seventy-two-stage Grand Tour',page.locator('.level-card').count()==12 and '0 / 12' in page.locator('.world-progress').inner_text() and 'all 72' in page.locator('#dialog').inner_text())
+    check('World 4 has exactly twelve courses and a eighty-four-stage Grand Tour',page.locator('.level-card').count()==12 and '0 / 12' in page.locator('.world-progress').inner_text() and 'all 84' in page.locator('#dialog').inner_text())
     shot('twelve-courses')
     page.evaluate('DeadSlow.level("gerbo-forest-slalom");DeadSlow.speed(0)');shot('forest-map')
     check('Forest course has five ordered controls and no city objectives',page.evaluate('DeadSlowTest.state.run.rampage.controlCount===5 && DeadSlowTest.state.run.rampage.districts.length===0'))

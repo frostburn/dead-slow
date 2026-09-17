@@ -52,7 +52,7 @@ test('railway logbook shows local circuit and Grand Tour clean and overall recor
     t.state.storage.races['long-grade']=[{time:123,clean:false},{time:135,clean:true}];
     t.state.storage.races['grand-tour']=[{time:456,clean:false},{time:480,clean:true}];
     t.action('log');const html=t.html('dialog');
-    for(const label of ['World 5 · The Long Grade','Grand Tour · 72',t.format(123),t.format(135),t.format(456),t.format(480)])assert.ok(html.includes(label),label);
+    for(const label of ['World 5 · The Long Grade','Grand Tour · 84',t.format(123),t.format(135),t.format(456),t.format(480)])assert.ok(html.includes(label),label);
 });
 test('field logbook exposes records archived before volcanic hills',()=>{
     require('../src/rampage-view.js');const t=create({fieldDialog:global.GerboView.dialog});t.cheats.level('gerbo-downhill');

@@ -40,8 +40,9 @@ def check_railway(page, check, out):
     page.evaluate('''(()=>{const r=DeadSlowTest.state.run,t=r.rail.config.tasks[0];r.rail.completed.push(t.id);r.splits.push({name:t.text,time:12.5});DeadSlowTest.hud()})()''')
     check('Completed railway split displays its timestamp',page.locator('#rail-tasks .done').inner_text().find('12.50')>=0)
     page.evaluate('DeadSlowTest.state.run.rail.completed=[];DeadSlowTest.hud()')
-    # Read rows and styles together: the HUD replaces these children each frame.
-    invalidated = page.locator('#rail-tasks .invalidated').evaluate_all('''rows=>rows.map(row=>({text:row.innerText,decoration:getComputedStyle(row.firstElementChild).textDecorationLine}))''')
+    # Query and read in one browser task: locator evaluation can capture nodes
+    # that the next HUD frame detaches before computed styles are sampled.
+    invalidated = page.evaluate('''()=>Array.from(document.querySelectorAll('#rail-tasks .invalidated'),row=>({text:row.innerText,decoration:getComputedStyle(row.firstElementChild).textDecorationLine}))''')
     check(f'Invalidated split retains its first time and strikes out the objective: {invalidated}',len(invalidated)==1 and '12.50' in invalidated[0]['text'] and invalidated[0]['decoration']=='line-through')
     page.evaluate('DeadSlow.level(5,1);DeadSlow.speed(0)')
     zoom=page.locator('#zoom-btn').inner_text()
@@ -210,7 +211,7 @@ def check_railway(page, check, out):
         DeadSlowTest.state.storage.races['grand-tour']=[{time:456,clean:true}];
     }''')
     page.click('#log-btn')
-    check('Railway logbook shows railway and tour records',all(label in page.locator('#dialog').inner_text() for label in ['World 5 · The Long Grade','Grand Tour · 72','02:03.00','02:15.00','07:36.00']))
+    check('Railway logbook shows railway and tour records',all(label in page.locator('#dialog').inner_text() for label in ['World 5 · The Long Grade','Grand Tour · 84','02:03.00','02:15.00','07:36.00']))
     for number,label in [(10,'balance reserve'),(11,'Low Crossing'),(12,'Coastal passenger')]:
         page.evaluate('(n)=>{DeadSlow.level(5,n);DeadSlow.speed(0)}',number)
         check(f'5-{number} shows its operating constraint',label in rail_detail(page, '#rail-operations'))

@@ -120,7 +120,7 @@
         const menu = Object.freeze({
             help() {
                 const commands = [
-                    ['DeadSlow.tour(8)', 'Start a manual 72-stage Grand Tour at 8×, unranked from departure.'],
+                    ['DeadSlow.tour(8)', 'Start a manual 84-stage Grand Tour at 8×, unranked from departure.'],
                     ['DeadSlow.circuit(3, 8)', 'Start a twelve-stage world playtest; keep speed across retry/next.'],
                     ['DeadSlow.convoy("morrow", "proceed")', 'Order a World 7 supply captain to proceed or hold; practice only.'],
                     ['DeadSlow.progress()', 'Compact current mission, circuit clock and completed sector splits.'],

@@ -68,9 +68,10 @@ export interface RailServices {
     fail():void;
 }
 
-export type PolarAction = 'tow'|'target'|'fire';
+export type PolarAction = 'tow'|'target'|'fire'|'ping'|'identify'|'team'|'ascend'|'descend'|'depth'|'rendezvous';
 export interface PolarInput {rudder:number;thruster:number;winch?:number}
 export interface PolarState {
+    submarine?:boolean;
     level:Level;
     contacts:number;
     fleet:{ship:{hull:number}}[];
@@ -78,7 +79,10 @@ export interface PolarState {
     complete:boolean;
     stats:Record<string,number>;
 }
-export interface PolarRun {polar:PolarState;ship:{hull:number}}
+export interface PolarRun {
+    polar:PolarState;ship:{hull:number};time?:number;contacts?:number;
+    finalJourney?:{subState:PolarState;watch:{handoffAt:number|null}};
+}
 export interface PolarPort {
     create(level:Level):PolarRun;
     step(level:Level,run:PolarRun,input:PolarInput,dt:number):void;

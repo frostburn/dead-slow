@@ -115,7 +115,7 @@ cleanliness and outcomes. See [TESTING.md](TESTING.md).
 
 ## Scope of the next campaigns
 
-The atlas has eight worlds, six complete campaigns, 72 circuit missions and one
+The atlas has eight worlds, seven complete campaigns, 84 circuit missions and one
 separate bonus. Stable IDs identify stages and campaigns; world numbers are
 presentation. The remaining 24 cards are disabled placeholders.
 
@@ -147,8 +147,8 @@ open a narrow shoulder beside the hull. Pressure ridges remain impassable.
 Slush is a continuous resistance field after a 20-second grace period; an
 opened cell never becomes a solid collider under a vessel. Breaking can leave
 mass-bearing floes, spawned only after occupied hulls clear their location.
-Icebergs drift independently, collide as solid bodies, and already carry keel
-metadata; depth bands and sonar are reserved for later assignments.
+Icebergs drift independently and collide as solid bodies. Their keel metadata
+also defines underwater clearance in the submarine assignments.
 
 Supply captains plan connected cleared water with beam clearance, then apply
 the same engine lag, thrust, rudder, drag and collision model as the player.
@@ -186,9 +186,85 @@ still count, and heavy slush leaves retry to the player. Its rules revision is 2
 all six charts use course revision 2. The physical cutter routes archive the
 previous timed-opening records for 7-04–7-06 only.
 Each assignment has normal individual records, elapsed split times and ghosts.
-`standalone` excludes them from the existing
-72-stage Grand Tour until the complete campaign exists; prior circuits keep
-their signatures. The polar tests cover boundaries and complete all six missions
+The completed twelve-assignment campaign joins the 84-stage Grand Tour.
+Individual signatures and the first six campaign signatures remain unchanged;
+the prior 72-stage tour is archived through the compatibility manifest.
+The polar tests cover boundaries and complete all six surface missions
 through ordinary controls at 120 Hz, including towing and physical projectile
 hits. A passive defense run loses a transport before it can leave. Browser UI checks run
 inside the existing atlas job; there is no additional CI matrix or job.
+
+## Pale Reach submarine watch
+
+`submarine-levels.js` adds 7-07–7-09 to the same campaign.
+`submarine.js` uses the existing inertial hull integrator and captain controls,
+with gradual depth changes between 18, 48 and 88 metres. Whole-hull overlap
+determines keel and seabed clearance. Invalid horizontal approaches collide;
+terrain never snaps a vessel into another depth band. Static hex chart texture
+is cached; moving keels and depth-dependent obstruction shading stay live.
+
+`sonar.js` stores detached observations, never live actor references. Passive
+listening supplies uncertain position, motion and machinery clues; speed,
+counterthrust and thrusters mask the receiver and alert listeners. Active pulses
+schedule echoes after travel time and give enemies an expiring emission fix.
+Unobserved tracks extrapolate briefly, then hold position while uncertainty grows.
+The underwater view renders hidden contacts from those estimates alone; only
+the covert mission's explicitly reported surface patrols have exact chart symbols.
+
+Identification is a separate bridge order. Torpedoes require a fresh identified
+submarine track, matching depth, forward arc, clearance and four steady seconds.
+They follow the plotted solution through space, can miss, and strike the first
+solid obstacle or hull at their depth. Enemy attacks use expiring sensor fixes.
+Going quiet lets the minelayer lose contact; decoys are released from its stern.
+One damaging hit makes it abandon minelaying and withdraw, which is a successful
+defense once the passage is safe and Petrel returns. Pursuit is unnecessary.
+
+The covert team needs quiet, slow transfers at working depth. Work advances only
+after leaving the exposed area; recovery and homecoming are separate objectives.
+Patrol listening arcs, self-noise, range and depth determine suspicion. Suspicion
+can decay, while a confirmed alarm remains latched. No infantry state is exposed.
+
+`submarine-navigation.cjs` completes all three missions through ordinary helm,
+depth, sonar and mission orders, using observed tracks and visible patrol reports.
+Focused tests cover lost-contact uncertainty, fire interlocks, projectile flight,
+depth clearance, alarm latching, failure deadlines, pause/retry and a warm chart
+draw budget. Existing browser CI checks the new controls and mobile layouts;
+there is no additional job or Node version. Existing surface course signatures
+remain unchanged; completing the campaign extends the Grand Tour to 84 stages.
+
+## Extraction, neutral rescue and the final passage
+
+`polar-finale-levels.js` supplies 7-10–7-12. `submarine-recovery.js` attaches one
+pickup to a drifting ice margin and keeps the other in a shelter whose plates
+separate continuously. The team begins waiting; a change of rendezvous moves
+its beacon over time. Transfer requires the correct depth and low relative
+speed. Exposure and pickup redirect already-visible patrols through ordinary
+captain controls, without spawning or teleporting them. Recovery and escape
+are separate objectives; confirmed suspicion still fails the assignment.
+
+The rescue extends the existing surface operation and tow model. Three groups
+need slow rescue contact before accepting Proceed, and captains plan through
+connected water with hull clearance. Oriel must stop entirely in the marked
+refuge outside the turning pocket. Two visible gunboats exchange physical
+shells across the short route; a longer southern cut avoids that line of fire.
+Their combat earns no rescue credit and is excluded from rescue damage totals.
+Success requires all three groups and the disabled vessel to remain alive.
+
+`polar-finale.js` owns the shared watch. It creates Petrel and a live surface
+run together. Surface physics advances the shared iceberg exactly once while
+the submarine checks the same keel at depth. Rime cuts only the initial lead;
+the relief ships and Kestrel wait physically at anchorage. Finishing the
+engineers' work disables the actual surface installation. Recovering the team
+and securing Petrel hands command to the existing Kestrel hull. It retains the
+ice grid, fracture timestamps, floes, NPCs, damage, elapsed clock and split list.
+The bridge replaces depth/sonar controls with convoy orders at that handoff.
+
+Weather continuously increases slush resistance; it never solidifies water
+through an occupied hull. The explicit 45-minute window applies to both legs.
+Kestrel cuts the remaining passage and the final relief ship reaching the exit
+completes the mission. Pause freezes both runs; retry reconstructs both legs.
+The result records each leg's duration and includes submarine damage in the
+clean-run decision. Focused tests cover these transitions, physical causality,
+record migration and ordinary-control completion of both pickup choices and
+both final surface assignments. Desktop and mobile checks stay in the existing
+browser job; no CI matrix or job is added.

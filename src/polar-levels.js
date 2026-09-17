@@ -133,6 +133,11 @@
         },'The main inlet is open and covered by the coastal battery. Rime is cutting the thinner northern flank; the dashed line is her intended route, not open water. Follow the icebreaker or prepare your own approach. Disable both military installations and withdraw to the green home berth. Response boats and drifting ice can obstruct your return.',
         'The forward gun needs a clear arc and 2.5 seconds below 2.4 kn with little turn. T selects, B fires. The battery announces its firing solution before launching a visible shell. Plan a retreat while opening your approach.',[650,900,1250])
     ];
+    const underwater=typeof module!=='undefined'&&module.exports?require('./submarine-levels.js'):root.PaleReachSubmarineLevels;
+    levels.push(...underwater.levels);
+    const finale=typeof module!=='undefined'&&module.exports?require('./polar-finale-levels.js'):root.PaleReachFinaleLevels;
+    levels.push(...finale.levels);
+    for(const level of levels)delete level.standalone;
     const api={levels,breaker,supply};
     if(typeof module!=='undefined'&&module.exports)module.exports=api;
     root.PaleReachLevels=api;

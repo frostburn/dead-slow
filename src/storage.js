@@ -13,7 +13,7 @@
     const FIELD_REVISED = ['gerbo-banking', 'gerbo-lake-skipping', 'gerbo-downhill', 'gerbo-forest-slalom', 'gerbo-fort-pillow', 'gerbo-cavy-clash', 'gerbo-pepperbreath', 'gerbo-whiskerdoom', 'gerbo-prickly-business', 'gerbo-rolling-threat'];
     const ARCHIVES = ['gerbozilla-contour-v1', 'grand-tour-contour-v1', 'gerbozilla-volcano-v1', 'grand-tour-order-v1', 'northwatch-approach-v1', 'archipelago-approach-v1', 'grand-tour-approach-v1', 'archipelago-layout-v2', 'gerbozilla-layout-v2', 'grand-tour-layout-v2', 'grand-tour-48', 'meridian-layout-v1', 'grand-tour-layout-v1', 'grand-tour-36', 'grand-tour-24', 'archipelago-dock-starts', 'grand-tour-dock-starts'];
     ARCHIVES.push('gerbozilla-topography-v1','grand-tour-60','long-grade-dispatch-v1','grand-tour-dispatch-v1');
-    const RACES = ['coast', 'northwatch', 'archipelago', 'meridian', 'gerbozilla', 'long-grade', 'grand-tour'];
+    const RACES = ['coast', 'northwatch', 'archipelago', 'meridian', 'gerbozilla', 'long-grade', 'pale-reach', 'grand-tour'];
     const fresh = () => ({
         version: VERSION, compatibility:{stages:{...CURRENT.stages},races:{...CURRENT.races}}, archivedCompatibility:{stages:{},races:{}}, stages: {}, marathon: [], races: Object.fromEntries(RACES.map(id=>[id,[]])), archivedStages: {}, archivedRaces: Object.fromEntries(ARCHIVES.map(id => [id, []])), settings: { ghost: true, sound: true, guide: true, pauseOnBlur: true }, attempts: 0
     });
