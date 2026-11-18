@@ -198,13 +198,17 @@
         for(const s of [run.ship,...st.fleet.map(f=>f.ship),...(o.survey?[o.survey.ship]:[])])if(s.hull<=0)st.failure=s.name+' lost. Every required crew must come home.';
     }
     function ready(st){const o=st.operation;if(!o)return false;return o.kind==='rescue'?o.survey.safeNow&&st.fleet.every(f=>f.rescued&&f.returned):o.kind==='transit'?st.fleet.every(f=>f.returned):o.kind==='survey'?o.survey.recovered&&o.survey.safeNow:o.kind==='defense'?st.fleet.every(f=>f.unloaded&&f.returned):o.assets.filter(a=>a.team==='hostile').every(a=>a.ship.hull<=0);}
-    function progress(st){const o=st.operation;return o.kind==='rescue'?[...st.fleet.map(f=>f.returned),o.survey.safeNow,st.complete]:o.kind==='transit'?[false,false,false,false,false,st.complete]:o.kind==='survey'?[o.survey.recovered,o.survey.safeNow,st.complete]:o.kind==='defense'?[st.fleet.every(f=>f.unloaded),st.fleet.every(f=>f.returned)]:[o.assets.find(a=>a.id==='battery').ship.hull<=0,o.assets.find(a=>a.id==='fuel').ship.hull<=0,st.complete];}
+    function progress(st){const o=st.operation;return o.kind==='rescue'?[o.survey.safeNow,...st.fleet.map(f=>f.returned),st.complete]:o.kind==='transit'?[false,false,false,false,false,st.complete]:o.kind==='survey'?[o.survey.recovered,o.survey.safeNow,st.complete]:o.kind==='defense'?[st.fleet.every(f=>f.unloaded),st.fleet.every(f=>f.returned)]:[o.assets.find(a=>a.id==='battery').ship.hull<=0,o.assets.find(a=>a.id==='fuel').ship.hull<=0,st.complete];}
     function message(st){const o=st.operation;
         if(o.warning)return o.warning;
-        if(o.kind==='rescue')return `${st.fleet.filter(f=>f.rescued).length}/3 GROUPS CONTACTED · ${st.stats.safeReturns}/3 SAFE · ORIEL ${o.survey.safeNow?'IN REFUGE':o.line?'UNDER TOW':'BLOCKING THE TURNING POCKET'}. No kills count toward rescue.`;
+        if(o.kind==='rescue'){
+            if(!o.survey.safeNow)return o.line?'Tow Oriel into the green refuge and stop her clear of the pocket.':'Connect to Oriel and clear the turning pocket.';
+            const missing=st.fleet.filter(f=>!f.rescued);
+            return missing.length?`Make rescue contact with ${missing.map(f=>f.name).join(', ')}.`:'Keep the cut clear until every ship reaches neutral water.';
+        }
         if(o.kind==='transit')return `${st.stats.safeReturns}/3 RELIEF SHIPS THROUGH · reopen the aging wake and keep stopping room.`;
         if(o.kind==='survey')return !o.survey.recovered?`RECORDER TRANSFER ${Math.floor(o.survey.recorders)} / 8 s · hold within 65 m with little relative motion`:o.survey.safeNow?'Caliper and her recorders are safe. Moor Kestrel.':o.line?`TOW CONNECTED · ${Math.round(o.line.tension*100)}% tension · allow room for Caliper’s stern`:'Recorders aboard · connect the tow and bring Caliper home.';
-        if(o.kind==='defense')return `${st.stats.deliveries}/2 cargoes ashore · ${st.stats.safeReturns}/2 transports safe. Give Proceed after unloading.`;
+        if(o.kind==='defense')return st.fleet.some(f=>!f.returned&&f.order==='hold')?'Cover the transports. Queue Proceed when their escape is clear.':'Protect the escape until both transports reach safe water.';
         return ready(st)?'Both military installations disabled. Withdraw to the green home berth.':'Disable the battery and fuel-transfer machinery; plan your exit before firing.';
     }
     const api={create,bodies,targets,action,before,move,assetContacts,after,ready,progress,message,solution,segmentHit,sheetHit};

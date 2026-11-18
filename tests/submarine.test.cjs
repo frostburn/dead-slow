@@ -111,6 +111,15 @@ test('underwater rendering never reads hidden hull positions and stays within th
   assert.ok(draws/60<100,`${n}: ${draws/60} draws`);assert.equal(bitmaps,60);
  }}finally{global.document=previous;}
 });
+test('the dive preview distinguishes approaching a shelf from being over it',()=>{
+ const r=state(7),st=r.polar,s=r.ship;
+ st.shelves=[{floor:65,poly:P.rect({x:s.x+52,y:s.y-26,w:25,h:52})}];
+ const preview=U.depthPreview(st,s),deep=preview.bands.find(b=>b.depth===88);
+ assert.equal(preview.distance,preview.reach);
+ assert.ok(deep.allowed&&deep.distance>0&&deep.distance<52);
+ s.x+=46;
+ assert.equal(U.depthPreview(st,s).bands.find(b=>b.depth===88).allowed,false);
+});
 for(const n of [7,8,9])test(`7-0${n}: complete with ordinary helm, depth, sonar and mission orders`,()=>{
  const t=require('./submarine-navigation.cjs').navigate(n),r=t.state.run,st=r.polar;
  assert.equal(t.state.status,'complete',JSON.stringify({time:r.time,xy:[r.ship.x,r.ship.y],failure:st.failure,mission:st.mission}));

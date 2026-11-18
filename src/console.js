@@ -30,7 +30,7 @@
                 const upcoming = (bridge.levels.catalog || []).find(l => l.comingSoon &&
                     (typeof worldOrId === 'string' ? l.id === worldOrId : l.worldNumber === worldOrId && l.stageNumber === stage));
                 throw new RangeError(upcoming ? 'Coming soon: this assignment is not playable yet.' :
-                    'Unknown assignment. Worlds 1–6 are complete; World 6 stage 13 is the separate bonus. DeadSlow.levels() lists the atlas.');
+                    'Unknown assignment. DeadSlow.levels() lists the atlas.');
             }
             return i;
         }
@@ -50,7 +50,7 @@
             const id = typeof worldOrId === 'number'
                 ? bridge.levels.find(l => l.worldNumber === worldOrId)?.campaign : worldOrId;
             if (id !== 'grand-tour' && !bridge.levels.some(l => l.campaign === id && !l.bonus && !l.standalone))
-                throw new RangeError('Circuit unavailable. Worlds 1–6 have complete circuits; World 7 has three individual assignments and World 8 is planned.');
+                throw new RangeError('Circuit unavailable. Worlds 1–7 have playable circuits.');
             unlocked = true; rate = speed; playback = null; lastReport = null;
             launching = true;
             try { bridge.circuit(id); } finally { launching = false; }

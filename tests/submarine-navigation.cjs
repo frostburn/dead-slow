@@ -6,8 +6,9 @@ const {create}=require('./headless.cjs');
 function navigate(n,{trace=false,reckless=false}={}){
  const t=create(),l=L.find(l=>l.id===`pale-reach-${n}`);t.load(L.indexOf(l),true);
  const r=t.state.run,s=r.ship,st=r.polar;
+ const hatch=l.polar.access,quietApproach=[[325,523],[485,508],[585,476],[620,428]];
  let phase=0,wp=0,route=n===7?[[135,535],[320,480],[405,440],[570,450],[725,435]]:
-  n===8?[[135,585],[320,580],[560,610],[720,540],[770,430],[770,360]]:[[150,420],[270,505],[350,570],[520,570],[710,615]];
+  n===8?[l.start.slice(0,2),...quietApproach,[hatch.x,hatch.y]]:[[150,420],[270,505],[350,570],[520,570],[710,615]];
  const apply=(order,input)=>{t.throttle(order-s.throttle);Object.assign(t.state.input,input);};
  const setRoute=points=>{route=[[s.x,s.y],...points];wp=0;};
  const steer=a=>P.clamp(P.wrap(a-s.a)*2.5-s.r*35,-1,1);
@@ -26,11 +27,11 @@ function navigate(n,{trace=false,reckless=false}={}){
     if(reckless&&st.time-st.pulseAt>=18)t.polarAction('ping');
     if(phase===0&&pilot(reckless?3:1.2).arrived){phase=1;}
     if(phase===1){steady(s.a);if(!st.mission.ordered)t.polarAction('team');if(st.mission.team==='working')phase=2;}
-    if(phase===2){const turn=steer(-Math.PI/2);apply(-1,{rudder:turn,thruster:turn*.35});if(s.y>530)phase=3;}
-    if(phase===3){steady(-Math.PI/2);if(st.mission.team==='waiting'){phase=4;setRoute([[770,430],[770,360]]);}}
+    if(phase===2){const turn=steer(-Math.PI/2);apply(-1,{rudder:turn,thruster:turn*.35});if(s.y>hatch.y+hatch.standOff+15)phase=3;}
+    if(phase===3){steady(-Math.PI/2);if(st.mission.team==='waiting'){phase=4;setRoute([[hatch.x,hatch.y]]);}}
     if(phase===4&&pilot(1.1).arrived)phase=5;
     if(phase===5){steady(s.a);if(!st.mission.ordered)t.polarAction('team');if(st.mission.team==='recovered')phase=6;}
-    if(phase===6){const turn=steer(-Math.PI/2);apply(-1,{rudder:turn,thruster:turn*.35});if(s.y>535){phase=7;setRoute([[720,580],[560,610],[320,580],[135,585]]);}}
+    if(phase===6){const turn=steer(-Math.PI/2);apply(-1,{rudder:turn,thruster:turn*.35});if(s.y>hatch.y+hatch.standOff+22){phase=7;setRoute([...quietApproach.slice(0,-1).reverse(),l.start.slice(0,2)]);}}
     if(phase===7&&pilot(1.4).arrived)phase=8;
     if(phase===8)steady(s.a);
    }else{

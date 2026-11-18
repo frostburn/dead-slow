@@ -15,6 +15,16 @@ for (const fixture of fixtures) {
             assert.ok(require('../src/rail.js').assertInvariants(st));
             return;
         }
+        if(t.state.run.polar) {
+            const st=t.state.run.polar;
+            if(st.config.pocket){
+                assert.ok(st.routeOpened);
+                assert.ok(require('../src/polar.js').pocketClear(st)>=st.config.pocket.required);
+                assert.equal(st.floes.length,st.config.fragments);
+            }
+            assert.equal(t.state.run.splits.length,st.config.objectives.length);
+            return;
+        }
         const work = t.state.run.jobs;
         assert.equal(work.line, null);
         assert.equal(work.onboard.length, 0);

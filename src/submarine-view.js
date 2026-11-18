@@ -6,7 +6,13 @@
     const U=typeof module!=='undefined'&&module.exports?require('./submarine.js'):root.PaleReachSubmarine;
     const F=typeof module!=='undefined'&&module.exports?require('./polar-finale.js'):root.PaleReachFinale;
     const $=id=>document.getElementById(id),set=(id,text)=>{const n=$(id),s=String(text);if(n.textContent!==s)n.textContent=s;},html=(id,text)=>{if($(id).innerHTML!==text)$(id).innerHTML=text;};
-    const backgrounds=new WeakMap();
+    const backgrounds=new WeakMap(),lookahead=new WeakMap();
+    function depthPreview(st,s){
+        const key=[Math.floor(st.time*4),Math.round(s.x),Math.round(s.y),Math.round(s.a*20),Math.round(s.depth),s.depthTarget].join('/');
+        let frame=lookahead.get(st);
+        if(frame?.key!==key){frame={key,preview:U.depthPreview(st,s)};lookahead.set(st,frame);}
+        return frame.preview;
+    }
     const kind=t=>!t.identified?'UNIDENTIFIED':t.category==='service'?'FRIENDLY TENDER':t.category==='decoy'?'DECOY':t.category==='patrol'?'SURFACE PATROL':'HOSTILE SUBMARINE';
     function splits(run,format){return (run.finalJourney?F.progress(run):U.progress(run)).map(o=>{const s=run.splits.find(s=>s.name===o.text);return `<div class="split-row ${s?'done':''}"><span>${o.text}</span><span>${s?format(s.time):'—'}</span></div>`;}).join('');}
     function prepare(level,action){
@@ -16,7 +22,7 @@
         document.title='DEAD SLOW — Under the Pale Reach';
         set('courses-btn','World map');set('dock-list-label','UNDERWATER WATCH');set('check-objectives','Assignment secured');set('check-inside','Home water');set('check-aligned','Depth settled');set('check-slow','Quiet and slow');
         set('polar-dispatch',level.polar.dispatch[0]);
-        set('polar-legend','RINGS · estimated contact regions / AMBER SEABED · blocks this depth / STRIPED KEEL · check clearance / GREEN · safe water');
+        set('polar-legend','Rings: estimated contacts. Amber: blocked at your depth. The short bow line shows charted clearance.');
         $('chart-section').setAttribute('aria-label','Underwater passage chart and estimated sonar contacts');
         $('sea').setAttribute('aria-label','Underwater chart. Sonar contacts are uncertain estimates. Seabed shelves and moving iceberg keels restrict the current depth.');
         const teamWatch=['covert','recovery'].includes(level.polar.mission);
@@ -39,12 +45,16 @@
         set('mobile-extra',`${Math.round(s.depth)} m · NOISE ${Math.round(st.noise*100)}%`);
         set('polar-readout',U.covert(st)?`SUSPICION ${Math.ceil(m.suspicion)}% / CONFIRMED AT 100% · TEAM ${m.team.toUpperCase()}`:`${st.tracks.length} ACOUSTIC TRACKS · ${m.identified?'SUBMARINE IDENTIFIED':'IDENTIFICATION REQUIRED'}`);
         $('polar-readout').classList.toggle('warning',m.suspicion>65);
-        const water=U.space(st,s),sea=run.finalJourney?.surface.polar;
+        const water=U.space(st,s),sea=run.finalJourney?.surface.polar,preview=depthPreview(st,s);
         set('polar-ice',`OVERHEAD ${Math.round(water.ceiling)} m · SEABED ${Math.round(water.floor)} m`+(sea?` / RIME ABOVE: ${sea.operation.npcs.find(n=>n.cutter).status} · ${(sea.stats.sheetArea/1000).toFixed(1)}k m² CUT`:''));
         set('sub-depth-status',`${s.depth.toFixed(1)} m ACTUAL → ${s.depthTarget} m ORDERED · ${Math.abs(s.heave)<.1?'DEPTH SETTLED':Math.abs(s.heave).toFixed(1)+' m/s '+(s.heave>0?'DIVING':'RISING')}`);
-        for(const b of $('polar-sub-controls').querySelectorAll('[data-sub-depth]')){const d=U.bands[Number(b.dataset.subDepth)].depth;b.disabled=!live||!U.depthAllowed(st,s,d);b.classList.toggle('selected',d===s.depthTarget);b.setAttribute('aria-pressed',String(d===s.depthTarget));}
+        for(const b of $('polar-sub-controls').querySelectorAll('[data-sub-depth]')){
+            const p=preview.bands[Number(b.dataset.subDepth)],d=p.depth;
+            b.disabled=!live||!p.allowed;b.classList.toggle('selected',d===s.depthTarget);b.setAttribute('aria-pressed',String(d===s.depthTarget));
+            const note=b.querySelector('small');set(note.id,!p.allowed?'Blocked here':p.distance<preview.reach?`${p.distance} m clear`:'Clear ahead');
+        }
         set('sub-noise',`SELF NOISE ${Math.round(st.noise*100)}% · ${st.noise<.35?'QUIET':st.noise<.65?'MACHINERY CARRYING':'LOUD · OTHER LISTENERS CAN HEAR'}`);
-        const cooldown=Math.max(0,18-st.time+st.pulseAt);$('sub-ping').disabled=!live||cooldown>0;set('sub-ping',cooldown>0?'Pulse ready in '+Math.ceil(cooldown)+' s':'Active pulse · P');
+        const cooldown=Math.max(0,18-st.time+st.pulseAt);$('sub-ping').disabled=!live||cooldown>0;set('sub-ping-label',cooldown>0?'Pulse ready in '+Math.ceil(cooldown)+' s':'Active pulse');
         html('sub-contacts',st.tracks.map(t=>`<button data-sub-target="${t.id}" aria-pressed="${t.id===st.selected}" class="${t.id===st.selected?'selected':''}"><b>${t.id}</b><span>${kind(t)}</span></button>`).join(''));
         const t=st.tracks.find(t=>t.id===st.selected),fix=t&&U.Sonar.predict(t,st.time);
         set('sub-track-detail',t?`${t.id} · ${t.source.toUpperCase()} · ±${Math.ceil(fix.radius)} m · ${Math.floor(fix.age)} s old. ${t.clue}. ${t.depth===null?'Depth unresolved':Math.round(t.depth)+' m observed depth'}. ${Math.floor(fix.quality)}% track confidence${fix.age>12?' · STALE: reacquire before firing':''}.`:'Select a track to inspect its motion clues. A pulse announces your position.');
@@ -52,7 +62,12 @@
         const g=st.gun;set('sub-solution',st.recovery?`RECOVERY ${m.board.toFixed(1)} / 8 s · ${st.recovery.settled?'TEAM AT RENDEZVOUS':'TEAM RELOCATING ON ICE'}`:st.config.mission==='covert'?`TEAM WORK ${Math.floor(m.work)} / ${st.config.access.work} s · TRANSFER ${m.board.toFixed(1)} / 8 s`:`${g.ammo} TORPEDOES · ${g.cooldown>0?'RELOAD '+Math.ceil(g.cooldown)+' s':g.reason+' · '+g.solution.toFixed(1)+' / '+g.hold+' s'}`);
         for(const b of $('sub-pickups').querySelectorAll('[data-pickup]')){const selected=b.dataset.pickup===st.recovery?.selected;b.disabled=!live||m.team==='recovered';b.classList.toggle('selected',selected);b.setAttribute('aria-pressed',String(selected));}
         $('sub-fire').disabled=!live||g.solution<g.hold||g.cooldown>0||g.ammo<=0;
-        $('sub-team').disabled=!live||!['aboard','waiting'].includes(m.team)||m.ordered;set('sub-team',m.team==='aboard'?'Insert team · F':m.team==='working'?'Team working':m.team==='waiting'?'Recover team · F':'Team aboard · return home');
+        if(U.covert(st)){
+            const t=U.transfer(st,s);
+            $('sub-team').disabled=!live||!t.available;
+            set('sub-team-label',m.ordered?'Transferring':m.team==='aboard'?'Insert team':m.team==='working'?'Team working':m.team==='waiting'?'Recover team':'Team aboard');
+            set('sub-team-detail',m.team==='aboard'||m.team==='waiting'?t.reason:'');
+        }
         html('splits',splits(run,format));
         $('check-objectives').classList.toggle('ok',m.threatGone);$('check-inside').classList.toggle('ok',run.dock.inside);$('check-aligned').classList.toggle('ok',Math.abs(s.heave)<.15);$('check-slow').classList.toggle('ok',motion.speed<.35&&m.suspicion<20);$('dock-bar').style.width=Math.min(100,m.homeHold*20)+'%';
         set('clock',format(run.time));set('clock-label',run.pausedUsed?'PRACTICE · UNRANKED':'WATCH TIME · IGT');$('clock-label').classList.toggle('practice',run.pausedUsed);
@@ -60,13 +75,14 @@
     }
     function dialog(kind,level,run,format,hasNext,race,actions=''){
         const st=run.polar,c=st.config,head=`<div class="eyebrow">WORLD 7 · UNDERWATER WATCH · ${String(level.stageNumber).padStart(2,'0')} / 12</div>`,retry='<button data-action="retry">Retry · Shift+R</button><button data-action="courses">World map</button>';
-        if(kind==='intro')return `${head}<h1>${level.name}</h1><p>${level.brief}</p><div class="polar-message"><strong>${c.dispatch[0]}</strong><p>${c.dispatch[1]}</p></div><p class="subtle">${level.tip}</p><div class="control-summary">W/S engine · A/D rudder · Q/E bow thruster · Space neutral<br>Z/X depth · P pulse · T contact · I identify · B torpedo · F team<br>Every order is also available on the bridge. Neutral does not brake.</div><div class="dialog-actions"><button class="primary" data-action="begin" autofocus>Take the watch →</button><button data-action="help">Underwater notes</button><button data-action="courses">World map</button></div>`;
+        if(kind==='intro')return `${head}<h1>${level.name}</h1><p>${level.brief}</p><div class="control-summary">${level.tip}</div><details class="polar-message"><summary>${c.dispatch[0]}</summary><p>${c.dispatch[1]}</p></details><div class="dialog-actions"><button class="primary" data-action="begin" autofocus>Take the watch →</button><button data-action="help">Underwater notes</button><button data-action="courses">World map</button></div>`;
         if(kind==='pause')return `${head}<h1>The watch is held.</h1><p>Vessels, sonar memories, depth changes, team work and suspicion are paused together. This attempt is now unranked practice.</p><div class="dialog-actions"><button class="primary" data-action="resume" autofocus>Resume watch</button>${retry}</div>`;
         if(kind==='failed')return `${head}<h1>The assignment could not be completed.</h1><p>${st.failure}</p><div class="result-time">${format(run.time)}</div><div class="dialog-actions">${retry}</div>`;
         if(kind==='result'&&c.finale)return `${head}<h1>The route is open.</h1><p>The engineers are home and the relief ships are through. The political settlement remains fragile; the passage is open.</p><div class="result-time">${format(run.time)}</div><div class="splits">${splits(run,format)}</div>${actions}`;
         if(kind==='result'&&st.recovery)return `${head}<h1>They are back.</h1><p>The team is aboard and Petrel has escaped the search without a confirmed alarm. The shelter is still drifting apart behind you.</p><div class="result-time">${format(run.time)}</div><div class="section-label">SPLITS · ELAPSED IGT</div><div class="splits">${splits(run,format)}</div>${actions}`;
         if(kind==='result')return `${head}<h1>${c.mission==='covert'?'The team is home.':c.mission==='hunt'?'The passage remains clear.':'The communications watch holds.'}</h1><p>${c.mission==='covert'?'The military relay is disabled, the team is recovered, and no confirmed alarm exposed the Council’s settlements.':c.mission==='hunt'?'The minelayer can no longer deny the relief passage. Petrel is secure; pursuit beyond the assignment was unnecessary.':'The intruder was identified and intercepted. Mica and the communications crew can continue their work.'}</p><div class="result-time">${format(run.time)}</div><div class="result-badge">${run.pausedUsed?'UNRANKED PRACTICE':run.pb?'NEW PERSONAL BEST':'ASSIGNMENT COMPLETE'}</div><div class="section-label">SPLITS · ELAPSED IGT</div><div class="splits">${splits(run,format)}</div>${actions}`;
-        return `${head}<h1>Listen before committing.</h1>${st.recovery?'<p><b>Moving extraction.</b> The team is already waiting. The pickup buttons select the shelter gap at working depth or the drifting margin at deep depth. A new selection gives the team time to travel on the ice. F orders recovery once its beacon arrives. Match the beacon’s drift for eight seconds. The shelter plates move apart and patrols approach; the nearer pickup never expires suddenly. After recovery the patrols redeploy west. Read their new arcs and leave by another approach.</p>':c.finale?'<p><b>One weather clock.</b> Insert and recover the engineers, then secure Petrel to take Kestrel. Rime is already cutting above you; the ice and surface ships keep moving while you work below. The handoff preserves that sea and the elapsed clock. Kestrel must cut the last section and escort all three relief ships through before the 45-minute window closes.</p>':''}<p><b>Three depth bands.</b> Shallow 18 m, working 48 m, deep 88 m. Orders take time. Iceberg keels obstruct the water above them; seabed shelves obstruct the water below their charted depths. The whole hull needs clearance. Amber terrain blocks your current depth. A depth button is unavailable when there is no room to reach it here.</p><p><b>Passive tracks.</b> Listening is continuous. Quiet machinery lets you hear farther and build identification evidence. Rings show estimated regions, not exact hull positions. A lost contact keeps its last observed motion; the prediction stops extending after 45 seconds while its uncertainty keeps growing. Old tracks are eventually dropped.</p><p><b>Active sonar.</b> P sends a visible pulse. Clearer echoes arrive after a delay, but other listeners receive your emission position immediately. The hostile submarine investigates that fix and can fire at it. Active sonar does not reveal contacts through solid seabed or ice keels.</p><p><b>Identification and torpedoes.</b> T selects a track; I records a fresh, discriminated identification. Friendly craft, decoys and unresolved contacts cannot be armed against. B launches one torpedo only after four seconds of a steady forward solution within 360 m, below 2.4 kn, at the observed depth. Old or uncertain tracks invalidate the solution. Torpedoes run on the plotted estimate, take time to travel, and hit the first hull or terrain at their depth. They do not follow a hidden target magically.</p><p><b>Noise and covert work.</b> High speed, strong thrust, bow thrusters and hard reversal carry sound. Neutral preserves momentum, so slow early. In the covert assignment, suspicion falls when you are out of the patrols’ listening arcs and quiet; 100% confirms an alarm. F orders an eight-second transfer at the working-depth hatch. The team needs you outside the exposed circle while it works, then needs another transfer to return aboard.</p><p><b>Finish the assignment.</b> Return to the green home-water circle, slow below 0.7 kn, settle the dive, and hold for five seconds. The covert watch additionally needs suspicion below 20%. Individual records, ghosts and elapsed split times are available; World 7 has a twelve-assignment circuit and joins the 84-stage Grand Tour.</p><div class="dialog-actions"><button class="primary" data-action="back" autofocus>Back to the bridge</button></div>`;
+        const operation=U.covert(st)?'<p><b>Team transfers.</b> Enter the marked zone at its depth, order the transfer and hold quiet. Stay outside the listening circle during the team’s work. Use the approach the patrols leave open.</p>':'<p><b>Listen first.</b> Rings mark uncertain contacts. An active pulse sharpens a fix but lets enemies hear where it came from. Identify a hostile contact, match its depth, and hold a stable bow solution before firing.</p>';
+        return `${head}<h1>Underwater notes</h1><p><b>Plan the dive.</b> The short bow line and depth buttons show clearance along your heading. Change depth before the obstruction. Amber shelves and keels block this depth.</p>${operation}<p><b>Secure Petrel.</b> Return to the green home-water circle below 0.7 kn at a settled depth. Hold five seconds.</p><div class="dialog-actions"><button class="primary" data-action="back" autofocus>Back to the bridge</button></div>`;
     }
     function render(canvas,level,run,zoom,options={}){
         const box=canvas.getBoundingClientRect(),dpr=Math.min(root.devicePixelRatio||1,2),W=box.width,H=box.height,w=Math.round(W*dpr),h=Math.round(H*dpr);
@@ -82,8 +98,8 @@
         let bg=backgrounds.get(level);
         if(!bg){
             bg=document.createElement('canvas');bg.width=level.world[0];bg.height=level.world[1];const b=bg.getContext('2d');b.fillStyle='#123744';b.fillRect(0,0,bg.width,bg.height);b.strokeStyle='#94c2c509';b.lineWidth=1;b.beginPath();
-            const r=26,dx=Math.sqrt(3)*r;
-            for(let row=0;row<bg.height/(r*1.5)+1;row++)for(let col=0;col<bg.width/dx+1;col++){const x=col*dx+(row%2)*dx/2,y=row*r*1.5;for(let i=0;i<7;i++){const a=Math.PI/3*i-Math.PI/2;i?b.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r):b.moveTo(x+Math.cos(a)*r,y+Math.sin(a)*r);}}
+            for(let x=0;x<bg.width;x+=50){b.moveTo(x,0);b.lineTo(x,bg.height);}
+            for(let y=0;y<bg.height;y+=50){b.moveTo(0,y);b.lineTo(bg.width,y);}
             b.stroke();backgrounds.set(level,bg);
         }
         ctx.drawImage(bg,0,0);
@@ -91,7 +107,7 @@
         for(const b of st.bergs){const danger=s.depth-5<=b.keel+2;poly(P.hull(b));ctx.fillStyle=danger?'#acb8a388':'#8ccecb20';ctx.fill();ctx.strokeStyle=danger?'#e6d3a5':'#9ed4cf';ctx.lineWidth=2;ctx.setLineDash(danger?[]:[6,5]);ctx.stroke();ctx.setLineDash([]);line({x:b.x-22,y:b.y+12},{x:b.x+22,y:b.y-12},'#cbd4b9',2);label(b.name,b.x,b.y-b.beam/2-16,'#e3dfb9');line(b,{x:b.x+b.vx*90,y:b.y+b.vy*90},'#dfcaa0',1.5,[4,5]);}
         for(const p of st.platforms){poly(p.poly);ctx.fillStyle='#607c79';ctx.fill();ctx.strokeStyle='#bcc6ad';ctx.lineWidth=2;ctx.stroke();label(p.name,p.x+p.w/2,p.y-16,'#dadac0');}
         ring(c.home.x,c.home.y,c.home.radius,'#8bddb7',[6,6]);label('SECURE / SAFE WATER',c.home.x,c.home.y+c.home.radius+20,'#a8e1bc');
-        if(c.access){const a=c.access;ring(a.x,a.y,a.standOff,'#d9ac7577',[5,7]);ring(a.x,a.y,a.radius,'#f1cf97');label('TEAM ACCESS · 48 m',a.x-12,a.y-40,'#f6d3a0');label('CLEAR WHILE TEAM WORKS',a.x,a.y+a.standOff+18,'#d9bd91',9);}
+        if(c.access){const a=c.access;if(st.mission.team==='working')ring(a.x,a.y,a.standOff,'#d9ac75b0',[5,7]);ring(a.x,a.y,a.radius,'#f1cf97');label(`HATCH · ${a.depth} m`,a.x,a.y-36,'#f6d3a0');}
         if(st.recovery){
             for(const p of U.Recovery.sites(st)){ring(p.x,p.y,p.radius,p.id===st.recovery.selected?'#ffe3ac':'#97bcbc',[5,5]);label(p.name.toUpperCase()+' · '+p.depth+' m',p.x,p.y-42,'#f0d6a6');line(p,{x:p.x+p.vx*180,y:p.y+p.vy*180},'#dfcaa0',2,[4,4]);}
             if(st.mission.team!=='recovered'){const b=st.recovery.beacon,p=U.access(st);ring(b.x,b.y,7,'#c9efba');label('TEAM',b.x,b.y+19,'#d7efb6',9);if(!st.recovery.settled)line(b,p,'#bee4ba',1,[3,7]);}
@@ -117,6 +133,12 @@
         for(const b of st.bursts)ring(b.x,b.y,5+(2-b.until+st.time)*13,'#ffcd9a');
         const ghost=options.ghost;
         if(options.settings?.ghost&&ghost?.length&&run.time<=ghost.at(-1)[0]){let lo=0,hi=ghost.length-1;while(lo<hi){const mid=Math.ceil((lo+hi)/2);if(ghost[mid][0]<=run.time)lo=mid;else hi=mid-1;}const a=ghost[lo],b=ghost[Math.min(lo+1,ghost.length-1)],t=b[0]===a[0]?0:P.clamp((run.time-a[0])/(b[0]-a[0]),0,1);poly(P.hull({...s,x:a[1]+(b[1]-a[1])*t,y:a[2]+(b[2]-a[2])*t,a:a[3]+P.wrap(b[3]-a[3])*t}));ctx.fillStyle='#d6efda38';ctx.fill();}
+        const preview=depthPreview(st,s),bow=P.localPoint(s,s.length/2,0),end=P.localPoint(s,s.length/2+preview.distance,0);
+        if(preview.distance>0)line(bow,end,preview.distance<preview.reach?'#eed49c':'#a3ddce77',1.8,[4,6]);
+        if(preview.distance<preview.reach){
+            const a=P.localPoint(s,s.length/2+preview.distance,-8),b=P.localPoint(s,s.length/2+preview.distance,8);
+            line(a,b,'#f3be79',2.5);
+        }
         poly(P.hull(s));ctx.fillStyle='#e9bb80';ctx.fill();ctx.strokeStyle='#172f37';ctx.lineWidth=2;ctx.stroke();line(P.localPoint(s,-7,0),P.localPoint(s,4,0),'#435a5c',5);ring(s.x,s.y,27,'#f4d09866');label('PETREL · '+Math.round(s.depth)+' m',s.x,s.y+35,'#ffe0ad');
         if(st.gun.aim)line(s,st.gun.aim,st.gun.solution>=st.gun.hold?'#c3e7b0':'#d9bd7f66',1.3,[5,8]);
         for(const mark of c.landmarks)label(mark.text,mark.x,mark.y,'#779b9f',10,0);

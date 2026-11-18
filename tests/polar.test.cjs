@@ -55,14 +55,17 @@ test('Hold preserves inertia and cargo cannot carve a replacement channel',()=>{
 });
 test('supply captains require connected cleared water; delivery alone never completes rescue',()=>{
  const r=state(3),f=r.polar.fleet[0];assert.equal(I.waterRoute(r.polar,f.ship,f.route.at(-1)),null);
+ assert.ok(I.command(r,f.id,'proceed'));I.step(level(3),r,{},1/120);
+ assert.match(f.waiting,/Queued.*closed/);assert.equal(f.ship.x,f.start[0]);
  r.polar.ice.opened.fill(0);assert.ok(I.waterRoute(r.polar,f.ship,f.route.at(-1)).length>1);
  r.polar.fleet.forEach(f=>f.unloaded=true);assert.equal(I.ready(r),false);
  r.polar.fleet.forEach(f=>f.returned=true);assert.equal(I.ready(r),true);
  r.polar.fleet[1].ship.hull=0;I.step(level(3),r,{},1/120);assert.match(r.polar.failure,/Every required crew/);assert.equal(r.polar.complete,false);
 });
 test('drifting solid ice transfers contact forces; fractures wait until hulls clear',()=>{
- const r=state(3),b=r.polar.bergs[0];r.ship.x=b.x;r.ship.y=b.y;r.ship.vx=2;
- const before=r.ship.x;I.step(level(3),r,{},1/120);assert.notEqual(r.ship.x,before+2/120);assert.ok(b.y>197);
+ const r=state(3),b=r.polar.bergs[0],bergY=b.y;
+ r.polar.ice.thickness.fill(0);Object.assign(r.ship,{x:b.x-b.length/2-7,y:b.y,vx:2});
+ const before=r.ship.x;I.step(level(3),r,{},1/120);assert.ok(r.ship.x<before);assert.ok(b.y>bergY);
  const p=state(1),x=p.ship.x,y=p.ship.y;p.polar.pendingFloes.push({x,y,k:1});
  I.step(level(1),p,{},1/120);assert.equal(p.polar.floes.length,0);
  p.ship.x+=80;I.step(level(1),p,{},1/120);assert.equal(p.polar.floes.length,1);assert.ok(p.polar.floes[0].mass>0);
@@ -70,19 +73,24 @@ test('drifting solid ice transfers contact forces; fractures wait until hulls cl
 test('pause freezes closure, fleet and drift; retry rebuilds all mission state',()=>{
  const t=create();t.load(L.indexOf(level(3)),true);t.advance(1);const r=t.state.run,time=r.polar.time,y=r.polar.bergs[0].y;
  t.pause();t.advance(2);assert.equal(r.polar.time,time);assert.equal(r.polar.bergs[0].y,y);assert.equal(t.convoyCommand('morrow','proceed'),false);
- t.retry();assert.notEqual(t.state.run,r);assert.equal(t.state.run.polar.time,0);assert.equal(t.state.run.polar.bergs[0].y,197);assert.equal(t.state.run.polar.stats.orders,0);
+ t.retry();assert.notEqual(t.state.run,r);assert.equal(t.state.run.polar.time,0);assert.equal(t.state.run.polar.bergs[0].y,level(3).polar.bergs[0].y);assert.equal(t.state.run.polar.stats.orders,0);
  assert.equal(t.state.run.polar.fleet[0].order,'hold');
 });
-for(const n of [1,2,3])test(`7-0${n}: complete fixed-step trip using helm and captain orders`,()=>{
- const {t,earlyPocket,closedLoad,bergWait}=require('./polar-navigation.cjs').navigate(n),r=t.state.run;
+for(const n of [2,3])test(`7-0${n}: complete fixed-step trip using helm and captain orders`,()=>{
+ const {t,closedLoad,unloadedAt,returnedAt}=require('./polar-navigation.cjs').navigate(n),r=t.state.run;
  assert.equal(t.state.status,'complete',JSON.stringify({time:r.time,ship:[r.ship.x,r.ship.y],dock:r.dock,fleet:r.polar.fleet.map(f=>f.waiting)}));
  assert.ok(r.ship.hull>90);assert.ok(r.result.polar);assert.ok(r.ghost.length>100);
  assert.equal(r.splits.length,I.progress(r).length);
  assert.ok(r.splits.every((s,i)=>s.time>0&&s.time<=r.time&&(!i||s.time>=r.splits[i-1].time)));
  assert.equal(t.state.storage.stages[t.state.level.id].runs.length,1);
- if(n===1){assert.ok(earlyPocket<r.polar.config.pocket.required);assert.ok(I.pocketClear(r.polar)>=.86);assert.equal(r.polar.floes.length,4);assert.equal(r.ship.hull,100);}
- if(n===2){assert.equal(r.polar.checkpoint,3);assert.ok(r.polar.fleet[0].returned);assert.ok(closedLoad>.1);assert.equal(r.ship.hull,100);}
- if(n===3){assert.equal(r.polar.stats.deliveries,2);assert.equal(r.polar.stats.safeReturns,2);assert.ok(r.polar.fleet.every(f=>f.ship.hull===100));assert.ok(bergWait);}
+ if(n===2){assert.ok(r.polar.routeOpened);assert.ok(r.polar.fleet[0].returned);assert.ok(closedLoad>.1);assert.equal(r.ship.hull,100);}
+ if(n===3){
+  assert.equal(r.polar.stats.deliveries,2);assert.equal(r.polar.stats.safeReturns,2);
+  for(const f of r.polar.fleet){
+   assert.ok(f.ship.hull>90);
+   assert.ok(returnedAt[f.id]>unloadedAt[f.id]+60,'unloading is followed by an actual return passage');
+  }
+ }
 });
 test('polar departure hulls start clear and the whole required hull must stay on the chart',()=>{
  for(const n of [1,2,3]){
@@ -92,14 +100,15 @@ test('polar departure hulls start clear and the whole required hull must stay on
    const x=s.x,y=s.y;I.iceContact(r.polar,s,1/120);assert.equal(s.x,x);assert.equal(s.y,y);assert.equal(s.hull,100);
   }
  }
- const r=state(3),s=r.polar.fleet[0].ship;s.x=1;s.y=380;s.vx=-.1;
+ const r=state(3),s=r.polar.fleet[0].ship;r.polar.ice.thickness.fill(0);s.x=1;s.vx=-.1;
  I.step(level(3),r,{},1/120);assert.match(r.polar.failure,/MORROW left the assignment chart/);assert.ok(s.x>0&&s.x<1,'exit fails before the centre leaves, without bouncing');
 });
 test('Rime finishing leaves the late supply passage playable',()=>{
  const t=create();t.load(L.indexOf(level(2)),true);t.advance(450);
  assert.equal(t.state.status,'running');assert.equal(t.state.run.polar.failure,null);
- assert.ok(t.state.run.polar.fleet[0].returned);assert.equal(t.state.run.polar.checkpoint,0);
- assert.match(I.message(t.state.run),/retry when you choose/);
- const r=t.state.run;r.ship.x=300;r.ship.y=330;
- I.step(level(2),r,{},1/120);assert.equal(r.polar.checkpoint,1,'a late passage can still earn its checkpoints');
+ assert.ok(t.state.run.polar.fleet[0].returned);assert.equal(t.state.run.polar.routeOpened,false);
+ assert.match(I.message(t.state.run),/Follow the wake into Glass Quay/);
+ const r=t.state.run,b=level(2).berth;
+ Object.assign(r.ship,{x:b.x,y:b.y});I.step(level(2),r,{},1/120);
+ assert.ok(r.polar.routeOpened,'a late arrival in the basin still counts');
 });

@@ -29,7 +29,7 @@
                 run.ghost.push([run.time,run.ship.x,run.ship.y,run.ship.a]);
                 run.ship=surface.ship;run.polar=st;run.dock=surface.dock;run.dockHold=0;
                 run.ghost.push([run.time,run.ship.x,run.ship.y,run.ship.a]);run.sampleAt=run.time+.25;
-                st.rebridge=true;st.complete=false;st.notice='KESTREL HAS THE WATCH · same clock, same sea. Reopen Rime’s aging wake and release the convoy.';st.noticeUntil=st.time+15;
+                st.rebridge=true;st.complete=false;st.notice='Kestrel has the watch. Connect the far end of Rime’s lead.';st.noticeUntil=st.time+8;
                 input.rudder=0;input.thruster=0;input.winch=0;
             }
         }else{I.step(st.level,run,input,dt,true);surface.time=run.time;}
@@ -50,8 +50,11 @@
     function message(run){const f=run.finalJourney,w=f.watch,left=Math.max(0,Math.ceil(w.deadline-run.time)),clock=`WEATHER ${Math.floor(left/60)}:${String(left%60).padStart(2,'0')} · `;
         if(run.polar.failure)return run.polar.failure;
         if(run.polar.complete)return 'The route is open, and the relief ships are through.';
-        if(w.phase==='underwater')return clock+'PETREL / '+U.message(run);
-        return clock+(run.polar.noticeUntil>run.time?run.polar.notice:`KESTREL / ${run.polar.stats.safeReturns} of 3 ships through. Clear the wake, then give Proceed.`);
+        if(w.phase==='underwater')return clock+U.message(run);
+        if(run.polar.noticeUntil>run.time)return clock+run.polar.notice;
+        if(!w.channel)return clock+'Connect the last cut. Proceed queues each ship.';
+        if(run.polar.fleet.some(f=>!f.returned&&f.order==='hold'))return clock+'The channel is open. Give Proceed when the bend is clear.';
+        return clock+`${run.polar.stats.safeReturns} of 3 ships through. Keep the lead clear.`;
     }
     const api={create,step,ready,progress,message};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.PaleReachFinale=api;
 })(globalThis);

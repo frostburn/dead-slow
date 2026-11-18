@@ -4,6 +4,9 @@ def check_polar(page,check,out):
     for stage in range(1,13):
         page.evaluate('(n)=>{DeadSlow.level(7,n);DeadSlow.speed(0)}',stage)
         page.wait_for_timeout(80)
+        if stage==1:
+            check('Bridge watch starts folded to expose the chart',page.locator('#polar-info').evaluate('(e)=>!e.open'))
+        page.locator('#polar-info').evaluate('(e)=>e.open=true')
         check(f'7-{stage:02} exposes a folding bridge watch and hides railway panels',page.locator('#polar-info').is_visible() and not page.locator('#rail-panel').is_visible())
         check(f'7-{stage:02} keeps mission reports in the window and shared instruments in the sidebar',page.locator('#polar-info #polar-readout').count()==1 and page.locator('.sidebar #splits').is_visible() and page.locator('.sidebar #speed').is_visible() and page.locator('#polar-panel #polar-readout, #polar-panel #sub-track-detail, #polar-panel .splits').count()==0)
         check(f'7-{stage:02} keeps the shared sidebar on every assignment',page.locator('.sidebar').is_visible() and page.locator('#polar-panel').is_visible()==(stage>2))
@@ -32,6 +35,8 @@ def check_polar(page,check,out):
         if stage==5:
             check('Base defense describes evacuation rather than docking',page.locator('#dock-list-label').inner_text()=='EVACUATION STATUS')
             check('Unloading reports sit in the chart window beside separate captain orders','Unloading' in page.locator('#polar-fleet-readouts').inner_text() and page.locator('#polar-panel [data-convoy]').count()==4)
+            page.locator('[data-convoy=hearth][data-order=proceed]').click()
+            check('Proceed queues a transport while it is still unloading','Departure queued' in page.locator('#polar-hearth-orderstate').inner_text() and page.evaluate('DeadSlowTest.state.run.polar.fleet[0].leg==="unloading"'))
         if stage==6:
             page.locator('[data-polar-target=fuel]').click()
             check('Target buttons select the named military installation',page.evaluate('DeadSlowTest.state.run.polar.operation.gun.target==="fuel"'))
@@ -49,8 +54,10 @@ def check_polar(page,check,out):
     page.evaluate('DeadSlow.level(7,3);DeadSlow.speed(0)')
     check_polar_rendering(page,check)
     check('Two captains have four order buttons',page.locator('#polar-fleet button').count()==4)
+    page.locator('#polar-info').evaluate('(e)=>e.open=false')
     page.locator('[data-convoy=morrow][data-order=proceed]').click()
     check('Proceed orders reach the physical captain',page.evaluate('DeadSlowTest.state.run.polar.fleet[0].order==="proceed"'))
+    check('Captain orders show a queued departure with the watch folded',page.locator('#polar-morrow-orderstate').inner_text()=='Queued for channel' and not page.locator('#polar-readout').is_visible())
     page.locator('[data-convoy=morrow][data-order=hold]').click()
     check('Hold is reflected as the selected accessible order',page.locator('[data-convoy=morrow][data-order=hold]').get_attribute('aria-pressed')=='true')
     page.evaluate('DeadSlow.step(2)')
@@ -97,6 +104,7 @@ def check_submarine(page,check,stage):
         check('First passive return stays unidentified with weapons locked',page.locator('#sub-contacts [aria-pressed=true]').count()==1 and 'UNIDENTIFIED' in page.locator('#sub-contacts').inner_text() and page.locator('#sub-fire').is_disabled())
         page.locator('[data-sub-depth="1"]').click()
         check('Depth button changes the order without moving the hull instantly',page.evaluate('DeadSlowTest.state.run.ship.depthTarget===48 && DeadSlowTest.state.run.ship.depth===18'))
+        check('Depth buttons show clearance along the bow corridor','clear' in page.locator('#sub-clear-48').inner_text().lower())
         page.evaluate('DeadSlow.step(10)')
         check('Depth readout follows the gradual dive',page.evaluate('DeadSlowTest.state.run.ship.depth>18 && DeadSlowTest.state.run.ship.depth<48') and '48 m ORDERED' in page.locator('#sub-depth-status').inner_text())
         page.keyboard.press('p');page.evaluate('DeadSlowTest.hud()')
@@ -110,8 +118,9 @@ def check_submarine(page,check,stage):
         check('Shallower key reaches the depth order',page.evaluate('DeadSlowTest.state.run.ship.depthTarget===18'))
     if stage==8:
         check('Covert watch exposes team progress and suspicion','SUSPICION' in page.locator('#polar-readout').inner_text() and 'TEAM WORK' in page.locator('#sub-solution').inner_text() and page.locator('#sub-team').is_visible() and not page.locator('#sub-fire').is_visible())
-        page.locator('#sub-team').click()
-        check('Remote insertion gives a visible hatch requirement','marked hatch' in page.locator('#polar-notice').inner_text())
+        check('The team order explains why it is unavailable at departure',page.locator('#sub-team').is_disabled() and 'm to the transfer zone' in page.locator('#sub-team-detail').inner_text())
+        page.keyboard.press('f');page.evaluate('DeadSlowTest.hud()')
+        check('The keyboard order gives the same transfer requirement','m to the transfer zone' in page.locator('#polar-notice').inner_text())
         page.click('#pause-btn')
         check('Underwater pause describes the stopped mission clocks','sonar memories' in page.locator('#dialog').inner_text())
         page.locator('[data-action=resume]').click()
@@ -127,15 +136,15 @@ def check_submarine(page,check,stage):
         page.evaluate('DeadSlow.step(3)')
         check('Relocating team has visible progress','RELOCATING' in page.locator('#sub-solution').inner_text())
     if stage==12:
-        check('Finale starts with a shared weather clock and a surface work report','LEG 1 / PETREL' in page.locator('#polar-phase').inner_text() and 'RIME ABOVE' in page.locator('#polar-ice').inner_text())
+        check('Finale starts with a shared weather clock and a surface work report','Leg 1 · 32:00' in page.locator('#polar-phase').inner_text() and 'RIME ABOVE' in page.locator('#polar-ice').inner_text())
         handoff_fixture(page)
         check('Handoff replaces submarine orders with the three actual convoy captains',not page.locator('#polar-sub-controls').is_visible() and page.locator('#polar-fleet button').count()==6 and 'KESTREL' in page.locator('#ship-name').inner_text())
         check('Taking the surface bridge restores its horn and replaces underwater reports',page.locator('#horn-btn').is_visible() and page.locator('#polar-surface-status').is_visible() and not page.locator('#polar-sub-status').is_visible())
-        check('Handoff preserves elapsed time and shows the second leg','LEG 2 / KESTREL' in page.locator('#polar-phase').inner_text() and page.evaluate('DeadSlowTest.state.run.time>6 && DeadSlowTest.state.run.finalJourney.watch.handoffAt>2'))
+        check('Handoff preserves elapsed time and shows the second leg','Leg 2' in page.locator('#polar-phase').text_content() and page.evaluate('DeadSlowTest.state.run.time>6 && DeadSlowTest.state.run.finalJourney.watch.handoffAt>2'))
         page.locator('[data-convoy=witness][data-order=proceed]').click()
         check('The new bridge sends orders to the retained surface state',page.evaluate('DeadSlowTest.state.run.finalJourney.surface.polar.fleet[0].order==="proceed"'))
         page.keyboard.press('Shift+r');page.evaluate('DeadSlowTest.hud()')
-        check('Retry restores both legs and their original ice','LEG 1 / PETREL' in page.locator('#polar-phase').inner_text() and page.locator('#polar-sub-controls').is_visible() and page.evaluate('DeadSlowTest.state.run.finalJourney.surface.polar.broken===0'))
+        check('Retry restores both legs and their original ice','Leg 1' in page.locator('#polar-phase').text_content() and page.locator('#polar-sub-controls').is_visible() and page.evaluate('DeadSlowTest.state.run.finalJourney.surface.polar.broken===0'))
 
 def handoff_fixture(page):
     # UI transition isolation, not a navigation proof: full control runs are in

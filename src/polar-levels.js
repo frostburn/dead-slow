@@ -9,25 +9,26 @@
     const cutter={length:44,beam:22,mass:1.8,propulsion:3,dragScale:1.15,iceClass:1};
     const berth=(x,y,a=0)=>({x,y,a,l:64,w:27,angle:12,speed:.32});
     const base=(n,name,kind,start,spec,world,polar,brief,tip,pace)=>({id:`pale-reach-${n}`,name,kind,start,spec,world,polar,
-        simulation:'polar',standalone:true,courseRevision:2,rulesRevision:n===2?2:1,berth:polar.berth,brief,tip,pace});
-    const firstRoute=[[105,390],[210,365],[280,275],[350,220],[445,235],[530,275],[640,280]];
+        simulation:'polar',standalone:true,courseRevision:[1,3,5].includes(n)?3:2,rulesRevision:n===2?3:[3,5].includes(n)?2:1,berth:polar.berth,brief,tip,pace});
+    const firstRoute=[[105,270],[190,270],[257,223],[323,222],[398,251],[472,255]];
     const lead=[[115,380],[210,380],[290,330],[385,265],[485,265],[585,320],[690,340],[795,310]];
-    const north=[[160,355],[275,290],[355,230],[450,185],[570,165],[690,170]];
-    const south=[[165,410],[260,450],[370,485],[485,465],[580,430],[700,425]];
+    const north=[[240,280],[305,244],[371,186],[455,153],[520,146],[574,150]];
+    const south=[[240,303],[320,326],[402,387],[500,403],[587,393]];
     const levels=[
-        base(1,'The First Fracture','Icebreaking · a usable harbor',[105,390,0],breaker,[840,560],{
-            mission:'pocket',cell:12,thickness:.86,closing:240,route:firstRoute,thinWidth:54,thinIce:.28,
-            water:[{x:125,y:390,rx:140,ry:93},{x:577,y:280,rx:78,ry:90},{x:746,y:280,rx:65,ry:94}],
-            patches:[{x:600,y:198,w:110,h:164,thickness:.28}],
-            ridges:[{x:324,y:292,w:60,h:268},{x:315,y:0,w:67,h:152}],
-            pocket:{x:666,y:280,rx:49,ry:42,required:.86},berth:berth(746,280),
-            docks:[{x:778,y:238,w:22,h:87,name:'THAWMARK SUPPLY JETTY'}],
-            landmarks:[{x:112,y:462,text:'WINTER ANCHORAGE'},{x:355,y:385,text:'PRESSURE RIDGE'},{x:359,y:181,text:'THIN DOGLEG'}],
-            fragments:4,fragmentFromX:460,
-            dispatch:['FREE ANCHORAGE COUNCIL / 06:20','Thawmark has three days of heating fuel. The Council will accept the delivery without accepting either authority’s new passage chart. Open room to turn, not just room to arrive.'],
-            objectives:['Open the thin dogleg','Widen the turning pocket','Moor at Thawmark jetty']
-        },'The winter anchorage has opened, but Thawmark’s supply jetty is still behind a pressure ridge. Take Kestrel through the thinner dogleg. Broken sheet leaves slush and drifting floes; slow as you enter the basin. Widen the marked turning pocket before docking.',
-        'Build 3–5 kn in open water and meet thin sheet bow first. The cream pressure ridge cannot be broken. Sweep the amber turning pocket until 86% is clear, then moor at the green jetty in neutral.',[600,800,1100]),
+        base(1,'The First Fracture','Icebreaking · open the harbor',[105,270,0],breaker,[700,460],{
+            mission:'pocket',cell:12,thickness:.86,closing:240,route:firstRoute,thinWidth:68,thinIce:.28,
+            water:[{x:105,y:270,rx:119,ry:81},{x:319,y:223,rx:76,ry:48},{x:572,y:273,rx:94,ry:108}],
+            patches:[{poly:[[437,207],[529,201],[563,254],[559,302],[466,320],[435,283]],thickness:.28}],
+            ridges:[{poly:[[271,299],[304,267],[352,279],[376,310],[354,369],[396,460],[250,460],[268,387]]},
+                {poly:[[266,0],[354,0],[363,107],[343,156],[304,170],[277,130]]}],
+            pocket:{x:483,y:280,rx:37,ry:29,required:.86},berth:{...berth(591,273),w:34},
+            docks:[{x:635,y:232,w:20,h:84,name:'THAWMARK JETTY'}],
+            landmarks:[{x:104,y:365,text:'WINTER ANCHORAGE'},{x:311,y:376,text:'PRESSURE RIDGE'}],
+            fragments:2,fragmentFromX:435,
+            dispatch:['THAWMARK / HEATING FUEL','Thawmark is down to three days of heating fuel. Cut a lead to the jetty, then make enough room for a supply ship to turn there.'],
+            objectives:['Connect the anchorage to the jetty','Clear the turning pocket','Moor at Thawmark']
+        },'Open the blue dogleg around the pressure ridge. Widen the turning pocket at its far end, then berth Kestrel at Thawmark.',
+        'Meet the thin sheet bow first at 3–5 kn. If the centre cut leaves ice in the pocket, sweep its remaining shoulder from the open basin.',[300,430,600]),
         base(2,'Borrowed Water','Loaded supply ship · continuous spacing',[90,380,0],supply,[920,580],{
             mission:'follow',cell:12,thickness:.82,closing:58,route:lead,thinWidth:52,thinIce:.25,
             patches:[{x:400,y:218,w:85,h:98,thickness:.58}],
@@ -36,28 +37,32 @@
             fleet:[{id:'leader',name:'RIME · COMPACT ICEBREAKER',start:[163,380,0],spec:{...breaker,name:'RIME',beam:18},
                 leader:true,route:[...lead.slice(1),[823,271]],cruise:2.8}],
             landmarks:[{x:108,y:464,text:'DEPARTURE LEAD'},{x:442,y:203,text:'COMPRESSED SHEET'},{x:754,y:414,text:'COUNCIL FREIGHT TERMINAL'}],
-            dispatch:['NARROWS COMPACT / PASSAGE SERVICE','Rime will pilot the lead at working speed. The Shelf League’s survey marks disagree with ours; follow the water the breaker actually opens. Lantern’s cargo belongs to the Council. Give the breaker room to stop.'],
-            objectives:['Follow Rime through the lead','Deliver Lantern’s cargo at Glass Quay']
+            arrival:{x:805,y:310,rx:90,ry:84},
+            dispatch:['GLASS QUAY / SUPPLY RUN','Rime is breaking the lead for Lantern. Give her room at the compressed bend. You can still reach Glass Quay if you fall behind.'],
+            objectives:['Reach Glass Quay’s basin','Moor Lantern at Glass Quay']
         },'Lantern is heavily laden and cannot break a new route. Follow Rime through the winding lead. New water thickens into slush behind the icebreaker; crowding her bow-to-stern leaves no braking room when she meets compressed sheet.',
         'Aim for 25–65 m of water between hulls. Read the gap and closing rate, anticipate the thick patch, and steer the stern through each bend. Rime waits at the far end; there is no arrival deadline. If heavy slush leaves you struggling, retry when you choose.',[360,500,700]),
-        base(3,'Deliveries Beyond the Map','Route preparation · two deliveries and returns',[155,375,0],breaker,[900,660],{
-            mission:'convoy',cell:12,thickness:.88,closing:112,route:north,thinWidth:64,thinIce:.27,
-            secondary:{route:south,width:70,thickness:.48,closing:240},
-            water:[{x:120,y:380,rx:157,ry:133},{x:690,y:178,rx:102,ry:86},{x:700,y:425,rx:107,ry:87},{x:445,y:475,rx:73,ry:55}],
-            ridges:[{x:360,y:282,w:310,h:69}],berth:berth(107,385,Math.PI),
-            docks:[{x:750,y:117,w:27,h:80,name:'TERN ASSEMBLY'},{x:757,y:392,w:25,h:79,name:'CINDER CO-OPERATIVE'}],
+        base(3,'Deliveries Beyond the Map','Convoy · two branches, one anchorage',[135,296,0],breaker,[750,560],{
+            mission:'convoy',cell:12,thickness:.88,closing:230,route:north,thinWidth:86,thinIce:.25,
+            secondary:{route:south,width:73,thickness:.44,closing:430},
+            water:[{x:115,y:296,rx:115,ry:145},{x:257,y:282,rx:116,ry:78},
+                {x:407,y:176,rx:72,ry:60},{x:571,y:146,rx:96,ry:79},{x:585,y:396,rx:111,ry:91},{x:489,y:405,rx:71,ry:61}],
+            openWaterRoutes:[{route:[[120,291],[270,280]],width:122}],
+            ridges:[{poly:[[348,279],[409,244],[515,246],[582,228],[721,233],[747,282],[730,321],[571,320],[487,351],[412,331],[350,310]]}],
+            anchorage:{x:142,y:296,rx:50,ry:39},berth:berth(142,296,Math.PI),
+            docks:[{x:628,y:93,w:23,h:80,name:'TERN'},{x:650,y:382,w:23,h:79,name:'CINDER'}],
             fleet:[
-                {id:'morrow',name:'MORROW · HEAT & MEDICINES',start:[100,325,0],spec:{...supply,name:'MORROW',length:36,mass:1.55},cruise:2.1,
-                    route:[[190,328],...north.slice(1)],home:[[684,225],[565,204],[447,222],[351,253],[259,310],[100,325]],unload:16},
-                {id:'sedge',name:'SEDGE · FOOD & GENERATORS',start:[100,440,0],spec:{...supply,name:'SEDGE',length:37,mass:1.6},cruise:2,
-                    route:[[194,430],...south.slice(1)],home:[[677,478],[579,468],[476,492],[365,514],[246,476],[100,440]],unload:19}
+                {id:'morrow',name:'MORROW',start:[205,239,-.25],spec:{...supply,name:'MORROW',length:36,mass:1.55},cruise:2.25,
+                    route:north,home:[[202,236]],unload:14},
+                {id:'sedge',name:'SEDGE',start:[204,341,.27],spec:{...supply,name:'SEDGE',length:37,mass:1.6},cruise:2.2,
+                    route:south,home:[[207,335]],unload:16}
             ],
-            bergs:[{id:'entrance-berg',x:292,y:197,vx:0,vy:.23,length:63,beam:37,keel:22,range:{x:292,y:245,rx:0,ry:118}}],
-            landmarks:[{x:113,y:535,text:'SAFE WATER / COUNCIL ANCHORAGE'},{x:425,y:410,text:'SHELTERED WAITING BASIN'},{x:458,y:312,text:'OLD PRESSURE RIDGE'}],
-            dispatch:['FREE ANCHORAGE COUNCIL / 08:45','Tern’s assembly and Cinder’s co-operative have each authorized a supply call. Neither accepts the other powers’ berth permits. Deliver to both, then bring both crews back to safe water. They decide when their cargo is ashore; you decide whether the route home will hold.'],
+            bergs:[{id:'entrance-berg',x:411,y:115,vx:0,vy:.24,length:54,beam:30,keel:22,range:{y:158,ry:61}}],
+            landmarks:[{x:116,y:455,text:'HOME ANCHORAGE'},{x:423,y:96,text:'ICEBERG BASIN'},{x:506,y:468,text:'WAITING BASIN'}],
+            dispatch:['TERN & CINDER / RELIEF SUPPLIES','Tern needs heat and medicine. Cinder needs food and generators. Open both routes and bring Morrow and Sedge home.'],
             objectives:['Morrow: unload at Tern and return','Sedge: unload at Cinder and return','Bring Kestrel home']
-        },'Prepare both branches for Morrow and Sedge. The northern sheet breaks easily but closes quickly, and an iceberg crosses its entrance. The longer southern cut has heavier ice and a sheltered waiting basin. Give each supply ship Hold or Proceed; their captains steer the marked routes.',
-        'Clear both sides of the dashed route for the outward and return legs. Hold starts a braking maneuver, not an instant stop. After unloading each captain waits for a fresh Proceed order. Both ships must return to safe water before Kestrel can finish.',[1200,1800,2400]),
+        },'Two supply ships share the fork. Tern’s thin cut has a drifting iceberg; Cinder’s heavier cut has a waiting basin. Choose which ship to send first and keep the fork clear for the returns.',
+        'Proceed can be queued before a channel is open and stays in effect through unloading. When both crews are home, stop Kestrel anywhere in the green anchorage.',[850,1150,1550]),
         base(4,'Buoys, Not Borders','Survey rescue · weapons restricted',[120,520,0],breaker,[960,720],{
             mission:'survey',cell:12,thickness:.82,closing:220,thinIce:.3,thinWidth:72,
             route:[[600,280],[500,245],[405,180],[290,205],[170,340],[120,500]],
@@ -79,35 +84,37 @@
             objectives:['Recover Caliper’s scientific recorders','Tow Caliper into safe water','Moor Kestrel without damaging the station']
         },'Rival pickets obstruct the direct passage and demand course changes. Awl is cutting a narrow northern lead; follow her actual wake or take the long open southern route. Approach Caliper slowly to transfer her recorders, then connect Kestrel’s stern towline to her bow. Protect the civilian station.',
         'F connects or releases the line when the towing points are within 55 m and relative speed is low. J/K shorten/lengthen it. Recorder transfer takes eight steady seconds nearby. The tow has inertia and can swing into ice; its whole hull must return.',[800,1100,1500]),
-        base(5,'Home Ice','Armed escort · defend the unloading window',[295,390,0],armed,[1000,760],{
+        base(5,'Home Ice','Armed escort · cover the escapes',[294,422,.45],armed,[1000,760],{
             mission:'defense',cell:12,thickness:.8,closing:260,thinIce:.35,thinWidth:66,
             route:[[235,390],[425,390],[655,390],[820,390]],
             water:[{x:180,y:390,rx:190,ry:210},{x:820,y:385,rx:150,ry:280}],
+            openWaterRoutes:[{route:[[560,225],[738,205]],width:68},{route:[[600,390],[738,390]],width:72},
+                {route:[[770,570],[650,570],[531,538],[436,500],[323,461]],width:76}],
             ridges:[],berth:berth(280,390,Math.PI),docks:[],
             cutters:[
-                {id:'north-cutter',name:'SHELF ICEBREAKER N',team:'hostile',start:[750,205,Math.PI],spec:cutter,cruise:2.8,depart:8,
-                    route:[[750,205],[650,205],[440,245],[270,300],[230,230]],width:80,thickness:.28},
-                {id:'middle-cutter',name:'SHELF ICEBREAKER C',team:'hostile',start:[750,390,Math.PI],spec:cutter,cruise:2.8,depart:70,
-                    route:[[750,390],[650,390],[470,390],[350,390],[310,520]],width:82,thickness:.28},
-                {id:'south-cutter',name:'SHELF ICEBREAKER S',team:'hostile',start:[775,570,Math.PI],spec:cutter,cruise:2.8,depart:135,
-                    route:[[775,570],[650,585],[460,545],[270,475],[250,540]],width:88,thickness:.28}
+                {id:'north-cutter',name:'NORTH CUTTER',team:'hostile',start:[590,225,Math.PI],spec:cutter,cruise:2.8,depart:0,
+                    route:[[590,225],[440,245],[270,300],[230,230]],width:80,thickness:.28},
+                {id:'middle-cutter',name:'CENTRAL CUTTER',team:'hostile',start:[631,390,Math.PI],spec:cutter,cruise:2.8,depart:35,
+                    route:[[631,390],[470,390],[350,390],[310,520]],width:82,thickness:.28},
+                {id:'south-cutter',name:'SOUTH CUTTER',team:'hostile',start:[650,570,Math.PI],spec:cutter,cruise:2.8,depart:55,
+                    route:[[650,570],[460,545],[270,475],[250,540]],width:88,thickness:.28}
             ],
             assets:[{id:'base',name:'THAWMARK SUPPLY BASE',x:215,y:362,w:42,h:56,hp:140,team:'friendly',essential:true}],
             fleet:[
-                {id:'hearth',name:'HEARTH · HEATING FUEL',start:[170,310,Math.PI],spec:{...supply,name:'HEARTH',length:36,mass:1.6},cruise:1.8,unload:360,unloading:true,route:[[170,310]],home:[[95,310]]},
-                {id:'pantry',name:'PANTRY · FOOD & MEDICINES',start:[170,465,Math.PI],spec:{...supply,name:'PANTRY',length:37,mass:1.7},cruise:1.7,unload:600,unloading:true,route:[[170,465]],home:[[95,465]]}
+                {id:'hearth',name:'HEARTH',start:[170,310,Math.PI],spec:{...supply,name:'HEARTH',length:36,mass:1.6},cruise:1.9,unload:128,unloading:true,route:[[170,310]],home:[[93,295]]},
+                {id:'pantry',name:'PANTRY',start:[170,465,Math.PI],spec:{...supply,name:'PANTRY',length:37,mass:1.7},cruise:1.8,unload:221,unloading:true,route:[[170,465]],home:[[92,530]]}
             ],
             gun:{range:290,arc:1.05,hold:2.5,reload:9,damage:36,ammo:28,shellSpeed:55,maxSpeed:1.25,maxTurn:.02},
             raiders:[
-                {id:'north-boat',name:'NORTH RAIDER',start:[830,205,Math.PI],spec:raider,cruise:2.4,spawn:0},
-                {id:'middle-boat',name:'CENTRAL RAIDER',start:[830,390,Math.PI],spec:raider,cruise:2.3,spawn:55},
-                {id:'south-boat',name:'SOUTH RAIDER',start:[850,585,Math.PI],spec:raider,cruise:2.4,spawn:125}
+                {id:'north-boat',name:'NORTH RAIDER',start:[639,222,Math.PI],spec:raider,cruise:2.6,spawn:0},
+                {id:'middle-boat',name:'CENTRAL RAIDER',start:[691,390,Math.PI],spec:raider,cruise:2.5,spawn:22},
+                {id:'south-boat',name:'SOUTH RAIDER',start:[512,531,-2.83],spec:raider,cruise:2.6,spawn:0}
             ],
             landmarks:[{x:108,y:615,text:'TRANSPORT SAFE WATER'},{x:800,y:89,text:'SHELF LEAGUE APPROACHES'}],
-            dispatch:['COUNCIL HARBOR DEFENSE / 14:35','The League calls the depot a Compact fuel dump. Hearth carries heating oil; Pantry carries food and medicines. Their captains need time at the hoses and cranes. Weapons are now authorized against attacking craft. Get the essential cargo ashore and both ships clear.'],
+            dispatch:['THAWMARK / HARBOR DEFENSE','Hearth is almost unloaded. Pantry needs a little longer. Cover the transports until both can break for the anchorage.'],
             objectives:['Land Hearth’s and Pantry’s essential cargo','Get both transports into safe water']
-        },'Three visible Shelf icebreakers are opening approaches for the raiders. Disabled cutters coast to a stop, but their wakes remain open. Raiders use connected water, including any shortcuts you cut. Defend the unloading transports, then give each captain Proceed to escape. Destroying every attacker is not required.',
-        'Select a hostile contact with T or the target buttons. Hold a steady bow solution below 2.4 kn; B fires one round. Red solution lines warn of enemy fire. Hold/Proceed lets you time each transport’s departure after unloading.',[620,800,1100]),
+        },'A raider is already through the southern lead. Other boats are following their cutters. Get Hearth and Pantry out as they finish unloading.',
+        'Queue Proceed to send a transport as soon as its cargo is ashore. Steady Kestrel below 2.4 kn to fire. The cutters’ wakes stay open after they stop.',[290,365,500]),
         base(6,'The Other Shore','Military strike · disable and withdraw',[125,590,0],armed,[1080,780],{
             mission:'strike',cell:12,thickness:.82,closing:170,thinIce:.35,thinWidth:80,
             route:[[125,590],[340,540],[520,445],[685,370],[825,350]],

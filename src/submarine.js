@@ -39,6 +39,33 @@
         return {floor,ceiling};
     }
     function depthAllowed(st,s,depth){const water=space(st,s);return depth>water.ceiling+7&&depth<water.floor-7;}
+    function depthPreview(st,s){
+        // Sweep the whole hull along the bow corridor using only charted
+        // terrain. Sonar contacts and unobserved hulls do not enter this view.
+        const axis=P.axes(s).f,hull=P.hull(s),reach=96,stride=6,[w,h]=st.level.world;
+        const clear=depth=>{
+            const solids=obstacles(st,depth);
+            for(let d=0;d<=reach;d+=stride){
+                const moved=hull.map(p=>({x:p.x+axis.x*d,y:p.y+axis.y*d}));
+                if(moved.some(p=>p.x<0||p.y<0||p.x>w||p.y>h)||solids.some(o=>P.sat(moved,o.poly)))return Math.max(0,d-stride);
+            }
+            return reach;
+        };
+        const distance=clear(s.depth);
+        return {reach,distance,bands:bands.map(({depth})=>{
+            const allowed=depthAllowed(st,s,depth);
+            return {depth,allowed,distance:allowed?(depth===s.depth?distance:clear(depth)):0};
+        })};
+    }
+    function transfer(st,s){
+        const a=access(st),m=st.mission,relative=a?Math.hypot(s.vx-(a.vx||0),s.vy-(a.vy||0)):Infinity;
+        if(!a||!['aboard','waiting'].includes(m.team))return {available:false,reason:m.team==='working'?'Team still inside':'Team already aboard'};
+        if(a.available===false)return {available:false,reason:'Team moving to the rendezvous'};
+        const gap=distance(s,a);
+        if(gap>a.radius)return {available:false,reason:`${Math.ceil(gap-a.radius)} m to the transfer zone`};
+        if(Math.abs(s.depth-a.depth)>=5)return {available:false,reason:`Reach ${a.depth} m for transfer`};
+        return {available:!m.ordered,reason:relative>=.25?'Match drift below 0.5 kn':st.noise>=.35?'Quiet the engines':'Hold here for transfer'};
+    }
     function noise(s,input={}){
         const surge=P.groundMotion(s).surge,counter=surge*s.engine<-.32?.55:0;
         return P.clamp(.06+speed(s)*.10+Math.abs(s.engine)**2*.48+counter+Math.abs(input.thruster||0)*.34+Math.abs(s.heave||0)*.05,0,1.5);
@@ -84,11 +111,9 @@
             launch(st,{ship:s,id:'player'},st.gun,solution.aim);return true;
         }
         if(name==='team'&&covert(st)){
-            if(!['aboard','waiting'].includes(m.team)){say(st,m.team==='working'?'The team is still inside. Clear the exposed area.':'Team recovered. Return to safe water.');return false;}
-            const a=access(st);
-            if(a.available===false){say(st,'The team is relocating on the ice. Wait for its rendezvous beacon.');return false;}
-            if(distance(s,a)>a.radius||Math.abs(s.depth-a.depth)>5){say(st,st.recovery?`Recovery needs the selected moving beacon at ${a.depth} m.`:'Team transfer needs the marked hatch at working depth.');return false;}
-            m.ordered=true;say(st,'Team transfer ordered. Hold quietly below 0.5 kn.');return true;
+            const t=transfer(st,s);
+            if(!t.available){say(st,t.reason);return false;}
+            m.ordered=true;say(st,'Transfer ordered · '+t.reason.toLowerCase()+'.');return true;
         }
         return false;
     }
@@ -207,7 +232,7 @@
             if(m.alarm||m.suspicion>=100){m.alarm=true;st.failure='Confirmed alarm. The covert assignment and its recovery window are lost.';}
             if(m.ordered){
                 m.board=close&&Math.hypot(s.vx-(a.vx||0),s.vy-(a.vy||0))<.25&&st.noise<.35?m.board+dt:Math.max(0,m.board-dt*2);
-                if(m.board>=a.hold){m.ordered=false;m.board=0;if(m.team==='aboard'){m.team='working';st.stats.teamInserted=1;say(st,'TEAM INSERTED · clear the 125 m exposed area.');}else{m.team='recovered';st.stats.teamRecovered=1;say(st,'TEAM ABOARD · escape to home water without an alarm.');}}
+                if(m.board>=a.hold){m.ordered=false;m.board=0;if(m.team==='aboard'){m.team='working';st.stats.teamInserted=1;say(st,`Team inside · clear the ${a.standOff} m circle.`);}else{m.team='recovered';st.stats.teamRecovered=1;say(st,'Team aboard · return to safe water.');}}
             }
             if(m.team==='working'&&distance(s,a)>a.standOff){m.left=true;m.work=Math.min(a.work,m.work+dt);if(m.work>=a.work){m.team='waiting';say(st,'TEAM READY · return through a patrol gap and order recovery.');}}
             m.threatGone=m.team==='recovered'&&(!st.recovery||st.recovery.escaped);
@@ -263,10 +288,18 @@
         if(st.noticeUntil>st.time)return st.notice;
         if(st.recovery)return Recovery.message(st);
         if(m.threatGone)return 'Assignment secured · return to home water, slow below 0.7 kn, and hold for five seconds.';
-        if(c.mission==='covert')return m.ordered?`TEAM TRANSFER ${m.board.toFixed(1)} / 8 s · hold quietly at working depth`:m.team==='aboard'?'Approach the marked hatch quietly. F orders insertion.':m.team==='working'?`TEAM WORK ${Math.floor(m.work)} / ${c.access.work} s · stay outside the 125 m exposed area`:'Team waiting. Return quietly and press F to recover them.';
+        if(c.mission==='covert'){
+            const a=c.access;
+            if(m.ordered)return `Transfer ${m.board.toFixed(1)} / ${a.hold} s · ${transfer(st,run.ship).reason.toLowerCase()}`;
+            if(m.team==='working'){
+                const clear=a.standOff-distance(run.ship,a);
+                return clear>0?`Move ${Math.ceil(clear)} m farther from the hatch before work can continue.`:`Team working · ${Math.max(0,Math.ceil(a.work-m.work))} s left. Stay outside the circle.`;
+            }
+            return `${m.team==='waiting'?'Recover the team':'Insert the team'} · ${transfer(st,run.ship).reason.toLowerCase()}.`;
+        }
         if(c.mission==='hunt'&&st.actors.some(a=>a.aborted))return 'Minelayer withdrawing. Keep the passage clear; pursuing beyond the chart is unnecessary.';
         return m.mining>0?`PASSAGE THREAT · ${Math.floor(m.mining)} / ${c.mission==='hunt'?c.passage.lay:c.installation.hold} s`:'Listen, select a contact, and identify it before committing to an interception.';
     }
-    const api={create,step,action,ready,progress,message,bands,space,depthAllowed,noise,obstacles,blocked,firingSolution,Sonar,Recovery,covert,access,listenRange};
+    const api={create,step,action,ready,progress,message,bands,space,depthAllowed,depthPreview,transfer,noise,obstacles,blocked,firingSolution,Sonar,Recovery,covert,access,listenRange};
     if(typeof module!=='undefined'&&module.exports)module.exports=api;root.PaleReachSubmarine=api;
 })(globalThis);

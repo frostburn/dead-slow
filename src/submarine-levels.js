@@ -5,7 +5,7 @@
     const sub={...spec,name:'UNIDENTIFIED SUBMARINE',length:34,mass:1.2,propulsion:1.15};
     const tender={length:32,beam:9,mass:1.1,propulsion:1.1,dragScale:1.05};
     const chart=(n,name,kind,start,world,config,brief,tip,pace)=>({id:`pale-reach-${n}`,name,kind,start,spec,world,simulation:'polar',standalone:true,
-        courseRevision:1,rulesRevision:2,berth:{x:start[0],y:start[1],a:Math.PI,l:70,w:35,speed:.35,angle:15},
+        courseRevision:n===8?2:1,rulesRevision:2,berth:{x:start[0],y:start[1],a:Math.PI,l:70,w:35,speed:.35,angle:15},
         polar:{underwater:true,depth:48,floor:130,ceiling:5,home:{x:start[0],y:start[1],radius:65},shelves:[],bergs:[],platforms:[],actors:[],...config},brief,tip,pace});
     const levels=[
         chart(7,'What the Ice Heard','Submarine watch · identify and intercept',[135,535,0],[1120,780],{
@@ -26,24 +26,24 @@
             landmarks:[{x:135,y:625,text:'PETREL / SAFE WATER'},{x:830,y:150,text:'DISPUTED SHELF'}]
         },'Three returns, three different causes. Listen quietly for motion and machinery, or send an active pulse for a clearer echo. A pulse also gives the intruder your position. Identify the submarine, stop it before it reaches the communications installation, then return home.',
         'Z / X select shallower / deeper bands; P sends a pulse; T selects a track; I records its identification; B launches a torpedo after a stable solution. The 60 m iceberg keel blocks shallow and working depth. Deep water passes beneath it, but the nearby 70 m seabed rise does not.',[750,1050,1450]),
-        chart(8,'Under the Listening Post','Covert team operation · insert and recover',[135,585,0],[1120,800],{
+        chart(8,'Under the Listening Post','Covert team operation · insert and recover',[150,510,0],[940,670],{
             mission:'covert',depth:48,
-            shelves:[{name:'WEST SHOAL · 35 m',floor:35,poly:[[320,230],[470,190],[545,265],[515,425],[385,445],[300,345]]},
-                {name:'RELAY SHELF · 68 m',floor:68,poly:[[705,200],[1040,210],[1080,480],[885,525],[705,445]]}],
-            bergs:[{id:'post-keel',name:'ICE MARGIN · 32 m',x:625,y:260,vx:.045,vy:0,length:118,beam:65,keel:32,range:{x:625,rx:50}}],
-            platforms:[{id:'relay',name:'SHELF MILITARY RELAY',x:815,y:290,w:42,h:92}],
-            access:{x:770,y:360,radius:29,depth:48,hold:8,standOff:125,work:90},
+            shelves:[{name:'WEST SHOAL · 35 m',floor:35,poly:[[249,195],[367,158],[427,237],[418,390],[321,438],[230,347]]},
+                {name:'RELAY SHELF · 68 m',floor:68,poly:[[554,180],[868,187],[899,421],[753,460],[555,395]]}],
+            bergs:[{id:'post-keel',name:'ICE MARGIN · 32 m',x:493,y:260,vx:.045,vy:0,length:98,beam:63,keel:32,range:{x:493,rx:44}}],
+            platforms:[{id:'relay',name:'SHELF RELAY',x:661,y:240,w:38,h:78}],
+            access:{x:620,y:318,radius:29,depth:48,hold:8,standOff:96,work:45},
             actors:[
-                {id:'watch-a',kind:'patrol',name:'SHORE WATCH · PATROL A',visible:true,start:[865,165,Math.PI],depth:3,spec:tender,
-                    route:[[865,165],[535,165],[555,520],[955,550],[1000,180]],cruise:1.25,loop:true},
-                {id:'watch-b',kind:'patrol',name:'SHORE WATCH · PATROL B',visible:true,start:[985,550,Math.PI],depth:3,spec:tender,
-                    route:[[985,550],[510,550],[480,130],[995,130]],cruise:1.1,loop:true}
+                {id:'watch-a',kind:'patrol',name:'PATROL A',visible:true,start:[734,140,Math.PI],depth:3,spec:tender,
+                    route:[[734,140],[465,140],[483,460],[793,486],[850,160]],cruise:1.25,loop:true},
+                {id:'watch-b',kind:'patrol',name:'PATROL B',visible:true,start:[852,498,Math.PI],depth:3,spec:tender,
+                    route:[[852,498],[434,498],[407,110],[834,110]],cruise:1.1,loop:true}
             ],
             objectives:['Insert the team at the submerged access','Clear the exposed area while the team works','Recover the team','Escape without a confirmed alarm'],
-            dispatch:['COUNCIL LIAISON / NARROWS COMPACT / 23:40','The relay is directing the League’s channel patrols. Put the team through its submerged maintenance hatch, leave while they copy and disable its military routing equipment, then collect them. Council shore watchers keep the two surface patrols plotted. An alarm would expose the settlements that helped us.'],
-            landmarks:[{x:140,y:680,text:'COVERT WITHDRAWAL'},{x:600,y:650,text:'SOUTHERN PATROL GAP'}]
-        },'Stop at the working-depth access point and order insertion. Leave the 125 m exposed area while the team works, then return through a patrol gap to recover it. Bring everyone home with suspicion below 20%. A confirmed alarm fails the assignment.',
-        'F orders insertion or recovery. Hold within 29 m at working depth and below 0.5 kn for eight seconds. Team work advances only while you are clear of the exposed area. Watch patrol listening arcs. Hard counterthrust, bow thrusters and active sonar are loud; reduce speed early. Weapons are sealed.',[1800,2300,2900]),
+            dispatch:['SHELF RELAY / QUIET APPROACH','Put the team through the relay’s hatch and wait outside the listening area. Get everyone home without raising an alarm.'],
+            landmarks:[{x:455,y:564,text:'SOUTHERN APPROACH'}]
+        },'Take the team to the 48 m hatch. Use the deep water south of the shoal or thread between the shoal and the drifting keel. Leave the marked circle while the team works, then pick them up.',
+        'Coast early. Strong thrust, active sonar and bow thrusters can alert the patrols. At the hatch, hold quiet and nearly still for eight seconds.',[1120,1420,1750]),
         chart(9,'Three Echoes Too Many','Passage defense · hunt a minelayer',[150,420,0],[1200,850],{
             mission:'hunt',depth:48,
             shelves:[{name:'SPLIT SHELF · 36 m',floor:36,poly:[[410,210],[570,190],[650,280],[610,400],[465,430],[390,340]]},

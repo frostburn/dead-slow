@@ -39,8 +39,9 @@ test('authored fractured basins use metre coordinates and leave all rescue hulls
  for(const s of [r.ship,...st.fleet.map(f=>f.ship),st.operation.survey.ship,...st.operation.npcs.map(n=>n.ship)]){
   const before=[s.x,s.y,s.hull];I.iceContact(st,s,1/120);assert.deepEqual([s.x,s.y,s.hull],before,s.name);
  }
+ const fireX=st.operation.npcs.find(n=>n.crossfire).ship.x;
  const widths=[150,250,350,450,550].map(y=>{
-  const open=[];for(let x=450;x<650;x++)if(!I.solidAt(st,x,y))open.push(x);return Math.max(...open)-Math.min(...open);
+  const open=[];for(let x=fireX-50;x<fireX+50;x++)if(!I.solidAt(st,x,y))open.push(x);return Math.max(...open)-Math.min(...open);
  });
  assert.ok(new Set(widths).size>=3,'the central lead has varying width');
 });
