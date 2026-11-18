@@ -77,8 +77,13 @@
     }
     function prepare(level,command,action){
         convoyOrder=command;bridgeOrder=action;$('polar-phase').hidden=!level.polar?.finale;
-        const entering=$('polar-info').hidden,c=level.polar;
-        $('polar-info').hidden=!c;$('horn-btn').hidden=!!c?.underwater;
+        const watch=$('polar-info'),entering=watch.hidden,c=level.polar;
+        const anchor=c?.underwater?$('polar-panel'):$('sea');
+        if(watch.parentElement!==anchor.parentElement){
+            if(c?.underwater)anchor.after(watch);
+            else anchor.before(watch);
+        }
+        watch.hidden=!c;$('horn-btn').hidden=!!c?.underwater;
         $('polar-sub-controls').hidden=true;
         const controls=!!(c&&(c.underwater||c.survey||c.gun||c.fleet?.some(f=>!f.leader)));
         $('polar-panel').hidden=!controls;document.body.dataset.polarControls=String(controls);

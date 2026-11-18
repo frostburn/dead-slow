@@ -82,13 +82,14 @@ def check_polar(page,check,out):
             check(f'7-0{stage} action buttons are usable at {width}×{height}',page.locator('#polar-actions button:visible').evaluate_all('(bs)=>bs.length>=3 && bs.every(b=>b.getBoundingClientRect().height>=40)'))
             if stage>=7 and stage!=11:
                 check(f'7-0{stage} depth and sonar orders remain available at {width}×{height}',page.locator('[data-sub-depth]').count()==3 and page.locator('#sub-ping').is_visible())
-                if stage==7:
-                    check(f'Underwater title and folded watch clear each other at {width}×{height}',page.evaluate('''() => {
-                        const watch=document.querySelector('#polar-info').getBoundingClientRect();
-                        const title=document.querySelector('#chart-title').getBoundingClientRect();
-                        return title.right<=watch.left && watch.right<=innerWidth;
-                    }'''))
                 page.locator('#polar-info').evaluate('(d)=>d.open=true')
+                if stage==7:
+                    check(f'Expanded underwater watch sits outside the chart at {width}×{height}',page.evaluate('''() => {
+                        const watch=document.querySelector('#polar-info');
+                        const sidebar=watch.closest('.sidebar')?.getBoundingClientRect();
+                        const chart=document.querySelector('#chart-section').getBoundingClientRect();
+                        return watch.open && sidebar && (sidebar.left>=chart.right || sidebar.top>=chart.bottom);
+                    }'''))
                 check(f'7-{stage:02} elapsed splits remain available at {width}×{height}',page.locator('#splits .split-row').count()==(6 if stage==12 else 4 if stage==8 else 3))
             if stage==12:
                 handoff_fixture(page)
@@ -146,6 +147,7 @@ def check_submarine(page,check,stage):
         handoff_fixture(page)
         check('Handoff replaces submarine orders with the three actual convoy captains',not page.locator('#polar-sub-controls').is_visible() and page.locator('#polar-fleet button').count()==6 and 'KESTREL' in page.locator('#ship-name').inner_text())
         check('Taking the surface bridge restores its horn and replaces underwater reports',page.locator('#horn-btn').is_visible() and page.locator('#polar-surface-status').is_visible() and not page.locator('#polar-sub-status').is_visible())
+        check('The surface watch moves back to the chart after handoff',page.locator('#chart-section #polar-info').count()==1)
         check('Handoff preserves elapsed time and shows the second leg','Leg 2' in page.locator('#polar-phase').text_content() and page.evaluate('DeadSlowTest.state.run.time>6 && DeadSlowTest.state.run.finalJourney.watch.handoffAt>2'))
         page.locator('[data-convoy=witness][data-order=proceed]').click()
         check('The new bridge sends orders to the retained surface state',page.evaluate('DeadSlowTest.state.run.finalJourney.surface.polar.fleet[0].order==="proceed"'))

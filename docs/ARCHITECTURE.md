@@ -147,8 +147,9 @@ markup retain their DOM nodes. A draw-call budget guards against repainting the
 whole field per frame; CI also compares incremental ice updates with fresh pixels.
 The folding `polar-info` chart window starts closed and holds vessel status,
 briefings and detailed fleet reports. The sidebar keeps common instruments,
-elapsed splits, and active controls. The same window survives the finale handoff,
-switching from submarine reports to the surface convoy's reports.
+elapsed splits, and active controls. The underwater watch sits in the sidebar
+with the depth and sonar controls. The same window returns to the chart during
+the finale handoff and shows the convoy's reports.
 
 Sheet fractures require forward momentum and a bow approach, cost speed and
 open a narrow shoulder beside the hull. Pressure ridges remain impassable.
