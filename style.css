@@ -2548,6 +2548,12 @@ body[data-theme="polar"] .sidebar>.hint { display:none; }
 }
 
 /* Pale Reach: deliberate orders remain usable beside the helm on small screens. */
+.polar-info:has(#polar-sub-status:not([hidden])) { position:absolute; inset:10px 12px auto auto; max-height:calc(100% - 44px); }
+.polar-info:has(#polar-sub-status:not([hidden])):not([open]) { width:max-content; }
+.polar-info:has(#polar-sub-status:not([hidden])):not([open])>summary { padding:8px 10px; }
+@media(max-width:600px) {
+  body[data-theme="polar"] .sea-section:has(#polar-sub-status:not([hidden])) .chart-heading { max-width:calc(100% - 148px); }
+}
 #polar-actions { margin:10px 0; }
 #polar-actions[hidden],#polar-tow-controls[hidden],#polar-gun-controls[hidden] { display:none; }
 #polar-actions button { min-height:42px; padding:8px; font:11px var(--mono); }

@@ -208,13 +208,15 @@ inside the existing atlas job; there is no additional CI matrix or job.
 `submarine.js` uses the existing inertial hull integrator and captain controls,
 with gradual depth changes between 18, 48 and 88 metres. Whole-hull overlap
 determines keel and seabed clearance. Invalid horizontal approaches collide;
-terrain never snaps a vessel into another depth band. Static hex chart texture
-is cached; moving keels and depth-dependent obstruction shading stay live.
+terrain never snaps a vessel into another depth band. The chart caches shaded
+seabed relief and redraws its hatch pattern when a shelf becomes impassable at
+the current depth. Hatching follows the collision boundary. Ice keels move
+over that layer and use the same blocking cue.
 Player and hostile submarines use a rounded pressure-hull polygon in `physics.js`
 for drawing, collision and clearance. Precomputed cap directions keep it cheap.
 The shell rejects the horn action underwater and hides its button, restoring it
-on the surface bridge. Sonar uncertainty is isotropic: the chart uses the same
-circular radius as the stored estimate.
+on the surface bridge. Sonar diamonds show estimated positions. Selecting a
+track adds its circular uncertainty, using the radius in the stored estimate.
 
 `sonar.js` stores detached observations, never live actor references. Passive
 listening supplies uncertain position, motion and machinery clues; speed,

@@ -111,7 +111,7 @@
     }
     function update(level,run,status,format,race=null){
         if(run.polar.rebridge){prepare(run.polar.level,convoyOrder,bridgeOrder);run.polar.rebridge=false;set('ship-name',run.ship.name);set('brief',run.polar.config.dispatch[1]);set('hint','Kestrel has the watch. Reopen the aging lead and use Hold / Proceed to bring all three relief ships through.');}
-        let summary=run.ship.name.split(' · ').at(-1);
+        let summary=run.polar.submarine?Math.round(run.ship.depth)+' m':run.ship.name.split(' · ').at(-1);
         $('race-banner').hidden=!race;
         if(race)set('race-banner',`${race.id==='grand-tour'?'GRAND TOUR':'PALE REACH'} ${race.position+1}/${race.route.length} · ${format(race.total+(status==='complete'?0:run.time))}${race.practice?' · PRACTICE':''}`);
         if(run.finalJourney){
@@ -119,7 +119,7 @@
             $('polar-phase').hidden=false;set('polar-phase',`${w.phase==='underwater'?'Leg 1':'Leg 2'} · ${clock} of weather left`);
             summary+=` · ${clock} left`;
         }
-        if(run.polar.submarine){set('polar-summary',summary+` · ${Math.round(run.ship.depth)} m`);return U.update(level,run,status,format);}
+        if(run.polar.submarine){set('polar-summary',summary);return U.update(level,run,status,format);}
         const s=run.ship,st=run.polar,o=st.operation,m=P.groundMotion(s),h=Math.max(0,Math.ceil(s.hull)),g=I.gap(run);
         set('speed',(m.surge<0?'−':'')+(m.speed*1.94384).toFixed(1));set('mobile-speed',$('speed').textContent);
         set('speed-direction',m.direction.toUpperCase());set('mobile-direction',m.direction.toUpperCase());

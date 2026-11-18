@@ -82,6 +82,12 @@ def check_polar(page,check,out):
             check(f'7-0{stage} action buttons are usable at {width}×{height}',page.locator('#polar-actions button:visible').evaluate_all('(bs)=>bs.length>=3 && bs.every(b=>b.getBoundingClientRect().height>=40)'))
             if stage>=7 and stage!=11:
                 check(f'7-0{stage} depth and sonar orders remain available at {width}×{height}',page.locator('[data-sub-depth]').count()==3 and page.locator('#sub-ping').is_visible())
+                if stage==7:
+                    check(f'Underwater title and folded watch clear each other at {width}×{height}',page.evaluate('''() => {
+                        const watch=document.querySelector('#polar-info').getBoundingClientRect();
+                        const title=document.querySelector('#chart-title').getBoundingClientRect();
+                        return title.right<=watch.left && watch.right<=innerWidth;
+                    }'''))
                 page.locator('#polar-info').evaluate('(d)=>d.open=true')
                 check(f'7-{stage:02} elapsed splits remain available at {width}×{height}',page.locator('#splits .split-row').count()==(6 if stage==12 else 4 if stage==8 else 3))
             if stage==12:

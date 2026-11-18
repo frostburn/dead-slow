@@ -101,7 +101,7 @@ test('pause freezes sonar, patrols, depth and team clocks; retry restores the or
 });
 test('underwater rendering never reads hidden hull positions and stays within the warm drawing budget',()=>{
  let draws=0,bitmaps=0;const methods=['fill','stroke','fillRect','strokeRect','drawImage'];
- const context=new Proxy({},{get:(o,k)=>o[k]??(()=>{if(methods.includes(k))draws++;if(k==='drawImage')bitmaps++;}),set:(o,k,v)=>(o[k]=v,true)});
+ const context=new Proxy({createLinearGradient:()=>({addColorStop(){}})},{get:(o,k)=>o[k]??(()=>{if(methods.includes(k))draws++;if(k==='drawImage')bitmaps++;}),set:(o,k,v)=>(o[k]=v,true)});
  const canvas=()=>({width:0,height:0,getBoundingClientRect:()=>({width:1050,height:720}),getContext:()=>context}),previous=global.document;
  global.document={createElement:canvas};
  try{for(const n of [7,8,9]){

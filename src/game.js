@@ -141,7 +141,7 @@
         $('ship-name').textContent = run.ship?.name || level.spec?.name || 'MV LONG PAUSE';
         $('work-panel').hidden = !level.jobs.length && !level.space && !level.rampage;
         status = 'ready';
-        $('stage-tag').textContent = level.tag;
+        $('stage-tag').textContent = level.polar?.underwater ? `W7 · ${String(level.stageNumber).padStart(2, '0')}` : level.tag;
         $('chart-title').textContent = level.name;
         $('mission-name').textContent = level.name;
         $('brief').textContent = level.brief;
