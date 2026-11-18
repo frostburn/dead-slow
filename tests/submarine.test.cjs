@@ -101,7 +101,7 @@ test('pause freezes sonar, patrols, depth and team clocks; retry restores the or
 });
 test('underwater rendering never reads hidden hull positions and stays within the warm drawing budget',()=>{
  let draws=0,bitmaps=0;const methods=['fill','stroke','fillRect','strokeRect','drawImage'];
- const context=new Proxy({},{get:(o,k)=>o[k]??(()=>{if(methods.includes(k))draws++;if(k==='drawImage')bitmaps++;}),set:(o,k,v)=>(o[k]=v,true)});
+ const context=new Proxy({createLinearGradient:()=>({addColorStop(){}})},{get:(o,k)=>o[k]??(()=>{if(methods.includes(k))draws++;if(k==='drawImage')bitmaps++;}),set:(o,k,v)=>(o[k]=v,true)});
  const canvas=()=>({width:0,height:0,getBoundingClientRect:()=>({width:1050,height:720}),getContext:()=>context}),previous=global.document;
  global.document={createElement:canvas};
  try{for(const n of [7,8,9]){
@@ -110,6 +110,15 @@ test('underwater rendering never reads hidden hull positions and stays within th
   for(let i=0;i<60;i++)view.render(c,level(n),r,1);
   assert.ok(draws/60<100,`${n}: ${draws/60} draws`);assert.equal(bitmaps,60);
  }}finally{global.document=previous;}
+});
+test('the dive preview distinguishes approaching a shelf from being over it',()=>{
+ const r=state(7),st=r.polar,s=r.ship;
+ st.shelves=[{floor:65,poly:P.rect({x:s.x+52,y:s.y-26,w:25,h:52})}];
+ const preview=U.depthPreview(st,s),deep=preview.bands.find(b=>b.depth===88);
+ assert.equal(preview.distance,preview.reach);
+ assert.ok(deep.allowed&&deep.distance>0&&deep.distance<52);
+ s.x+=46;
+ assert.equal(U.depthPreview(st,s).bands.find(b=>b.depth===88).allowed,false);
 });
 for(const n of [7,8,9])test(`7-0${n}: complete with ordinary helm, depth, sonar and mission orders`,()=>{
  const t=require('./submarine-navigation.cjs').navigate(n),r=t.state.run,st=r.polar;

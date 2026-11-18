@@ -1,9 +1,12 @@
 /* Screen-space chart labels: bounded placement, independent of the ice grid. */
 (function(root){
     'use strict';
-    function create(ctx,W,H,ox,oy,scale){
-        const pending=[],placed=[];
+    function create(ctx,W,H,ox,oy,scale,{top=54,bottom=36}={}){
+        const pending=[],placed=[],reserved=[];
         const overlap=(a,b)=>a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
+        function reserve(x,y,r){
+            reserved.push({x:ox+x*scale-r,y:oy+y*scale-r,w:2*r,h:2*r});
+        }
         function add(text,x,y,color='#b7d1d0',size=10,priority=1){
             x=ox+x*scale;y=oy+y*scale;
             // Off-chart objects must not acquire misleading edge labels when zoomed.
@@ -18,7 +21,7 @@
                 let box;
                 for(const [dx,dy] of [[0,0],[0,-h],[0,h],[0,-2*h],[0,2*h],[-w/2,-h],[w/2,h],[0,-3*h],[0,3*h]]){
                     const b={x:Math.max(8,Math.min(W-8-w,p.x+dx-w/2)),y:p.y+dy-h/2,w,h};
-                    if(b.x<8||b.x+w>W-8||b.y<54||b.y+h>H-36||placed.some(q=>overlap(b,q)))continue;
+                    if(b.x<8||b.x+w>W-8||b.y<top||b.y+h>H-bottom||reserved.some(q=>overlap(b,q))||placed.some(q=>overlap(b,q)))continue;
                     box=b;break;
                 }
                 // Dense secondary annotations yield to vessel/target names.
@@ -32,7 +35,7 @@
             }
             ctx.restore();return placed;
         }
-        return {add,draw};
+        return {add,draw,reserve};
     }
     const api={create};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.PaleReachLabels=api;
 })(globalThis);

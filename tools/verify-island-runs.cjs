@@ -35,7 +35,8 @@ if (require.main === module) {
         assert.equal(t.state.status, 'complete', `${fixture.level}: did not finish`);
         assert.ok(t.state.run.result.clean, `${fixture.level}: not clean`);
         assert.ok(Math.abs(t.state.run.time - fixture.expectedTime) < 1 / 120, `${fixture.level}: author time diverged`);
-        console.log(`${t.state.level.name}: ${t.state.run.time.toFixed(2)} s, ${t.state.run.contacts} contacts, ${t.state.run.jobs.stats.lineBreaks} parted lines`);
+        const r=t.state.run,lineBreaks=r.jobs?.stats.lineBreaks??r.polar?.stats.towBreaks??0;
+        console.log(`${t.state.level.name}: ${r.time.toFixed(2)} s, ${r.contacts} contacts, ${lineBreaks} parted lines`);
     }
 }
 module.exports = { replay, fixtures };

@@ -61,6 +61,9 @@ test('elapsed time and disabled cutters cannot open remote ice on any new chart'
 test('visible cutters fracture only sheet touching their advancing bows and create navigable water',()=>{
  for(const n of [4,5,6]){
   const r=state(n),st=r.polar,o=st.operation,cutters=o.npcs.filter(n=>n.cutter),cuts=new Map(cutters.map(n=>[n.ship,0]));st.player=r.ship;
+  const north=n===5&&{...o.npcs.find(n=>n.id==='north-boat').ship};
+  const distance=route=>route.slice(1).reduce((sum,p,i)=>sum+Math.hypot(p[0]-route[i][0],p[1]-route[i][1]),0);
+  const detour=north&&distance(I.waterRoute(st,north,[170,310]));
   const before=st.ice.opened.slice();let revision=st.ice.revision;
   const checked={...I,iceContact(st,s,dt){
    const footprint=P.hull({...s,beam:s.beam+18}),f=P.axes(s).f,forward=s.vx*f.x+s.vy*f.y;
@@ -76,7 +79,10 @@ test('visible cutters fracture only sheet touching their advancing bows and crea
   // The real captain, engine and contact code, at 120 Hz; no scripted tile edits.
   for(let i=0;i<120*340;i++){st.time+=1/120;O.before(st,r,{},1/120);O.move(st,r,1/120,checked);}
   for(const cutter of cutters)assert.ok(cuts.get(cutter.ship)>25,`${n}: ${cutter.name} must make a substantial physical cut`);
-  if(n===5)assert.ok(I.waterRoute(st,o.npcs[0].ship,[170,310]),'raiders can use the physically opened lead');
+  if(north){
+   const lead=I.waterRoute(st,north,[170,310]);
+   assert.ok(lead&&distance(lead)<detour*.75,'the northern cutter opens a shorter approach for raiders');
+  }
   const opened=st.ice.opened.slice();st.time=10000;O.before(st,r,{},0);
   for(let k=0;k<opened.length;k++)if(opened[k]>=0)assert.ok(st.ice.opened[k]>=0,'old wakes stay slush, never refreeze into a wall');
  }
@@ -134,6 +140,21 @@ test('cargo and safe returns define defense victory; the strike still needs an a
  const s=firing();s.polar.operation.assets[0].ship.hull=0;assert.equal(I.ready(s),false);
  s.polar.operation.assets[1].ship.hull=0;tick(s,.01);assert.equal(I.ready(s),true);assert.equal(s.polar.complete,false);
  s.ship.hull=0;tick(s,.01);assert.equal(s.polar.complete,false);assert.match(s.polar.failure,/lost/);
+});
+test('a transport honors the departure order given during unloading',()=>{
+ const r=state(5),[hearth,pantry]=r.polar.fleet;
+ assert.ok(I.command(r,hearth.id,'proceed'));
+ assert.ok(I.command(r,pantry.id,'proceed'));
+ assert.ok(I.command(r,pantry.id,'hold'));
+ for(const f of [hearth,pantry])f.unloadProgress=f.unload-.005;
+ tick(r,.01);
+ for(const f of [hearth,pantry]){
+  assert.ok(f.unloaded);
+  assert.equal(f.leg,'return');
+  assert.equal(f.returned,false);
+ }
+ assert.equal(hearth.order,'proceed');assert.equal(pantry.order,'hold');
+ assert.equal(I.ready(r),false);
 });
 test('pause freezes the new operations and rejects fire/tow orders; retry restores the assignment',()=>{
  const t=create();t.load(L.indexOf(level(6)),true);t.advance(2);const r=t.state.run;t.polarAction('target','battery');t.pause();

@@ -24,34 +24,31 @@ records, personal-best ghosts, keyboard controls and a multitouch helm.
 Gray chapters can be inspected but not launched. World 8's 12 placeholder missions
 are not counted as playable levels or included in circuits. The Grand Tour visits
 **1 → 2 → 3 → 4 → 5 → 6 → 7**, eighty-four assignments; the Century Ship remains separate.
-There are **85 playable assignments and 41 author recordings**. Every complete world has its own twelve-stage circuit.
+There are **85 playable assignments and 44 author recordings**. Every complete world has its own twelve-stage circuit.
 
 World 7 opens **Race for the Pale Reach** with The First Fracture, Borrowed Water,
-and Deliveries Beyond the Map. Cut sheet ice bow first, widen a turning pocket,
-keep a laden supply ship behind an independent icebreaker, then prepare routes
-for two Council supply ships. Hold and Proceed are physical captain’s orders;
-both deliveries **and both returns** are required. Broken channels visibly fill
-with slush, while substantial floes and the crossing iceberg remain solid moving
-objects. Rime finishing her passage no longer fails Borrowed Water: she waits
-at Glass Quay, and you choose whether to continue through slush or retry.
-Pausing freezes all ships, sonar, mission clocks and ice together. All twelve
-assignments have individual records and ghosts, form the World 7 circuit and
-join the Grand Tour. Earlier 72-stage tour records are archived separately;
-individual mission records and the first six campaign circuits are retained.
+and Deliveries Beyond the Map. Connect the dogleg to Thawmark and widen the
+turning pocket before mooring. In Borrowed Water, leave braking room behind
+Rime and bring Lantern all the way into Glass Quay. Rime waits in the basin if
+Lantern falls behind. Watch the opener with `DeadSlow.watch("pale-reach-1", 8)`.
 
-World 7's folding **Bridge watch** window holds vessel status, contact details,
-fleet reports and elapsed splits. The sidebar contains orders; missions needing
-only the helm leave the full width to the chart. The watch starts folded on small
-screens. Submarines have rounded collision hulls and no horn; sonar uncertainty
-is drawn as circular range regions. Earlier submarine handling records and the
-old 7-11 ice-field records are archived separately after this geometry revision.
+In Deliveries Beyond the Map, Tern’s thin lead crosses a drifting iceberg and
+Cinder’s heavier lead has a waiting basin. The mint traces show the captains’
+routes through the water you have cleared. Proceed can be queued before a cut
+opens and continues through unloading. Hold begins braking. Both deliveries and
+both returns count, then Kestrel must stop inside the green anchorage.
+
+Bridge watch starts folded to expose more of the chart. Open it for clearance,
+contact and fleet reports. The sidebar keeps orders and elapsed splits visible.
+The logbook archives records for revised missions, the Pale Reach circuit and
+the Grand Tour. Pausing freezes all ships, sonar, mission clocks and ice together.
 
 **Buoys, Not Borders**, **Home Ice**, and **The Other Shore** add a physical survey
 tow under patrol pressure, defense of an unloading base, and a strike that requires
-disabling two military installations and withdrawing. Visible icebreakers
-physically cut the changing leads on all three charts. Dashed
-lines mark their intended routes; only moving bows open ice. Awl opens the rescue
-lead, Shelf cutters lead the attackers, and Rime prepares the strike flank.
+disabling two military installations and withdrawing. In Home Ice, a raider is
+already through the southern lead. Cover Hearth and Pantry and queue their
+escapes as they finish unloading. Awl opens the survey lead, Shelf cutters cut
+approaches for the attackers, and Rime prepares the strike flank.
 Disabled cutters coast to a stop; their wakes and wrecks remain in place.
 F connects/releases the tow; J/K operate its winch. T selects a hostile target
 and B fires a single round. Guns
@@ -60,8 +57,9 @@ visible and avoidable. The same orders are available as touch buttons. Each
 completed objective records its elapsed split time.
 
 **What the Ice Heard**, **Under the Listening Post**, and **Three Echoes Too Many**
-introduce Petrel, a submarine with three readable depth bands. Z/X orders shallower
-or deeper water; iceberg keels and seabed shelves restrict the whole hull.
+introduce Petrel, a submarine with three depth bands. Z/X orders shallower
+or deeper water. The bow line and depth buttons show charted clearance from
+iceberg keels and seabed shelves along your current heading.
 Passive contacts are uncertain estimates that expand when lost. P sends an active
 pulse for clearer echoes, but listeners receive your emission position. T selects
 a track, I records its identification, and B launches a torpedo only with a fresh,
@@ -79,14 +77,13 @@ rendezvous drifting with the ice margin at deep depth. Changing the choice
 takes real relocation time. Match the beacon's drift, recover the team, then
 avoid the patrols that redeploy across the arrival route.
 
-**No Flag on the Lifeboats** returns to Kestrel. Establish rescue contact with
-three stranded groups carrying civilian, Compact and League crews, tow disabled
-Oriel out of the turning pocket, and bring every required hull to neutral water.
-Visible gunboats exchange travelling shells across the short cut. The protected
-southern route follows irregular fractured basins and needs more breaking;
-there is no player gun or kill objective.
+**No Flag on the Lifeboats** returns to Kestrel. Tow disabled Oriel out of the
+turning pocket and bring all three stranded crews in the eastern bay to neutral
+water. Gunboats exchange shells across the short cut. The sheltered southern
+lead needs more breaking and gives all three ships a shared passage out of the
+bay.
 
-**The Passage Must Stay Open** has two legs on one 45-minute weather clock.
+**The Passage Must Stay Open** has two legs on one 32-minute weather clock.
 Insert and recover the channel engineers with Petrel, secure the submarine,
 then take Kestrel and escort three inspection and relief ships through the exit.
 The same surface sea advances throughout the underwater operation: Rime makes
@@ -224,7 +221,7 @@ Run one at a time. All twelve courses have input-only reference recordings; the
 ten revised-map recordings are verified for version 5.0.0. They are not
 claimed optimal. Read the [field guide](docs/GERBOZILLA.md) for mechanics and tests.
 
-There are **41 recordings and 85 selectable assignments**. All seven playable worlds
+There are **44 recordings and 85 selectable assignments**. All seven playable worlds
 have twelve-stage circuits; the **Grand Tour has 84 stages**. The Century Ship
 is the single bonus, excluded from every circuit. Each route has separate
 overall and clean records. The World 4 HUD, result screen and field log show

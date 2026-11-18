@@ -67,11 +67,11 @@
      <div id="polar-gun-controls" hidden><div id="polar-targets" aria-label="Hostile targets"></div><div class="polar-winch"><button data-polar-action="target">Next target <span class="key-hint">· T</span></button><button data-polar-action="fire" id="polar-fire">Fire <span class="key-hint">· B</span></button></div></div>
      <div id="polar-sub-controls" hidden>
       <div id="sub-pickups" aria-label="Team rendezvous" hidden></div>
-      <div class="section-label">DEPTH ORDER · Z / X</div><div class="sub-depths"><button data-sub-depth="0">Shallow · 18 m</button><button data-sub-depth="1">Working · 48 m</button><button data-sub-depth="2">Deep · 88 m</button></div>
-      <div class="polar-winch"><button id="sub-ping" data-polar-action="ping">Active pulse <span class="key-hint">· P</span></button><button data-polar-action="target">Next contact <span class="key-hint">· T</span></button></div>
+      <div class="section-label">DEPTH<span class="key-hint"> · Z / X</span></div><div class="sub-depths"><button data-sub-depth="0">18 m<small id="sub-clear-18"></small></button><button data-sub-depth="1">48 m<small id="sub-clear-48"></small></button><button data-sub-depth="2">88 m<small id="sub-clear-88"></small></button></div>
+      <div class="polar-winch"><button id="sub-ping" data-polar-action="ping"><span id="sub-ping-label">Active pulse</span><span class="key-hint"> · P</span></button><button data-polar-action="target">Next contact <span class="key-hint">· T</span></button></div>
       <div id="sub-contacts" aria-label="Select a sonar track"></div>
       <div class="polar-winch"><button id="sub-identify" data-polar-action="identify">Record identification <span class="key-hint">· I</span></button><button id="sub-fire" data-polar-action="fire">Torpedo <span class="key-hint">· B</span></button></div>
-      <button id="sub-team" data-polar-action="team">Insert team <span class="key-hint">· F</span></button>
+      <button id="sub-team" data-polar-action="team"><span id="sub-team-label">Insert team</span><span class="key-hint"> · F</span><small id="sub-team-detail"></small></button>
      </div>
     </div>
     <div id="polar-fleet"></div>

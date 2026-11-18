@@ -2520,12 +2520,13 @@ body[data-theme="polar"] .sidebar>.hint { display:none; }
 #polar-ice,#polar-legend { font:10px/1.6 var(--mono); color:var(--muted); }
 #polar-legend { margin:9px 0 0; }
 .polar-order { border-top:1px solid var(--line); margin-top:12px; padding-top:10px; }
-.polar-order>strong { display:block; font:600 10px/1.5 var(--mono); color:var(--amber); }
+.polar-order>header { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 8px; font:10px/1.5 var(--mono); color:var(--muted); }
+.polar-order>header strong { color:var(--amber); }
 .polar-order>div { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:6px; }
 .polar-order button { min-height:42px; }
 .polar-order button.selected { background:#37574f; border-color:var(--green); }
 .polar-message { background:#193843; border-left:3px solid var(--amber); padding:14px 18px; margin:18px 0; }
-.polar-message strong { font:11px var(--mono); color:var(--amber); }
+.polar-message summary { cursor:pointer; font:11px var(--mono); color:var(--amber); }
 .polar-message p { margin:9px 0 0; }
 @media(max-width:820px) {
   body[data-theme="polar"] .workspace { grid-template-columns:1fr; grid-template-rows:minmax(160px,1fr) auto; }
@@ -2534,7 +2535,7 @@ body[data-theme="polar"] .sidebar>.hint { display:none; }
   #polar-readout { margin:0 0 3px; font-size:11px; }
   #polar-fleet { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px; }
   .polar-order { margin-top:6px; padding-top:6px; }
-  .polar-order>strong { font-size:9px; }
+  .polar-order>header { font-size:9px; }
   .polar-order button { padding:7px 3px; font-size:11px; }
   body[data-theme="polar"] .chart-title { font-size:16px; }
 }
@@ -2547,6 +2548,15 @@ body[data-theme="polar"] .sidebar>.hint { display:none; }
 }
 
 /* Pale Reach: deliberate orders remain usable beside the helm on small screens. */
+.sidebar .polar-info { position:static; width:auto; max-width:none; max-height:none; margin:8px 0; overflow:visible; box-shadow:none; }
+.sidebar .polar-info>summary { min-height:38px; padding:8px 10px; }
+.sidebar #polar-summary { display:inline; margin:0; }
+@media(max-width:820px), (max-height:530px) and (max-width:1050px) {
+  body[data-theme="polar"] .sidebar:has(>.polar-info) { display:flex; flex-direction:column; }
+  .sidebar:has(>.polar-info)>* { flex-shrink:0; }
+  .sidebar:has(>.polar-info)>#polar-panel { order:-2; }
+  .sidebar>.polar-info { order:-1; }
+}
 #polar-actions { margin:10px 0; }
 #polar-actions[hidden],#polar-tow-controls[hidden],#polar-gun-controls[hidden] { display:none; }
 #polar-actions button { min-height:42px; padding:8px; font:11px var(--mono); }
@@ -2566,6 +2576,8 @@ body[data-theme="polar"] .sidebar>.hint { display:none; }
 #sub-contacts b,#sub-contacts span { display:block; font-size:10px; line-height:1.4; }
 #sub-contacts span { color:var(--muted); font-size:9px; }
 #sub-team { width:100%; }
+.sub-depths small,#sub-team-detail { display:block; margin-top:3px; color:var(--muted); font:10px/1.25 var(--mono); }
+#sub-team-detail:empty { display:none; }
 #polar-phase { display:block; color:var(--amber); font:11px/1.5 var(--mono); margin-bottom:8px; }
 #polar-phase[hidden],#sub-pickups[hidden] { display:none; }
 #sub-pickups { display:grid; grid-template-columns:1fr 1fr; gap:5px; margin:6px 0; }

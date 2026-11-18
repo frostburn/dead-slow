@@ -5,7 +5,9 @@ const L=require('../src/levels.js'),I=require('../src/polar.js'),U=require('../s
 const {create}=require('./headless.cjs');
 function navigate(n,{trace=false,pickup='far'}={}){
  const t=create(),l=L.find(l=>l.id===`pale-reach-${n}`);t.load(L.indexOf(l),true);const r=t.state.run;
- let phase=0,wp=0,route=n===10?[[135,580],[290,540],[520,515],[730,490]]:n===11?[[155,570],[210,455]]:[[140,520],[300,580],[480,610],[650,600],[675,445],[675,350]],rescues=0;
+ const hatch=l.polar.access;
+ const deepApproach=[[435,559],[560,567],[640,535]];
+ let phase=0,wp=0,route=n===10?[[135,580],[290,540],[520,515],[730,490]]:n===11?[[155,570],[210,455]]:[l.start.slice(0,2),...deepApproach,[hatch.x,hatch.y]],rescues=0;
  const ship=()=>r.ship;
  const apply=(order,input)=>{t.throttle(order-ship().throttle);Object.assign(t.state.input,input);};
  const steer=a=>P.clamp(P.wrap(a-ship().a)*2.5-ship().r*35,-1,1);
@@ -27,25 +29,34 @@ function navigate(n,{trace=false,pickup='far'}={}){
     if(phase===0&&pilot(2).arrived)phase=1;
     if(phase===1){steady(-Math.PI/2);if(Math.abs(P.wrap(s.a+Math.PI/2))<.1&&I.speed(s)<.12&&t.polarAction('tow')){phase=2;setRoute([[210,340]]);}}
     if(phase===2){pilot(1.6);if(o.survey.safeNow)phase=3;}
-    if(phase===3){steady(-Math.PI/2);if(o.survey.safeNow){t.polarAction('tow');phase=4;setRoute([[160,475],[205,590],...l.polar.rescue.protectedRoute.slice(1,-1),[790,320]]);}}
+    if(phase===3){steady(-Math.PI/2);if(o.survey.safeNow){t.polarAction('tow');phase=4;setRoute([[130,374],[125,478],...l.polar.rescue.protectedRoute.slice(0,-1),[631,601],[642,544],[651,461],[648,343]]);}}
     if(phase===4&&pilot().arrived)phase=5;
-    if(phase===5){steady(s.a);const f=st.fleet[rescues];if(f.rescued){t.convoyCommand(f.id,'proceed');rescues++;if(rescues===1){phase=4;setRoute([[850,320],[855,440],[785,500]]);}else if(rescues===2){phase=4;setRoute([[835,510],[805,585],[795,665]]);}else{phase=6;setRoute([[790,700],[720,745]]);}}}
-    if(phase===6&&pilot(2).arrived)phase=7;
+    if(phase===5){
+     steady(s.a);
+     if(st.fleet[rescues].rescued){
+      if(rescues>0)t.convoyCommand(st.fleet[rescues-1].id,'proceed');
+      rescues++;
+      if(rescues===1){phase=4;setRoute([[639,397],[648,437]]);}
+      else if(rescues===2){phase=4;setRoute([[647,501],[642,546]]);}
+      else{phase=6;setRoute([[628,600],[655,637]]);}
+     }
+    }
+    if(phase===6&&pilot(2).arrived){phase=7;for(const f of st.fleet)t.convoyCommand(f.id,'proceed');}
     if(phase===7)steady(s.a);
    }else if(r.finalJourney.watch.phase==='underwater'){
     if(phase===0&&pilot(1.9).arrived)phase=1;
     if(phase===1){steady(-Math.PI/2);if(!st.mission.ordered)t.polarAction('team');if(st.mission.team==='working')phase=2;}
-    if(phase===2){const k=steer(-Math.PI/2);apply(-1,{rudder:k,thruster:k});if(s.y>480)phase=3;}
-    if(phase===3){steady(-Math.PI/2);if(st.mission.team==='waiting'){phase=4;setRoute([[675,445],[675,350]]);}}
+    if(phase===2){const k=steer(-Math.PI/2);apply(-1,{rudder:k,thruster:k});if(s.y>hatch.y+hatch.standOff+12)phase=3;}
+    if(phase===3){steady(-Math.PI/2);if(st.mission.team==='waiting'){phase=4;setRoute([[hatch.x,hatch.y]]);}}
     if(phase===4&&pilot(1.5).arrived)phase=5;
     if(phase===5){steady(-Math.PI/2);if(!st.mission.ordered)t.polarAction('team');if(st.mission.team==='recovered')phase=6;}
-    if(phase===6){const k=steer(-Math.PI/2);apply(-1,{rudder:k,thruster:k});if(s.y>525){phase=7;setRoute([[650,600],[480,610],[300,580],[140,520]]);}}
+    if(phase===6){const k=steer(-Math.PI/2);apply(-1,{rudder:k,thruster:k});if(s.y>525){phase=7;setRoute([[...deepApproach[2]],[...deepApproach[1]],[...deepApproach[0]],l.start.slice(0,2)]);}}
     if(phase===7&&pilot(2).arrived)phase=8;
     if(phase===8)steady(s.a);
    }else{
     if(phase<9){phase=9;setRoute([[325,565],[455,535],[625,555],[780,590],[860,590]]);}
     for(const f of st.fleet)if(f.order==='hold'&&!f.returned)t.convoyCommand(f.id,'proceed');
-    if(phase===9&&pilot(2.8).arrived){phase=10;setRoute([[860,475]]);}
+    if(phase===9&&pilot(2.8).arrived){phase=10;setRoute([[848,516]]);}
     if(phase===10&&pilot(2.2).arrived)phase=11;
     if(phase===11)steady(s.a);
    }

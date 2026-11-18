@@ -145,10 +145,11 @@ rebuild the raster. Ships and moving ice still draw every frame, while physics
 continues at 120 Hz with continuous slush density. Unchanged HUD text and split
 markup retain their DOM nodes. A draw-call budget guards against repainting the
 whole field per frame; CI also compares incremental ice updates with fresh pixels.
-The folding `polar-info` chart window owns status, briefings, fleet reports and
-elapsed splits. The sidebar holds only orders and selectable targets. Missions
-without extra orders collapse that sidebar. The same window survives the finale
-handoff, switching from submarine reports to the surface convoy's reports.
+The folding `polar-info` chart window starts closed and holds vessel status,
+briefings and detailed fleet reports. The sidebar keeps common instruments,
+elapsed splits, and active controls. The underwater watch sits in the sidebar
+with the depth and sonar controls. The same window returns to the chart during
+the finale handoff and shows the convoy's reports.
 
 Sheet fractures require forward momentum and a bow approach, cost speed and
 open a narrow shoulder beside the hull. Pressure ridges remain impassable.
@@ -160,9 +161,10 @@ also defines underwater clearance in the submarine assignments.
 
 Supply captains plan connected cleared water with beam clearance, then apply
 the same engine lag, thrust, rudder, drag and collision model as the player.
-They brake for ice and traffic. Hold cannot erase velocity. They unload at
-rest, await a fresh Proceed for their return, and must get home with their
-hulls intact. Navigation may retain its last valid route when a conservative
+They brake for ice and traffic. Hold begins braking. Proceed queues while the
+channel is closed or a vessel is unloading and remains active for the return leg.
+The chart draws the current route once a captain finds connected water.
+Navigation may retain its last valid route when a conservative
 planning clearance rejects the current grid cell; physics still prevents
 crossing intact sheet. Paths are requests, never position constraints.
 
@@ -189,10 +191,9 @@ installation or solid ice they meet. Exact hex intersections along a narrow ray 
 Defense ends with cargo ashore and both transports returned, regardless of live
 attackers. Strike completion also requires docking after both installations fall.
 
-Borrowed Water has no arrival deadline: Rime waits at Glass Quay, late checkpoints
-still count, and heavy slush leaves retry to the player. Its rules revision is 2;
-all six charts use course revision 2. The physical cutter routes archive the
-previous timed-opening records for 7-04–7-06 only.
+Borrowed Water checks the whole hull in Glass Quay’s basin before accepting
+mooring. Rime waits there and the player can finish later. Revised course and
+rules stamps archive old splits and ghosts for those missions and their circuits.
 Each assignment has normal individual records, elapsed split times and ghosts.
 The completed twelve-assignment campaign joins the 84-stage Grand Tour.
 Individual signatures and the first six campaign signatures remain unchanged;
@@ -208,13 +209,15 @@ inside the existing atlas job; there is no additional CI matrix or job.
 `submarine.js` uses the existing inertial hull integrator and captain controls,
 with gradual depth changes between 18, 48 and 88 metres. Whole-hull overlap
 determines keel and seabed clearance. Invalid horizontal approaches collide;
-terrain never snaps a vessel into another depth band. Static hex chart texture
-is cached; moving keels and depth-dependent obstruction shading stay live.
+terrain never snaps a vessel into another depth band. The chart caches shaded
+seabed relief and redraws its hatch pattern when a shelf becomes impassable at
+the current depth. Hatching follows the collision boundary. Ice keels move
+over that layer and use the same blocking cue.
 Player and hostile submarines use a rounded pressure-hull polygon in `physics.js`
 for drawing, collision and clearance. Precomputed cap directions keep it cheap.
 The shell rejects the horn action underwater and hides its button, restoring it
-on the surface bridge. Sonar uncertainty is isotropic: the chart uses the same
-circular radius as the stored estimate.
+on the surface bridge. Sonar diamonds show estimated positions. Selecting a
+track adds its circular uncertainty, using the radius in the stored estimate.
 
 `sonar.js` stores detached observations, never live actor references. Passive
 listening supplies uncertain position, motion and machinery clues; speed,
@@ -273,7 +276,7 @@ ice grid, fracture timestamps, floes, NPCs, damage, elapsed clock and split list
 The bridge replaces depth/sonar controls with convoy orders at that handoff.
 
 Weather continuously increases slush resistance; it never solidifies water
-through an occupied hull. The explicit 45-minute window applies to both legs.
+through an occupied hull. The 32-minute window applies to both legs.
 Kestrel cuts the remaining passage and the final relief ship reaching the exit
 completes the mission. Pause freezes both runs; retry reconstructs both legs.
 The result records each leg's duration and includes submarine damage in the

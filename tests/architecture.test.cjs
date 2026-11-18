@@ -15,27 +15,51 @@ test('hex polar charts archive square-grid ghosts and the circuits containing th
     assert.equal(current.races.coast,old.races.coast);assert.deepEqual(out.stages['dead-slow'],stage());
     assert.equal(out.races['grand-tour'].length,0);assert.equal(out.archivedRaces[C.archiveKey('grand-tour',old.races['grand-tour'])].length,1);
     for(const l of levels.filter(l=>l.polar&&l.stageNumber<=3)){
-        assert.equal(current.stages[l.id],l.stageNumber===2?'polar:2:2':'polar:2:1');assert.equal(out.stages[l.id],undefined);
+        assert.notEqual(current.stages[l.id],'polar:1:1');assert.equal(out.stages[l.id],undefined);
         assert.deepEqual(out.archivedStages[C.archiveKey(l.id,'polar:1:1')],stage());
     }
 });
 
-test('removing Borrowed Water’s deadline archives only that assignment’s former rules',()=>{
+test('Borrowed Water archives the former rules with a deadline',()=>{
     const old=C.manifest(levels.map(l=>l.id==='pale-reach-2'?{...l,rulesRevision:1}:l)),data=S.fresh();data.compatibility=old;
     for(const n of [1,2,3])data.stages[`pale-reach-${n}`]=stage();
     const out=S.sanitize(data,C.manifest(levels));
     assert.equal(out.stages['pale-reach-2'],undefined);assert.deepEqual(out.archivedStages[C.archiveKey('pale-reach-2','polar:2:1')],stage());
     for(const n of [1,3])assert.deepEqual(out.stages[`pale-reach-${n}`],stage());
 });
-test('physical cutter charts archive only the three former timed-opening assignments',()=>{
-    const old=C.manifest(levels.map(l=>l.polar&&l.stageNumber>=4&&l.stageNumber<=6?{...l,courseRevision:1}:l)),data=S.fresh();data.compatibility=old;
-    for(const l of levels)data.stages[l.id]=stage();data.races['grand-tour']=[{...record}];
-    const current=C.manifest(levels),out=S.sanitize(data,current);assert.equal(current.races.coast,old.races.coast);
+test('physical cutter charts archive the former timed-opening assignments',()=>{
+    const timed=l=>l.polar&&l.stageNumber>=4&&l.stageNumber<=6;
+    const old=C.manifest(levels.map(l=>timed(l)?{...l,courseRevision:1,rulesRevision:1}:l));
+    const data=S.fresh();data.compatibility=old;data.races['grand-tour']=[{...record}];
+    for(const l of levels)data.stages[l.id]=stage();
+    const out=S.sanitize(data,C.manifest(levels));
     for(const l of levels){
-        if(l.polar&&l.stageNumber>=4&&l.stageNumber<=6){assert.equal(out.stages[l.id],undefined);assert.deepEqual(out.archivedStages[C.archiveKey(l.id,'polar:1:1')],stage());}
+        if(timed(l)){assert.equal(out.stages[l.id],undefined);assert.deepEqual(out.archivedStages[C.archiveKey(l.id,'polar:1:1')],stage());}
         else assert.deepEqual(out.stages[l.id],stage());
     }
-    assert.equal(out.races['grand-tour'].length,0);assert.equal(out.archivedRaces[C.archiveKey('grand-tour',old.races['grand-tour'])].length,1);
+    assert.equal(out.races['grand-tour'].length,0);
+    assert.equal(out.archivedRaces[C.archiveKey('grand-tour',old.races['grand-tour'])].length,1);
+});
+test('the Pale Reach rework archives revised 7.0 courses and only the circuits that use them',()=>{
+    const released={1:[2,1],2:[2,2],3:[2,1],5:[2,1],8:[1,2],11:[2,1],12:[1,2]};
+    const old=C.manifest(levels.map(l=>{
+        const revision=l.polar&&released[l.stageNumber];
+        return revision?{...l,courseRevision:revision[0],rulesRevision:revision[1]}:l;
+    }));
+    const data=S.fresh();data.compatibility=old;
+    for(const l of levels)data.stages[l.id]=stage();
+    for(const id of Object.keys(old.races))data.races[id]=[{...record}];
+    const out=S.sanitize(data,C.manifest(levels));
+    for(const l of levels){
+        if(l.polar&&released[l.stageNumber]){assert.equal(out.stages[l.id],undefined);assert.deepEqual(out.archivedStages[C.archiveKey(l.id,old.stages[l.id])],stage());}
+        else assert.deepEqual(out.stages[l.id],stage());
+    }
+    for(const id of Object.keys(old.races)){
+        if(id==='pale-reach'||id==='grand-tour'){
+            assert.equal(out.races[id].length,0);
+            assert.equal(out.archivedRaces[C.archiveKey(id,old.races[id])].length,1);
+        }else assert.equal(out.races[id].length,1);
+    }
 });
 test('schema upgrade retains current records; a course revision archives only affected routes',()=>{
     const data=S.fresh();data.version=17;

@@ -20,15 +20,20 @@ test('submarines cannot sound a horn and use the same rounded hull for chart and
  }
  t.load(0,true);assert.notEqual(t.signal(),false,'ordinary surface horn remains available');
 });
-test('sonar uncertainty and world-to-canvas scaling preserve circular range',()=>{
+test('only the selected sonar estimate has a circular range and a chart label',()=>{
  const l=level(7),r={...I.create(l),time:0},st=r.polar;
  const track=U.Sonar.observe(st,st.actors[0],r.ship,0,true),fix=U.Sonar.predict(track,0);
- const arcs=[],scales=[],ellipses=[];
- const ctx=new Proxy({arc:(...a)=>arcs.push(a),ellipse:(...a)=>ellipses.push(a),scale:(...a)=>scales.push(a)}, {get:(o,k)=>o[k]??(()=>{}),set:(o,k,v)=>(o[k]=v,true)});
+ const extra=U.Sonar.observe(st,st.actors[1],r.ship,0),unselected=U.Sonar.predict(extra,0);
+ st.selected=track.id;
+ const arcs=[],scales=[],ellipses=[],text=[];
+ const ctx=new Proxy({arc:(...a)=>arcs.push(a),ellipse:(...a)=>ellipses.push(a),scale:(...a)=>scales.push(a),
+  fillText:t=>text.push(t),createLinearGradient:()=>({addColorStop(){}})}, {get:(o,k)=>o[k]??(()=>{}),set:(o,k,v)=>(o[k]=v,true)});
  const canvas=()=>({width:0,height:0,getBoundingClientRect:()=>({width:930,height:530}),getContext:()=>ctx});
  const previous=global.document;global.document={createElement:canvas};
  try{require('../src/submarine-view.js').render(canvas(),l,r,1);}finally{global.document=previous;}
  assert.ok(arcs.some(a=>a[0]===fix.x&&a[1]===fix.y&&a[2]===fix.radius));
+ assert.ok(!arcs.some(a=>a[0]===unselected.x&&a[1]===unselected.y));
+ assert.ok(text.includes(track.id));assert.ok(!text.some(t=>t.includes(extra.id)||t.includes('UNIDENTIFIED')));
  assert.ok(scales.every(([x,y])=>x===y));assert.equal(ellipses.length,0);
 });
 test('authored fractured basins use metre coordinates and leave all rescue hulls afloat',()=>{
@@ -39,8 +44,9 @@ test('authored fractured basins use metre coordinates and leave all rescue hulls
  for(const s of [r.ship,...st.fleet.map(f=>f.ship),st.operation.survey.ship,...st.operation.npcs.map(n=>n.ship)]){
   const before=[s.x,s.y,s.hull];I.iceContact(st,s,1/120);assert.deepEqual([s.x,s.y,s.hull],before,s.name);
  }
+ const fireX=st.operation.npcs.find(n=>n.crossfire).ship.x;
  const widths=[150,250,350,450,550].map(y=>{
-  const open=[];for(let x=450;x<650;x++)if(!I.solidAt(st,x,y))open.push(x);return Math.max(...open)-Math.min(...open);
+  const open=[];for(let x=fireX-50;x<fireX+50;x++)if(!I.solidAt(st,x,y))open.push(x);return Math.max(...open)-Math.min(...open);
  });
  assert.ok(new Set(widths).size>=3,'the central lead has varying width');
 });
